@@ -55,6 +55,7 @@
 }
 
 - (void)askQuestion:(NSString *)question
+       instructions:(NSString *)instructions
          completion:(void (^)(NSString *answer, NSError *error))completion
 {
 	if(![self isConfigured]) {
@@ -65,7 +66,7 @@
 	}
 
 	[[self model] ask:question
-	     instructions:NekoAnswerInstructions
+	     instructions:instructions
 	       completion:^(NSString *answer, NSString *failure) {
 		if([answer length] > 0) {
 			completion(answer, nil);

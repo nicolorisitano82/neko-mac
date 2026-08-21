@@ -104,6 +104,7 @@ static NSString * const NekoCharacterDirectory = @"Characters";
 	name = [[manifest objectForKey:@"Name"] copy];
 	if(name == nil)
 		name = [identifier copy];
+	persona = [[manifest objectForKey:@"Persona"] copy];
 
 	float width = [[manifest objectForKey:@"SpriteWidth"] floatValue];
 	float height = [[manifest objectForKey:@"SpriteHeight"] floatValue];
@@ -153,6 +154,7 @@ static NSString * const NekoCharacterDirectory = @"Characters";
 		[frames[i] release];
 	[identifier release];
 	[name release];
+	[persona release];
 	[super dealloc];
 }
 
@@ -166,6 +168,14 @@ static NSString * const NekoCharacterDirectory = @"Characters";
 - (NSString *)name
 {
 	return name;
+}
+
+- (NSString *)persona
+{
+	if([persona length] > 0)
+		return persona;
+	return [NSString stringWithFormat:
+		NSLocalizedString(@"a small pixel-art cat named %@", nil), name];
 }
 
 - (NSSize)spriteSize

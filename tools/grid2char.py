@@ -188,6 +188,9 @@ def main():
     p.add_argument('--autogrid', action='store_true',
                    help='take the cell boxes from where the poses are instead of '
                         'splitting the image evenly')
+    p.add_argument('--persona', default='',
+                   help='who this character is, in a phrase, for when it is asked '
+                        'a question: "a small owl, solemn and slightly pedantic"')
     p.add_argument('--author', default='')
     p.add_argument('--license', default='')
     args = p.parse_args()
@@ -269,6 +272,7 @@ def main():
         'Name': name,
         'SpriteWidth': args.size,
         'SpriteHeight': args.size,
+        'Persona': args.persona,
         'Author': args.author,
         'License': args.license,
         'States': states,

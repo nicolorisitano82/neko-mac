@@ -95,8 +95,16 @@ the app and nothing of ours goes over the network.
 Keychain and never in the preferences file. Questions go to Anthropic; the
 preferences say so next to the field.
 
-With none of them available the cat answers in character, which is the whole
-joke and needs no setup at all.
+Whoever is on screen is who answers: the manifest's `Persona` describes the
+character, and the question goes out with it, so the wizard cat sounds like a
+wizard and the flying saucer talks about this planet from the outside. The facts
+are not negotiable — the instructions put truth first and confine the character
+to the wording, because a small model handed a costume will otherwise invent a
+charming explanation. Characters without a `Persona` answer as themselves, by
+name.
+
+With none of the providers available the cat answers in character anyway, which
+is the whole joke and needs no setup at all.
 
 The on-device model is reached through `src/NekoAppleModel.swift`, the only Swift
 file in the project: `FoundationModels` ships no headers, so a Swift shim is the
@@ -122,6 +130,7 @@ project change — drop the folder in and rebuild:
 | `Identifier` | unique string, this is what `NekoCharacter` stores |
 | `Name` | shown in the menu and in the preferences |
 | `SpriteWidth` / `SpriteHeight` | points; the panel sizes itself from these |
+| `Persona` | optional: who this character is, in a phrase, used when it is asked a question |
 | `States` | one entry per state: `Frames` (file names, in order) and `TicksPerFrame` |
 
 A tick is 0.125s, so `TicksPerFrame = 4` holds each frame for half a second —

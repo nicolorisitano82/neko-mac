@@ -41,6 +41,7 @@ typedef enum {
 {
 	NSString *identifier;
 	NSString *name;
+	NSString *persona;
 	NSSize spriteSize;
 	NSArray *frames[NekoStateCount];
 	unsigned ticksPerFrame[NekoStateCount];
@@ -55,6 +56,11 @@ typedef enum {
 
 - (NSString *)identifier;
 - (NSString *)name;
+
+/* Who this character is, in a phrase, for when it is asked a question. Taken
+   from the manifest's Persona key; without one it falls back to being a cat by
+   that name, which is what most of them are. */
+- (NSString *)persona;
 - (NSSize)spriteSize;
 
 /* Frames of a state, fallbacks already applied: never nil, never empty. */

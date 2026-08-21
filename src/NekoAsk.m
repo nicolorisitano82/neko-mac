@@ -291,7 +291,13 @@ enum { NekoPhaseIdle = 0, NekoPhaseListening, NekoPhaseThinking, NekoPhaseAnswer
 	   rather than a row of dots. */
 	[self showBubble:question dismissAfter:0.0];
 
-	[provider askQuestion:question completion:^(NSString *answer, NSError *error) {
+	/* Whoever is on screen is who answers. */
+	NekoCharacter *character = [[NekoController sharedController] character];
+	NSString *instructions = NekoAnswerInstructionsFor([character persona]);
+
+	[provider askQuestion:question
+	         instructions:instructions
+	           completion:^(NSString *answer, NSError *error) {
 		if(phase != NekoPhaseThinking)
 			return;                            /* cancelled while it thought */
 		if([answer length] > 0)

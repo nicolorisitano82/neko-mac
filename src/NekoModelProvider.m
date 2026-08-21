@@ -80,6 +80,7 @@ static const NSTimeInterval NekoModelTimeout = 12.0;
 #pragma mark Asking
 
 - (void)askQuestion:(NSString *)question
+       instructions:(NSString *)instructions
          completion:(void (^)(NSString *answer, NSError *error))completion
 {
 	[self cancel];
@@ -95,7 +96,7 @@ static const NSTimeInterval NekoModelTimeout = 12.0;
 	NSDictionary *body = [NSDictionary dictionaryWithObjectsAndKeys:
 		[self model], @"model",
 		[NSNumber numberWithInt:400], @"max_tokens",   /* a bubble, not an essay */
-		NekoAnswerInstructions, @"system",
+		instructions, @"system",
 		[NSDictionary dictionaryWithObjectsAndKeys:@"low", @"effort", nil], @"output_config",
 		@"default", @"fallbacks",
 		[NSArray arrayWithObject:

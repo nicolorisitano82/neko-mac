@@ -10,6 +10,8 @@
 	<string>fan-made oneko.js skin, collection states no licence; check before redistributing</string>
 	<key>Name</key>
 	<string>Bunny</string>
+	<key>Persona</key>
+	<string>a small rabbit, twitchy and quick and easily startled</string>
 	<key>SpriteHeight</key>
 	<integer>32</integer>
 	<key>SpriteWidth</key>

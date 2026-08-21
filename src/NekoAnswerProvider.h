@@ -19,16 +19,19 @@
 /* Why it is not configured, for the preferences to show. nil when it is. */
 - (NSString *)configurationHint;
 
+/* instructions describe who is answering; a provider that cannot set a system
+   prompt of its own is expected to work them into the question. */
 - (void)askQuestion:(NSString *)question
+       instructions:(NSString *)instructions
          completion:(void (^)(NSString *answer, NSError *error))completion;
 
 - (void)cancel;
 
 @end
 
-/* The voice the cat answers in, shared by every provider that talks to a model
-   so they cannot drift apart. */
-extern NSString * const NekoAnswerInstructions;
+/* The voice the character answers in, built around who it is. Shared by every
+   provider so they cannot drift apart. */
+extern NSString *NekoAnswerInstructionsFor(NSString *persona);
 
 /* Errors every provider raises. */
 extern NSString * const NekoAskErrorDomain;

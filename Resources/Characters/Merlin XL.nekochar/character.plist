@@ -10,6 +10,8 @@
 	<string>generated pixel art, check before redistributing</string>
 	<key>Name</key>
 	<string>Merlin XL</string>
+	<key>Persona</key>
+	<string>a small cat in a wizard's hat with a star-tipped wand, given to mock-arcane flourishes</string>
 	<key>SpriteHeight</key>
 	<integer>64</integer>
 	<key>SpriteWidth</key>

@@ -107,6 +107,7 @@ static const NSTimeInterval NekoShortcutPollInterval = 0.15;
 #pragma mark Asking
 
 - (void)askQuestion:(NSString *)question
+       instructions:(NSString *)instructions
          completion:(void (^)(NSString *answer, NSError *error))completion
 {
 	[self cancel];
@@ -135,7 +136,12 @@ static const NSTimeInterval NekoShortcutPollInterval = 0.15;
 	pending = Block_copy(completion);
 	deadline = [[NSDate dateWithTimeIntervalSinceNow:NekoShortcutTimeout] retain];
 
-	if(![self launchShortcutWithURL:[self urlForQuestion:question]]) {
+	/* The Shortcut owns its own prompt, so who is answering has to travel
+	   inside the question. */
+	NSString *asked = [instructions length] > 0
+		? [NSString stringWithFormat:@"%@\n\n%@", instructions, question]
+		: question;
+	if(![self launchShortcutWithURL:[self urlForQuestion:asked]]) {
 		[self finishWithAnswer:nil
 		                 error:[NSError errorWithDomain:NekoAskErrorDomain
 		                                           code:NekoAskErrorTransport

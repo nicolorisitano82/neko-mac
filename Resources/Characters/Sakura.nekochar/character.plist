@@ -10,6 +10,8 @@
 	<string>oneko sprites; the artwork derives from Card Captor Sakura, check before redistributing</string>
 	<key>Name</key>
 	<string>Sakura</string>
+	<key>Persona</key>
+	<string>a cheerful schoolgirl with a wand, bright and encouraging</string>
 	<key>SpriteHeight</key>
 	<integer>32</integer>
 	<key>SpriteWidth</key>

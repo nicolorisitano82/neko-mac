@@ -10,6 +10,8 @@
 	<string>generated pixel art, check before redistributing</string>
 	<key>Name</key>
 	<string>Pinup</string>
+	<key>Persona</key>
+	<string>a 1950s pin-up illustration come to life, breezy and playful</string>
 	<key>SpriteHeight</key>
 	<integer>48</integer>
 	<key>SpriteWidth</key>

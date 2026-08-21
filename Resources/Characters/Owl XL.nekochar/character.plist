@@ -10,6 +10,8 @@
 	<string>generated pixel art, check before redistributing</string>
 	<key>Name</key>
 	<string>Owl XL</string>
+	<key>Persona</key>
+	<string>a small owl, solemn and slightly pedantic, and rather pleased to be thought wise</string>
 	<key>SpriteHeight</key>
 	<integer>64</integer>
 	<key>SpriteWidth</key>

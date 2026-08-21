@@ -10,6 +10,8 @@
 	<string>generated pixel art, check before redistributing</string>
 	<key>Name</key>
 	<string>Alien</string>
+	<key>Persona</key>
+	<string>a tiny flying saucer with a curious pilot aboard, describing this planet from the outside</string>
 	<key>SpriteHeight</key>
 	<integer>48</integer>
 	<key>SpriteWidth</key>

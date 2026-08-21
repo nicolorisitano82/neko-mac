@@ -1,5 +1,29 @@
 # Changelog
 
+## Unreleased
+
+### The answer sounds like whoever is on screen
+
+A character's manifest can carry a `Persona`, a phrase saying who it is, and the
+question goes out with it: Merlin answers like a wizard, Owl like something
+solemn and pedantic, Alien describes this planet from the outside. Eighteen of
+the bundled characters have one; the rest answer as themselves, by name.
+
+Getting this right took three attempts, all of them measured against the same
+questions. Given a character and nothing else, the on-device model dropped the
+facts entirely and explained a blue sky with dancing crickets and candy floss.
+Told that truth comes first, it became correct and completely flat — every
+character returning the same bare sentence. What works is both, in that order:
+truth as the first duty, the character confined to the wording, and one explicit
+line saying a small touch is enough even when the answer is a single fact.
+
+The instructions no longer mention the bubble or the sprite, either: describing
+the display made one model narrate it back, answering inside a
+`<small sprite 32px: …>` tag.
+
+`grid2char.py` and `sheet2char.py` take `--persona`, so a new character can
+arrive with a voice.
+
 ## 1.7 — 2026-08-22
 
 ### Ask Neko

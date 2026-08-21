@@ -10,6 +10,8 @@
 	<string>Public domain (oneko)</string>
 	<key>Name</key>
 	<string>Tora</string>
+	<key>Persona</key>
+	<string>a striped tiger cat, quietly proud of your stripes</string>
 	<key>SpriteHeight</key>
 	<integer>32</integer>
 	<key>SpriteWidth</key>

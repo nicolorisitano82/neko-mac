@@ -58,6 +58,9 @@ def main():
     p.add_argument("out", help="destination Foo.nekochar folder")
     p.add_argument("--name", help="display name (default: from the file name)")
     p.add_argument("--identifier", help="default: lowercased name")
+    p.add_argument("--persona", default="",
+                   help="who this character is, in a phrase, for when it is asked "
+                        "a question")
     p.add_argument("--author", default="")
     p.add_argument("--license", default="")
     args = p.parse_args()
@@ -80,6 +83,7 @@ def main():
         "Name": name,
         "SpriteWidth": CELL,
         "SpriteHeight": CELL,
+        "Persona": args.persona,
         "Author": args.author,
         "License": args.license,
         "States": {state: {"Frames": [b + ".png" for b in bases],
