@@ -4,6 +4,7 @@
 #import "NekoBubble.h"
 #import "NekoShortcutProvider.h"
 #import "NekoModelProvider.h"
+#import "NekoAppleProvider.h"
 #import "NekoController.h"
 #import "MyPanel.h"
 #import <AVFoundation/AVFoundation.h>
@@ -33,7 +34,7 @@ enum { NekoPhaseIdle = 0, NekoPhaseListening, NekoPhaseThinking, NekoPhaseAnswer
 			[NSNumber numberWithInt:(int)(NSEventModifierFlagControl
 			                              | NSEventModifierFlagOption)],
 				NekoAskHotKeyModifiersKey,
-			@"shortcut", NekoAskProviderKey,
+			@"apple", NekoAskProviderKey,   /* free, private, and already there */
 			@"Ask Neko", NekoAskShortcutNameKey,
 			[NSNumber numberWithBool:NO], NekoAskSpeakKey, nil]];
 }
@@ -112,12 +113,21 @@ enum { NekoPhaseIdle = 0, NekoPhaseListening, NekoPhaseThinking, NekoPhaseAnswer
 	return modelProvider;
 }
 
+- (NekoAppleProvider *)appleProvider
+{
+	if(appleProvider == nil)
+		appleProvider = [[NekoAppleProvider alloc] init];
+	return appleProvider;
+}
+
 - (id<NekoAnswerProvider>)provider
 {
 	NSString *choice = [[NSUserDefaults standardUserDefaults]
 		stringForKey:NekoAskProviderKey];
 	if([choice isEqualToString:@"model"])
 		return [self modelProvider];
+	if([choice isEqualToString:@"apple"] || [choice length] == 0)
+		return [self appleProvider];
 
 	NSString *name = [[NSUserDefaults standardUserDefaults]
 		stringForKey:NekoAskShortcutNameKey];
@@ -310,6 +320,11 @@ enum { NekoPhaseIdle = 0, NekoPhaseListening, NekoPhaseThinking, NekoPhaseAnswer
 				break;
 			case NekoAskErrorNotConfigured:
 				line = [self cannedReply];
+				break;
+			case NekoAskErrorNoShortcut:
+				line = [NSString stringWithFormat:
+					NekoAskLocalized(@"I cannot find a Shortcut called “%@”."),
+					[[error userInfo] objectForKey:@"name"] ?: @"?"];
 				break;
 			default:
 				break;

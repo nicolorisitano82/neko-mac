@@ -1,6 +1,7 @@
 #import "NekoController.h"
 #import "NekoHotKey.h"
 #import "NekoModelProvider.h"
+#import "NekoAppleProvider.h"
 
 NSString * const NekoCharacterKey  = @"NekoCharacter";
 NSString * const NekoSpeedKey      = @"NekoSpeed";
@@ -610,6 +611,7 @@ static const float NekoMaxStopRadius = 200.0f;
 	                                    frame:NSMakeRect(20.0f, 222.0f, 125.0f, 17.0f)]];
 	askProviderPopUp = [[NSPopUpButton alloc]
 		initWithFrame:NSMakeRect(152.0f, 217.0f, 220.0f, 26.0f) pullsDown:NO];
+	[askProviderPopUp addItemWithTitle:NekoLocalized(@"Apple Intelligence, on this Mac")];
 	[askProviderPopUp addItemWithTitle:NekoLocalized(@"A Shortcut of mine")];
 	[askProviderPopUp addItemWithTitle:NekoLocalized(@"Claude, directly")];
 	[askProviderPopUp setTarget:self];
@@ -675,13 +677,15 @@ static const float NekoMaxStopRadius = 200.0f;
 	NekoAsk *ask = [NekoAsk sharedAsk];
 	NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
 	BOOL on = [ask isEnabled];
-	BOOL model = [[defaults stringForKey:NekoAskProviderKey] isEqualToString:@"model"];
+	NSString *choice = [defaults stringForKey:NekoAskProviderKey];
+	BOOL model = [choice isEqualToString:@"model"];
+	BOOL shortcut = [choice isEqualToString:@"shortcut"];
 
 	[askCheck setState:on ? NSControlStateValueOn : NSControlStateValueOff];
 	[askHotKeyPopUp setEnabled:on];
 	[askProviderPopUp setEnabled:on];
-	[askProviderPopUp selectItemAtIndex:model ? 1 : 0];
-	[askShortcutField setEnabled:on && !model];
+	[askProviderPopUp selectItemAtIndex:model ? 2 : (shortcut ? 1 : 0)];
+	[askShortcutField setEnabled:on && shortcut];
 	[askShortcutField setStringValue:
 		[defaults stringForKey:NekoAskShortcutNameKey] ?: @""];
 	[askKeyField setEnabled:on && model];
@@ -749,8 +753,10 @@ static const float NekoMaxStopRadius = 200.0f;
 
 - (void)takeAskProviderFrom:(id)sender
 {
+	NSArray *choices = [NSArray arrayWithObjects:@"apple", @"shortcut", @"model", nil];
+	NSInteger index = [sender indexOfSelectedItem];
 	[[NSUserDefaults standardUserDefaults]
-		setObject:([sender indexOfSelectedItem] == 1) ? @"model" : @"shortcut"
+		setObject:[choices objectAtIndex:(index >= 0 && index < 3) ? index : 0]
 		   forKey:NekoAskProviderKey];
 	[self syncAskControls];
 }

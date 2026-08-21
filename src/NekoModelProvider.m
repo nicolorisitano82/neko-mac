@@ -7,15 +7,6 @@ static NSString * const NekoKeychainAccount = @"anthropic-api-key";
 static NSString * const NekoDefaultModel = @"claude-opus-5";
 static const NSTimeInterval NekoModelTimeout = 12.0;
 
-/* Short answers, in the user's language, in character. The cat is a cat. */
-static NSString * const NekoSystemPrompt =
-	@"You are Neko, a small pixel-art cat who lives on someone's computer desktop "
-	@"and has just been asked a question out loud. Answer in the language you were "
-	@"asked in. Be genuinely useful and correct, but keep it to one or two short "
-	@"sentences: your answer is displayed in a speech bubble beside a cat 32 pixels "
-	@"tall. No lists, no headings, no preamble. A little feline character is welcome, "
-	@"never at the cost of the answer.";
-
 @implementation NekoModelProvider
 
 - (void)dealloc
@@ -104,7 +95,7 @@ static NSString * const NekoSystemPrompt =
 	NSDictionary *body = [NSDictionary dictionaryWithObjectsAndKeys:
 		[self model], @"model",
 		[NSNumber numberWithInt:400], @"max_tokens",   /* a bubble, not an essay */
-		NekoSystemPrompt, @"system",
+		NekoAnswerInstructions, @"system",
 		[NSDictionary dictionaryWithObjectsAndKeys:@"low", @"effort", nil], @"output_config",
 		@"default", @"fallbacks",
 		[NSArray arrayWithObject:

@@ -61,3 +61,10 @@
 "I am a cat. Ask me again once you have set up an answer." = "Sono un gatto. Richiedimelo quando avrai preparato una risposta.";
 "No idea. I mostly chase the cursor." = "Non ne ho idea. Io inseguo cursori.";
 "Ask the Shortcut. I have not been given one." = "Chiedi alla Scorciatoia. Non me ne hanno data una.";
+"Apple Intelligence, on this Mac" = "Apple Intelligence, su questo Mac";
+"Needs macOS 26 or newer" = "Richiede macOS 26 o successivo";
+"This Mac does not support Apple Intelligence" = "Questo Mac non supporta Apple Intelligence";
+"Turn Apple Intelligence on in System Settings" = "Attiva Apple Intelligence in Impostazioni di Sistema";
+"The model is still downloading" = "Il modello si sta ancora scaricando";
+"The model is not available" = "Il modello non è disponibile";
+"I cannot find a Shortcut called “%@”." = "Non trovo una Scorciatoia chiamata «%@».";

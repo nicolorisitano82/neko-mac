@@ -14,10 +14,30 @@ says what is about to happen, and it is open only between the keystroke and the
 end of the sentence. `SFSpeechRecognizer` is weakly linked and keeps recognition
 on the Mac when the language allows.
 
-Answers come from one of two providers behind a one-method protocol: a Shortcut
-the user owns, which returns its answer through the clipboard and gets the
-previous clipboard contents put back, or the Anthropic API with a key kept in the
-Keychain. With neither configured the cat answers in character.
+Answers come from one of three providers behind a one-method protocol.
+
+**Apple's on-device model** is the default: the one behind Apple Intelligence,
+free, private and offline, answering in about two seconds. It is reached through
+`src/NekoAppleModel.swift`, the first Swift file in this project —
+`FoundationModels` is Swift-only and ships no headers, so there is no other way
+in. The Intel slice of the universal binary omits it, because the Command Line
+Tools carry the Swift compatibility libraries for arm64 only and Apple
+Intelligence needs Apple silicon regardless; the provider reports itself
+unavailable when the class is missing, which is what already happens on macOS
+older than 26.
+
+The other two: a Shortcut the user owns, which returns its answer through the
+clipboard and gets the previous contents put back, or the Anthropic API with a
+key kept in the Keychain. With none of them available the cat answers in
+character.
+
+Asking for a Shortcut that does not exist used to mean twelve seconds of waiting
+and a vague apology while Shortcuts complained on its own behalf; the name is now
+checked against `shortcuts list` first, and the cat says which name it could not
+find.
+
+The deployment target moves from 10.13 to 11, which is what mixing Swift in
+costs.
 
 Siri itself is not involved, and cannot be: no public API hands a Siri answer
 back to another application. `docs/ask-neko.md` records that, the design, and the

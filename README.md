@@ -75,7 +75,13 @@ permission and works inside the sandbox. The microphone is asked for the first
 time the feature is used and opens only between the keystroke and the end of the
 sentence; recognition stays on this Mac when the language supports it.
 
-Answers come from one of two places, chosen in the preferences:
+Answers come from one of three places, chosen in the preferences:
+
+*Apple Intelligence, on this Mac* is the default: the on-device model, the same
+one behind Apple Intelligence. Nothing leaves the Mac, there is no key and there
+is no bill. It needs macOS 26 or newer on a Mac that supports Apple
+Intelligence, with the feature switched on; when any of that is missing the
+preferences say which.
 
 *A Shortcut of mine* hands the question to a Shortcut you own and shows what it
 puts on the clipboard, restoring whatever was there before. The intelligence is
@@ -87,8 +93,13 @@ the app and nothing of ours goes over the network.
 Keychain and never in the preferences file. Questions go to Anthropic; the
 preferences say so next to the field.
 
-With neither configured the cat answers in character, which is the whole joke
-and needs no setup at all. [docs/ask-neko.md](docs/ask-neko.md) has the design,
+With none of them available the cat answers in character, which is the whole
+joke and needs no setup at all.
+
+The on-device model is reached through `src/NekoAppleModel.swift`, the only Swift
+file in the project: `FoundationModels` ships no headers, so a Swift shim is the
+only way in. The Intel half of the universal binary leaves it out, since Apple
+Intelligence needs Apple silicon anyway. [docs/ask-neko.md](docs/ask-neko.md) has the design,
 including the part that cannot work: Siri has no public API that hands an answer
 back to another application.
 

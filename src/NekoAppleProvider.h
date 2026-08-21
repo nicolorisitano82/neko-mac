@@ -1,0 +1,22 @@
+/* NekoAppleProvider */
+
+#import <Cocoa/Cocoa.h>
+#import "NekoAnswerProvider.h"
+
+/* Apple's on-device model, the one behind Apple Intelligence.
+
+   Nothing leaves the Mac, there is no key and there is no bill. It exists only
+   on macOS 26 and later, on hardware that supports Apple Intelligence, with the
+   feature switched on; when any of that is missing the preferences say which.
+
+   The model itself is reached through NekoAppleModel, the single Swift file in
+   this project — FoundationModels ships no headers, so a Swift shim is the only
+   way in. */
+@interface NekoAppleProvider : NSObject <NekoAnswerProvider>
+{
+	id model;                    /* NekoAppleModel */
+}
+
++ (BOOL)isSupported;
+
+@end

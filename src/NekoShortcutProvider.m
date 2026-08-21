@@ -44,6 +44,66 @@ static const NSTimeInterval NekoShortcutPollInterval = 0.15;
 		: NSLocalizedString(@"Name the Shortcut that answers", nil);
 }
 
+#pragma mark What the user actually has
+
++ (NSArray *)availableShortcutNames
+{
+	static NSArray *cached = nil;
+	static NSDate *asked = nil;
+	/* The list is a process launch; a few seconds of memory is plenty. */
+	if(cached != nil && [asked timeIntervalSinceNow] > -5.0)
+		return cached;
+
+	NSTask *task = [[[NSTask alloc] init] autorelease];
+	[task setLaunchPath:@"/usr/bin/shortcuts"];
+	[task setArguments:[NSArray arrayWithObject:@"list"]];
+	NSPipe *output = [NSPipe pipe];
+	[task setStandardOutput:output];
+	[task setStandardError:[NSPipe pipe]];
+
+	NSData *data = nil;
+	@try {
+		[task launch];
+		data = [[output fileHandleForReading] readDataToEndOfFile];
+		[task waitUntilExit];
+	} @catch (NSException *problem) {
+		return nil;              /* no Shortcuts, or not allowed to ask */
+	}
+	if([task terminationStatus] != 0)
+		return nil;
+
+	NSString *text = [[[NSString alloc] initWithData:data
+	                                       encoding:NSUTF8StringEncoding] autorelease];
+	NSMutableArray *names = [NSMutableArray array];
+	NSEnumerator *e = [[text componentsSeparatedByString:@"\n"] objectEnumerator];
+	NSString *line;
+	while((line = [e nextObject]) != nil) {
+		NSString *name = [line stringByTrimmingCharactersInSet:
+			[NSCharacterSet whitespaceAndNewlineCharacterSet]];
+		if([name length] > 0)
+			[names addObject:name];
+	}
+
+	[cached release];
+	[asked release];
+	cached = [names copy];
+	asked = [[NSDate date] retain];
+	return cached;
+}
+
+- (BOOL)shortcutExists
+{
+	NSArray *names = [NekoShortcutProvider availableShortcutNames];
+	if(names == nil)
+		return YES;              /* cannot tell: let it try */
+	NSEnumerator *e = [names objectEnumerator];
+	NSString *name;
+	while((name = [e nextObject]) != nil)
+		if([name caseInsensitiveCompare:shortcutName] == NSOrderedSame)
+			return YES;
+	return NO;
+}
+
 #pragma mark Asking
 
 - (void)askQuestion:(NSString *)question
@@ -55,6 +115,17 @@ static const NSTimeInterval NekoShortcutPollInterval = 0.15;
 		completion(nil, [NSError errorWithDomain:NekoAskErrorDomain
 		                                    code:NekoAskErrorNotConfigured
 		                                userInfo:nil]);
+		return;
+	}
+
+	/* Asking for a Shortcut that is not there used to mean twelve seconds of
+	   waiting followed by a vague apology, while Shortcuts complained on its
+	   own behalf. Say it at once, and say which name failed. */
+	if(![self shortcutExists]) {
+		completion(nil, [NSError errorWithDomain:NekoAskErrorDomain
+		                                    code:NekoAskErrorNoShortcut
+		                                userInfo:[NSDictionary dictionaryWithObject:shortcutName
+		                                                                    forKey:@"name"]]);
 		return;
 	}
 

@@ -26,11 +26,16 @@
 
 @end
 
-/* Errors both providers raise. */
+/* The voice the cat answers in, shared by every provider that talks to a model
+   so they cannot drift apart. */
+extern NSString * const NekoAnswerInstructions;
+
+/* Errors every provider raises. */
 extern NSString * const NekoAskErrorDomain;
 enum {
 	NekoAskErrorNotConfigured = 1,
 	NekoAskErrorTimedOut,
 	NekoAskErrorNoAnswer,
-	NekoAskErrorTransport
+	NekoAskErrorTransport,
+	NekoAskErrorNoShortcut       /* the named Shortcut does not exist */
 };

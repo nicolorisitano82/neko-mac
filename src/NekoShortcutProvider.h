@@ -27,6 +27,14 @@
 - (id)initWithShortcutName:(NSString *)name;
 - (NSString *)shortcutName;
 
+/* Every Shortcut the user has, by name, or nil when they cannot be listed.
+   Asked of /usr/bin/shortcuts, which works inside the sandbox. */
++ (NSArray *)availableShortcutNames;
+
+/* Whether the named one is among them. YES when the list is unavailable, so a
+   working setup is never blocked by a failed check. */
+- (BOOL)shortcutExists;
+
 /* The URL that runs the Shortcut with the question as its input. */
 - (NSURL *)urlForQuestion:(NSString *)question;
 

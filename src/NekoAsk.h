@@ -4,13 +4,13 @@
 #import "NekoAnswerProvider.h"
 
 @class NekoHotKey, NekoListener, NekoBubble;
-@class NekoShortcutProvider, NekoModelProvider;
+@class NekoShortcutProvider, NekoModelProvider, NekoAppleProvider;
 
 /* NSUserDefaults keys */
 extern NSString * const NekoAskEnabledKey;
 extern NSString * const NekoAskHotKeyCodeKey;
 extern NSString * const NekoAskHotKeyModifiersKey;
-extern NSString * const NekoAskProviderKey;      /* "shortcut" or "model" */
+extern NSString * const NekoAskProviderKey;      /* "apple", "shortcut" or "model" */
 extern NSString * const NekoAskShortcutNameKey;
 extern NSString * const NekoAskSpeakKey;
 
@@ -30,6 +30,7 @@ extern NSString * const NekoAskSpeakKey;
 	NekoBubble *bubble;
 	NekoShortcutProvider *shortcutProvider;
 	NekoModelProvider *modelProvider;
+	NekoAppleProvider *appleProvider;
 	int phase;
 	BOOL hotKeyFailed;
 }
