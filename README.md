@@ -102,6 +102,28 @@ derived by slicing oneko.js' own sheet and matching every cell against the
 sprites already in `Neko.nekochar`. All 32 matched exactly, so the mapping is a
 bijection and any sheet in that format converts unambiguously.
 
+`char2sheet.py` goes the other way, packing a character back into an oneko.js
+sheet, and with `--all` it also writes the TypeScript registry the web version
+uses:
+
+```sh
+python3 tools/char2sheet.py --all Resources/Characters web/assets/oneko \
+        --registry web/src/oneko-characters.ts
+```
+
+Packing `Neko.nekochar` reproduces oneko.js' own sheet pixel for pixel, and
+packing an imported skin reproduces the sheet it was sliced from; `--verify
+SHEET` runs that comparison.
+
+## The web version
+
+`web/` holds a TypeScript port of oneko.js that wears all 28 characters,
+packaged as a standalone Angular component plus a framework-agnostic engine.
+Its sheets and character registry are generated from `Resources/Characters` by
+the command above, so the two versions cannot drift. See
+[web/README.md](web/README.md), and [web/INTEGRATION.md](web/INTEGRATION.md) for
+adding it to an app that already exists.
+
 The `*_togi` states are currently unreachable: they need screen edge detection,
 which this port does not do.
 
