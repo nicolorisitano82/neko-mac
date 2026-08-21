@@ -48,22 +48,35 @@ diagonals fall back to the nearest cardinal direction, the wall-scratching
 so a partial character still animates. Any image format `NSImage` reads works,
 mixed extensions included.
 
-Six characters ship with the app:
+29 characters ship with the app, in two families.
 
-| Character | Where it comes from |
-|---|---|
-| Neko | the original oneko cat |
-| Tora | oneko's tiger; it reuses the cat's masks, oneko has no `bitmasks/tora` |
-| Dog | oneko's dog |
-| Sakura, Tomoyo | oneko's sakura patch. The sprites derive from Card Captor Sakura artwork, so check the situation before redistributing the app with them |
-| Kuro | an inverted recolour of Neko, added to exercise the picker |
+**From oneko itself** — public domain sprites, converted from oneko's 1-bit XBM
+pairs: **Neko** (the original cat), **Tora** (its tiger, which reuses the cat's
+masks because oneko has no `bitmasks/tora`), **Dog**, and **Sakura** and
+**Tomoyo** from oneko's sakura patch. **Kuro** is an inverted recolour of Neko.
 
-### Converting more oneko animals
+**From the oneko.js ecosystem** — 23 skins written for the JavaScript port:
+Ace, Black, Bunny, Calico, Default, Eevee, Esmeralda, Fox, Ghost, Gray, Jess,
+Kina, Lucy, Maia, Maria, Mike, Moka, Silver, Silversky, Snuupy, Spirit,
+Valentine, Vaporwave.
 
-`tools/xbm2char.py` turns an oneko animal into a character folder. oneko stores
-each frame as two 1-bit XBM files — `bitmaps/` says which pixels take the
-foreground colour, `bitmasks/` says which pixels are drawn at all — and the
-script combines them into RGBA PNGs.
+The Sakura and Tomoyo sprites derive from Card Captor Sakura artwork, and the
+oneko.js skins are fan-made sheets from collections that state no licence, so
+check the situation before shipping the app with them. Each `character.plist`
+records where its sprites came from.
+
+Because the menu bar icon is rendered as a template image only when the sprites
+are greyscale, the classic two colour characters adapt to a light or dark menu
+bar while the colourful ones keep their colours.
+
+### Converting more characters
+
+Two converters live in `tools/`, both writing a ready `*.nekochar` folder.
+
+`xbm2char.py` takes an oneko animal. oneko stores each frame as two 1-bit XBM
+files — `bitmaps/` says which pixels take the foreground colour, `bitmasks/`
+says which pixels are drawn at all — and the script combines them into RGBA
+PNGs.
 
 ```sh
 curl -O http://deb.debian.org/debian/pool/main/o/oneko/oneko_1.2.sakura.6.orig.tar.gz
@@ -74,6 +87,20 @@ python3 tools/xbm2char.py oneko-1.2.sakura.6.orig tora Resources/Characters/Tora
 `--verify DIR` compares the conversion against an existing character instead of
 writing files; converting `neko` reproduces `Neko.nekochar` pixel for pixel,
 which is what keeps the bit polarity in the script honest.
+
+`sheet2char.py` takes an oneko.js sprite sheet: one 256x128 PNG holding an 8x4
+grid of 32x32 cells, which is exactly the 32 frames a character needs. Sheets a
+pixel short of that (some community skins are 255x127) are padded rather than
+rejected.
+
+```sh
+python3 tools/sheet2char.py oneko.gif Resources/Characters/Foo.nekochar --name Foo
+```
+
+The cell layout in that script was not read off the oneko.js source: it was
+derived by slicing oneko.js' own sheet and matching every cell against the
+sprites already in `Neko.nekochar`. All 32 matched exactly, so the mapping is a
+bijection and any sheet in that format converts unambiguously.
 
 The `*_togi` states are currently unreachable: they need screen edge detection,
 which this port does not do.

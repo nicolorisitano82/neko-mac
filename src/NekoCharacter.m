@@ -197,11 +197,37 @@ static NSString * const NekoCharacterDirectory = @"Characters";
 	return ticksPerFrame[[self resolvedState:state]];
 }
 
+/* Template rendering keeps the menu bar icon readable in both appearances, but
+   it throws colour away. That suits the classic two colour sprites and ruins
+   the colourful ones, so only greyscale frames become templates. */
+- (BOOL)isGreyscale:(NSImage *)image
+{
+	NSBitmapImageRep *rep = [NSBitmapImageRep imageRepWithData:[image TIFFRepresentation]];
+	if(rep == nil)
+		return NO;
+	NSInteger x, y;
+	for(y = 0; y < [rep pixelsHigh]; y++) {
+		for(x = 0; x < [rep pixelsWide]; x++) {
+			NSColor *colour = [[rep colorAtX:x y:y]
+				colorUsingColorSpaceName:NSCalibratedRGBColorSpace];
+			if(colour == nil || [colour alphaComponent] == 0.0)
+				continue;
+			CGFloat r = [colour redComponent];
+			CGFloat g = [colour greenComponent];
+			CGFloat b = [colour blueComponent];
+			if(fabs(r - g) > 0.02 || fabs(g - b) > 0.02)
+				return NO;
+		}
+	}
+	return YES;
+}
+
 - (NSImage *)menuBarImage
 {
-	NSImage *image = [[[self framesForState:NekoStateStop] objectAtIndex:0] copy];
+	NSImage *frame = [[self framesForState:NekoStateStop] objectAtIndex:0];
+	NSImage *image = [frame copy];
 	[image setSize:NSMakeSize(18.0f, 18.0f)];
-	[image setTemplate:YES];
+	[image setTemplate:[self isGreyscale:frame]];
 	return [image autorelease];
 }
 
