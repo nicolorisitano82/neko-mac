@@ -122,12 +122,6 @@ static const float NekoMaxStopRadius = 200.0f;
 	                  keyEquivalent:@""];
 	[askItem setTarget:self];
 
-	/* The switch itself, one click away rather than inside a preferences tab. */
-	askEnableItem = [menu addItemWithTitle:NekoLocalized(@"Enable Ask Neko")
-	                                action:@selector(toggleAskEnabled:)
-	                         keyEquivalent:@""];
-	[askEnableItem setTarget:self];
-
 	[menu addItem:[NSMenuItem separatorItem]];
 
 	item = [menu addItemWithTitle:NekoLocalized(@"About Neko")
@@ -161,28 +155,29 @@ static const float NekoMaxStopRadius = 200.0f;
 	[button setToolTip:@"Neko"];
 }
 
-/* Shown with its keystroke, and dimmed when the feature is off, so the menu
-   explains the feature rather than hiding it. */
+/* One slot that changes identity: the question when the feature is on, the way
+   to turn it on when it is off. A greyed out item that does nothing is noise,
+   and a checkmark would hide the five settings behind it. */
 - (void)updateAskItem
 {
 	NekoAsk *ask = [NekoAsk sharedAsk];
-	BOOL on = [ask isEnabled];
-	[askItem setEnabled:on];
-	[askItem setTitle:on
-		? [NSString stringWithFormat:@"%@  (%@)", NekoLocalized(@"Ask Neko"),
-			[ask hotKeyDisplayName]]
-		: NekoLocalized(@"Ask Neko")];
-	[askEnableItem setState:on ? NSControlStateValueOn : NSControlStateValueOff];
+	if([ask isEnabled]) {
+		[askItem setTitle:[NSString stringWithFormat:@"%@  (%@)",
+			NekoLocalized(@"Ask Neko"), [ask hotKeyDisplayName]]];
+		[askItem setAction:@selector(askNeko:)];
+	} else {
+		/* The ellipsis is the promise that a window opens. */
+		[askItem setTitle:NekoLocalized(@"Set up Ask Neko…")];
+		[askItem setAction:@selector(showAskPreferences:)];
+	}
+	[askItem setTarget:self];
+	[askItem setEnabled:YES];
 }
 
-- (void)toggleAskEnabled:(id)sender
+- (void)showAskPreferences:(id)sender
 {
-	NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
-	[defaults setBool:![[NekoAsk sharedAsk] isEnabled] forKey:NekoAskEnabledKey];
-	[[NekoAsk sharedAsk] applySettings];
-	[self updateAskItem];
-	if(prefsPanel != nil)
-		[self syncAskControls];
+	[self showPreferences:sender];
+	[prefsTabs selectTabViewItemAtIndex:1];
 }
 
 - (void)askNeko:(id)sender
@@ -452,6 +447,7 @@ static const float NekoMaxStopRadius = 200.0f;
 	NSTabView *tabs = [[NSTabView alloc]
 		initWithFrame:NSInsetRect([[prefsPanel contentView] bounds], 8.0f, 8.0f)];
 	[[prefsPanel contentView] addSubview:tabs];
+	prefsTabs = tabs;            /* to open straight onto a tab */
 
 	NSView *content = [[[NSView alloc]
 		initWithFrame:NSMakeRect(0.0f, 0.0f, 470.0f, 340.0f)] autorelease];

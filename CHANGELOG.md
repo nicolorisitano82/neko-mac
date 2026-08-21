@@ -4,9 +4,14 @@
 
 ### Ask Neko
 
-Off by default, switched on from the menu bar or its own preferences tab: ⌃⌥N,
-a question out loud, an answer in a bubble beside the cat, which holds still
-while you talk to it.
+Off by default: ⌃⌥N, a question out loud, an answer in a bubble beside the cat,
+which holds still while you talk to it.
+
+One slot in the menu carries it, changing identity rather than greying out:
+**Set up Ask Neko…** opens its preferences tab while the feature is off, and
+becomes **Ask Neko (⌃⌥N)** once it is on. A disabled item that does nothing
+teaches nobody anything, and a checkmark would have hidden the five settings
+behind it.
 
 The bubble used to cut the end off short answers. It measured the text with
 `boundingRectWithSize:` and drew it in an `NSTextField`, which keeps insets of
