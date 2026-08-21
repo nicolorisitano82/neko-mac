@@ -19,6 +19,7 @@
 	
 	float speed, scale, stopRadius;
 	BOOL idleSleep;
+	BOOL held;                   /* frozen mid-conversation */
 	BOOL windowsMode;            /* lives on window tops instead of chasing */
 	
 	BOOL wanderEnabled;
@@ -34,5 +35,11 @@
 
 /* Reads the current preferences and applies them to the cat. */
 - (void)applySettings;
+
+/* Stops chasing and shows one pose, for as long as something more important
+   than the pointer is going on. The frames still animate. */
+- (void)holdWithState:(NekoState)state;
+- (void)releaseHold;
+- (BOOL)isHeld;
 
 @end

@@ -130,6 +130,26 @@
 	    || nekoState == NekoStateDLMove || nekoState == NekoStateDRMove;
 }
 
+#pragma mark Being held
+
+- (void)holdWithState:(NekoState)state
+{
+	held = YES;
+	[self setStateTo:state];
+	[self startTimer];           /* the frames keep moving even while it waits */
+}
+
+- (void)releaseHold
+{
+	held = NO;
+	restedTicks = 0;
+}
+
+- (BOOL)isHeld
+{
+	return held;
+}
+
 #pragma mark Wandering
 
 /* Somewhere else on the desk, a few sprites away, pointing away from wherever
@@ -492,6 +512,9 @@
 	
 	[self advanceClock];
 	
+	if(held)
+		goto breakout;           /* being asked a question outranks the pointer */
+	
     if(nekoState == NekoStateStop) {
 		if (wall != NekoStateCount && isNekoMoveStart) {
 			[self setStateTo:wall];    /* pressed against something, claw at it */
@@ -587,7 +610,7 @@
 	/* Only the window dweller is pulled downwards: a cat chasing the pointer
 	   rests wherever it stopped, and dragging it to the floor there sent it
 	   into a loop of arriving, falling and setting off again. */
-	if (windowsMode && ![self isWalking]) {
+	if (windowsMode && !held && ![self isWalking]) {
 		float floor = [self floorUnderCentre:x + [self frame].size.width / 2.0f
 		                               feet:previousY];
 		if (y > floor)

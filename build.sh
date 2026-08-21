@@ -27,8 +27,12 @@ ditto --noextattr --noqtn Resources "$APP/Contents/Resources"
 clang -arch arm64 -arch x86_64 -fno-objc-arc -O2 \
 	-isysroot "$SDK" -mmacosx-version-min=10.13 \
 	-Wno-deprecated-declarations \
-	-framework Cocoa -framework ServiceManagement -o "$APP/Contents/MacOS/Neko" \
-	src/main.m src/MyView.m src/MyPanel.m src/NekoCharacter.m src/NekoController.m
+	-framework Cocoa -framework ServiceManagement -framework Carbon \
+	-framework Security -framework AVFoundation -weak_framework Speech \
+	-o "$APP/Contents/MacOS/Neko" \
+	src/main.m src/MyView.m src/MyPanel.m src/NekoCharacter.m src/NekoController.m \
+	src/NekoAnswerProvider.m src/NekoShortcutProvider.m src/NekoModelProvider.m \
+	src/NekoHotKey.m src/NekoListener.m src/NekoBubble.m src/NekoAsk.m
 
 xattr -cr "$APP"
 codesign --sign - --entitlements Neko.entitlements --force "$APP"

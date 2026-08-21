@@ -14,6 +14,7 @@ cat icon for
   size (1× or 2×), which of the two behaviours it follows, whether the cat falls
   asleep when the mouse sits still, whether it wanders off on its own, and
   whether it opens at login
+* **Ask Neko** (⌃⌥N) — hold a question out loud, get an answer in a bubble
 * **About Neko**
 * **Quit Neko** (⌘Q)
 
@@ -61,6 +62,35 @@ before the setting existed. The step is capped by whatever distance is left over
 the ring, so the cat settles on it instead of stepping across and jittering
 back; as in the original, it only bothers getting up once the pointer is more
 than half a step beyond the ring.
+
+## Ask Neko
+
+Off by default. Turned on in its own preferences tab, it gives the cat a
+keystroke — ⌃⌥N by default: press it, ask something out loud, and the answer
+appears in a bubble beside the cat, which stops chasing the pointer while you
+talk to it.
+
+The keystroke is registered rather than monitored, so it costs no Accessibility
+permission and works inside the sandbox. The microphone is asked for the first
+time the feature is used and opens only between the keystroke and the end of the
+sentence; recognition stays on this Mac when the language supports it.
+
+Answers come from one of two places, chosen in the preferences:
+
+*A Shortcut of mine* hands the question to a Shortcut you own and shows what it
+puts on the clipboard, restoring whatever was there before. The intelligence is
+yours to choose: Apple Intelligence's *Use Model* action, which can escalate to
+ChatGPT, a ChatGPT action, or anything else that ends in text. No key lives in
+the app and nothing of ours goes over the network.
+
+*Claude, directly* calls the Anthropic API with a key you paste once, kept in the
+Keychain and never in the preferences file. Questions go to Anthropic; the
+preferences say so next to the field.
+
+With neither configured the cat answers in character, which is the whole joke
+and needs no setup at all. [docs/ask-neko.md](docs/ask-neko.md) has the design,
+including the part that cannot work: Siri has no public API that hands an answer
+back to another application.
 
 ## Characters
 

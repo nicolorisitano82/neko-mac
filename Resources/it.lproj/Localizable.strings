@@ -28,3 +28,36 @@
 "Follows the cursor" = "Segue il cursore";
 "Lives on the Dock" = "Vive sul Dock";
 "Only while following the cursor" = "Solo mentre segue il cursore";
+
+/* Ask Neko */
+"Ask Neko" = "Chiedi a Neko";
+"Pet" = "Gatto";
+"Let me ask Neko questions out loud" = "Posso fare domande a voce a Neko";
+"Keystroke:" = "Scorciatoia:";
+"Answers from:" = "Risposte da:";
+"Shortcut name:" = "Nome scorciatoia:";
+"API key:" = "Chiave API:";
+"A Shortcut of mine" = "Una mia Scorciatoia";
+"A Shortcut" = "Una Scorciatoia";
+"Claude, directly" = "Claude, direttamente";
+"Read the answer aloud" = "Leggi la risposta ad alta voce";
+"The microphone is asked for the first time you use this, never before." = "Il microfono viene chiesto al primo uso, non prima.";
+"Another application already owns that keystroke. Pick a different one." = "Quella scorciatoia è già di un’altra applicazione. Scegline un’altra.";
+"Press %@ and ask. Neko listens until you stop talking." = "Premi %@ e chiedi. Neko ascolta finché parli.";
+"Name the Shortcut that answers" = "Indica la Scorciatoia che risponde";
+"Paste an API key" = "Incolla una chiave API";
+"Listening…" = "Ascolto…";
+"My ears do not work on this Mac." = "Le mie orecchie non funzionano su questo Mac.";
+"You have not let me listen. Microphone, in System Settings." = "Non mi hai dato il permesso di ascoltare. Microfono, in Impostazioni di Sistema.";
+"Then I shall keep quiet." = "Allora resto zitto.";
+"I could not hear anything at all." = "Non ho sentito proprio nulla.";
+"I did not catch that." = "Non ho capito.";
+"I have no answer for that." = "Non ho una risposta.";
+"Whatever I asked never answered." = "Chi ho interpellato non ha risposto.";
+"Neko is about to ask for the microphone" = "Neko sta per chiedere il microfono";
+"It listens only while you hold the conversation, from the keystroke until you stop talking. Nothing is recorded and nothing is kept." = "Ascolta solo durante la conversazione, dalla scorciatoia fino a quando smetti di parlare. Niente viene registrato e niente viene conservato.";
+"Continue" = "Continua";
+"Not now" = "Non ora";
+"I am a cat. Ask me again once you have set up an answer." = "Sono un gatto. Richiedimelo quando avrai preparato una risposta.";
+"No idea. I mostly chase the cursor." = "Non ne ho idea. Io inseguo cursori.";
+"Ask the Shortcut. I have not been given one." = "Chiedi alla Scorciatoia. Non me ne hanno data una.";

@@ -28,3 +28,36 @@
 "Follows the cursor" = "Suit le curseur";
 "Lives on the Dock" = "Vit sur le Dock";
 "Only while following the cursor" = "Seulement en suivant le curseur";
+
+/* Ask Neko */
+"Ask Neko" = "Demander à Neko";
+"Pet" = "Chat";
+"Let me ask Neko questions out loud" = "Je peux poser des questions à voix haute";
+"Keystroke:" = "Raccourci :";
+"Answers from:" = "Réponses de :";
+"Shortcut name:" = "Nom du raccourci :";
+"API key:" = "Clé API :";
+"A Shortcut of mine" = "Un de mes raccourcis";
+"A Shortcut" = "Un raccourci";
+"Claude, directly" = "Claude, directement";
+"Read the answer aloud" = "Lire la réponse à voix haute";
+"The microphone is asked for the first time you use this, never before." = "Le micro est demandé à la première utilisation, jamais avant.";
+"Another application already owns that keystroke. Pick a different one." = "Ce raccourci appartient déjà à une autre application. Choisissez-en un autre.";
+"Press %@ and ask. Neko listens until you stop talking." = "Appuyez sur %@ et parlez. Neko écoute jusqu’à ce que vous vous taisiez.";
+"Name the Shortcut that answers" = "Indiquez le raccourci qui répond";
+"Paste an API key" = "Collez une clé API";
+"Listening…" = "J’écoute…";
+"My ears do not work on this Mac." = "Mes oreilles ne marchent pas sur ce Mac.";
+"You have not let me listen. Microphone, in System Settings." = "Vous ne m’avez pas laissé écouter. Micro, dans Réglages Système.";
+"Then I shall keep quiet." = "Alors je me tais.";
+"I could not hear anything at all." = "Je n’ai rien entendu du tout.";
+"I did not catch that." = "Je n’ai pas compris.";
+"I have no answer for that." = "Je n’ai pas de réponse.";
+"Whatever I asked never answered." = "Ce que j’ai interrogé n’a jamais répondu.";
+"Neko is about to ask for the microphone" = "Neko va demander le micro";
+"It listens only while you hold the conversation, from the keystroke until you stop talking. Nothing is recorded and nothing is kept." = "Il n’écoute que pendant la conversation, du raccourci jusqu’à ce que vous vous taisiez. Rien n’est enregistré, rien n’est conservé.";
+"Continue" = "Continuer";
+"Not now" = "Pas maintenant";
+"I am a cat. Ask me again once you have set up an answer." = "Je suis un chat. Redemandez quand une réponse sera configurée.";
+"No idea. I mostly chase the cursor." = "Aucune idée. Moi, je poursuis le curseur.";
+"Ask the Shortcut. I have not been given one." = "Demandez au raccourci. On ne m’en a pas donné.";

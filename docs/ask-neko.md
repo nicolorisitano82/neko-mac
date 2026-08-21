@@ -3,8 +3,9 @@
 An optional mode: a keystroke, you ask a question out loud, and the answer
 arrives in a speech bubble beside the cat, as if the cat had answered.
 
-Nothing here is implemented yet. This document is the plan, and the three
-assumptions it rests on were measured inside the sandboxed app first:
+**Built.** This document was the plan; what shipped follows it, with the
+differences noted in the last section. The three assumptions it rests on were
+measured inside the sandboxed app before any code was written:
 
 | Checked | Result |
 |---|---|
@@ -235,6 +236,38 @@ Phase 0, before any of it: the tab split in the preferences window.
 
 Phases 1 and 2 are worth having on their own: a cat that hears you and answers
 something in character is already the whole joke.
+
+## What shipped, and where it differs from this plan
+
+| Piece | File |
+|---|---|
+| The keystroke | `src/NekoHotKey.m` — Carbon registration, no permission |
+| The bubble | `src/NekoBubble.m` — non-activating panel, flips and clamps to the screen |
+| Speech to text | `src/NekoListener.m` — `SFSpeechRecognizer`, weakly linked, on device when the language allows |
+| The two providers | `src/NekoShortcutProvider.m`, `src/NekoModelProvider.m` behind `NekoAnswerProvider.h` |
+| The sequence | `src/NekoAsk.m` — hotkey, states, holding the cat still, canned replies |
+| Preferences | the `Ask Neko` tab in `src/NekoController.m` |
+
+Three deliberate differences:
+
+- **The keystroke is a short list, not a recorder.** Four combinations that
+  collide with nothing, rather than a field that captures any key. Storing an
+  arbitrary combination already works — `NekoAskHotKeyCode` and
+  `NekoAskHotKeyModifiers` — so a recorder can be added later without touching
+  anything else.
+- **Escape does not dismiss the bubble.** A panel that never becomes key cannot
+  see Escape, and monitoring keys globally would mean asking for Accessibility,
+  which the whole design avoids. The keystroke itself cancels, and clicking the
+  bubble dismisses it.
+- **The answer arrives whole**, not streamed. A cat that types word by word is a
+  different feature, and the bubble would resize on every token.
+
+One bug worth remembering, found by the integration test: `NekoAsk` used to ask
+`NekoController` for the panel while still inside its own `init`, and the
+controller asks `NekoAsk` for the keystroke while still inside *its* init. Two
+singletons, each waiting for the other, recursing until the stack gave out —
+at launch, not just under test. `NekoAsk` no longer touches the controller
+before it is asked to do something.
 
 ## Not for the web version
 

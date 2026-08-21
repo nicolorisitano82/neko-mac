@@ -1,5 +1,28 @@
 # Changelog
 
+## Unreleased
+
+### Ask Neko
+
+Off by default, in its own preferences tab: ⌃⌥N, a question out loud, an answer
+in a bubble beside the cat, which holds still while you talk to it.
+
+The keystroke is a Carbon hotkey registration rather than an event monitor,
+which is why it needs no Accessibility permission and works in the sandbox. The
+microphone is requested the first time the feature is used, after a sheet that
+says what is about to happen, and it is open only between the keystroke and the
+end of the sentence. `SFSpeechRecognizer` is weakly linked and keeps recognition
+on the Mac when the language allows.
+
+Answers come from one of two providers behind a one-method protocol: a Shortcut
+the user owns, which returns its answer through the clipboard and gets the
+previous clipboard contents put back, or the Anthropic API with a key kept in the
+Keychain. With neither configured the cat answers in character.
+
+Siri itself is not involved, and cannot be: no public API hands a Siri answer
+back to another application. `docs/ask-neko.md` records that, the design, and the
+three places where the implementation deliberately differs from it.
+
 ## 1.6 — 2026-08-21
 
 ### The cat claws at what it cannot pass

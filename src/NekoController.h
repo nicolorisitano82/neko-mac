@@ -2,6 +2,7 @@
 
 #import <Cocoa/Cocoa.h>
 #import "NekoCharacter.h"
+#import "NekoAsk.h"
 
 @class MyPanel;
 
@@ -23,6 +24,7 @@ extern NSString * const NekoSettingsDidChangeNotification;
 	MyPanel *panel;              /* not retained, owned by the nib */
 	NSStatusItem *statusItem;
 	NSMenuItem *pauseItem;
+	NSMenuItem *askItem;
 	NSMenu *characterMenu;
 	NSPanel *prefsPanel;
 	NSTextField *speedField;
@@ -34,6 +36,13 @@ extern NSString * const NekoSettingsDidChangeNotification;
 	NSButton *sleepCheck;
 	NSButton *wanderCheck;
 	NSPopUpButton *behaviourPopUp;
+	NSButton *askCheck;
+	NSPopUpButton *askHotKeyPopUp;
+	NSPopUpButton *askProviderPopUp;
+	NSTextField *askShortcutField;
+	NSSecureTextField *askKeyField;
+	NSButton *askSpeakCheck;
+	NSTextField *askStatusField;
 	NSButton *loginCheck;
 }
 

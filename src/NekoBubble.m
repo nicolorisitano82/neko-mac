@@ -1,0 +1,213 @@
+#import "NekoBubble.h"
+
+static const float NekoBubbleMaxWidth = 420.0f;
+static const float NekoBubblePadding = 12.0f;
+static const float NekoBubbleTail = 9.0f;
+static const float NekoBubbleGap = 6.0f;
+static const float NekoBubbleRadius = 10.0f;
+
+/* Draws the rounded body and the tail. The tail points down when the bubble sits
+   above the cat, which is the usual case, and up when it had to go below. */
+@interface NekoBubbleView : NSView
+{
+	BOOL tailAtBottom;
+	float tailOffset;            /* from the centre, to keep it on the cat */
+}
+- (void)setTailAtBottom:(BOOL)atBottom offset:(float)offset;
+@end
+
+@implementation NekoBubbleView
+
+- (void)setTailAtBottom:(BOOL)atBottom offset:(float)offset
+{
+	tailAtBottom = atBottom;
+	tailOffset = offset;
+	[self setNeedsDisplay:YES];
+}
+
+- (BOOL)isOpaque
+{
+	return NO;
+}
+
+- (void)drawRect:(NSRect)dirty
+{
+	NSRect body = [self bounds];
+	if(tailAtBottom)
+		body.origin.y += NekoBubbleTail;
+	body.size.height -= NekoBubbleTail;
+	body = NSInsetRect(body, 0.5f, 0.5f);
+
+	NSBezierPath *path = [NSBezierPath bezierPathWithRoundedRect:body
+	                                                    xRadius:NekoBubbleRadius
+	                                                    yRadius:NekoBubbleRadius];
+
+	float centre = NSMidX(body) + tailOffset;
+	centre = MIN(MAX(centre, NSMinX(body) + NekoBubbleRadius + NekoBubbleTail),
+	             NSMaxX(body) - NekoBubbleRadius - NekoBubbleTail);
+	NSBezierPath *tail = [NSBezierPath bezierPath];
+	if(tailAtBottom) {
+		[tail moveToPoint:NSMakePoint(centre - NekoBubbleTail, NSMinY(body) + 0.5f)];
+		[tail lineToPoint:NSMakePoint(centre, NSMinY(body) - NekoBubbleTail)];
+		[tail lineToPoint:NSMakePoint(centre + NekoBubbleTail, NSMinY(body) + 0.5f)];
+	} else {
+		[tail moveToPoint:NSMakePoint(centre - NekoBubbleTail, NSMaxY(body) - 0.5f)];
+		[tail lineToPoint:NSMakePoint(centre, NSMaxY(body) + NekoBubbleTail)];
+		[tail lineToPoint:NSMakePoint(centre + NekoBubbleTail, NSMaxY(body) - 0.5f)];
+	}
+	[tail closePath];
+	[path appendBezierPath:tail];
+
+	[[NSColor windowBackgroundColor] setFill];
+	[path fill];
+	/* separatorColor is 10.14, and this project still builds for 10.13. */
+	[[[NSColor labelColor] colorWithAlphaComponent:0.20f] setStroke];
+	[path setLineWidth:1.0f];
+	[path stroke];
+}
+
+- (void)mouseDown:(NSEvent *)event
+{
+	[[self window] performSelector:@selector(dismissByClick)];
+}
+
+@end
+
+@implementation NekoBubble
+
+- (id)init
+{
+	self = [super initWithContentRect:NSMakeRect(0.0f, 0.0f, 200.0f, 60.0f)
+	                       styleMask:(NSWindowStyleMaskBorderless
+	                                  | NSWindowStyleMaskNonactivatingPanel)
+	                         backing:NSBackingStoreBuffered
+	                           defer:NO];
+	[self setOpaque:NO];
+	[self setBackgroundColor:[NSColor clearColor]];
+	[self setHasShadow:YES];
+	[self setLevel:NSStatusWindowLevel + 1];
+	[self setCanHide:NO];
+	[self setHidesOnDeactivate:NO];
+	[self setBecomesKeyOnlyIfNeeded:YES];
+	[self setContentView:[[[NekoBubbleView alloc] initWithFrame:NSZeroRect] autorelease]];
+
+	label = [[NSTextField alloc] initWithFrame:NSZeroRect];
+	[label setBezeled:NO];
+	[label setDrawsBackground:NO];
+	[label setEditable:NO];
+	[label setSelectable:NO];
+	[label setLineBreakMode:NSLineBreakByWordWrapping];
+	[[label cell] setWraps:YES];
+	[[label cell] setUsesSingleLineMode:NO];
+	[[self contentView] addSubview:label];
+	return self;
+}
+
+- (void)dealloc
+{
+	[dismissal invalidate];
+	[label release];
+	[super dealloc];
+}
+
+- (BOOL)canBecomeKeyWindow
+{
+	return NO;                   /* never steal the focus */
+}
+
+- (void)setDismissalTarget:(id)target action:(SEL)action
+{
+	owner = target;
+	dismissedAction = action;
+}
+
++ (NSTimeInterval)readingTimeFor:(NSString *)text
+{
+	/* Six seconds, plus a little for every character, capped so a wall of text
+	   does not stay up for a minute. */
+	return MIN(6.0 + 0.04 * (double)[text length], 30.0);
+}
+
+- (void)showText:(NSString *)text
+        nearRect:(NSRect)catFrame
+    dismissAfter:(NSTimeInterval)seconds
+{
+	NSFont *font = [NSFont systemFontOfSize:0.0];
+	[label setFont:font];
+	[label setStringValue:(text ?: @"")];
+
+	NSRect measured = [(text ?: @"") boundingRectWithSize:
+			NSMakeSize(NekoBubbleMaxWidth - 2.0f * NekoBubblePadding, 10000.0f)
+		options:(NSStringDrawingUsesLineFragmentOrigin | NSStringDrawingUsesFontLeading)
+		attributes:[NSDictionary dictionaryWithObject:font forKey:NSFontAttributeName]];
+
+	float textWidth = ceilf(measured.size.width);
+	float textHeight = ceilf(measured.size.height);
+	float width = MIN(textWidth + 2.0f * NekoBubblePadding, NekoBubbleMaxWidth);
+	float height = textHeight + 2.0f * NekoBubblePadding + NekoBubbleTail;
+
+	NSScreen *screen = [self screenForRect:catFrame];
+	NSRect visible = [screen visibleFrame];
+
+	/* Above the cat by default, below when there is no room up there. */
+	BOOL above = NSMaxY(catFrame) + NekoBubbleGap + height <= NSMaxY(visible);
+	float y = above ? NSMaxY(catFrame) + NekoBubbleGap
+	                : NSMinY(catFrame) - NekoBubbleGap - height;
+	float x = NSMidX(catFrame) - width / 2.0f;
+	x = MIN(MAX(x, NSMinX(visible) + 4.0f), NSMaxX(visible) - width - 4.0f);
+	y = MIN(MAX(y, NSMinY(visible) + 4.0f), NSMaxY(visible) - height - 4.0f);
+
+	[self setFrame:NSMakeRect(x, y, width, height) display:NO];
+	[(NekoBubbleView *)[self contentView] setTailAtBottom:above
+	                                               offset:NSMidX(catFrame) - (x + width / 2.0f)];
+	[label setFrame:NSMakeRect(NekoBubblePadding,
+	                           (above ? NekoBubbleTail : 0.0f) + NekoBubblePadding,
+	                           width - 2.0f * NekoBubblePadding, textHeight)];
+
+	[self orderFront:nil];
+
+	[dismissal invalidate];
+	dismissal = nil;
+	if(seconds > 0.0)
+		dismissal = [NSTimer scheduledTimerWithTimeInterval:seconds
+		                                            target:self
+		                                          selector:@selector(hideByTimer:)
+		                                          userInfo:nil
+		                                           repeats:NO];
+}
+
+- (NSScreen *)screenForRect:(NSRect)rect
+{
+	NSEnumerator *e = [[NSScreen screens] objectEnumerator];
+	NSScreen *screen;
+	while((screen = [e nextObject]) != nil)
+		if(NSIntersectsRect([screen frame], rect))
+			return screen;
+	return [NSScreen mainScreen];
+}
+
+- (void)hideByTimer:(NSTimer *)timer
+{
+	[self hide];
+}
+
+- (void)dismissByClick
+{
+	[self hide];
+	if(owner != nil && dismissedAction != NULL)
+		[owner performSelector:dismissedAction withObject:self];
+}
+
+- (void)hide
+{
+	[dismissal invalidate];
+	dismissal = nil;
+	[self orderOut:nil];
+}
+
+- (BOOL)isShowing
+{
+	return [self isVisible];
+}
+
+@end

@@ -28,8 +28,12 @@
 	<string>Public domain</string>
 	<key>NSMainNibFile</key>
 	<string>MainMenu</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>Neko listens only while you are asking it a question, from the keystroke until you stop talking. Nothing is recorded.</string>
 	<key>NSPrincipalClass</key>
 	<string>NSApplication</string>
+	<key>NSSpeechRecognitionUsageDescription</key>
+	<string>What you ask Neko is turned into text so that it can be answered. Recognition stays on this Mac when the language allows it.</string>
 	<key>NSUIElement</key>
 	<string>1</string>
 </dict>

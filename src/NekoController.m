@@ -1,4 +1,6 @@
 #import "NekoController.h"
+#import "NekoHotKey.h"
+#import "NekoModelProvider.h"
 
 NSString * const NekoCharacterKey  = @"NekoCharacter";
 NSString * const NekoSpeedKey      = @"NekoSpeed";
@@ -114,6 +116,13 @@ static const float NekoMaxStopRadius = 200.0f;
 
 	[menu addItem:[NSMenuItem separatorItem]];
 
+	askItem = [menu addItemWithTitle:NekoLocalized(@"Ask Neko")
+	                         action:@selector(askNeko:)
+	                  keyEquivalent:@""];
+	[askItem setTarget:self];
+
+	[menu addItem:[NSMenuItem separatorItem]];
+
 	item = [menu addItemWithTitle:NekoLocalized(@"About Neko")
 	                       action:@selector(showAbout:)
 	                keyEquivalent:@""];
@@ -127,6 +136,7 @@ static const float NekoMaxStopRadius = 200.0f;
 	[statusItem setMenu:menu];
 	[menu release];
 
+	[self updateAskItem];
 	[self updateStatusItemImage];
 	[self updatePauseItemTitle];
 }
@@ -142,6 +152,24 @@ static const float NekoMaxStopRadius = 200.0f;
 	else
 		[button setTitle:@"Neko"];  /* the sprites are missing, stay visible */
 	[button setToolTip:@"Neko"];
+}
+
+/* Shown with its keystroke, and dimmed when the feature is off, so the menu
+   explains the feature rather than hiding it. */
+- (void)updateAskItem
+{
+	NekoAsk *ask = [NekoAsk sharedAsk];
+	BOOL on = [ask isEnabled];
+	[askItem setEnabled:on];
+	[askItem setTitle:on
+		? [NSString stringWithFormat:@"%@  (%@)", NekoLocalized(@"Ask Neko"),
+			[ask hotKeyDisplayName]]
+		: NekoLocalized(@"Ask Neko")];
+}
+
+- (void)askNeko:(id)sender
+{
+	[[NekoAsk sharedAsk] toggle:sender];
 }
 
 - (void)updatePauseItemTitle
@@ -337,6 +365,7 @@ static const float NekoMaxStopRadius = 200.0f;
 	[self buildCharacterMenu];
 	[self updateStatusItemImage];
 	[self updatePauseItemTitle];
+	[self updateAskItem];
 	[[NSNotificationCenter defaultCenter]
 		postNotificationName:NekoSettingsDidChangeNotification object:self];
 }
@@ -391,7 +420,7 @@ static const float NekoMaxStopRadius = 200.0f;
 - (void)buildPreferencesPanel
 {
 	prefsPanel = [[NSPanel alloc]
-		initWithContentRect:NSMakeRect(0.0f, 0.0f, 470.0f, 340.0f)
+		initWithContentRect:NSMakeRect(0.0f, 0.0f, 494.0f, 390.0f)
 		          styleMask:(NSWindowStyleMaskTitled | NSWindowStyleMaskClosable)
 		            backing:NSBackingStoreBuffered
 		              defer:NO];
@@ -400,7 +429,26 @@ static const float NekoMaxStopRadius = 200.0f;
 	[prefsPanel setHidesOnDeactivate:NO];
 	[prefsPanel center];
 
-	NSView *content = [prefsPanel contentView];
+	/* Two tabs: the cat, and the conversation. One window's worth of controls
+	   each, rather than one window with two windows' worth. */
+	NSTabView *tabs = [[NSTabView alloc]
+		initWithFrame:NSInsetRect([[prefsPanel contentView] bounds], 8.0f, 8.0f)];
+	[[prefsPanel contentView] addSubview:tabs];
+
+	NSView *content = [[[NSView alloc]
+		initWithFrame:NSMakeRect(0.0f, 0.0f, 470.0f, 340.0f)] autorelease];
+	NSTabViewItem *petTab = [[[NSTabViewItem alloc] initWithIdentifier:@"pet"] autorelease];
+	[petTab setLabel:NekoLocalized(@"Pet")];
+	[petTab setView:content];
+	[tabs addTabViewItem:petTab];
+
+	NSView *askContent = [[[NSView alloc]
+		initWithFrame:NSMakeRect(0.0f, 0.0f, 470.0f, 340.0f)] autorelease];
+	NSTabViewItem *askTab = [[[NSTabViewItem alloc] initWithIdentifier:@"ask"] autorelease];
+	[askTab setLabel:NekoLocalized(@"Ask Neko")];
+	[askTab setView:askContent];
+	[tabs addTabViewItem:askTab];
+	[tabs release];
 
 	/* Behaviour */
 	[content addSubview:[self labelWithString:NekoLocalized(@"Behaviour:")
@@ -523,8 +571,210 @@ static const float NekoMaxStopRadius = 200.0f;
 	[content addSubview:reset];
 	[reset release];
 
+	[self buildAskTab:askContent];
 	[self updateWanderAvailability];
 	[self updateValueFields];
+}
+
+/* The conversation tab. Everything below the switch is disabled until the
+   switch is on, so the shape of the feature is visible before turning it on. */
+- (void)buildAskTab:(NSView *)content
+{
+	NekoAsk *ask = [NekoAsk sharedAsk];
+
+	askCheck = [[NSButton alloc] initWithFrame:NSMakeRect(20.0f, 300.0f, 400.0f, 18.0f)];
+	[askCheck setButtonType:NSButtonTypeSwitch];
+	[askCheck setTitle:NekoLocalized(@"Let me ask Neko questions out loud")];
+	[askCheck setState:[ask isEnabled] ? NSControlStateValueOn : NSControlStateValueOff];
+	[askCheck setTarget:self];
+	[askCheck setAction:@selector(takeAskEnabledFrom:)];
+	[content addSubview:askCheck];
+	[askCheck release];
+
+	[content addSubview:[self labelWithString:NekoLocalized(@"Keystroke:")
+	                                    frame:NSMakeRect(20.0f, 262.0f, 125.0f, 17.0f)]];
+	askHotKeyPopUp = [[NSPopUpButton alloc]
+		initWithFrame:NSMakeRect(152.0f, 257.0f, 160.0f, 26.0f) pullsDown:NO];
+	NSEnumerator *e = [[self hotKeyChoices] objectEnumerator];
+	NSArray *choice;
+	while((choice = [e nextObject]) != nil)
+		[askHotKeyPopUp addItemWithTitle:[NekoHotKey
+			displayNameForKeyCode:[[choice objectAtIndex:0] unsignedShortValue]
+			            modifiers:[[choice objectAtIndex:1] unsignedIntegerValue]]];
+	[askHotKeyPopUp setTarget:self];
+	[askHotKeyPopUp setAction:@selector(takeAskHotKeyFrom:)];
+	[content addSubview:askHotKeyPopUp];
+	[askHotKeyPopUp release];
+
+	[content addSubview:[self labelWithString:NekoLocalized(@"Answers from:")
+	                                    frame:NSMakeRect(20.0f, 222.0f, 125.0f, 17.0f)]];
+	askProviderPopUp = [[NSPopUpButton alloc]
+		initWithFrame:NSMakeRect(152.0f, 217.0f, 220.0f, 26.0f) pullsDown:NO];
+	[askProviderPopUp addItemWithTitle:NekoLocalized(@"A Shortcut of mine")];
+	[askProviderPopUp addItemWithTitle:NekoLocalized(@"Claude, directly")];
+	[askProviderPopUp setTarget:self];
+	[askProviderPopUp setAction:@selector(takeAskProviderFrom:)];
+	[content addSubview:askProviderPopUp];
+	[askProviderPopUp release];
+
+	[content addSubview:[self labelWithString:NekoLocalized(@"Shortcut name:")
+	                                    frame:NSMakeRect(20.0f, 182.0f, 125.0f, 17.0f)]];
+	askShortcutField = [[NSTextField alloc] initWithFrame:NSMakeRect(152.0f, 179.0f, 220.0f, 22.0f)];
+	[askShortcutField setTarget:self];
+	[askShortcutField setAction:@selector(takeAskShortcutNameFrom:)];
+	[content addSubview:askShortcutField];
+	[askShortcutField release];
+
+	[content addSubview:[self labelWithString:NekoLocalized(@"API key:")
+	                                    frame:NSMakeRect(20.0f, 142.0f, 125.0f, 17.0f)]];
+	askKeyField = [[NSSecureTextField alloc] initWithFrame:NSMakeRect(152.0f, 139.0f, 220.0f, 22.0f)];
+	[askKeyField setTarget:self];
+	[askKeyField setAction:@selector(takeAskKeyFrom:)];
+	[content addSubview:askKeyField];
+	[askKeyField release];
+
+	askSpeakCheck = [[NSButton alloc] initWithFrame:NSMakeRect(152.0f, 106.0f, 300.0f, 18.0f)];
+	[askSpeakCheck setButtonType:NSButtonTypeSwitch];
+	[askSpeakCheck setTitle:NekoLocalized(@"Read the answer aloud")];
+	[askSpeakCheck setTarget:self];
+	[askSpeakCheck setAction:@selector(takeAskSpeakFrom:)];
+	[content addSubview:askSpeakCheck];
+	[askSpeakCheck release];
+
+	askStatusField = [self labelWithString:@"" frame:NSMakeRect(20.0f, 20.0f, 430.0f, 68.0f)];
+	[askStatusField setAlignment:NSTextAlignmentLeft];
+	[[askStatusField cell] setWraps:YES];
+	[askStatusField setFont:[NSFont systemFontOfSize:11.0f]];
+	[askStatusField setTextColor:[NSColor secondaryLabelColor]];
+	[content addSubview:askStatusField];
+
+	[self syncAskControls];
+}
+
+/* The combinations offered. A recorder field would be nicer; a short list of
+   things that do not collide with anything is more useful sooner. */
+- (NSArray *)hotKeyChoices
+{
+	NSUInteger control = NSEventModifierFlagControl;
+	NSUInteger option = NSEventModifierFlagOption;
+	NSUInteger command = NSEventModifierFlagCommand;
+	NSUInteger shift = NSEventModifierFlagShift;
+	return [NSArray arrayWithObjects:
+		[NSArray arrayWithObjects:[NSNumber numberWithUnsignedShort:0x2D],
+			[NSNumber numberWithUnsignedInteger:control | option], nil],
+		[NSArray arrayWithObjects:[NSNumber numberWithUnsignedShort:0x31],
+			[NSNumber numberWithUnsignedInteger:control | option], nil],
+		[NSArray arrayWithObjects:[NSNumber numberWithUnsignedShort:0x2D],
+			[NSNumber numberWithUnsignedInteger:command | control], nil],
+		[NSArray arrayWithObjects:[NSNumber numberWithUnsignedShort:0x2D],
+			[NSNumber numberWithUnsignedInteger:option | shift], nil], nil];
+}
+
+- (void)syncAskControls
+{
+	NekoAsk *ask = [NekoAsk sharedAsk];
+	NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
+	BOOL on = [ask isEnabled];
+	BOOL model = [[defaults stringForKey:NekoAskProviderKey] isEqualToString:@"model"];
+
+	[askCheck setState:on ? NSControlStateValueOn : NSControlStateValueOff];
+	[askHotKeyPopUp setEnabled:on];
+	[askProviderPopUp setEnabled:on];
+	[askProviderPopUp selectItemAtIndex:model ? 1 : 0];
+	[askShortcutField setEnabled:on && !model];
+	[askShortcutField setStringValue:
+		[defaults stringForKey:NekoAskShortcutNameKey] ?: @""];
+	[askKeyField setEnabled:on && model];
+	[askKeyField setStringValue:[[ask modelProvider] hasApiKey] ? @"••••••••••••" : @""];
+	[askSpeakCheck setEnabled:on];
+	[askSpeakCheck setState:[defaults boolForKey:NekoAskSpeakKey]
+		? NSControlStateValueOn : NSControlStateValueOff];
+
+	/* Which combination is selected, if it is one of the offered ones. */
+	unsigned short code = (unsigned short)[defaults integerForKey:NekoAskHotKeyCodeKey];
+	NSUInteger flags = (NSUInteger)[defaults integerForKey:NekoAskHotKeyModifiersKey];
+	NSArray *choices = [self hotKeyChoices];
+	NSUInteger i;
+	for(i = 0; i < [choices count]; i++) {
+		NSArray *choice = [choices objectAtIndex:i];
+		if([[choice objectAtIndex:0] unsignedShortValue] == code
+		   && [[choice objectAtIndex:1] unsignedIntegerValue] == flags) {
+			[askHotKeyPopUp selectItemAtIndex:i];
+			break;
+		}
+	}
+
+	[askStatusField setStringValue:[self askStatusLine]];
+}
+
+- (NSString *)askStatusLine
+{
+	NekoAsk *ask = [NekoAsk sharedAsk];
+	if(![ask isEnabled])
+		return NekoLocalized(@"The microphone is asked for the first time you use this, never before.");
+	if([ask hotKeyUnavailable])
+		return NekoLocalized(@"Another application already owns that keystroke. Pick a different one.");
+
+	NSString *hint = [[ask provider] configurationHint];
+	if(hint != nil)
+		return hint;
+	return [NSString stringWithFormat:
+		NekoLocalized(@"Press %@ and ask. Neko listens until you stop talking."),
+		[ask hotKeyDisplayName]];
+}
+
+#pragma mark Ask Neko actions
+
+- (void)takeAskEnabledFrom:(id)sender
+{
+	[[NSUserDefaults standardUserDefaults]
+		setBool:([sender state] == NSControlStateValueOn) forKey:NekoAskEnabledKey];
+	[[NekoAsk sharedAsk] applySettings];
+	[self updateAskItem];
+	[self syncAskControls];
+}
+
+- (void)takeAskHotKeyFrom:(id)sender
+{
+	NSArray *choice = [[self hotKeyChoices] objectAtIndex:[sender indexOfSelectedItem]];
+	NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
+	[defaults setInteger:[[choice objectAtIndex:0] unsignedShortValue]
+	              forKey:NekoAskHotKeyCodeKey];
+	[defaults setInteger:(NSInteger)[[choice objectAtIndex:1] unsignedIntegerValue]
+	              forKey:NekoAskHotKeyModifiersKey];
+	[[NekoAsk sharedAsk] applySettings];
+	[self updateAskItem];
+	[self syncAskControls];
+}
+
+- (void)takeAskProviderFrom:(id)sender
+{
+	[[NSUserDefaults standardUserDefaults]
+		setObject:([sender indexOfSelectedItem] == 1) ? @"model" : @"shortcut"
+		   forKey:NekoAskProviderKey];
+	[self syncAskControls];
+}
+
+- (void)takeAskShortcutNameFrom:(id)sender
+{
+	[[NSUserDefaults standardUserDefaults]
+		setObject:[sender stringValue] forKey:NekoAskShortcutNameKey];
+	[self syncAskControls];
+}
+
+- (void)takeAskKeyFrom:(id)sender
+{
+	NSString *typed = [sender stringValue];
+	if([typed hasPrefix:@"•"])
+		return;                  /* the placeholder, not a new key */
+	[[[NekoAsk sharedAsk] modelProvider] setApiKey:typed];
+	[self syncAskControls];
+}
+
+- (void)takeAskSpeakFrom:(id)sender
+{
+	[[NSUserDefaults standardUserDefaults]
+		setBool:([sender state] == NSControlStateValueOn) forKey:NekoAskSpeakKey];
 }
 
 - (void)updateValueFields
@@ -547,6 +797,7 @@ static const float NekoMaxStopRadius = 200.0f;
 	[wanderCheck setState:[self wandersWhenIdle] ? NSControlStateValueOn : NSControlStateValueOff];
 	[behaviourPopUp selectItemAtIndex:[self livesOnWindowEdges] ? 1 : 0];
 	[self updateWanderAvailability];
+	[self syncAskControls];
 	/* The system owns this one, so it is read back rather than remembered. */
 	[loginCheck setState:[self opensAtLogin] ? NSControlStateValueOn : NSControlStateValueOff];
 	[self updateValueFields];

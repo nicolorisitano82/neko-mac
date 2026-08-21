@@ -28,3 +28,36 @@
 "Follows the cursor" = "Sigue el cursor";
 "Lives on the Dock" = "Vive en el Dock";
 "Only while following the cursor" = "Solo mientras sigue el cursor";
+
+/* Ask Neko */
+"Ask Neko" = "Preguntar a Neko";
+"Pet" = "Gato";
+"Let me ask Neko questions out loud" = "Puedo hacerle preguntas en voz alta";
+"Keystroke:" = "Atajo:";
+"Answers from:" = "Respuestas de:";
+"Shortcut name:" = "Nombre del atajo:";
+"API key:" = "Clave API:";
+"A Shortcut of mine" = "Un atajo mío";
+"A Shortcut" = "Un atajo";
+"Claude, directly" = "Claude, directamente";
+"Read the answer aloud" = "Leer la respuesta en voz alta";
+"The microphone is asked for the first time you use this, never before." = "El micrófono se pide la primera vez que lo usas, nunca antes.";
+"Another application already owns that keystroke. Pick a different one." = "Ese atajo ya pertenece a otra aplicación. Elige otro.";
+"Press %@ and ask. Neko listens until you stop talking." = "Pulsa %@ y pregunta. Neko escucha mientras hablas.";
+"Name the Shortcut that answers" = "Indica el atajo que responde";
+"Paste an API key" = "Pega una clave API";
+"Listening…" = "Escuchando…";
+"My ears do not work on this Mac." = "Mis orejas no funcionan en este Mac.";
+"You have not let me listen. Microphone, in System Settings." = "No me has dejado escuchar. Micrófono, en Ajustes del Sistema.";
+"Then I shall keep quiet." = "Entonces me callo.";
+"I could not hear anything at all." = "No he oído nada en absoluto.";
+"I did not catch that." = "No lo he entendido.";
+"I have no answer for that." = "No tengo respuesta.";
+"Whatever I asked never answered." = "Lo que consulté no respondió nunca.";
+"Neko is about to ask for the microphone" = "Neko va a pedir el micrófono";
+"It listens only while you hold the conversation, from the keystroke until you stop talking. Nothing is recorded and nothing is kept." = "Escucha solo durante la conversación, desde el atajo hasta que dejas de hablar. Nada se graba y nada se guarda.";
+"Continue" = "Continuar";
+"Not now" = "Ahora no";
+"I am a cat. Ask me again once you have set up an answer." = "Soy un gato. Vuelve a preguntar cuando tengas una respuesta configurada.";
+"No idea. I mostly chase the cursor." = "Ni idea. Yo persigo el cursor.";
+"Ask the Shortcut. I have not been given one." = "Pregúntale al atajo. A mí no me han dado ninguno.";
