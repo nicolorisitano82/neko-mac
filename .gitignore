@@ -2,3 +2,4 @@
 /Neko.xcodeproj/project.xcworkspace/xcuserdata/
 /build/
 .DS_Store
+__pycache__/
