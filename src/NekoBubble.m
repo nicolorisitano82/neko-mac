@@ -136,14 +136,18 @@ static const float NekoBubbleRadius = 10.0f;
 	[label setFont:font];
 	[label setStringValue:(text ?: @"")];
 
-	NSRect measured = [(text ?: @"") boundingRectWithSize:
-			NSMakeSize(NekoBubbleMaxWidth - 2.0f * NekoBubblePadding, 10000.0f)
-		options:(NSStringDrawingUsesLineFragmentOrigin | NSStringDrawingUsesFontLeading)
-		attributes:[NSDictionary dictionaryWithObject:font forKey:NSFontAttributeName]];
+	/* Measured by the cell that will draw it, not by boundingRectWithSize:.
+	   A text field keeps insets of its own, so the string wraps sooner inside
+	   the field than it does in a bare measurement: a sentence measured as one
+	   line needs two, and the second one used to be cut off — which ate the end
+	   of every short answer. */
+	float room = NekoBubbleMaxWidth - 2.0f * NekoBubblePadding;
+	NSSize needed = [[label cell] cellSizeForBounds:
+		NSMakeRect(0.0f, 0.0f, room, 10000.0f)];
 
-	float textWidth = ceilf(measured.size.width);
-	float textHeight = ceilf(measured.size.height);
-	float width = MIN(textWidth + 2.0f * NekoBubblePadding, NekoBubbleMaxWidth);
+	float textWidth = ceilf(MIN(needed.width, room));
+	float textHeight = ceilf(needed.height);
+	float width = textWidth + 2.0f * NekoBubblePadding;
 	float height = textHeight + 2.0f * NekoBubblePadding + NekoBubbleTail;
 
 	NSScreen *screen = [self screenForRect:catFrame];

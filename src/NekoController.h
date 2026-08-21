@@ -25,6 +25,7 @@ extern NSString * const NekoSettingsDidChangeNotification;
 	NSStatusItem *statusItem;
 	NSMenuItem *pauseItem;
 	NSMenuItem *askItem;
+	NSMenuItem *askEnableItem;
 	NSMenu *characterMenu;
 	NSPanel *prefsPanel;
 	NSTextField *speedField;

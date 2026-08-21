@@ -287,7 +287,9 @@ enum { NekoPhaseIdle = 0, NekoPhaseListening, NekoPhaseThinking, NekoPhaseAnswer
 
 	phase = NekoPhaseThinking;
 	[[self panel] holdWithState:NekoStateKaki];
-	[self showBubble:NekoAskLocalized(@"…") dismissAfter:0.0];
+	/* The question stays up while it thinks, so you can see what it understood
+	   rather than a row of dots. */
+	[self showBubble:question dismissAfter:0.0];
 
 	[provider askQuestion:question completion:^(NSString *answer, NSError *error) {
 		if(phase != NekoPhaseThinking)

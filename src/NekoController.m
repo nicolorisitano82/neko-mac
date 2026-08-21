@@ -122,6 +122,12 @@ static const float NekoMaxStopRadius = 200.0f;
 	                  keyEquivalent:@""];
 	[askItem setTarget:self];
 
+	/* The switch itself, one click away rather than inside a preferences tab. */
+	askEnableItem = [menu addItemWithTitle:NekoLocalized(@"Enable Ask Neko")
+	                                action:@selector(toggleAskEnabled:)
+	                         keyEquivalent:@""];
+	[askEnableItem setTarget:self];
+
 	[menu addItem:[NSMenuItem separatorItem]];
 
 	item = [menu addItemWithTitle:NekoLocalized(@"About Neko")
@@ -166,6 +172,17 @@ static const float NekoMaxStopRadius = 200.0f;
 		? [NSString stringWithFormat:@"%@  (%@)", NekoLocalized(@"Ask Neko"),
 			[ask hotKeyDisplayName]]
 		: NekoLocalized(@"Ask Neko")];
+	[askEnableItem setState:on ? NSControlStateValueOn : NSControlStateValueOff];
+}
+
+- (void)toggleAskEnabled:(id)sender
+{
+	NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
+	[defaults setBool:![[NekoAsk sharedAsk] isEnabled] forKey:NekoAskEnabledKey];
+	[[NekoAsk sharedAsk] applySettings];
+	[self updateAskItem];
+	if(prefsPanel != nil)
+		[self syncAskControls];
 }
 
 - (void)askNeko:(id)sender

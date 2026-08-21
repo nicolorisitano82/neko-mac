@@ -15,6 +15,7 @@ cat icon for
   asleep when the mouse sits still, whether it wanders off on its own, and
   whether it opens at login
 * **Ask Neko** (⌃⌥N) — hold a question out loud, get an answer in a bubble
+* **Enable Ask Neko** — the switch for it, without opening the preferences
 * **About Neko**
 * **Quit Neko** (⌘Q)
 
@@ -65,8 +66,8 @@ than half a step beyond the ring.
 
 ## Ask Neko
 
-Off by default. Turned on in its own preferences tab, it gives the cat a
-keystroke — ⌃⌥N by default: press it, ask something out loud, and the answer
+Off by default. Turned on from the menu bar, or in its own preferences tab, it
+gives the cat a keystroke — ⌃⌥N by default: press it, ask something out loud, and the answer
 appears in a bubble beside the cat, which stops chasing the pointer while you
 talk to it.
 

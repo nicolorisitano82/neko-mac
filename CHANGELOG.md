@@ -4,8 +4,16 @@
 
 ### Ask Neko
 
-Off by default, in its own preferences tab: ⌃⌥N, a question out loud, an answer
-in a bubble beside the cat, which holds still while you talk to it.
+Off by default, switched on from the menu bar or its own preferences tab: ⌃⌥N,
+a question out loud, an answer in a bubble beside the cat, which holds still
+while you talk to it.
+
+The bubble used to cut the end off short answers. It measured the text with
+`boundingRectWithSize:` and drew it in an `NSTextField`, which keeps insets of
+its own: a sentence that measured as one line needed two inside the field, and
+the second one fell outside the frame. It is now measured by the cell that draws
+it. The question also stays on screen while the cat thinks, instead of being
+replaced by a row of dots, so you can see what it understood.
 
 The keystroke is a Carbon hotkey registration rather than an event monitor,
 which is why it needs no Accessibility permission and works in the sandbox. The
