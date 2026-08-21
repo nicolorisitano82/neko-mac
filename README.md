@@ -165,6 +165,6 @@ notarise it:
 
 ```sh
 ./dmg.sh --sign "Developer ID Application: Your Name (TEAMID)"
-xcrun notarytool submit dist/Neko-1.1.dmg --apple-id ... --team-id ... --wait
-xcrun stapler staple dist/Neko-1.1.dmg
+xcrun notarytool submit dist/Neko-1.5.dmg --apple-id ... --team-id ... --wait
+xcrun stapler staple dist/Neko-1.5.dmg
 ```
