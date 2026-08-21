@@ -185,7 +185,7 @@ export const ONEKO_CHARACTERS: readonly OnekoCharacter[] = [
     name: "Merlin",
     sheet: "merlin.png",
     author: "generated pixel art",
-    licence: "check before redistributing",
+    licence: "generated pixel art, check before redistributing",
   },
   {
     id: "mike",

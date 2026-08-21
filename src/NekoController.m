@@ -9,6 +9,28 @@ NSString * const NekoPausedKey     = @"NekoPaused";
 
 NSString * const NekoSettingsDidChangeNotification = @"NekoSettingsDidChange";
 
+/* SMAppService arrived in macOS 13 and registers the app itself as a login
+   item, no helper bundle involved. It is reached through the runtime rather
+   than linked, so the binary still runs on the older systems this project
+   targets, where the class is simply absent. */
+@protocol NekoAppService <NSObject>
+- (BOOL)registerAndReturnError:(NSError **)error;
+- (BOOL)unregisterAndReturnError:(NSError **)error;
+- (NSInteger)status;
+@end
+
+@protocol NekoAppServiceClass <NSObject>
+- (id)mainAppService;
+@end
+
+/* SMAppServiceStatus */
+enum {
+	NekoLoginNotRegistered = 0,
+	NekoLoginEnabled = 1,
+	NekoLoginRequiresApproval = 2,
+	NekoLoginNotFound = 3
+};
+
 /* The English text doubles as the lookup key, so a missing translation falls
    back to English on its own and there is no English table to keep in step. */
 #define NekoLocalized(text) NSLocalizedString(text, nil)
@@ -200,6 +222,70 @@ static const float NekoMaxStopRadius = 200.0f;
 	return [[NSUserDefaults standardUserDefaults] boolForKey:NekoPausedKey];
 }
 
+#pragma mark Opening at login
+
+- (id<NekoAppService>)loginService
+{
+	Class serviceClass = NSClassFromString(@"SMAppService");
+	if (serviceClass == Nil)
+		return nil;
+	return [(id<NekoAppServiceClass>)serviceClass mainAppService];
+}
+
+- (BOOL)canOpenAtLogin
+{
+	return [self loginService] != nil;
+}
+
+- (BOOL)opensAtLogin
+{
+	id<NekoAppService> service = [self loginService];
+	if (service == nil)
+		return NO;
+	NSInteger status = [service status];
+	return status == NekoLoginEnabled || status == NekoLoginRequiresApproval;
+}
+
+/* Returns whether the system now agrees, so the checkbox can follow it rather
+   than the click. */
+- (BOOL)setOpensAtLogin:(BOOL)wanted
+{
+	id<NekoAppService> service = [self loginService];
+	if (service == nil)
+		return NO;
+
+	NSError *error = nil;
+	BOOL ok = wanted ? [service registerAndReturnError:&error]
+	                 : [service unregisterAndReturnError:&error];
+	if (!ok)
+		NSLog(@"Neko: could not %@ as a login item: %@",
+		      wanted ? @"register" : @"unregister", error);
+	else if (wanted && [service status] == NekoLoginRequiresApproval)
+		[self explainLoginApproval];
+	return [self opensAtLogin];
+}
+
+/* Registering succeeds but stays inert until the user allows it, and nothing
+   says so unless we do. */
+- (void)explainLoginApproval
+{
+	NSAlert *alert = [[[NSAlert alloc] init] autorelease];
+	[alert setMessageText:NekoLocalized(@"Neko needs your approval to open at login")];
+	[alert setInformativeText:NekoLocalized(@"Open System Settings, then Login Items, and allow Neko.")];
+	[alert addButtonWithTitle:NekoLocalized(@"OK")];
+	[NSApp activateIgnoringOtherApps:YES];
+	[alert runModal];
+}
+
+- (void)takeOpenAtLoginFrom:(id)sender
+{
+	BOOL wanted = ([sender state] == NSControlStateValueOn);
+	BOOL got = [self setOpensAtLogin:wanted];
+	[sender setState:got ? NSControlStateValueOn : NSControlStateValueOff];
+}
+
+#pragma mark Notifications
+
 - (void)settingsChanged
 {
 	[[NSUserDefaults standardUserDefaults] synchronize];
@@ -337,7 +423,7 @@ static const float NekoMaxStopRadius = 200.0f;
 	[sizePopUp release];
 
 	/* Idle sleep */
-	sleepCheck = [[NSButton alloc] initWithFrame:NSMakeRect(129.0f, 76.0f, 300.0f, 18.0f)];
+	sleepCheck = [[NSButton alloc] initWithFrame:NSMakeRect(129.0f, 84.0f, 300.0f, 18.0f)];
 	[sleepCheck setButtonType:NSButtonTypeSwitch];
 	[sleepCheck setTitle:NekoLocalized(@"Fall asleep when idle")];
 	[sleepCheck setState:[self idleSleep] ? NSControlStateValueOn : NSControlStateValueOff];
@@ -345,6 +431,20 @@ static const float NekoMaxStopRadius = 200.0f;
 	[sleepCheck setAction:@selector(takeIdleSleepFrom:)];
 	[content addSubview:sleepCheck];
 	[sleepCheck release];
+
+	/* Opening at login */
+	loginCheck = [[NSButton alloc] initWithFrame:NSMakeRect(129.0f, 60.0f, 300.0f, 18.0f)];
+	[loginCheck setButtonType:NSButtonTypeSwitch];
+	[loginCheck setTitle:NekoLocalized(@"Open at login")];
+	[loginCheck setState:[self opensAtLogin] ? NSControlStateValueOn : NSControlStateValueOff];
+	[loginCheck setTarget:self];
+	[loginCheck setAction:@selector(takeOpenAtLoginFrom:)];
+	if (![self canOpenAtLogin]) {
+		[loginCheck setEnabled:NO];
+		[loginCheck setToolTip:NekoLocalized(@"Needs macOS 13 or newer")];
+	}
+	[content addSubview:loginCheck];
+	[loginCheck release];
 
 	/* Restore defaults */
 	NSButton *reset = [[NSButton alloc] initWithFrame:NSMakeRect(16.0f, 16.0f, 180.0f, 32.0f)];
@@ -375,6 +475,8 @@ static const float NekoMaxStopRadius = 200.0f;
 	[radiusSlider setFloatValue:[self stopRadius]];
 	[sizePopUp selectItemAtIndex:([self scale] >= 2.0f) ? 1 : 0];
 	[sleepCheck setState:[self idleSleep] ? NSControlStateValueOn : NSControlStateValueOff];
+	/* The system owns this one, so it is read back rather than remembered. */
+	[loginCheck setState:[self opensAtLogin] ? NSControlStateValueOn : NSControlStateValueOff];
 	[self updateValueFields];
 }
 

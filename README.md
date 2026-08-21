@@ -11,7 +11,8 @@ cat icon for
 * **Pause Neko** / **Resume Neko** — hide and freeze the cat, or bring it back
 * **Character ▸** — pick the sprite set; the menu bar icon follows it
 * **Preferences…** (⌘,) — character, speed, how close it comes to the pointer,
-  size (1× or 2×) and whether the cat falls asleep when the mouse sits still
+  size (1× or 2×), whether the cat falls asleep when the mouse sits still, and
+  whether it opens at login
 * **About Neko**
 * **Quit Neko** (⌘Q)
 
@@ -21,6 +22,12 @@ the language the system asks for.
 Settings are stored in `NSUserDefaults` (`NekoCharacter`, `NekoSpeed`,
 `NekoStopRadius`, `NekoScale`, `NekoIdleSleep`, `NekoPaused`) and take effect
 immediately.
+
+**Open at login** asks the system to launch Neko when you log in, through
+`SMAppService`, so there is no helper bundle and no stored preference: the
+system holds that state and the checkbox reads it back. macOS may ask you to
+allow it under Login Items before it takes effect, and the checkbox stays
+disabled on macOS 12 and earlier, where the API does not exist.
 
 **Stops short by** is the ring the cat keeps around the pointer, 0 to 200
 points, 48 by default. At 0 it sits right under the cursor, which is what it did

@@ -30,6 +30,7 @@ extern NSString * const NekoSettingsDidChangeNotification;
 	NSPopUpButton *characterPopUp;
 	NSPopUpButton *sizePopUp;
 	NSButton *sleepCheck;
+	NSButton *loginCheck;
 }
 
 + (NekoController *)sharedController;
@@ -43,6 +44,11 @@ extern NSString * const NekoSettingsDidChangeNotification;
 - (float)scale;
 - (BOOL)idleSleep;
 - (BOOL)isPaused;
+
+/* Whether the system has been told to open Neko at login. Always NO before
+   macOS 13, which has no SMAppService. */
+- (BOOL)opensAtLogin;
+- (BOOL)canOpenAtLogin;
 
 - (void)showPreferences:(id)sender;
 - (void)togglePause:(id)sender;

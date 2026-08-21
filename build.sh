@@ -27,7 +27,7 @@ ditto --noextattr --noqtn Resources "$APP/Contents/Resources"
 clang -arch arm64 -arch x86_64 -fno-objc-arc -O2 \
 	-isysroot "$SDK" -mmacosx-version-min=10.13 \
 	-Wno-deprecated-declarations \
-	-framework Cocoa -o "$APP/Contents/MacOS/Neko" \
+	-framework Cocoa -framework ServiceManagement -o "$APP/Contents/MacOS/Neko" \
 	src/main.m src/MyView.m src/MyPanel.m src/NekoCharacter.m src/NekoController.m
 
 xattr -cr "$APP"

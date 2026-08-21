@@ -1,5 +1,37 @@
 # Changelog
 
+## Unreleased
+
+### Opens at login
+
+A new preference asks the system to launch Neko when you log in. It goes
+through `SMAppService`, so there is no helper bundle to ship and no preference
+of our own: the system holds that state and the checkbox reads it back, which
+also means the checkbox follows what the system agreed to rather than what was
+clicked. macOS may ask for approval under Login Items before it takes effect,
+and says so when it does.
+
+`ServiceManagement` is linked, since a framework that is never linked is never
+loaded and the class would be invisible to the runtime lookup. The framework has
+existed since macOS 10.6 while the class arrived in 13, so the app still starts
+on older systems, where the checkbox is simply disabled.
+
+### Characters that face the right way
+
+A generated sheet rarely holds eight coherent directions: the walks come out as
+sitting poses and left-facing rarely matches right-facing. `grid2char.py
+--mirror` builds every left-facing frame by flipping its right-facing twin, so
+the two halves match by construction, and every generated character was
+reimported with it. Pinup was redrawn against the rewritten prompt in
+`tools/sprite-prompt.md`, which now says what each view has to show — walking up
+is seen from behind, with no face at all, which is what was missing.
+
+`--alpha-floor` clears a near invisible wash before anything else. One sheet
+arrived with 44% of its area at alpha 1 to 16: invisible on screen, but enough
+that no row read as empty and every cell's bounding box covered the whole cell,
+so the trimming quietly did nothing and each pose was scaled from its cell
+rather than from itself.
+
 ## 1.5.1 — 2026-08-21
 
 ### Stops short of the pointer

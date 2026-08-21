@@ -28,9 +28,41 @@ from sheet2char import CELL, CELLS
 from xbm2char import STATES
 
 
+# A pose facing left is the pose facing right, flipped. Asking a generator for
+# both is asking for two characters that do not match; these pairs are made
+# rather than drawn.
+MIRROR_PAIRS = (
+    ('left1', 'right1'), ('left2', 'right2'),
+    ('upleft1', 'upright1'), ('upleft2', 'upright2'),
+    ('dwleft1', 'dwright1'), ('dwleft2', 'dwright2'),
+    ('ltogi1', 'rtogi1'), ('ltogi2', 'rtogi2'),
+)
+
+
 def frames_in_layout_order():
     """The 8x4 oneko layout, read left to right then top to bottom."""
     return [CELLS[(col, row)] for row in range(4) for col in range(8)]
+
+
+def clear_faint(image, floor):
+    """Drop a near invisible wash, which some generators lay over the whole sheet.
+
+    Left in place it defeats everything downstream: no row reads as empty, so the
+    grid cannot be detected, and every cell's bounding box covers the whole cell,
+    so trimming does nothing and the pose ends up scaled from the cell instead of
+    from itself."""
+    if floor <= 0:
+        return image, 0
+    alpha = image.split()[3]
+    px = image.load()
+    cleared = 0
+    for y in range(image.height):
+        for x in range(image.width):
+            pixel = px[x, y]
+            if 0 < pixel[3] <= floor:
+                px[x, y] = (0, 0, 0, 0)
+                cleared += 1
+    return image, cleared
 
 
 def bands(projection, wanted, minimum=20):
@@ -143,7 +175,13 @@ def main():
     p.add_argument('--fit', choices=('trim', 'cell'), default='trim',
                    help='trim each pose and scale it, or scale the whole cell')
     p.add_argument('--align', choices=('bottom', 'center'), default='bottom')
+    p.add_argument('--mirror', action='store_true',
+                   help='build every left-facing frame by flipping its right-facing '
+                        'twin, instead of using whatever was drawn for it')
     p.add_argument('--pad', type=int, default=0, help='transparent margin, in final pixels')
+    p.add_argument('--alpha-floor', type=int, default=16, metavar='N',
+                   help='treat alpha up to N as empty, clearing a near invisible '
+                        'wash before anything else. Default 16, 0 disables it')
     p.add_argument('--tolerance', type=int, default=12,
                    help='how far a pixel may stray from the border colour and still count as background')
     p.add_argument('--keep-background', action='store_true')
@@ -162,6 +200,10 @@ def main():
                          % (columns, rows, columns * rows, len(names)))
 
     image = Image.open(args.sheet).convert('RGBA')
+    image, faint = clear_faint(image, args.alpha_floor)
+    if faint:
+        print('cleared %d pixels below alpha %d' % (faint, args.alpha_floor))
+
     if args.keep_background:
         reference, cleared = None, 0
     else:
@@ -197,6 +239,22 @@ def main():
             continue
         result.save(os.path.join(args.out, frame + '.png'))
         written.append(frame)
+
+    if args.mirror:
+        made = []
+        for target, source in MIRROR_PAIRS:
+            if source not in written:
+                continue
+            image_path = os.path.join(args.out, source + '.png')
+            flipped = Image.open(image_path).transpose(Image.FLIP_LEFT_RIGHT)
+            flipped.save(os.path.join(args.out, target + '.png'))
+            if target not in written:
+                written.append(target)
+            if target in empty:
+                empty.remove(target)
+            made.append(target)
+        if made:
+            print('mirrored from the right-facing poses: %s' % ', '.join(made))
 
     states = {}
     for state, bases, ticks in STATES:

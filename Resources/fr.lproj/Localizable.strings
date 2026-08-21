@@ -18,3 +18,8 @@
 "%.0f pt/s" = "%.0f pt/s";
 "%.0f pt" = "%.0f pt";
 "touches" = "au contact";
+"Open at login" = "Ouvrir à la session";
+"Needs macOS 13 or newer" = "Nécessite macOS 13 ou plus récent";
+"Neko needs your approval to open at login" = "Neko a besoin de votre accord pour s’ouvrir à la session";
+"Open System Settings, then Login Items, and allow Neko." = "Ouvrez Réglages Système, puis Ouverture, et autorisez Neko.";
+"OK" = "OK";
