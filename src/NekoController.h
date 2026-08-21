@@ -11,6 +11,8 @@ extern NSString * const NekoSpeedKey;      /* points the cat moves per tick */
 extern NSString * const NekoScaleKey;      /* 1.0 or 2.0 */
 extern NSString * const NekoStopRadiusKey; /* points to keep from the pointer */
 extern NSString * const NekoIdleSleepKey;  /* BOOL, cat falls asleep when idle */
+extern NSString * const NekoWanderKey;     /* BOOL, cat strolls off on its own */
+extern NSString * const NekoBehaviourKey; /* "follow" or "windows" */
 extern NSString * const NekoPausedKey;     /* BOOL, cat hidden and frozen */
 
 /* Posted whenever a setting changes. */
@@ -30,6 +32,8 @@ extern NSString * const NekoSettingsDidChangeNotification;
 	NSPopUpButton *characterPopUp;
 	NSPopUpButton *sizePopUp;
 	NSButton *sleepCheck;
+	NSButton *wanderCheck;
+	NSPopUpButton *behaviourPopUp;
 	NSButton *loginCheck;
 }
 
@@ -43,6 +47,8 @@ extern NSString * const NekoSettingsDidChangeNotification;
 - (float)stopRadius;
 - (float)scale;
 - (BOOL)idleSleep;
+- (BOOL)wandersWhenIdle;
+- (BOOL)livesOnWindowEdges;
 - (BOOL)isPaused;
 
 /* Whether the system has been told to open Neko at login. Always NO before

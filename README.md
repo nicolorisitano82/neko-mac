@@ -11,7 +11,8 @@ cat icon for
 * **Pause Neko** / **Resume Neko** — hide and freeze the cat, or bring it back
 * **Character ▸** — pick the sprite set; the menu bar icon follows it
 * **Preferences…** (⌘,) — character, speed, how close it comes to the pointer,
-  size (1× or 2×), whether the cat falls asleep when the mouse sits still, and
+  size (1× or 2×), which of the two behaviours it follows, whether the cat falls
+  asleep when the mouse sits still, whether it wanders off on its own, and
   whether it opens at login
 * **About Neko**
 * **Quit Neko** (⌘Q)
@@ -20,8 +21,33 @@ The interface is available in English, Italian, French and Spanish, following
 the language the system asks for.
 
 Settings are stored in `NSUserDefaults` (`NekoCharacter`, `NekoSpeed`,
-`NekoStopRadius`, `NekoScale`, `NekoIdleSleep`, `NekoPaused`) and take effect
+`NekoStopRadius`, `NekoScale`, `NekoIdleSleep`, `NekoWander`, `NekoBehaviour`,
+`NekoPaused`) and take effect
 immediately.
+
+**Behaviour** is a choice between two, because they do not mix:
+
+*Follows the cursor* is the classic one. The cat chases the pointer, stops at
+the ring described above, and rests wherever it stopped — in mid-air if that is
+where it stopped, exactly as oneko always did.
+
+*Lives on the Dock* ignores the pointer and moves in along the bottom of the
+screen instead. When the Dock is out the cat lives on top of it; when the Dock is
+hidden, or set to a side of the screen, it runs to the top edge of a window that
+is not filling the screen and lives there instead; with neither, it settles on
+the desk. Gravity applies in this behaviour, so hiding the Dock or closing the
+window it sat on drops it onto whatever is below.
+
+The Dock's own window covers the whole screen and says nothing useful, so the
+room it takes is read from the difference between a screen's `frame` and its
+`visibleFrame`. Window rectangles come from `CGWindowListCopyWindowInfo`, which
+needs no permission and works inside the sandbox; nothing is read but geometry.
+
+**Wander off when idle** belongs to the first behaviour and is disabled in the
+second, where the cat is already moving about on its own. Once it has arrived,
+sat down and been left alone for half a minute, it strolls off away from the
+pointer instead of sleeping there for ever. Moving the pointer cancels the errand
+at once.
 
 **Open at login** asks the system to launch Neko when you log in, through
 `SMAppService`, so there is no helper bundle and no stored preference: the
@@ -148,8 +174,9 @@ the command above, so the two versions cannot drift. See
 [web/README.md](web/README.md), and [web/INTEGRATION.md](web/INTEGRATION.md) for
 adding it to an app that already exists.
 
-The `*_togi` states are currently unreachable: they need screen edge detection,
-which this port does not do.
+The `*_togi` states are the cat clawing at what it cannot get past: the edge of
+the screens, or the top of the window it stands on when the pointer is inside
+that window.
 
 ## Building
 
@@ -189,6 +216,6 @@ notarise it:
 
 ```sh
 ./dmg.sh --sign "Developer ID Application: Your Name (TEAMID)"
-xcrun notarytool submit dist/Neko-1.5.2.dmg --apple-id ... --team-id ... --wait
-xcrun stapler staple dist/Neko-1.5.2.dmg
+xcrun notarytool submit dist/Neko-1.6.dmg --apple-id ... --team-id ... --wait
+xcrun stapler staple dist/Neko-1.6.dmg
 ```

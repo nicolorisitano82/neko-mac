@@ -1,5 +1,53 @@
 # Changelog
 
+## 1.6 — 2026-08-21
+
+### The cat claws at what it cannot pass
+
+Every bundled character has always carried four wall-scratching animations this
+port could not reach, because nothing told it where the walls were. It does now:
+the edge of the combined screens, and the top of the window the cat is standing
+on when the pointer is inside that window. The cat also stays on screen, which
+it did not before — it could walk off the edge following a pointer at the
+border.
+
+### Two behaviours, not one with an extra switch
+
+**Behaviour** replaces what started as a checkbox, because chasing the pointer
+and living on window edges fight each other: one wants the cat to rest wherever
+it stopped, the other pulls it down onto the nearest surface, and having both at
+once made the cat arrive at the pointer, slide to the floor, climb back and
+start over.
+
+*Follows the cursor* is the classic behaviour, unchanged. *Lives on the Dock*
+ignores the pointer: the cat lives on top of the Dock, and when the Dock is
+hidden or sits on a side of the screen it runs to a window that is not filling
+the screen and lives on its top edge instead. Gravity applies, so hiding the Dock
+or closing that window drops it.
+
+The Dock's own Quartz window covers the whole screen and tells you nothing, so
+the space it reserves is read from the difference between a screen's `frame` and
+its `visibleFrame`, and the cat is kept over the middle of that edge where the
+Dock actually is. Window rectangles come from `CGWindowListCopyWindowInfo`, which
+works inside the sandbox and needs no permission; the list is refreshed every few
+ticks, since windows do not move eight times a second.
+
+**Wander off when idle** is disabled in the second behaviour rather than
+fighting it: a cat on the Dock is already moving about on its own.
+
+### Designed, not built
+
+`docs/ask-neko.md` plans **Ask Neko**: a hotkey, a spoken question, an answer in
+a bubble beside the cat. It is a design document only — no code — and it records
+what cannot work as first imagined, since Siri has no public API that hands an
+answer back to another app.
+
+### It goes for a walk, once it has actually rested
+
+**Wander off when idle** now waits for the cat to arrive, sit down and be left
+alone for half a minute, and then sends it *away* from the pointer rather than
+to a random spot. Moving the pointer cancels the errand immediately.
+
 ## 1.5.2 — 2026-08-21
 
 ### Opens at login

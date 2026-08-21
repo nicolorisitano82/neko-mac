@@ -23,3 +23,8 @@
 "Neko needs your approval to open at login" = "Neko ha bisogno della tua approvazione per aprirsi al login";
 "Open System Settings, then Login Items, and allow Neko." = "Apri Impostazioni di Sistema, poi Elementi login, e consenti Neko.";
 "OK" = "OK";
+"Wander off when idle" = "Va a spasso quando è inattivo";
+"Behaviour:" = "Comportamento:";
+"Follows the cursor" = "Segue il cursore";
+"Lives on the Dock" = "Vive sul Dock";
+"Only while following the cursor" = "Solo mentre segue il cursore";

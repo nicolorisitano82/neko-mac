@@ -87,6 +87,11 @@
 	scale = [controller scale];
 	stopRadius = [controller stopRadius];
 	idleSleep = [controller idleSleep];
+	windowsMode = [controller livesOnWindowEdges];
+	wanderEnabled = [controller wandersWhenIdle];
+	if(!wanderEnabled && !windowsMode)
+		wandering = NO;
+	shelvesAge = 0;
 	
 	NekoCharacter *newCharacter = [controller character];
 	if(newCharacter != character) {
@@ -116,13 +121,254 @@
 	}
 }
 
+/* The eight walking states, which several decisions turn on. */
+- (BOOL)isWalking
+{
+	return nekoState == NekoStateUMove || nekoState == NekoStateDMove
+	    || nekoState == NekoStateLMove || nekoState == NekoStateRMove
+	    || nekoState == NekoStateULMove || nekoState == NekoStateURMove
+	    || nekoState == NekoStateDLMove || nekoState == NekoStateDRMove;
+}
+
+#pragma mark Wandering
+
+/* Somewhere else on the desk, a few sprites away, pointing away from wherever
+   the pointer is: a cat that has been left alone drifts off, it does not circle
+   the cursor it just gave up on. */
+- (void)startWanderingAwayFromPointer
+{
+	NSRect bounds = [self nekoBounds];
+	NSRect frame = [self frame];
+	NSPoint mouse = [NSEvent mouseLocation];
+
+	double away = atan2(NSMinY(frame) - mouse.y, NSMidX(frame) - mouse.x);
+	if(isnan(away))
+		away = (double)arc4random_uniform(360) * M_PI / 180.0;
+	/* within a third of a turn either side of straight away */
+	away += ((double)arc4random_uniform(120) - 60.0) * M_PI / 180.0;
+	float reach = 150.0f + (float)arc4random_uniform(200);
+
+	wanderTarget = NSMakePoint(NSMidX(frame) + reach * cos(away),
+	                           NSMinY(frame) + reach * sin(away));
+	wanderTarget.x = MIN(MAX(wanderTarget.x, NSMinX(bounds) + frame.size.width),
+	                     NSMaxX(bounds) - frame.size.width);
+	wanderTarget.y = MIN(MAX(wanderTarget.y, NSMinY(bounds)),
+	                     NSMaxY(bounds) - frame.size.height);
+	wanderMouse = mouse;
+	wandering = YES;
+}
+
+/* In the other behaviour the cat picks one of your window tops, or the desk,
+   and goes to sit on it. The pointer has no say. */
+- (void)startWanderingOntoShelf
+{
+	NSRect bounds = [self nekoBounds];
+	NSRect frame = [self frame];
+	NSMutableArray *surfaces = [NSMutableArray arrayWithArray:shelves];
+	if([surfaces count] == 0)
+		[surfaces addObject:[NSValue valueWithRect:NSMakeRect(
+			NSMinX(bounds), NSMinY(bounds), bounds.size.width, 1.0f)]];  /* the desk */
+
+	NSRect surface = [[surfaces objectAtIndex:arc4random_uniform([surfaces count])] rectValue];
+	float room = surface.size.width - frame.size.width;
+	float x = NSMinX(surface) + (room > 0.0f ? (float)arc4random_uniform((unsigned)room) : 0.0f);
+
+	wanderTarget = NSMakePoint(x + frame.size.width / 2.0f, surface.origin.y);
+	wanderMouse = [NSEvent mouseLocation];
+	wandering = YES;
+}
+
+- (void)stopWandering
+{
+	wandering = NO;
+}
+
+/* Chasing the pointer: it drifts off only after having properly settled and
+   slept, about half a minute of being left alone. Living on windows: it moves
+   between them whenever it has sat still long enough. */
+- (BOOL)shouldWanderNow
+{
+	if(wandering)
+		return NO;
+	if(windowsMode)
+		return restedTicks > 80;      /* ten seconds on a window top */
+	return wanderEnabled && restedTicks > 240;   /* thirty seconds asleep */
+}
+
+- (void)beginWandering
+{
+	if(windowsMode)
+		[self startWanderingOntoShelf];
+	else
+		[self startWanderingAwayFromPointer];
+	restedTicks = 0;
+}
+
+/* What the cat is walking towards: the pointer, or wherever it decided to go. */
+- (NSPoint)chaseTarget
+{
+	if(wandering)
+		return wanderTarget;
+	if(windowsMode)
+		return NSMakePoint(NSMidX([self frame]), NSMinY([self frame]));  /* stay put */
+	return [NSEvent mouseLocation];
+}
+
+#pragma mark Walls and window edges
+
+/* Every screen together, so the cat can follow the pointer onto another
+   display instead of treating its own screen border as a wall. */
+- (NSRect)nekoBounds
+{
+	NSRect bounds = NSZeroRect;
+	NSEnumerator *e = [[NSScreen screens] objectEnumerator];
+	NSScreen *screen;
+	while((screen = [e nextObject]) != nil)
+		bounds = NSIsEmptyRect(bounds) ? [screen visibleFrame]
+		                               : NSUnionRect(bounds, [screen visibleFrame]);
+	return NSIsEmptyRect(bounds) ? [[NSScreen mainScreen] visibleFrame] : bounds;
+}
+
+/* Where the Dock is, as a surface to stand on, or an empty rect when it is
+   hidden. Its own Quartz window covers the whole screen and says nothing, so the
+   room it reserves is read from the screen instead: visibleFrame stops where the
+   Dock starts. Only a Dock along the bottom is handled; on the sides the cat
+   falls back to windows. */
+- (NSRect)dockSurface
+{
+	NSScreen *screen = [self screen] ? [self screen] : [NSScreen mainScreen];
+	NSRect frame = [screen frame];
+	NSRect visible = [screen visibleFrame];
+	float reserved = NSMinY(visible) - NSMinY(frame);
+	if(reserved < 20.0f)
+		return NSZeroRect;           /* hidden, or on a side */
+
+	/* The Dock sits in the middle of the edge, so the cat is kept over the part
+	   that is actually there rather than the empty desk beside it. */
+	float inset = frame.size.width * 0.15f;
+	return NSMakeRect(NSMinX(frame) + inset, NSMinY(visible),
+	                  frame.size.width - 2.0f * inset, 1.0f);
+}
+
+/* The surfaces the cat may stand on: the Dock when it is out, otherwise the top
+   edge of any window that is not filling the screen, otherwise the desk itself.
+   Refreshed every few ticks, since windows do not move eight times a second. */
+- (void)refreshShelves
+{
+	if(shelves != nil && shelvesAge > 0) {
+		shelvesAge--;
+		return;
+	}
+	shelvesAge = 4;
+
+	NSMutableArray *found = [NSMutableArray array];
+	NSRect dock = [self dockSurface];
+	if(!NSIsEmptyRect(dock)) {
+		[shelves release];
+		shelves = [[NSArray arrayWithObject:[NSValue valueWithRect:dock]] retain];
+		return;
+	}
+
+	CFArrayRef list = CGWindowListCopyWindowInfo(
+		kCGWindowListOptionOnScreenOnly | kCGWindowListExcludeDesktopElements,
+		kCGNullWindowID);
+	if(list == NULL)
+		return;
+
+	/* Quartz measures from the top of the main display downwards. */
+	NSRect screenFrame = [[[NSScreen screens] objectAtIndex:0] frame];
+	float flip = NSMaxY(screenFrame);
+	double screenArea = screenFrame.size.width * screenFrame.size.height;
+	int mine = [[NSProcessInfo processInfo] processIdentifier];
+	NSEnumerator *e = [(NSArray *)list objectEnumerator];
+	NSDictionary *window;
+	while((window = [e nextObject]) != nil) {
+		if([[window objectForKey:(id)kCGWindowLayer] integerValue] != 0)
+			continue;
+		if([[window objectForKey:(id)kCGWindowOwnerPID] intValue] == mine)
+			continue;
+		NSNumber *alpha = [window objectForKey:(id)kCGWindowAlpha];
+		if(alpha != nil && [alpha floatValue] < 0.5f)
+			continue;
+		CGRect bounds = CGRectZero;
+		if(!CGRectMakeWithDictionaryRepresentation(
+			(CFDictionaryRef)[window objectForKey:(id)kCGWindowBounds], &bounds))
+			continue;
+		if(bounds.size.width < 120.0f || bounds.size.height < 60.0f)
+			continue;
+		/* A window filling the screen leaves nowhere to be seen standing. */
+		if(bounds.size.width * bounds.size.height > 0.85 * screenArea)
+			continue;
+		[found addObject:[NSValue valueWithRect:NSMakeRect(
+			bounds.origin.x, flip - bounds.origin.y, bounds.size.width, 1.0f)]];
+	}
+	CFRelease(list);
+
+	[shelves release];
+	shelves = [found copy];
+}
+
+/* The highest surface the cat can stand on at this horizontal position, never
+   above where its feet already are: it lands on things, it is not lifted. */
+- (float)floorUnderCentre:(float)centre feet:(float)feet
+{
+	float floor = NSMinY([self nekoBounds]);
+	if(!windowsMode)
+		return floor;
+
+	NSEnumerator *e = [shelves objectEnumerator];
+	NSValue *value;
+	while((value = [e nextObject]) != nil) {
+		NSRect shelf = [value rectValue];
+		if(centre < NSMinX(shelf) || centre > NSMaxX(shelf))
+			continue;
+		float top = shelf.origin.y;
+		if(top > feet + 1.0f || top <= floor)
+			continue;
+		floor = top;
+	}
+	return floor;
+}
+
+/* Keeps the whole sprite on a screen, and standing on whatever is under it. */
+- (void)settleX:(float *)x Y:(float *)y from:(float)previousY
+{
+	NSRect bounds = [self nekoBounds];
+	float side = [self frame].size.width;
+	*x = MIN(MAX(*x, NSMinX(bounds)), NSMaxX(bounds) - side);
+	*y = MIN(MAX(*y, NSMinY(bounds)), NSMaxY(bounds) - side);
+	*y = MAX(*y, [self floorUnderCentre:*x + side / 2.0f feet:previousY]);
+}
+
+/* The scratching state for whatever the cat is pressed against while still
+   trying to get past it, or NekoStateCount when it is not blocked. */
+- (NekoState)blockedWallState
+{
+	NSRect bounds = [self nekoBounds];
+	NSRect frame = [self frame];
+	float edge = 1.0f;
+
+	if(moveDx < 0.0f && NSMinX(frame) <= NSMinX(bounds) + edge)
+		return NekoStateLTogi;
+	if(moveDx > 0.0f && NSMaxX(frame) >= NSMaxX(bounds) - edge)
+		return NekoStateRTogi;
+	if(moveDy > 0.0f && NSMaxY(frame) >= NSMaxY(bounds) - edge)
+		return NekoStateUTogi;
+	if(moveDy < 0.0f) {
+		float floor = [self floorUnderCentre:NSMidX(frame) feet:NSMinY(frame)];
+		if(NSMinY(frame) <= floor + edge)
+			return NekoStateDTogi;   /* the desk, or the window it is standing on */
+	}
+	return NekoStateCount;
+}
+
 - (void)calcDxDyForX:(float)x Y:(float)y
 {
 	float		MouseX, MouseY;
 	float		DeltaX, DeltaY;
 	float		Length;
 	
-	NSPoint p = [NSEvent mouseLocation];
+	NSPoint p = [self chaseTarget];
 	MouseX = p.x;
 	MouseY = p.y;
 	
@@ -217,13 +463,29 @@
 {
 	float x = [self frame].origin.x;
 	float y = [self frame].origin.y;
-	//printf("paint %d %d\n", time(NULL), tickCount % [stateFrames count]);
+	float previousY = y;
 	
 	if(stateFrames == nil)
 		return;                        /* not wired up to a character yet */
 	
+	if(windowsMode)
+		[self refreshShelves];
+	
+	if([self isWalking])
+		restedTicks = 0;
+	else if(restedTicks < 60000)
+		restedTicks++;
+	
+	/* Whatever it had in mind, you moving the pointer wins. */
+	if(wandering) {
+		NSPoint mouse = [NSEvent mouseLocation];
+		if(hypotf(mouse.x - wanderMouse.x, mouse.y - wanderMouse.y) > 24.0f)
+			[self stopWandering];
+	}
+	
 	[self calcDxDyForX:x Y:y];
 	BOOL isNekoMoveStart = [self isNekoMoveStart];
+	NekoState wall = [self blockedWallState];
 	
 	unsigned frame = (tickCount / stateTicksPerFrame) % [stateFrames count];
 	[view setImageTo:(NSImage*)[stateFrames objectAtIndex:frame]];
@@ -231,19 +493,30 @@
 	[self advanceClock];
 	
     if(nekoState == NekoStateStop) {
+		if (wall != NekoStateCount && isNekoMoveStart) {
+			[self setStateTo:wall];    /* pressed against something, claw at it */
+			goto breakout;
+		}
 		if (isNekoMoveStart) {
+			[self setStateTo:NekoStateAwake];
+			goto breakout;
+		}
+		if ([self shouldWanderNow]) {
+			[self beginWandering];
 			[self setStateTo:NekoStateAwake];
 			goto breakout;
 		}
 		if (stateCount < 4) {
 			goto breakout;
 		}
-		/* The *_togi (wall scratching) states need screen edge detection, which
-		   this port does not do yet, so they stay unreachable. Characters are
-		   still expected to describe them. */
 		[self setStateTo:NekoStateJare];
 	} else if(nekoState == NekoStateJare) {
 		if (isNekoMoveStart) {
+			[self setStateTo:NekoStateAwake];
+			goto breakout;
+		}
+		if ([self shouldWanderNow]) {
+			[self beginWandering];
 			[self setStateTo:NekoStateAwake];
 			goto breakout;
 		}
@@ -274,6 +547,10 @@
 			[self setStateTo:NekoStateAwake];
 			goto breakout;
 		}
+		if ([self shouldWanderNow]) {
+			[self beginWandering];
+			[self setStateTo:NekoStateAwake];
+		}
 	} else if(nekoState == NekoStateAwake) {
 		if (stateCount < 3) {
 			goto breakout;
@@ -282,9 +559,18 @@
 	} else if(nekoState == NekoStateUMove || nekoState == NekoStateDMove || nekoState == NekoStateLMove || nekoState == NekoStateRMove || nekoState == NekoStateULMove || nekoState == NekoStateURMove || nekoState == NekoStateDLMove || nekoState == NekoStateDRMove) {
 		x += moveDx;
 		y += moveDy;
-		[self NekoDirection];
+		[self settleX:&x Y:&y from:previousY];
+		if (wall != NekoStateCount) {
+			/* It cannot get any closer, so it scratches instead of walking on
+			   the spot for ever. */
+			[self setStateTo:wall];
+		} else {
+			[self NekoDirection];
+			if (wandering && nekoState == NekoStateStop)
+				[self stopWandering];   /* arrived where it wanted to go */
+		}
 	} else if(nekoState == NekoStateUTogi || nekoState == NekoStateDTogi || nekoState == NekoStateLTogi || nekoState == NekoStateRTogi) {
-		if (isNekoMoveStart) {
+		if (wall == NekoStateCount && isNekoMoveStart) {
 			[self setStateTo:NekoStateAwake];
 			goto breakout;
 		}
@@ -298,7 +584,17 @@
 	}
 
 	breakout:
+	/* Only the window dweller is pulled downwards: a cat chasing the pointer
+	   rests wherever it stopped, and dragging it to the floor there sent it
+	   into a loop of arriving, falling and setting off again. */
+	if (windowsMode && ![self isWalking]) {
+		float floor = [self floorUnderCentre:x + [self frame].size.width / 2.0f
+		                               feet:previousY];
+		if (y > floor)
+			y = MAX(floor, y - speed);
+	}
 	[view displayIfNeeded];
 	[self setFrameOrigin:NSMakePoint(x, y)];
 }
+
 @end

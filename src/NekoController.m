@@ -5,6 +5,8 @@ NSString * const NekoSpeedKey      = @"NekoSpeed";
 NSString * const NekoScaleKey      = @"NekoScale";
 NSString * const NekoStopRadiusKey = @"NekoStopRadius";
 NSString * const NekoIdleSleepKey  = @"NekoIdleSleep";
+NSString * const NekoWanderKey     = @"NekoWander";
+NSString * const NekoBehaviourKey  = @"NekoBehaviour";
 NSString * const NekoPausedKey     = @"NekoPaused";
 
 NSString * const NekoSettingsDidChangeNotification = @"NekoSettingsDidChange";
@@ -56,6 +58,8 @@ static const float NekoMaxStopRadius = 200.0f;
 			[NSNumber numberWithFloat:1.0f], NekoScaleKey,
 			[NSNumber numberWithFloat:48.0f], NekoStopRadiusKey,
 			[NSNumber numberWithBool:YES], NekoIdleSleepKey,
+			[NSNumber numberWithBool:YES], NekoWanderKey,
+			@"follow", NekoBehaviourKey,
 			[NSNumber numberWithBool:NO], NekoPausedKey, nil]];
 }
 
@@ -217,6 +221,19 @@ static const float NekoMaxStopRadius = 200.0f;
 	return [[NSUserDefaults standardUserDefaults] boolForKey:NekoIdleSleepKey];
 }
 
+- (BOOL)wandersWhenIdle
+{
+	return [[NSUserDefaults standardUserDefaults] boolForKey:NekoWanderKey];
+}
+
+/* Two behaviours that cannot be mixed: chasing the pointer means resting
+   wherever it stopped, living on windows means being pulled down onto them. */
+- (BOOL)livesOnWindowEdges
+{
+	return [[[NSUserDefaults standardUserDefaults] stringForKey:NekoBehaviourKey]
+		isEqualToString:@"windows"];
+}
+
 - (BOOL)isPaused
 {
 	return [[NSUserDefaults standardUserDefaults] boolForKey:NekoPausedKey];
@@ -275,6 +292,32 @@ static const float NekoMaxStopRadius = 200.0f;
 	[alert addButtonWithTitle:NekoLocalized(@"OK")];
 	[NSApp activateIgnoringOtherApps:YES];
 	[alert runModal];
+}
+
+- (void)takeWanderFrom:(id)sender
+{
+	[[NSUserDefaults standardUserDefaults]
+		setBool:([sender state] == NSControlStateValueOn) forKey:NekoWanderKey];
+	[self settingsChanged];
+}
+
+- (void)takeBehaviourFrom:(id)sender
+{
+	[[NSUserDefaults standardUserDefaults]
+		setObject:([sender indexOfSelectedItem] == 1) ? @"windows" : @"follow"
+		   forKey:NekoBehaviourKey];
+	[self updateWanderAvailability];
+	[self settingsChanged];
+}
+
+/* Wandering is what an idle cursor-chaser does. A cat living on the Dock is
+   already moving about on its own, so the two cannot both be on. */
+- (void)updateWanderAvailability
+{
+	BOOL follows = ![self livesOnWindowEdges];
+	[wanderCheck setEnabled:follows];
+	[wanderCheck setToolTip:follows ? nil
+		: NekoLocalized(@"Only while following the cursor")];
 }
 
 - (void)takeOpenAtLoginFrom:(id)sender
@@ -341,13 +384,14 @@ static const float NekoMaxStopRadius = 200.0f;
 	[label setDrawsBackground:NO];
 	[label setEditable:NO];
 	[label setSelectable:NO];
+	[label setAlignment:NSTextAlignmentRight];
 	return label;
 }
 
 - (void)buildPreferencesPanel
 {
 	prefsPanel = [[NSPanel alloc]
-		initWithContentRect:NSMakeRect(0.0f, 0.0f, 445.0f, 280.0f)
+		initWithContentRect:NSMakeRect(0.0f, 0.0f, 470.0f, 340.0f)
 		          styleMask:(NSWindowStyleMaskTitled | NSWindowStyleMaskClosable)
 		            backing:NSBackingStoreBuffered
 		              defer:NO];
@@ -358,12 +402,26 @@ static const float NekoMaxStopRadius = 200.0f;
 
 	NSView *content = [prefsPanel contentView];
 
+	/* Behaviour */
+	[content addSubview:[self labelWithString:NekoLocalized(@"Behaviour:")
+	                                    frame:NSMakeRect(20.0f, 96.0f, 125.0f, 17.0f)]];
+
+	behaviourPopUp = [[NSPopUpButton alloc]
+		initWithFrame:NSMakeRect(152.0f, 91.0f, 260.0f, 26.0f) pullsDown:NO];
+	[behaviourPopUp addItemWithTitle:NekoLocalized(@"Follows the cursor")];
+	[behaviourPopUp addItemWithTitle:NekoLocalized(@"Lives on the Dock")];
+	[behaviourPopUp selectItemAtIndex:[self livesOnWindowEdges] ? 1 : 0];
+	[behaviourPopUp setTarget:self];
+	[behaviourPopUp setAction:@selector(takeBehaviourFrom:)];
+	[content addSubview:behaviourPopUp];
+	[behaviourPopUp release];
+
 	/* Character */
 	[content addSubview:[self labelWithString:NekoLocalized(@"Character:")
-	                                    frame:NSMakeRect(20.0f, 238.0f, 105.0f, 17.0f)]];
+	                                    frame:NSMakeRect(20.0f, 298.0f, 125.0f, 17.0f)]];
 
 	characterPopUp = [[NSPopUpButton alloc]
-		initWithFrame:NSMakeRect(127.0f, 233.0f, 170.0f, 26.0f) pullsDown:NO];
+		initWithFrame:NSMakeRect(152.0f, 293.0f, 170.0f, 26.0f) pullsDown:NO];
 	NSEnumerator *e = [[NekoCharacter availableCharacters] objectEnumerator];
 	NekoCharacter *character;
 	while((character = [e nextObject]) != nil)
@@ -376,9 +434,9 @@ static const float NekoMaxStopRadius = 200.0f;
 
 	/* Speed */
 	[content addSubview:[self labelWithString:NekoLocalized(@"Speed:")
-	                                    frame:NSMakeRect(20.0f, 198.0f, 105.0f, 17.0f)]];
+	                                    frame:NSMakeRect(20.0f, 258.0f, 125.0f, 17.0f)]];
 
-	speedSlider = [[NSSlider alloc] initWithFrame:NSMakeRect(130.0f, 195.0f, 200.0f, 21.0f)];
+	speedSlider = [[NSSlider alloc] initWithFrame:NSMakeRect(152.0f, 255.0f, 200.0f, 21.0f)];
 	[speedSlider setMinValue:NekoMinSpeed];
 	[speedSlider setMaxValue:NekoMaxSpeed];
 	[speedSlider setFloatValue:[self speed]];
@@ -388,14 +446,14 @@ static const float NekoMaxStopRadius = 200.0f;
 	[content addSubview:speedSlider];
 	[speedSlider release];
 
-	speedField = [self labelWithString:@"" frame:NSMakeRect(340.0f, 198.0f, 90.0f, 17.0f)];
+	speedField = [self labelWithString:@"" frame:NSMakeRect(362.0f, 258.0f, 90.0f, 17.0f)];
 	[content addSubview:speedField];
 
 	/* How close it comes */
 	[content addSubview:[self labelWithString:NekoLocalized(@"Stops short by:")
-	                                    frame:NSMakeRect(20.0f, 158.0f, 105.0f, 17.0f)]];
+	                                    frame:NSMakeRect(20.0f, 218.0f, 125.0f, 17.0f)]];
 
-	radiusSlider = [[NSSlider alloc] initWithFrame:NSMakeRect(130.0f, 155.0f, 200.0f, 21.0f)];
+	radiusSlider = [[NSSlider alloc] initWithFrame:NSMakeRect(152.0f, 215.0f, 200.0f, 21.0f)];
 	[radiusSlider setMinValue:NekoMinStopRadius];
 	[radiusSlider setMaxValue:NekoMaxStopRadius];
 	[radiusSlider setFloatValue:[self stopRadius]];
@@ -405,15 +463,15 @@ static const float NekoMaxStopRadius = 200.0f;
 	[content addSubview:radiusSlider];
 	[radiusSlider release];
 
-	radiusField = [self labelWithString:@"" frame:NSMakeRect(340.0f, 158.0f, 90.0f, 17.0f)];
+	radiusField = [self labelWithString:@"" frame:NSMakeRect(362.0f, 218.0f, 90.0f, 17.0f)];
 	[content addSubview:radiusField];
 
 	/* Size */
 	[content addSubview:[self labelWithString:NekoLocalized(@"Size:")
-	                                    frame:NSMakeRect(20.0f, 116.0f, 105.0f, 17.0f)]];
+	                                    frame:NSMakeRect(20.0f, 176.0f, 125.0f, 17.0f)]];
 
 	sizePopUp = [[NSPopUpButton alloc]
-		initWithFrame:NSMakeRect(127.0f, 111.0f, 100.0f, 26.0f) pullsDown:NO];
+		initWithFrame:NSMakeRect(152.0f, 171.0f, 100.0f, 26.0f) pullsDown:NO];
 	[sizePopUp addItemWithTitle:@"1\u00d7"];
 	[sizePopUp addItemWithTitle:@"2\u00d7"];
 	[sizePopUp selectItemAtIndex:([self scale] >= 2.0f) ? 1 : 0];
@@ -423,7 +481,7 @@ static const float NekoMaxStopRadius = 200.0f;
 	[sizePopUp release];
 
 	/* Idle sleep */
-	sleepCheck = [[NSButton alloc] initWithFrame:NSMakeRect(129.0f, 84.0f, 300.0f, 18.0f)];
+	sleepCheck = [[NSButton alloc] initWithFrame:NSMakeRect(154.0f, 144.0f, 300.0f, 18.0f)];
 	[sleepCheck setButtonType:NSButtonTypeSwitch];
 	[sleepCheck setTitle:NekoLocalized(@"Fall asleep when idle")];
 	[sleepCheck setState:[self idleSleep] ? NSControlStateValueOn : NSControlStateValueOff];
@@ -432,8 +490,18 @@ static const float NekoMaxStopRadius = 200.0f;
 	[content addSubview:sleepCheck];
 	[sleepCheck release];
 
+	/* Wandering */
+	wanderCheck = [[NSButton alloc] initWithFrame:NSMakeRect(154.0f, 120.0f, 300.0f, 18.0f)];
+	[wanderCheck setButtonType:NSButtonTypeSwitch];
+	[wanderCheck setTitle:NekoLocalized(@"Wander off when idle")];
+	[wanderCheck setState:[self wandersWhenIdle] ? NSControlStateValueOn : NSControlStateValueOff];
+	[wanderCheck setTarget:self];
+	[wanderCheck setAction:@selector(takeWanderFrom:)];
+	[content addSubview:wanderCheck];
+	[wanderCheck release];
+
 	/* Opening at login */
-	loginCheck = [[NSButton alloc] initWithFrame:NSMakeRect(129.0f, 60.0f, 300.0f, 18.0f)];
+	loginCheck = [[NSButton alloc] initWithFrame:NSMakeRect(154.0f, 72.0f, 300.0f, 18.0f)];
 	[loginCheck setButtonType:NSButtonTypeSwitch];
 	[loginCheck setTitle:NekoLocalized(@"Open at login")];
 	[loginCheck setState:[self opensAtLogin] ? NSControlStateValueOn : NSControlStateValueOff];
@@ -447,7 +515,7 @@ static const float NekoMaxStopRadius = 200.0f;
 	[loginCheck release];
 
 	/* Restore defaults */
-	NSButton *reset = [[NSButton alloc] initWithFrame:NSMakeRect(16.0f, 16.0f, 180.0f, 32.0f)];
+	NSButton *reset = [[NSButton alloc] initWithFrame:NSMakeRect(16.0f, 20.0f, 180.0f, 32.0f)];
 	[reset setBezelStyle:NSBezelStyleRounded];
 	[reset setTitle:NekoLocalized(@"Restore Defaults")];
 	[reset setTarget:self];
@@ -455,6 +523,7 @@ static const float NekoMaxStopRadius = 200.0f;
 	[content addSubview:reset];
 	[reset release];
 
+	[self updateWanderAvailability];
 	[self updateValueFields];
 }
 
@@ -475,6 +544,9 @@ static const float NekoMaxStopRadius = 200.0f;
 	[radiusSlider setFloatValue:[self stopRadius]];
 	[sizePopUp selectItemAtIndex:([self scale] >= 2.0f) ? 1 : 0];
 	[sleepCheck setState:[self idleSleep] ? NSControlStateValueOn : NSControlStateValueOff];
+	[wanderCheck setState:[self wandersWhenIdle] ? NSControlStateValueOn : NSControlStateValueOff];
+	[behaviourPopUp selectItemAtIndex:[self livesOnWindowEdges] ? 1 : 0];
+	[self updateWanderAvailability];
 	/* The system owns this one, so it is read back rather than remembered. */
 	[loginCheck setState:[self opensAtLogin] ? NSControlStateValueOn : NSControlStateValueOff];
 	[self updateValueFields];
@@ -538,6 +610,8 @@ static const float NekoMaxStopRadius = 200.0f;
 	[defaults removeObjectForKey:NekoScaleKey];
 	[defaults removeObjectForKey:NekoStopRadiusKey];
 	[defaults removeObjectForKey:NekoIdleSleepKey];
+	[defaults removeObjectForKey:NekoWanderKey];
+	[defaults removeObjectForKey:NekoBehaviourKey];
 	[defaults removeObjectForKey:NekoPausedKey];
 	if(prefsPanel != nil)
 		[self syncPreferencesControls];
