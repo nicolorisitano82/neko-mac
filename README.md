@@ -95,6 +95,11 @@ the app and nothing of ours goes over the network.
 Keychain and never in the preferences file. Questions go to Anthropic; the
 preferences say so next to the field.
 
+Neko answers in the language it is running in — named outright in the
+instructions, because "the same language as the question" is too weak for a
+small model, which drifts into English halfway through. To have it answer in a
+different language, change the app's language in System Settings.
+
 Whoever is on screen is who answers: the manifest's `Persona` describes the
 character, and the question goes out with it, so the wizard cat sounds like a
 wizard and the flying saucer talks about this planet from the outside. The facts

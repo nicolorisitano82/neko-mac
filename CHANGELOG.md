@@ -17,6 +17,11 @@ character returning the same bare sentence. What works is both, in that order:
 truth as the first duty, the character confined to the wording, and one explicit
 line saying a small touch is enough even when the answer is a single fact.
 
+The answer is pinned to the language Neko runs in, named outright: "reply in
+Italian", not "reply in the same language as the question", which a small model
+honours for a sentence and then abandons. Asked in English while running in
+Italian, it now answers in Italian.
+
 The instructions no longer mention the bubble or the sprite, either: describing
 the display made one model narrate it back, answering inside a
 `<small sprite 32px: …>` tag.
