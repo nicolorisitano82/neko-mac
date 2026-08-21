@@ -33,7 +33,9 @@ while [ $# -gt 0 ]; do
 	esac
 done
 
-[ -d "$APP" ] || ./build.sh
+# Always rebuild: skipping it when build/Neko.app happens to exist means
+# packaging whatever was there before, down to its version number.
+./build.sh
 
 VERSION=$(/usr/libexec/PlistBuddy -c "Print :CFBundleShortVersionString" "$APP/Contents/Info.plist")
 VOLUME="Neko $VERSION"
