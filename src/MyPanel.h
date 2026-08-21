@@ -2,19 +2,27 @@
 
 #import <Cocoa/Cocoa.h>
 #import "MyView.h"
+#import "NekoCharacter.h"
 
 @interface MyPanel : NSPanel
 {
 	IBOutlet MyView *view;
 	
-	NSArray *stop, *jare, *kaki, *akubi, *sleep, *awake, *u_move, *d_move,
-	        *l_move, *r_move, *ul_move, *ur_move, *dl_move, *dr_move, *u_togi,
-			*d_togi, *l_togi, *r_togi;
+	NekoCharacter *character;
+	NekoState nekoState;
+	NSArray *stateFrames;         /* frames of nekoState, never empty */
+	unsigned stateTicksPerFrame;
 	
-	id nekoState;
 	unsigned char tickCount, stateCount;
 	float moveDx, moveDy;
-	id myTimer;
+	NSTimer *myTimer;
+	
+	float speed, scale;
+	BOOL idleSleep;
 	
 }
+
+/* Reads the current preferences and applies them to the cat. */
+- (void)applySettings;
+
 @end

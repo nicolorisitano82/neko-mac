@@ -1,6 +1,6 @@
 //
 //  main.m
-//  猫
+//  Neko
 //
 //  Created by Matthew Donoughe on 2007-09-23.
 //  Copyright __MyCompanyName__ 2007. All rights reserved.

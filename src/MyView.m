@@ -27,7 +27,8 @@
 {
     if(image) {
         [[NSGraphicsContext currentContext] setImageInterpolation:NSImageInterpolationNone];
-		[image drawAtPoint:NSMakePoint(0.0f, 0.0f) fromRect:NSZeroRect operation:NSCompositeCopy fraction:1.0f];
+		/* drawn into the whole view so the cat scales with the panel */
+		[image drawInRect:[self bounds] fromRect:NSZeroRect operation:NSCompositingOperationCopy fraction:1.0f];
     }
 	//printf("draw %d\n", image);
 }

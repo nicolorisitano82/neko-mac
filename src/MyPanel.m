@@ -1,106 +1,115 @@
 #import "MyPanel.h"
+#import "NekoController.h"
 
 @implementation MyPanel
-- (void)setStateTo:(id)theState
+- (void)setStateTo:(NekoState)theState
 {
-	if(nekoState == theState)
+	if(stateFrames != nil && nekoState == theState)
 		return;
 	//printf("state %d\n", theState);
 	tickCount = 0;
 	stateCount = 0;
 	nekoState = theState;
-	[self flushWindow];
+	[stateFrames release];
+	stateFrames = [[character framesForState:theState] retain];
+	stateTicksPerFrame = [character ticksPerFrameForState:theState];
+	[view setNeedsDisplay:YES];
 }
 
 - (id)initWithContentRect:(NSRect)contentRect styleMask:(NSWindowStyleMask)styleMask backing:(NSBackingStoreType)bufferingType defer:(BOOL)deferCreation
 {
-	self = [super initWithContentRect:contentRect styleMask:NSBorderlessWindowMask backing:bufferingType defer:deferCreation];
+	self = [super initWithContentRect:contentRect styleMask:NSWindowStyleMaskBorderless backing:bufferingType defer:deferCreation];
 	[self setBecomesKeyOnlyIfNeeded:YES];
 	[self setLevel:NSStatusWindowLevel];
 	[self setOpaque:NO];
 	[self setCanHide:NO];
 	[self setIgnoresMouseEvents:YES];
 	[self setMovableByWindowBackground:NO];
-	[self setFrame:NSMakeRect(0.0f, 0.0f, 32.0f, 32.0f) display:0];
+	[self setFrame:NSMakeRect(0.0f, 0.0f, 32.0f, 32.0f) display:NO];
 	[self center];
 	[self setBackgroundColor:[NSColor clearColor]];
-	[self useOptimizedDrawing:YES];
-	NSBundle *bundle = [NSBundle mainBundle];
 	
-	stop = [NSArray arrayWithObjects:
-		[[NSImage alloc] initWithContentsOfFile:[bundle pathForResource:@"mati2" ofType:@"gif"]], nil];
-	[stop retain];
-	jare = [NSArray arrayWithObjects:
-		[[NSImage alloc] initWithContentsOfFile:[bundle pathForResource:@"jare2" ofType:@"gif"]],
-		[[NSImage alloc] initWithContentsOfFile:[bundle pathForResource:@"mati2" ofType:@"gif"]], nil];
-	[jare retain];
-	kaki = [NSArray arrayWithObjects:
-		[[NSImage alloc] initWithContentsOfFile:[bundle pathForResource:@"kaki1" ofType:@"gif"]],
-		[[NSImage alloc] initWithContentsOfFile:[bundle pathForResource:@"kaki2" ofType:@"gif"]], nil];
-	[kaki retain];
-	akubi = [NSArray arrayWithObjects:
-		[[NSImage alloc] initWithContentsOfFile:[bundle pathForResource:@"mati3" ofType:@"gif"]], nil];
-	[akubi retain];
-	sleep = [NSArray arrayWithObjects:
-		[[NSImage alloc] initWithContentsOfFile:[bundle pathForResource:@"sleep1" ofType:@"gif"]],
-		[[NSImage alloc] initWithContentsOfFile:[bundle pathForResource:@"sleep2" ofType:@"gif"]], nil];
-	[sleep retain];
-	awake = [NSArray arrayWithObjects:
-		[[NSImage alloc] initWithContentsOfFile:[bundle pathForResource:@"awake" ofType:@"gif"]], nil];
-	[awake retain];
-	u_move = [NSArray arrayWithObjects:
-		[[NSImage alloc] initWithContentsOfFile:[bundle pathForResource:@"up1" ofType:@"gif"]],
-		[[NSImage alloc] initWithContentsOfFile:[bundle pathForResource:@"up2" ofType:@"gif"]], nil];
-	[u_move retain];
-	d_move = [NSArray arrayWithObjects:
-		[[NSImage alloc] initWithContentsOfFile:[bundle pathForResource:@"down1" ofType:@"gif"]],
-		[[NSImage alloc] initWithContentsOfFile:[bundle pathForResource:@"down2" ofType:@"gif"]], nil];
-	[d_move retain];
-	l_move = [NSArray arrayWithObjects:
-		[[NSImage alloc] initWithContentsOfFile:[bundle pathForResource:@"left1" ofType:@"gif"]],
-		[[NSImage alloc] initWithContentsOfFile:[bundle pathForResource:@"left2" ofType:@"gif"]], nil];
-	[l_move retain];
-	r_move = [NSArray arrayWithObjects:
-		[[NSImage alloc] initWithContentsOfFile:[bundle pathForResource:@"right1" ofType:@"gif"]],
-		[[NSImage alloc] initWithContentsOfFile:[bundle pathForResource:@"right2" ofType:@"gif"]], nil];
-	[r_move retain];
-	ul_move = [NSArray arrayWithObjects:
-		[[NSImage alloc] initWithContentsOfFile:[bundle pathForResource:@"upleft1" ofType:@"gif"]],
-		[[NSImage alloc] initWithContentsOfFile:[bundle pathForResource:@"upleft2" ofType:@"gif"]], nil];
-	[ul_move retain];
-	ur_move = [NSArray arrayWithObjects:
-		[[NSImage alloc] initWithContentsOfFile:[bundle pathForResource:@"upright1" ofType:@"gif"]],
-		[[NSImage alloc] initWithContentsOfFile:[bundle pathForResource:@"upright2" ofType:@"gif"]], nil];
-	[ur_move retain];
-	dl_move = [NSArray arrayWithObjects:
-		[[NSImage alloc] initWithContentsOfFile:[bundle pathForResource:@"dwleft1" ofType:@"gif"]],
-		[[NSImage alloc] initWithContentsOfFile:[bundle pathForResource:@"dwleft2" ofType:@"gif"]], nil];
-	[dl_move retain];
-	dr_move = [NSArray arrayWithObjects:
-		[[NSImage alloc] initWithContentsOfFile:[bundle pathForResource:@"dwright1" ofType:@"gif"]],
-		[[NSImage alloc] initWithContentsOfFile:[bundle pathForResource:@"dwright2" ofType:@"gif"]], nil];
-	[dr_move retain];
-	u_togi = [NSArray arrayWithObjects:
-		[[NSImage alloc] initWithContentsOfFile:[bundle pathForResource:@"utogi1" ofType:@"gif"]],
-		[[NSImage alloc] initWithContentsOfFile:[bundle pathForResource:@"utogi2" ofType:@"gif"]], nil];
-	[u_togi retain];
-	d_togi = [NSArray arrayWithObjects:
-		[[NSImage alloc] initWithContentsOfFile:[bundle pathForResource:@"dtogi1" ofType:@"gif"]],
-		[[NSImage alloc] initWithContentsOfFile:[bundle pathForResource:@"dtogi2" ofType:@"gif"]], nil];
-	[d_togi retain];
-	l_togi = [NSArray arrayWithObjects:
-		[[NSImage alloc] initWithContentsOfFile:[bundle pathForResource:@"ltogi1" ofType:@"gif"]],
-		[[NSImage alloc] initWithContentsOfFile:[bundle pathForResource:@"ltogi2" ofType:@"gif"]], nil];
-	[l_togi retain];
-	r_togi = [NSArray arrayWithObjects:
-		[[NSImage alloc] initWithContentsOfFile:[bundle pathForResource:@"rtogi1" ofType:@"gif"]],
-		[[NSImage alloc] initWithContentsOfFile:[bundle pathForResource:@"rtogi2" ofType:@"gif"]], nil];
-	[r_togi retain];
+	speed = 13.0f;
+	scale = 1.0f;
+	idleSleep = YES;
 	
-	[self setStateTo:stop];
-	
-	[NSTimer scheduledTimerWithTimeInterval:0.125f target:self selector:@selector(handleTimer:) userInfo:nil repeats:YES];
+	[self startTimer];
 	return self;
+}
+
+- (void)awakeFromNib
+{
+	NekoController *controller = [NekoController sharedController];
+	[controller setPanel:self];
+	[[NSNotificationCenter defaultCenter] addObserver:self
+	                                        selector:@selector(settingsDidChange:)
+	                                            name:NekoSettingsDidChangeNotification
+	                                          object:nil];
+	[self applySettings];
+}
+
+- (void)startTimer
+{
+	if(myTimer != nil)
+		return;
+	myTimer = [NSTimer scheduledTimerWithTimeInterval:0.125f target:self selector:@selector(handleTimer:) userInfo:nil repeats:YES];
+}
+
+- (void)stopTimer
+{
+	[myTimer invalidate];
+	myTimer = nil;
+}
+
+- (void)settingsDidChange:(NSNotification*)notification
+{
+	[self applySettings];
+}
+
+/* Resizes the window around its own centre so swapping character or size does
+   not make the cat drift across the screen. */
+- (void)setSpriteSide:(float)side
+{
+	NSRect frame = [self frame];
+	if(frame.size.width == side && frame.size.height == side)
+		return;
+	frame.origin.x += floor((frame.size.width - side) / 2.0f);
+	frame.origin.y += floor((frame.size.height - side) / 2.0f);
+	frame.size = NSMakeSize(side, side);
+	[self setFrame:frame display:YES];
+}
+
+- (void)applySettings
+{
+	NekoController *controller = [NekoController sharedController];
+	speed = [controller speed];
+	scale = [controller scale];
+	idleSleep = [controller idleSleep];
+	
+	NekoCharacter *newCharacter = [controller character];
+	if(newCharacter != character) {
+		[character release];
+		character = [newCharacter retain];
+		[stateFrames release];
+		stateFrames = nil;             /* forces setStateTo: to reload */
+		[self setStateTo:NekoStateStop];
+	}
+	
+	/* Sprites are square in every character shipped so far; the larger side
+	   drives the window so a non-square one is letterboxed instead of cropped. */
+	NSSize sprite = [character spriteSize];
+	[self setSpriteSide:MAX(sprite.width, sprite.height) * scale];
+	[view setFrame:[[self contentView] bounds]];
+	[view setNeedsDisplay:YES];
+	
+	if([controller isPaused]) {
+		[self stopTimer];
+		[self orderOut:nil];
+	} else {
+		if(![self isVisible])
+			[self orderFront:nil];
+		[self startTimer];
+	}
 }
 
 - (void)calcDxDyForX:(float)x Y:(float)y
@@ -113,18 +122,18 @@
 	MouseX = p.x;
 	MouseY = p.y;
 	
-	DeltaX = floor(MouseX - x - 16.0f);
+	DeltaX = floor(MouseX - x - [self frame].size.width / 2.0f);
 	DeltaY = floor(MouseY - y);
 	
 	Length = hypotf(DeltaX, DeltaY);
 	
 	if (Length != 0.0f) {
-		if (Length <= 13.0f) {
+		if (Length <= speed) {
 			moveDx = DeltaX;
 			moveDy = DeltaY;
 		} else {
-			moveDx = (13.0f * DeltaX) / Length;
-			moveDy = (13.0f * DeltaY) / Length;
+			moveDx = (speed * DeltaX) / Length;
+			moveDy = (speed * DeltaY) / Length;
 		}
 	} else {
 		moveDx = moveDy = 0.0f;
@@ -133,7 +142,8 @@
 
 - (BOOL)isNekoMoveStart
 {
-	return moveDx > 6 || moveDx < -6 || moveDy > 6 || moveDy < -6;
+	float threshold = speed / 2.0f;
+	return moveDx > threshold || moveDx < -threshold || moveDy > threshold || moveDy < -threshold;
 }
 
 - (void)advanceClock
@@ -151,13 +161,13 @@
 
 - (void)NekoDirection
 {
-    id			NewState;
+    NekoState	NewState;
     double		LargeX, LargeY;
     double		Length;
     double		SinTheta;
 	
     if (moveDx == 0.0f && moveDy == 0.0f) {
-		NewState = stop;
+		NewState = NekoStateStop;
     } else {
 		LargeX = (double)moveDx;
 		LargeY = (double)moveDy;
@@ -167,27 +177,27 @@
 		
 		if (moveDx > 0) {
 			if (SinTheta > 0.9239) {
-				NewState = u_move;
+				NewState = NekoStateUMove;
 			} else if (SinTheta > 0.3827) {
-				NewState = ur_move;
+				NewState = NekoStateURMove;
 			} else if (SinTheta > -0.3827) {
-				NewState = r_move;
+				NewState = NekoStateRMove;
 			} else if (SinTheta > -0.9239) {
-				NewState = dr_move;
+				NewState = NekoStateDRMove;
 			} else {
-				NewState = d_move;
+				NewState = NekoStateDMove;
 			}
 		} else {
 			if (SinTheta > 0.9239) {
-				NewState = u_move;
+				NewState = NekoStateUMove;
 			} else if (SinTheta > 0.3827) {
-				NewState = ul_move;
+				NewState = NekoStateULMove;
 			} else if (SinTheta > -0.3827) {
-				NewState = l_move;
+				NewState = NekoStateLMove;
 			} else if (SinTheta > -0.9239) {
-				NewState = dl_move;
+				NewState = NekoStateDLMove;
 			} else {
-				NewState = d_move;
+				NewState = NekoStateDMove;
 			}
 		}
     }
@@ -199,91 +209,84 @@
 {
 	float x = [self frame].origin.x;
 	float y = [self frame].origin.y;
-	//printf("paint %d %d\n", time(NULL), tickCount % [nekoState count]);
+	//printf("paint %d %d\n", time(NULL), tickCount % [stateFrames count]);
+	
+	if(stateFrames == nil)
+		return;                        /* not wired up to a character yet */
 	
 	[self calcDxDyForX:x Y:y];
 	BOOL isNekoMoveStart = [self isNekoMoveStart];
 	
-    if(nekoState != sleep) {
-		[view setImageTo:(NSImage*)[nekoState objectAtIndex:tickCount % [nekoState count]]];
-    } else {
-		[view setImageTo:(NSImage*)[nekoState objectAtIndex:(tickCount>>2) % [nekoState count]]];
-    }
+	unsigned frame = (tickCount / stateTicksPerFrame) % [stateFrames count];
+	[view setImageTo:(NSImage*)[stateFrames objectAtIndex:frame]];
 	
 	[self advanceClock];
 	
-    if(nekoState == stop) {
+    if(nekoState == NekoStateStop) {
 		if (isNekoMoveStart) {
-			[self setStateTo:awake];
+			[self setStateTo:NekoStateAwake];
 			goto breakout;
 		}
 		if (stateCount < 4) {
 			goto breakout;
 		}
-		/*if (moveDx < 0 && x <= 0) {
-		[self setStateTo:l_togi];
-		} else if (moveDx > 0 && x >= WindowWidth - 32) {
-			[self setStateTo:r_togi];
-		} else if (moveDy < 0 && y <= 0) {
-			[self setStateTo:u_togi];
-		} else if (moveDy > 0 && y >= WindowHeight - 32) {
-			[self setStateTo:d_togi];
-		} else {*/
-		[self setStateTo:jare];
-		//}
-	} else if(nekoState == jare) {
+		/* The *_togi (wall scratching) states need screen edge detection, which
+		   this port does not do yet, so they stay unreachable. Characters are
+		   still expected to describe them. */
+		[self setStateTo:NekoStateJare];
+	} else if(nekoState == NekoStateJare) {
 		if (isNekoMoveStart) {
-			[self setStateTo:awake];
+			[self setStateTo:NekoStateAwake];
 			goto breakout;
 		}
 		if (stateCount < 10) {
 			goto breakout;
 		}
-		[self setStateTo:kaki];
-	} else if(nekoState == kaki) {
+		[self setStateTo:NekoStateKaki];
+	} else if(nekoState == NekoStateKaki) {
 		if (isNekoMoveStart) {
-			[self setStateTo:awake];
+			[self setStateTo:NekoStateAwake];
 			goto breakout;
 		}
 		if (stateCount < 4) {
 			goto breakout;
 		}
-		[self setStateTo:akubi];
-	} else if(nekoState == akubi) {
+		[self setStateTo:NekoStateAkubi];
+	} else if(nekoState == NekoStateAkubi) {
 		if (isNekoMoveStart) {
-			[self setStateTo:awake];
+			[self setStateTo:NekoStateAwake];
 			goto breakout;
 		}
 		if (stateCount < 6) {
 			goto breakout;
 		}
-		[self setStateTo:sleep];
-	} else if(nekoState == sleep) {
+		[self setStateTo:(idleSleep ? NekoStateSleep : NekoStateStop)];
+	} else if(nekoState == NekoStateSleep) {
 		if (isNekoMoveStart) {
-			[self setStateTo:awake];
+			[self setStateTo:NekoStateAwake];
 			goto breakout;
 		}
-	} else if(nekoState == awake) {
+	} else if(nekoState == NekoStateAwake) {
 		if (stateCount < 3) {
 			goto breakout;
 		}
-		[self NekoDirection];	/* 猫が動く向きを求める */
-	} else if(nekoState == u_move || nekoState == d_move || nekoState == l_move || nekoState == r_move || nekoState == ul_move || nekoState == ur_move || nekoState == dl_move || nekoState == dr_move) {
+		[self NekoDirection];	/* work out which way the cat moves */
+	} else if(nekoState == NekoStateUMove || nekoState == NekoStateDMove || nekoState == NekoStateLMove || nekoState == NekoStateRMove || nekoState == NekoStateULMove || nekoState == NekoStateURMove || nekoState == NekoStateDLMove || nekoState == NekoStateDRMove) {
 		x += moveDx;
 		y += moveDy;
 		[self NekoDirection];
-	} else if(nekoState == u_togi || nekoState == d_togi || nekoState == l_togi || nekoState == r_togi) {
+	} else if(nekoState == NekoStateUTogi || nekoState == NekoStateDTogi || nekoState == NekoStateLTogi || nekoState == NekoStateRTogi) {
 		if (isNekoMoveStart) {
-			[self setStateTo:awake];
+			[self setStateTo:NekoStateAwake];
 			goto breakout;
 		}
 		if (stateCount < 10) {
 			goto breakout;
 		}
-		[self setStateTo:kaki];
+		[self setStateTo:NekoStateKaki];
 	} else {
 		/* Internal Error */
-		[self setStateTo:stop];
+		[self setStateTo:NekoStateStop];
 	}
 
 	breakout:
