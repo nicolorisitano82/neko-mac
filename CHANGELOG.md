@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 1.7.1 — 2026-08-22
 
 ### The answer sounds like whoever is on screen
 
