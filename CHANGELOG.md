@@ -1,0 +1,166 @@
+# Changelog
+
+## 1.5.1 — 2026-08-21
+
+### Stops short of the pointer
+
+A new preference, **Stops short by**, is the ring the cat keeps around the
+cursor: 0 to 200 points, 48 by default. At 0 it sits right under the cursor, the
+way it always did. The step towards the pointer is capped by the distance left
+over the ring, so the cat settles on it instead of stepping across and jittering
+back, and anything under a point counts as arrived — the deltas are whole
+points, so without that the cat could creep a fraction of a point per tick
+without ever finishing.
+
+The web version gained the same `stopRadius` option, replacing a hard-coded
+48-point cushion that quietly doubled at 2× scale.
+
+### The interface speaks four languages
+
+English, Italian, French and Spanish, in `Resources/<lang>.lproj`. The English
+text is the lookup key, so a missing translation falls back to English on its
+own. The preferences window was widened to fit the longest of them, checked by
+measuring every string against the control that holds it.
+
+### Six new characters
+
+Generated pixel art, imported with the new `tools/grid2char.py`: **Merlin** the
+wizard cat and **Owl** at 48 points, **Merlin XL** and **Owl XL** at 64,
+**Alien** and **Pinup** at 48. They are the first characters larger than the
+32-point sprites oneko drew, which the manifest always allowed and nothing had
+exercised.
+
+`grid2char.py` keys the background out by flooding in from the border, so white
+fur inside a character survives a white backdrop, and it compares alpha as well
+as colour — a sprite outlined in black shares its colour with transparent black,
+and an earlier version ate the outlines. `--autogrid` takes the cell boxes from
+where the poses actually are rather than splitting the image evenly.
+
+`char2sheet.py` now scales oversized characters down to 32 points for the web
+sprite sheet instead of leaving them out.
+
+### Fixed
+
+- A character that fails to load no longer sizes the window to nothing.
+- `tools/sprite-prompt.md` documents the cell-by-cell layout of a sheet, so a
+  new character can be drawn to fit.
+
+## 1.5 — 2026-08-21
+
+The cat that chases your cursor, now with a menu bar item, preferences, 28
+characters, and a web version. First release since the fork, so everything below
+is new.
+
+### A menu bar item
+
+Neko has no dock icon, and until now the only way to quit it was `killall`. It
+now lives in the menu bar:
+
+- **Pause / Resume** — hide and freeze the cat, or bring it back
+- **Character ▸** — switch sprite set; the menu bar icon follows it
+- **Preferences…** (⌘,) — character, speed, size, idle behaviour
+- **About Neko**
+- **Quit Neko** (⌘Q)
+
+The icon is drawn as a template image only when the sprites are greyscale, so
+the classic cats adapt to a light or dark menu bar while the colourful ones keep
+their colours.
+
+### Preferences
+
+| | |
+|---|---|
+| Character | any of the 28 below |
+| Speed | 4 to 30 points per tick, shown in points per second |
+| Stops short by | 0 to 200 points to keep from the pointer, 48 by default; 0 sits on the cursor |
+| Size | 1× (32px) or 2× |
+| Fall asleep when idle | on or off |
+
+Settings live in `NSUserDefaults` (`NekoCharacter`, `NekoSpeed`,
+`NekoStopRadius`, `NekoScale`, `NekoIdleSleep`, `NekoPaused`) and apply
+immediately, no restart. The step towards the pointer is capped by the distance
+left over the stop ring, so the cat settles on it rather than stepping across
+and jittering back.
+
+### 28 characters
+
+From oneko itself, public domain: **Neko**, **Tora**, **Dog**, **Sakura**,
+**Tomoyo**, plus **Kuro**, an inverted recolour.
+
+From the oneko.js ecosystem: Ace, Black, Bunny, Calico, Eevee, Esmeralda, Fox,
+Ghost, Gray, Jess, Kina, Lucy, Maia, Maria, Mike, Moka, Silver, Silversky,
+Snuupy, Spirit, Valentine, Vaporwave.
+
+Each one is a folder in `Resources/Characters` with a `character.plist`
+manifest, added to the project as a folder reference — a new character is a
+folder drop and a rebuild, no project change. Sprite size and per-state frame
+timing come from the manifest, and a character that only describes some states
+still animates: diagonals fall back to the nearest cardinal direction, wall
+scratching falls back to grooming, everything else to sitting still.
+
+Internally this replaced the state machine's comparison of `NSArray` pointers
+with a `NekoState` enum, which is what made runtime character switching
+possible at all.
+
+### A web version
+
+`web/` holds a TypeScript port of oneko.js wearing the same 28 characters,
+packaged as a standalone Angular component plus a framework-agnostic engine:
+live character swap, 1×/2× scale, adjustable speed, pause, idle sleep,
+`prefers-reduced-motion` support, and inert under server side rendering.
+
+Its sprite sheets and character registry are generated from the same folders the
+app uses, so the two versions cannot drift. `web/INTEGRATION.md` covers adding
+it to an app that already exists.
+
+### For contributors
+
+Three converters in `tools/`:
+
+- `xbm2char.py` — an oneko animal (bitmap + bitmask XBM pairs) into a character
+- `sheet2char.py` — an oneko.js 256×128 sprite sheet into a character
+- `char2sheet.py` — a character back into a sheet, and the TypeScript registry
+
+They check themselves: converting oneko's own cat reproduces the sprites already
+in the tree pixel for pixel, and packing a character back reproduces the sheet
+it came from. `--verify` runs those comparisons.
+
+`./build.sh` builds the app with just the Command Line Tools, no Xcode.
+`./dmg.sh` builds the disk image, background and window layout included. The
+project also builds on a current macOS again: `SDKROOT` was pinned to the 10.9
+SDK, which no longer exists.
+
+### Installing
+
+Open `Neko-1.5.dmg` and drag Neko to Applications.
+
+**The app is signed ad hoc, not notarised.** macOS will report it as damaged the
+first time, because it arrived from the internet. Clear the quarantine flag
+once:
+
+```sh
+xattr -dr com.apple.quarantine /Applications/Neko.app
+```
+
+Universal binary, x86_64 and arm64, built for macOS 10.13 and later.
+
+To quit it, use **Quit Neko** in the menu bar.
+
+### Known limitations
+
+- The wall-scratching animations are unreachable: they need screen edge
+  detection, which this port does not do yet.
+- No launch at login.
+- The pet does not change the mouse cursor, unlike the X11 original.
+
+### Credits and licences
+
+Based on the public domain oneko by Masayuki Koba, and on Matthew Donoughe's
+Cocoa port. The web engine is a port of
+[oneko.js](https://github.com/adryd325/oneko.js), MIT, © 2022 adryd.
+
+The sprites do not share one licence. The oneko animals are public domain.
+Sakura and Tomoyo derive from Card Captor Sakura artwork. The oneko.js skins
+come from community collections that state no licence, and several are fan art
+of other people's characters. Each character's provenance is recorded in its
+manifest.

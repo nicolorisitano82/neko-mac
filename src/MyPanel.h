@@ -17,7 +17,7 @@
 	float moveDx, moveDy;
 	NSTimer *myTimer;
 	
-	float speed, scale;
+	float speed, scale, stopRadius;
 	BOOL idleSleep;
 	
 }

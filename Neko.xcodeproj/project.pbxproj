@@ -9,6 +9,9 @@
 /* Begin PBXBuildFile section */
 		8D11072A0486CEB800E47090 /* MainMenu.nib in Resources */ = {isa = PBXBuildFile; fileRef = 29B97318FDCFA39411CA2CEA /* MainMenu.nib */; };
 		8D11072B0486CEB800E47090 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 089C165CFE840E0CC02AAC07 /* InfoPlist.strings */; };
+		D1C0117A1B00000000000021 /* it.lproj in Resources */ = {isa = PBXBuildFile; fileRef = D1C0117A1B00000000000020 /* it.lproj */; };
+		D1C0117A1B00000000000023 /* fr.lproj in Resources */ = {isa = PBXBuildFile; fileRef = D1C0117A1B00000000000022 /* fr.lproj */; };
+		D1C0117A1B00000000000025 /* es.lproj in Resources */ = {isa = PBXBuildFile; fileRef = D1C0117A1B00000000000024 /* es.lproj */; };
 		D1C0117A1B00000000000011 /* Characters in Resources */ = {isa = PBXBuildFile; fileRef = D1C0117A1B00000000000010 /* Characters */; };
 		D1C0117A1B00000000000014 /* NekoCharacter.m in Sources */ = {isa = PBXBuildFile; fileRef = D1C0117A1B00000000000013 /* NekoCharacter.m */; };
 		8D11072D0486CEB800E47090 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 29B97316FDCFA39411CA2CEA /* main.m */; settings = {ATTRIBUTES = (); }; };
@@ -28,6 +31,9 @@
 		29B97324FDCFA39411CA2CEA /* AppKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AppKit.framework; path = /System/Library/Frameworks/AppKit.framework; sourceTree = "<absolute>"; };
 		29B97325FDCFA39411CA2CEA /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = /System/Library/Frameworks/Foundation.framework; sourceTree = "<absolute>"; };
 		32CA4F630368D1EE00C91783 /* Neko_Prefix.pch */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Neko_Prefix.pch; sourceTree = "<group>"; };
+		D1C0117A1B00000000000020 /* it.lproj */ = {isa = PBXFileReference; lastKnownFileType = folder; path = it.lproj; sourceTree = "<group>"; };
+		D1C0117A1B00000000000022 /* fr.lproj */ = {isa = PBXFileReference; lastKnownFileType = folder; path = fr.lproj; sourceTree = "<group>"; };
+		D1C0117A1B00000000000024 /* es.lproj */ = {isa = PBXFileReference; lastKnownFileType = folder; path = es.lproj; sourceTree = "<group>"; };
 		D1C0117A1B00000000000010 /* Characters */ = {isa = PBXFileReference; lastKnownFileType = folder; path = Characters; sourceTree = "<group>"; };
 		D1C0117A1B00000000000012 /* NekoCharacter.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = NekoCharacter.h; sourceTree = "<group>"; };
 		D1C0117A1B00000000000013 /* NekoCharacter.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = NekoCharacter.m; sourceTree = "<group>"; };
@@ -126,6 +132,9 @@
 			children = (
 				A7B9FF1C1A575C310074B4D4 /* Neko.icns */,
 				D1C0117A1B00000000000010 /* Characters */,
+				D1C0117A1B00000000000024 /* es.lproj */,
+				D1C0117A1B00000000000022 /* fr.lproj */,
+				D1C0117A1B00000000000020 /* it.lproj */,
 				089C165CFE840E0CC02AAC07 /* InfoPlist.strings */,
 				29B97318FDCFA39411CA2CEA /* MainMenu.nib */,
 			);
@@ -185,6 +194,9 @@
 			hasScannedForEncodings = 1;
 			knownRegions = (
 				en,
+				it,
+				fr,
+				es,
 			);
 			mainGroup = 29B97314FDCFA39411CA2CEA /* Neko */;
 			projectDirPath = "";
@@ -203,6 +215,9 @@
 				8D11072A0486CEB800E47090 /* MainMenu.nib in Resources */,
 				8D11072B0486CEB800E47090 /* InfoPlist.strings in Resources */,
 				D1C0117A1B00000000000011 /* Characters in Resources */,
+				D1C0117A1B00000000000025 /* es.lproj in Resources */,
+				D1C0117A1B00000000000023 /* fr.lproj in Resources */,
+				D1C0117A1B00000000000021 /* it.lproj in Resources */,
 				A7B9FF1D1A575C310074B4D4 /* Neko.icns in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

@@ -10,13 +10,24 @@ cat icon for
 
 * **Pause Neko** / **Resume Neko** — hide and freeze the cat, or bring it back
 * **Character ▸** — pick the sprite set; the menu bar icon follows it
-* **Preferences…** (⌘,) — character, speed, size (1× or 2×) and whether the cat
-  falls asleep when the mouse sits still
+* **Preferences…** (⌘,) — character, speed, how close it comes to the pointer,
+  size (1× or 2×) and whether the cat falls asleep when the mouse sits still
 * **About Neko**
 * **Quit Neko** (⌘Q)
 
+The interface is available in English, Italian, French and Spanish, following
+the language the system asks for.
+
 Settings are stored in `NSUserDefaults` (`NekoCharacter`, `NekoSpeed`,
-`NekoScale`, `NekoIdleSleep`, `NekoPaused`) and take effect immediately.
+`NekoStopRadius`, `NekoScale`, `NekoIdleSleep`, `NekoPaused`) and take effect
+immediately.
+
+**Stops short by** is the ring the cat keeps around the pointer, 0 to 200
+points, 48 by default. At 0 it sits right under the cursor, which is what it did
+before the setting existed. The step is capped by whatever distance is left over
+the ring, so the cat settles on it instead of stepping across and jittering
+back; as in the original, it only bothers getting up once the pointer is more
+than half a step beyond the ring.
 
 ## Characters
 
@@ -48,22 +59,28 @@ diagonals fall back to the nearest cardinal direction, the wall-scratching
 so a partial character still animates. Any image format `NSImage` reads works,
 mixed extensions included.
 
-29 characters ship with the app, in two families.
+34 characters ship with the app, in three families.
 
 **From oneko itself** — public domain sprites, converted from oneko's 1-bit XBM
 pairs: **Neko** (the original cat), **Tora** (its tiger, which reuses the cat's
 masks because oneko has no `bitmasks/tora`), **Dog**, and **Sakura** and
 **Tomoyo** from oneko's sakura patch. **Kuro** is an inverted recolour of Neko.
 
-**From the oneko.js ecosystem** — 23 skins written for the JavaScript port:
-Ace, Black, Bunny, Calico, Default, Eevee, Esmeralda, Fox, Ghost, Gray, Jess,
-Kina, Lucy, Maia, Maria, Mike, Moka, Silver, Silversky, Snuupy, Spirit,
-Valentine, Vaporwave.
+**From the oneko.js ecosystem** — 22 skins written for the JavaScript port:
+Ace, Black, Bunny, Calico, Eevee, Esmeralda, Fox, Ghost, Gray, Jess, Kina,
+Lucy, Maia, Maria, Mike, Moka, Silver, Silversky, Snuupy, Spirit, Valentine,
+Vaporwave.
 
-The Sakura and Tomoyo sprites derive from Card Captor Sakura artwork, and the
-oneko.js skins are fan-made sheets from collections that state no licence, so
-check the situation before shipping the app with them. Each `character.plist`
-records where its sprites came from.
+**Drawn for this app** — generated pixel art imported with `tools/grid2char.py`,
+and the first characters here that are not 32 points across: **Merlin** the
+wizard cat and **Owl** at 48, **Merlin XL** and **Owl XL** at 64, **Alien** and
+**Pinup** at 48.
+
+The Sakura and Tomoyo sprites derive from Card Captor Sakura artwork, the
+oneko.js skins are fan-made sheets from collections that state no licence, and
+the generated ones have their own uncertainty, so check the situation before
+shipping the app with them. Each `character.plist` records where its sprites
+came from.
 
 Because the menu bar icon is rendered as a template image only when the sprites
 are greyscale, the classic two colour characters adapt to a light or dark menu
@@ -165,6 +182,6 @@ notarise it:
 
 ```sh
 ./dmg.sh --sign "Developer ID Application: Your Name (TEAMID)"
-xcrun notarytool submit dist/Neko-1.5.dmg --apple-id ... --team-id ... --wait
-xcrun stapler staple dist/Neko-1.5.dmg
+xcrun notarytool submit dist/Neko-1.5.1.dmg --apple-id ... --team-id ... --wait
+xcrun stapler staple dist/Neko-1.5.1.dmg
 ```

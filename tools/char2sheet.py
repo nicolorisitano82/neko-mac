@@ -25,8 +25,6 @@ from sheet2char import CELL, CELLS, HEIGHT, WIDTH
 def frame_files(folder):
     """base frame name -> file name, taken from the manifest."""
     manifest = plistlib.load(open(os.path.join(folder, "character.plist"), "rb"))
-    if (manifest.get("SpriteWidth"), manifest.get("SpriteHeight")) != (CELL, CELL):
-        raise SystemExit("%s: only %dx%d sprites fit an oneko.js sheet" % (folder, CELL, CELL))
     files = {}
     for state in manifest["States"].values():
         for name in state["Frames"]:
@@ -36,6 +34,10 @@ def frame_files(folder):
 
 def pack(folder):
     manifest, files = frame_files(folder)
+    side = (manifest.get("SpriteWidth"), manifest.get("SpriteHeight"))
+    if side != (CELL, CELL):
+        print("%s: %sx%s sprites scaled down to %dpx for the sheet"
+              % (folder, side[0], side[1], CELL))
     sheet = Image.new("RGBA", (WIDTH, HEIGHT), (0, 0, 0, 0))
     missing = []
     for (col, row), frame in CELLS.items():
@@ -44,6 +46,10 @@ def pack(folder):
             missing.append(frame)
             continue
         cell = Image.open(os.path.join(folder, name)).convert("RGBA")
+        # A character drawn larger than a cell, which only the desktop app can
+        # use at full size, is scaled down rather than left out of the sheet.
+        if cell.size != (CELL, CELL):
+            cell = cell.resize((CELL, CELL), Image.BOX)
         sheet.paste(cell, (col * CELL, row * CELL))
     if missing:
         print("%s: no frame for %s" % (folder, ", ".join(sorted(missing))))

@@ -111,6 +111,8 @@ export interface OnekoOptions {
   assetsPath: string;
   /** Points the cat covers per animation step. The macOS app allows 4 to 30. */
   speed: number;
+  /** Points to keep between the pet and the pointer. 0 sits on the cursor. */
+  stopRadius: number;
   /** 1 draws the sprites at their native 32px, 2 doubles them. */
   scale: number;
   /** Whether the cat is allowed to fall asleep when it has nothing to chase. */
@@ -129,6 +131,7 @@ const DEFAULTS: OnekoOptions = {
   characterId: ONEKO_DEFAULT_CHARACTER_ID,
   assetsPath: 'assets/oneko',
   speed: 13,
+  stopRadius: 48,
   scale: 1,
   idleSleep: true,
   paused: false,
@@ -165,6 +168,7 @@ export class OnekoEngine {
     this.options = { ...DEFAULTS, ...options };
     this.options.speed = clampSpeed(this.options.speed);
     this.options.scale = clampScale(this.options.scale);
+    this.options.stopRadius = clampStopRadius(this.options.stopRadius);
     this.nekoX = this.options.startPosition.x;
     this.nekoY = this.options.startPosition.y;
     this.mouseX = this.nekoX;
@@ -228,6 +232,7 @@ export class OnekoEngine {
     this.options = { ...previous, ...options };
     this.options.speed = clampSpeed(this.options.speed);
     this.options.scale = clampScale(this.options.scale);
+    this.options.stopRadius = clampStopRadius(this.options.stopRadius);
 
     if (this.options.scale !== previous.scale) {
       this.applyScale();
@@ -395,14 +400,14 @@ export class OnekoEngine {
 
   private tick(): void {
     this.frameCount += 1;
-    const { speed, scale } = this.options;
+    const { speed, scale, stopRadius } = this.options;
     const diffX = this.nekoX - this.mouseX;
     const diffY = this.nekoY - this.mouseY;
     const distance = Math.sqrt(diffX ** 2 + diffY ** 2);
 
-    /* Close enough: keep still. The 48px cushion stops the cat from sitting
-       on top of the cursor, and grows with the sprite. */
-    if (distance < speed || distance < 48 * scale) {
+    /* How far there is to go before the ring the pet keeps around the pointer. */
+    const travel = distance - stopRadius;
+    if (travel <= 0) {
       this.idle();
       return;
     }
@@ -424,8 +429,11 @@ export class OnekoEngine {
        is always one of the eight directions. */
     this.setSprite(direction as OnekoDirection, this.frameCount);
 
-    this.nekoX -= (diffX / distance) * speed;
-    this.nekoY -= (diffY / distance) * speed;
+    /* Capping the step by the distance left over the ring lands the pet on it
+       rather than stepping across and jittering back. */
+    const step = Math.min(speed, travel);
+    this.nekoX -= (diffX / distance) * step;
+    this.nekoY -= (diffY / distance) * step;
 
     const half = (ONEKO_CELL * scale) / 2;
     this.nekoX = Math.min(Math.max(half, this.nekoX), window.innerWidth - half);
@@ -446,6 +454,11 @@ export class OnekoEngine {
 
 function clampSpeed(speed: number): number {
   return Math.min(Math.max(Number(speed) || DEFAULTS.speed, 4), 30);
+}
+
+function clampStopRadius(radius: number): number {
+  const value = Number(radius);
+  return Math.min(Math.max(Number.isFinite(value) ? value : DEFAULTS.stopRadius, 0), 200);
 }
 
 function clampScale(scale: number): number {

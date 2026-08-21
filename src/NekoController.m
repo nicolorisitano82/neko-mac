@@ -3,13 +3,23 @@
 NSString * const NekoCharacterKey  = @"NekoCharacter";
 NSString * const NekoSpeedKey      = @"NekoSpeed";
 NSString * const NekoScaleKey      = @"NekoScale";
+NSString * const NekoStopRadiusKey = @"NekoStopRadius";
 NSString * const NekoIdleSleepKey  = @"NekoIdleSleep";
 NSString * const NekoPausedKey     = @"NekoPaused";
 
 NSString * const NekoSettingsDidChangeNotification = @"NekoSettingsDidChange";
 
+/* The English text doubles as the lookup key, so a missing translation falls
+   back to English on its own and there is no English table to keep in step. */
+#define NekoLocalized(text) NSLocalizedString(text, nil)
+
 static const float NekoMinSpeed = 4.0f;
 static const float NekoMaxSpeed = 30.0f;
+
+/* How close the cat is allowed to get to the pointer. 0 puts it right under
+   the cursor, which is what it did before the setting existed. */
+static const float NekoMinStopRadius = 0.0f;
+static const float NekoMaxStopRadius = 200.0f;
 
 @implementation NekoController
 
@@ -22,6 +32,7 @@ static const float NekoMaxSpeed = 30.0f;
 			@"neko", NekoCharacterKey,
 			[NSNumber numberWithFloat:13.0f], NekoSpeedKey,
 			[NSNumber numberWithFloat:1.0f], NekoScaleKey,
+			[NSNumber numberWithFloat:48.0f], NekoStopRadiusKey,
 			[NSNumber numberWithBool:YES], NekoIdleSleepKey,
 			[NSNumber numberWithBool:NO], NekoPausedKey, nil]];
 }
@@ -58,31 +69,31 @@ static const float NekoMaxSpeed = 30.0f;
 		statusItemWithLength:NSSquareStatusItemLength] retain];
 
 	NSMenu *menu = [[NSMenu alloc] initWithTitle:@"Neko"];
-	pauseItem = [menu addItemWithTitle:@"Pause Neko"
+	pauseItem = [menu addItemWithTitle:NekoLocalized(@"Pause Neko")
 	                           action:@selector(togglePause:)
 	                    keyEquivalent:@""];
 	[pauseItem setTarget:self];
 
 	[menu addItem:[NSMenuItem separatorItem]];
 
-	NSMenuItem *item = [menu addItemWithTitle:@"Character" action:NULL keyEquivalent:@""];
-	characterMenu = [[NSMenu alloc] initWithTitle:@"Character"];
+	NSMenuItem *item = [menu addItemWithTitle:NekoLocalized(@"Character") action:NULL keyEquivalent:@""];
+	characterMenu = [[NSMenu alloc] initWithTitle:NekoLocalized(@"Character")];
 	[self buildCharacterMenu];
 	[item setSubmenu:characterMenu];
 
-	item = [menu addItemWithTitle:@"Preferences…"
+	item = [menu addItemWithTitle:NekoLocalized(@"Preferences…")
 	                       action:@selector(showPreferences:)
 	                keyEquivalent:@","];
 	[item setTarget:self];
 
 	[menu addItem:[NSMenuItem separatorItem]];
 
-	item = [menu addItemWithTitle:@"About Neko"
+	item = [menu addItemWithTitle:NekoLocalized(@"About Neko")
 	                       action:@selector(showAbout:)
 	                keyEquivalent:@""];
 	[item setTarget:self];
 
-	item = [menu addItemWithTitle:@"Quit Neko"
+	item = [menu addItemWithTitle:NekoLocalized(@"Quit Neko")
 	                       action:@selector(quit:)
 	                keyEquivalent:@"q"];
 	[item setTarget:self];
@@ -109,7 +120,8 @@ static const float NekoMaxSpeed = 30.0f;
 
 - (void)updatePauseItemTitle
 {
-	[pauseItem setTitle:[self isPaused] ? @"Resume Neko" : @"Pause Neko"];
+	[pauseItem setTitle:[self isPaused] ? NekoLocalized(@"Resume Neko")
+	                                   : NekoLocalized(@"Pause Neko")];
 }
 
 - (void)buildCharacterMenu
@@ -128,7 +140,7 @@ static const float NekoMaxSpeed = 30.0f;
 			? NSControlStateValueOn : NSControlStateValueOff];
 	}
 	if([characterMenu numberOfItems] == 0)
-		[[characterMenu addItemWithTitle:@"No characters found" action:NULL
+		[[characterMenu addItemWithTitle:NekoLocalized(@"No characters found") action:NULL
 		                  keyEquivalent:@""] setEnabled:NO];
 }
 
@@ -160,6 +172,16 @@ static const float NekoMaxSpeed = 30.0f;
 	if(speed > NekoMaxSpeed)
 		return NekoMaxSpeed;
 	return speed;
+}
+
+- (float)stopRadius
+{
+	float radius = [[NSUserDefaults standardUserDefaults] floatForKey:NekoStopRadiusKey];
+	if(radius < NekoMinStopRadius)
+		return NekoMinStopRadius;
+	if(radius > NekoMaxStopRadius)
+		return NekoMaxStopRadius;
+	return radius;
 }
 
 - (float)scale
@@ -239,11 +261,11 @@ static const float NekoMaxSpeed = 30.0f;
 - (void)buildPreferencesPanel
 {
 	prefsPanel = [[NSPanel alloc]
-		initWithContentRect:NSMakeRect(0.0f, 0.0f, 380.0f, 240.0f)
+		initWithContentRect:NSMakeRect(0.0f, 0.0f, 445.0f, 280.0f)
 		          styleMask:(NSWindowStyleMaskTitled | NSWindowStyleMaskClosable)
 		            backing:NSBackingStoreBuffered
 		              defer:NO];
-	[prefsPanel setTitle:@"Neko Preferences"];
+	[prefsPanel setTitle:NekoLocalized(@"Neko Preferences")];
 	[prefsPanel setReleasedWhenClosed:NO];
 	[prefsPanel setHidesOnDeactivate:NO];
 	[prefsPanel center];
@@ -251,11 +273,11 @@ static const float NekoMaxSpeed = 30.0f;
 	NSView *content = [prefsPanel contentView];
 
 	/* Character */
-	[content addSubview:[self labelWithString:@"Character:"
-	                                    frame:NSMakeRect(20.0f, 188.0f, 70.0f, 17.0f)]];
+	[content addSubview:[self labelWithString:NekoLocalized(@"Character:")
+	                                    frame:NSMakeRect(20.0f, 238.0f, 105.0f, 17.0f)]];
 
 	characterPopUp = [[NSPopUpButton alloc]
-		initWithFrame:NSMakeRect(95.0f, 183.0f, 160.0f, 26.0f) pullsDown:NO];
+		initWithFrame:NSMakeRect(127.0f, 233.0f, 170.0f, 26.0f) pullsDown:NO];
 	NSEnumerator *e = [[NekoCharacter availableCharacters] objectEnumerator];
 	NekoCharacter *character;
 	while((character = [e nextObject]) != nil)
@@ -267,10 +289,10 @@ static const float NekoMaxSpeed = 30.0f;
 	[characterPopUp release];
 
 	/* Speed */
-	[content addSubview:[self labelWithString:@"Speed:"
-	                                    frame:NSMakeRect(20.0f, 148.0f, 70.0f, 17.0f)]];
+	[content addSubview:[self labelWithString:NekoLocalized(@"Speed:")
+	                                    frame:NSMakeRect(20.0f, 198.0f, 105.0f, 17.0f)]];
 
-	speedSlider = [[NSSlider alloc] initWithFrame:NSMakeRect(95.0f, 145.0f, 200.0f, 21.0f)];
+	speedSlider = [[NSSlider alloc] initWithFrame:NSMakeRect(130.0f, 195.0f, 200.0f, 21.0f)];
 	[speedSlider setMinValue:NekoMinSpeed];
 	[speedSlider setMaxValue:NekoMaxSpeed];
 	[speedSlider setFloatValue:[self speed]];
@@ -280,17 +302,34 @@ static const float NekoMaxSpeed = 30.0f;
 	[content addSubview:speedSlider];
 	[speedSlider release];
 
-	speedField = [self labelWithString:@"" frame:NSMakeRect(305.0f, 148.0f, 60.0f, 17.0f)];
+	speedField = [self labelWithString:@"" frame:NSMakeRect(340.0f, 198.0f, 90.0f, 17.0f)];
 	[content addSubview:speedField];
 
+	/* How close it comes */
+	[content addSubview:[self labelWithString:NekoLocalized(@"Stops short by:")
+	                                    frame:NSMakeRect(20.0f, 158.0f, 105.0f, 17.0f)]];
+
+	radiusSlider = [[NSSlider alloc] initWithFrame:NSMakeRect(130.0f, 155.0f, 200.0f, 21.0f)];
+	[radiusSlider setMinValue:NekoMinStopRadius];
+	[radiusSlider setMaxValue:NekoMaxStopRadius];
+	[radiusSlider setFloatValue:[self stopRadius]];
+	[radiusSlider setContinuous:YES];
+	[radiusSlider setTarget:self];
+	[radiusSlider setAction:@selector(takeStopRadiusFrom:)];
+	[content addSubview:radiusSlider];
+	[radiusSlider release];
+
+	radiusField = [self labelWithString:@"" frame:NSMakeRect(340.0f, 158.0f, 90.0f, 17.0f)];
+	[content addSubview:radiusField];
+
 	/* Size */
-	[content addSubview:[self labelWithString:@"Size:"
-	                                    frame:NSMakeRect(20.0f, 106.0f, 70.0f, 17.0f)]];
+	[content addSubview:[self labelWithString:NekoLocalized(@"Size:")
+	                                    frame:NSMakeRect(20.0f, 116.0f, 105.0f, 17.0f)]];
 
 	sizePopUp = [[NSPopUpButton alloc]
-		initWithFrame:NSMakeRect(92.0f, 101.0f, 100.0f, 26.0f) pullsDown:NO];
-	[sizePopUp addItemWithTitle:@"1×"];
-	[sizePopUp addItemWithTitle:@"2×"];
+		initWithFrame:NSMakeRect(127.0f, 111.0f, 100.0f, 26.0f) pullsDown:NO];
+	[sizePopUp addItemWithTitle:@"1\u00d7"];
+	[sizePopUp addItemWithTitle:@"2\u00d7"];
 	[sizePopUp selectItemAtIndex:([self scale] >= 2.0f) ? 1 : 0];
 	[sizePopUp setTarget:self];
 	[sizePopUp setAction:@selector(takeScaleFrom:)];
@@ -298,9 +337,9 @@ static const float NekoMaxSpeed = 30.0f;
 	[sizePopUp release];
 
 	/* Idle sleep */
-	sleepCheck = [[NSButton alloc] initWithFrame:NSMakeRect(94.0f, 66.0f, 260.0f, 18.0f)];
+	sleepCheck = [[NSButton alloc] initWithFrame:NSMakeRect(129.0f, 76.0f, 300.0f, 18.0f)];
 	[sleepCheck setButtonType:NSButtonTypeSwitch];
-	[sleepCheck setTitle:@"Fall asleep when idle"];
+	[sleepCheck setTitle:NekoLocalized(@"Fall asleep when idle")];
 	[sleepCheck setState:[self idleSleep] ? NSControlStateValueOn : NSControlStateValueOff];
 	[sleepCheck setTarget:self];
 	[sleepCheck setAction:@selector(takeIdleSleepFrom:)];
@@ -308,30 +347,35 @@ static const float NekoMaxSpeed = 30.0f;
 	[sleepCheck release];
 
 	/* Restore defaults */
-	NSButton *reset = [[NSButton alloc] initWithFrame:NSMakeRect(16.0f, 16.0f, 150.0f, 32.0f)];
+	NSButton *reset = [[NSButton alloc] initWithFrame:NSMakeRect(16.0f, 16.0f, 180.0f, 32.0f)];
 	[reset setBezelStyle:NSBezelStyleRounded];
-	[reset setTitle:@"Restore Defaults"];
+	[reset setTitle:NekoLocalized(@"Restore Defaults")];
 	[reset setTarget:self];
 	[reset setAction:@selector(restoreDefaults:)];
 	[content addSubview:reset];
 	[reset release];
 
-	[self updateSpeedField];
+	[self updateValueFields];
 }
 
-- (void)updateSpeedField
+- (void)updateValueFields
 {
 	[speedField setStringValue:
-		[NSString stringWithFormat:@"%.0f pt/s", [self speed] * 8.0f]];
+		[NSString stringWithFormat:NekoLocalized(@"%.0f pt/s"), [self speed] * 8.0f]];
+	float radius = [self stopRadius];
+	[radiusField setStringValue:(radius <= 0.0f)
+		? NekoLocalized(@"touches")
+		: [NSString stringWithFormat:NekoLocalized(@"%.0f pt"), radius]];
 }
 
 - (void)syncPreferencesControls
 {
 	[characterPopUp selectItemWithTitle:[[self character] name]];
 	[speedSlider setFloatValue:[self speed]];
+	[radiusSlider setFloatValue:[self stopRadius]];
 	[sizePopUp selectItemAtIndex:([self scale] >= 2.0f) ? 1 : 0];
 	[sleepCheck setState:[self idleSleep] ? NSControlStateValueOn : NSControlStateValueOff];
-	[self updateSpeedField];
+	[self updateValueFields];
 }
 
 - (void)showPreferences:(id)sender
@@ -359,7 +403,14 @@ static const float NekoMaxSpeed = 30.0f;
 - (void)takeSpeedFrom:(id)sender
 {
 	[[NSUserDefaults standardUserDefaults] setFloat:[sender floatValue] forKey:NekoSpeedKey];
-	[self updateSpeedField];
+	[self updateValueFields];
+	[self settingsChanged];
+}
+
+- (void)takeStopRadiusFrom:(id)sender
+{
+	[[NSUserDefaults standardUserDefaults] setFloat:[sender floatValue] forKey:NekoStopRadiusKey];
+	[self updateValueFields];
 	[self settingsChanged];
 }
 
@@ -383,6 +434,7 @@ static const float NekoMaxSpeed = 30.0f;
 	[defaults removeObjectForKey:NekoCharacterKey];
 	[defaults removeObjectForKey:NekoSpeedKey];
 	[defaults removeObjectForKey:NekoScaleKey];
+	[defaults removeObjectForKey:NekoStopRadiusKey];
 	[defaults removeObjectForKey:NekoIdleSleepKey];
 	[defaults removeObjectForKey:NekoPausedKey];
 	if(prefsPanel != nil)

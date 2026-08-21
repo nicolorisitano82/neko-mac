@@ -43,6 +43,9 @@ export class OnekoPetComponent implements OnInit, OnChanges, OnDestroy {
   /** Points covered per animation step, clamped to 4..30. */
   @Input() speed = 13;
 
+  /** Points to keep between the pet and the pointer, 0..200. 0 sits on it. */
+  @Input() stopRadius = 48;
+
   /** 1 for native 32px sprites, 2 to double them. */
   @Input() scale = 1;
 
@@ -69,6 +72,7 @@ export class OnekoPetComponent implements OnInit, OnChanges, OnDestroy {
         characterId: this.character,
         assetsPath: this.assetsPath,
         speed: Number(this.speed),
+        stopRadius: Number(this.stopRadius),
         scale: Number(this.scale),
         idleSleep: this.idleSleep,
         paused: this.paused,
@@ -89,6 +93,9 @@ export class OnekoPetComponent implements OnInit, OnChanges, OnDestroy {
     }
     if (changes['speed']) {
       update.speed = Number(this.speed);
+    }
+    if (changes['stopRadius']) {
+      update.stopRadius = Number(this.stopRadius);
     }
     if (changes['scale']) {
       update.scale = Number(this.scale);

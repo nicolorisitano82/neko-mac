@@ -77,7 +77,7 @@ instead also works and takes precedence.
 Then measure where the icons should go, rather than eyeballing it:
 
 ```sh
-open dist/Neko-1.5.dmg      # look at it, and if the icons sit off the circles
+open dist/Neko-1.5.1.dmg      # look at it, and if the icons sit off the circles
 ```
 
 the four constants near the top of `dmg.sh` are the ones to change. The

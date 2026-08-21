@@ -31,6 +31,7 @@
 	
 	speed = 13.0f;
 	scale = 1.0f;
+	stopRadius = 48.0f;
 	idleSleep = YES;
 	
 	[self startTimer];
@@ -84,6 +85,7 @@
 	NekoController *controller = [NekoController sharedController];
 	speed = [controller speed];
 	scale = [controller scale];
+	stopRadius = [controller stopRadius];
 	idleSleep = [controller idleSleep];
 	
 	NekoCharacter *newCharacter = [controller character];
@@ -97,8 +99,10 @@
 	
 	/* Sprites are square in every character shipped so far; the larger side
 	   drives the window so a non-square one is letterboxed instead of cropped. */
-	NSSize sprite = [character spriteSize];
-	[self setSpriteSide:MAX(sprite.width, sprite.height) * scale];
+	/* A missing character would otherwise size the window to nothing. */
+	NSSize sprite = (character != nil) ? [character spriteSize] : NSMakeSize(32.0f, 32.0f);
+	float side = MAX(MAX(sprite.width, sprite.height), 8.0f) * scale;
+	[self setSpriteSide:side];
 	[view setFrame:[[self contentView] bounds]];
 	[view setNeedsDisplay:YES];
 	
@@ -127,16 +131,20 @@
 	
 	Length = hypotf(DeltaX, DeltaY);
 	
-	if (Length != 0.0f) {
-		if (Length <= speed) {
-			moveDx = DeltaX;
-			moveDy = DeltaY;
-		} else {
-			moveDx = (speed * DeltaX) / Length;
-			moveDy = (speed * DeltaY) / Length;
-		}
-	} else {
+	/* The cat keeps stopRadius points between itself and the pointer. Capping
+	   the step by whatever distance is left over that ring makes it settle on
+	   the ring instead of stepping across it and jittering back. */
+	/* The deltas are whole points, so the distance left over the ring can sit
+	   just above zero for ever and the cat would creep towards the pointer a
+	   fraction of a point per tick, walking animation and all. Anything under
+	   a point counts as arrived. */
+	float travel = Length - stopRadius;
+	if (travel <= 1.0f) {
 		moveDx = moveDy = 0.0f;
+	} else {
+		float step = (travel < speed) ? travel : speed;
+		moveDx = (step * DeltaX) / Length;
+		moveDy = (step * DeltaY) / Length;
 	}
 }
 

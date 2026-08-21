@@ -162,6 +162,7 @@ Every preference the desktop version exposes is an input:
 <oneko-pet
   [character]="character"
   [speed]="speed"
+  [stopRadius]="stopRadius"
   [scale]="scale"
   [idleSleep]="idleSleep"
   [paused]="paused"

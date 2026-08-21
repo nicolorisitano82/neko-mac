@@ -1,0 +1,20 @@
+/* Spanish translation of the Neko interface.
+   The keys are the English strings, so anything missing here shows in English. */
+
+"Pause Neko" = "Pausar Neko";
+"Resume Neko" = "Reanudar Neko";
+"Character" = "Personaje";
+"Preferences…" = "Preferencias…";
+"About Neko" = "Acerca de Neko";
+"Quit Neko" = "Salir de Neko";
+"No characters found" = "No se encontró ningún personaje";
+"Neko Preferences" = "Preferencias de Neko";
+"Character:" = "Personaje:";
+"Speed:" = "Velocidad:";
+"Stops short by:" = "Se detiene a:";
+"Size:" = "Tamaño:";
+"Fall asleep when idle" = "Se duerme si no hay actividad";
+"Restore Defaults" = "Restaurar valores";
+"%.0f pt/s" = "%.0f pt/s";
+"%.0f pt" = "%.0f pt";
+"touches" = "en contacto";

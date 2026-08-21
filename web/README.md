@@ -58,6 +58,7 @@ the real cursor.
 |---|---|---|
 | `character` | `'neko'` | identifier from `ONEKO_CHARACTER_IDS` |
 | `speed` | `13` | points per animation step, clamped to 4..30 |
+| `stopRadius` | `48` | points to keep between the pet and the pointer, 0..200 |
 | `scale` | `1` | `1` for native 32px sprites, `2` to double them |
 | `idleSleep` | `true` | let the pet fall asleep when idle |
 | `paused` | `false` | hide it and stop the loop |
