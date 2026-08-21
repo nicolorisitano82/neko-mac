@@ -144,3 +144,27 @@ reports it as damaged. Clear it once with
 ```sh
 xattr -dr com.apple.quarantine .
 ```
+
+## Packaging
+
+`./dmg.sh` builds `dist/Neko-<version>.dmg`: the app, an alias to
+`/Applications` to drag it onto, and a Finder window arranged over
+`packaging/dmg-background.png`. A background twice the window size is paired
+with a downscaled copy in a TIFF automatically, so one file covers Retina and
+non-Retina displays. The icon positions in the script were measured from the
+picture; [packaging/dmg-background-prompt.md](packaging/dmg-background-prompt.md)
+records the geometry and the prompt the picture came from.
+
+Arranging the window means scripting Finder, which needs permission to control
+it (System Settings > Privacy & Security > Automation). Without that permission
+the script still produces a working image, only without arranged icons.
+
+The app is signed ad hoc, and Gatekeeper refuses an ad-hoc signed app that
+arrives inside a downloaded image. To hand the image to someone else, sign and
+notarise it:
+
+```sh
+./dmg.sh --sign "Developer ID Application: Your Name (TEAMID)"
+xcrun notarytool submit dist/Neko-1.1.dmg --apple-id ... --team-id ... --wait
+xcrun stapler staple dist/Neko-1.1.dmg
+```
