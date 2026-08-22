@@ -9,21 +9,19 @@
    to the pointer and asks what you are writing, or pounces on the cursor, or
    goes to claw the edge of the screen.
 
-   What it goes on is what the system will tell anyone without a permission
-   prompt: how many keys and mouse moves have happened since the machine booted,
-   and how long since the last one. Nothing about which keys, nothing about
-   where, nothing that identifies anything. Typing fast is a number going up. */
+   What it goes on comes from NekoDesktop: counters the system hands out with no
+   permission at all — keys and mouse moves since boot, seconds since the last
+   one — plus, if that switch is on, the text being worked on.
+
+   What it says comes from whichever engine Ask Neko is set to, asked while the
+   cat is still walking over, with written-in lines as the fallback for when
+   there is no engine or it does not answer in time. */
 @interface NekoAntics : NSObject
 {
 	NSTimer *heartbeat;
 	NSTimer *arrival;            /* watches for the cat reaching the pointer */
 	NSDate *lastAntic;
 	NSTimeInterval cooldown;     /* seconds until it is allowed to be curious */
-	uint32_t keysBefore;
-	uint32_t movesBefore;
-	NSDate *sampledAt;
-	uint32_t keysPerMinute;
-	uint32_t movesPerMinute;
 	NSString *pendingLine;       /* what it will say once it arrives */
 }
 

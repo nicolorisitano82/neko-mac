@@ -1,5 +1,45 @@
 # Changelog
 
+## Unreleased
+
+### The cat asks about what you are actually doing
+
+The curious questions were written in and localized: five of them, picked at
+random. They are now asked of whichever engine Ask Neko is set to, while the cat
+is still walking over, so the errand covers the wait; the written-in lines stay
+as the fallback for no engine, an error, or an answer that arrives after the cat
+has already wandered off.
+
+More to the point, the cat can now be told what you are working on. **Reading the
+text you are working on** is a new switch on the Suggestions tab, off until you
+turn it on, and it asks for the Accessibility permission when you do. With it on,
+the field you are typing in — or whatever is under the pointer — is read and
+included in the description the engine is given.
+
+The difference, measured on the same desktop with a file open in TextEdit:
+without the text, *"Cosa stai scrivendo?"*; with it, *"Cosa stai scrivendo nelle
+note di rilascio?"*. The 1.5B model, given the same context, went for the window
+title: *"Cosa stai facendo con questo file prova-neko.txt?"*.
+
+What it will not do: password fields are refused by subrole, nothing at all is
+read while macOS has secure keyboard entry on, only the last few hundred
+characters are taken, and the tab prints the exact block that would be sent
+whether the switch is on or off. With a remote engine that block goes to that
+service, and the paragraph says so.
+
+Behind it, one class — `NekoDesktop` — now holds everything the cat can tell
+about your day, where the suggestions and the antics each used to keep half of
+it and neither could see the other's half.
+
+### The model that was chosen but never downloaded
+
+Picking a model in the menu and not downloading it left the local provider
+unconfigured for ever: questions fell back to the canned reply, the roaming cat
+went quiet, and nothing anywhere said why. Found on a real machine, where the
+preferences pointed at Qwen 3B and only the 1.5B was on the disk. A model that is
+actually there now wins over one that was merely chosen, and the Local model tab
+says which is answering and why.
+
 ## 1.9.1 — 2026-08-22
 
 ### The cat crosses desktops

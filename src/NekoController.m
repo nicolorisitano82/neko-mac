@@ -1,6 +1,7 @@
 #import "NekoController.h"
 #import "NekoAdvisor.h"
 #import "NekoAntics.h"
+#import "NekoDesktop.h"
 #import "NekoHotKey.h"
 #import "NekoModelProvider.h"
 #import "NekoModelStore.h"
@@ -826,11 +827,19 @@ static const float NekoMaxStopRadius = 200.0f;
 	[content addSubview:suggestCheck];
 	[suggestCheck release];
 
+	readTextCheck = [[NSButton alloc] initWithFrame:NSMakeRect(20.0f, 274.0f, 430.0f, 18.0f)];
+	[readTextCheck setButtonType:NSButtonTypeSwitch];
+	[readTextCheck setTitle:NekoLocalized(@"Let it read the text I am working on")];
+	[readTextCheck setTarget:self];
+	[readTextCheck setAction:@selector(takeReadTextFrom:)];
+	[content addSubview:readTextCheck];
+	[readTextCheck release];
+
 	[content addSubview:[self labelWithString:NekoLocalized(@"At most every:")
-	                                    frame:NSMakeRect(20.0f, 266.0f, 125.0f, 17.0f)]];
+	                                    frame:NSMakeRect(20.0f, 240.0f, 125.0f, 17.0f)]];
 
 	suggestEveryPopUp = [[NSPopUpButton alloc]
-		initWithFrame:NSMakeRect(152.0f, 261.0f, 160.0f, 26.0f) pullsDown:NO];
+		initWithFrame:NSMakeRect(152.0f, 235.0f, 160.0f, 26.0f) pullsDown:NO];
 	NSEnumerator *e = [[self suggestIntervalChoices] objectEnumerator];
 	NSNumber *minutes;
 	while((minutes = [e nextObject]) != nil)
@@ -841,7 +850,7 @@ static const float NekoMaxStopRadius = 200.0f;
 	[content addSubview:suggestEveryPopUp];
 	[suggestEveryPopUp release];
 
-	suggestNowButton = [[NSButton alloc] initWithFrame:NSMakeRect(20.0f, 210.0f, 200.0f, 32.0f)];
+	suggestNowButton = [[NSButton alloc] initWithFrame:NSMakeRect(20.0f, 192.0f, 200.0f, 32.0f)];
 	[suggestNowButton setBezelStyle:NSBezelStyleRounded];
 	[suggestNowButton setTitle:NekoLocalized(@"Suggest something now")];
 	[suggestNowButton setTarget:self];
@@ -850,7 +859,7 @@ static const float NekoMaxStopRadius = 200.0f;
 	[suggestNowButton release];
 
 	suggestStatusField = [self labelWithString:@""
-	                                     frame:NSMakeRect(20.0f, 20.0f, 430.0f, 180.0f)];
+	                                     frame:NSMakeRect(20.0f, 16.0f, 430.0f, 168.0f)];
 	[suggestStatusField setAlignment:NSTextAlignmentLeft];
 	[[suggestStatusField cell] setWraps:YES];
 	[content addSubview:suggestStatusField];
@@ -873,6 +882,19 @@ static const float NekoMaxStopRadius = 200.0f;
 	[[NekoAdvisor sharedAdvisor] applySettings];
 	[self syncSuggestControls];
 	[self syncAskControls];
+}
+
+/* Turning this on is a real decision — it reads what you are typing — so it
+   asks the system for the permission there and then, which puts up the standard
+   alert and opens the pane. The switch stays where the user put it either way,
+   and the paragraph underneath says whether it is actually working. */
+- (void)takeReadTextFrom:(id)sender
+{
+	BOOL wanted = ([sender state] == NSControlStateValueOn);
+	[[NSUserDefaults standardUserDefaults] setBool:wanted forKey:NekoReadTextKey];
+	if(wanted)
+		[NekoDesktop requestAccessibility];
+	[self syncSuggestControls];
 }
 
 - (void)takeSuggestEveryFrom:(id)sender
@@ -916,6 +938,9 @@ static const float NekoMaxStopRadius = 200.0f;
 		: NekoLocalized(@"Only in the “Roams on its own” behaviour")];
 	[suggestEveryPopUp setEnabled:roaming && on];
 	[suggestNowButton setEnabled:roaming && on];
+	[readTextCheck setState:[defaults boolForKey:NekoReadTextKey]
+		? NSControlStateValueOn : NSControlStateValueOff];
+	[readTextCheck setEnabled:roaming];
 
 	NSArray *choices = [self suggestIntervalChoices];
 	NSUInteger index = [choices indexOfObject:
@@ -939,7 +964,15 @@ static const float NekoMaxStopRadius = 200.0f;
 	[line appendString:@"\n"];
 	[line appendString:[[NekoAdvisor sharedAdvisor] context]];
 	[line appendString:@"\n"];
-	[line appendString:NekoLocalized(@"Nothing is read from inside your documents. Window titles are included only if this Mac has already granted Neko screen recording; the permission is never asked for. With Apple Intelligence or a model on this Mac, none of it leaves the Mac; with ChatGPT, Claude or a Shortcut, it is sent to that service like any other question.")];
+	[line appendString:NekoLocalized(@"Window titles are included only if this Mac has already granted Neko screen recording; that permission is never asked for. With Apple Intelligence or a model on this Mac, none of it leaves the Mac; with ChatGPT, Claude or a Shortcut, it is sent to that service like any other question.")];
+
+	if([[NSUserDefaults standardUserDefaults] boolForKey:NekoReadTextKey]) {
+		[line appendString:@"\n\n"];
+		if([NekoDesktop accessibilityGranted])
+			[line appendString:NekoLocalized(@"Reading the text is on: what is in the field you are typing in, or under the pointer, is included above and goes wherever the rest of it goes. Password fields are refused, nothing at all is read while macOS has secure keyboard entry on, and only the last few hundred characters are taken.")];
+		else
+			[line appendString:NekoLocalized(@"Reading the text is switched on but Neko has no Accessibility permission, so nothing is being read. Open System Settings, Privacy & Security, Accessibility, and allow Neko.")];
+	}
 	return line;
 }
 
@@ -1127,6 +1160,17 @@ static const float NekoMaxStopRadius = 200.0f;
 - (NSString *)localStatusLine:(BOOL)installed
 {
 	NSMutableString *line = [NSMutableString string];
+	NekoModelStore *store = [NekoModelStore sharedStore];
+	NekoLocalProvider *local = [[[NekoLocalProvider alloc] init] autorelease];
+	NSString *chosen = [local chosenModelIdentifier];
+	NSString *using = [local modelIdentifier];
+	if([chosen length] > 0 && ![chosen isEqualToString:using]
+	   && [store installedURLForIdentifier:using] != nil) {
+		NekoLocalModel *fallback = [store modelWithIdentifier:using];
+		[line appendFormat:NekoLocalized(@"“%@” is selected but was never downloaded, so %@ is answering instead. "),
+			[[store modelWithIdentifier:chosen] name] ?: chosen,
+			[fallback name] ?: using];
+	}
 	if([NekoLocalProvider makeEngine] == nil)
 		[line appendString:NekoLocalized(@"No engine is compiled into this build yet, so a downloaded model cannot answer. Everything around it is ready: the model can be fetched now and will be used the moment the engine lands.")];
 	else if(installed)

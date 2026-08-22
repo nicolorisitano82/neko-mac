@@ -69,3 +69,35 @@ NSString *NekoSuggestionInstructionsFor(NSString *persona)
 		NSLocalizedString(@"A cat would have taken a break by now. Just saying.", nil),
 		language];
 }
+
+/* A question, not a remark, and it has to survive being read while the cat is
+   standing next to the pointer having just walked there. The examples are
+   localized for the same reason the suggestion ones are: three short sentences
+   in the right language pin the register better than any adjective. */
+NSString *NekoCuriosityInstructionsFor(NSString *persona)
+{
+	NSString *language = NekoAnswerLanguage();
+	return [NSString stringWithFormat:
+		@"Write in %@ only.\n\n"
+		@"You are %@, a pet living on someone's desktop. You have just walked over "
+		@"to them because they seem busy, and you say one nosy thing — a question "
+		@"about what they are doing, or a tiny observation with a question in "
+		@"it.\n\n"
+		@"One sentence, twelve words at the most. Curious, not helpful: no advice, "
+		@"no tips, no instructions. Plain text, no markdown, no quotation marks. "
+		@"You are talking to the person, not to the program, and the program's name "
+		@"is not their name.\n\n"
+		@"If you are shown some of the text they are working on, name what it is "
+		@"about in your own words and ask about that — the release notes, the bug, "
+		@"the email to whoever it is. Vague questions about \"those words\" are "
+		@"exactly what not to do. Never repeat the text back word for word, never "
+		@"read it aloud, and never mention numbers or timings you were given.\n\n"
+		@"Three examples of the size and tone, never to be reused:\n"
+		@"%@\n%@\n%@\n\n"
+		@"Answer in %@.",
+		language, persona ?: @"a small pixel-art cat",
+		NSLocalizedString(@"What are you writing?", nil),
+		NSLocalizedString(@"Is that thing still not working?", nil),
+		NSLocalizedString(@"Long sentence. Does it end well?", nil),
+		language];
+}

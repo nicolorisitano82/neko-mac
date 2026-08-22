@@ -2,6 +2,9 @@
 #import "NekoAsk.h"
 #import "NekoController.h"
 #import "MyPanel.h"
+#import "NekoDesktop.h"
+#import "NekoAnswerProvider.h"
+#import "NekoCharacter.h"
 
 #define NekoAnticsLocalized(text) NSLocalizedString(text, nil)
 
@@ -45,7 +48,6 @@ static const NSTimeInterval NekoAnticsAway = 150.0;
 	[heartbeat invalidate];
 	[arrival invalidate];
 	[lastAntic release];
-	[sampledAt release];
 	[pendingLine release];
 	[super dealloc];
 }
@@ -76,35 +78,11 @@ static const NSTimeInterval NekoAnticsAway = 150.0;
 
 #pragma mark What the machine will admit to
 
-/* Counters, not events: no tap on the input stream, no accessibility
-   permission, nothing that could see a keystroke. */
-- (uint32_t)counterFor:(CGEventType)type
-{
-	return (uint32_t)CGEventSourceCounterForEventType(
-		kCGEventSourceStateCombinedSessionState, type);
-}
-
-- (void)sample
-{
-	uint32_t keys = [self counterFor:kCGEventKeyDown];
-	uint32_t moves = [self counterFor:kCGEventMouseMoved];
-	NSTimeInterval since = sampledAt != nil ? -[sampledAt timeIntervalSinceNow] : 0.0;
-
-	if(since > 1.0) {
-		double minutes = since / 60.0;
-		keysPerMinute = (uint32_t)((keys - keysBefore) / minutes);
-		movesPerMinute = (uint32_t)((moves - movesBefore) / minutes);
-	}
-	keysBefore = keys;
-	movesBefore = moves;
-	[sampledAt release];
-	sampledAt = [[NSDate date] retain];
-}
-
+/* Everything the antics run on comes from NekoDesktop, which the suggestions
+   read too. */
 - (NSTimeInterval)idleSeconds
 {
-	return CGEventSourceSecondsSinceLastEventType(
-		kCGEventSourceStateCombinedSessionState, kCGAnyInputEventType);
+	return [[NekoDesktop sharedDesktop] idleSeconds];
 }
 
 #pragma mark Deciding
@@ -126,7 +104,7 @@ static const NSTimeInterval NekoAnticsAway = 150.0;
 
 - (void)consider:(NSTimer *)timer
 {
-	[self sample];
+	[[NekoDesktop sharedDesktop] sample];
 	if(![self mayBeCuriousNow])
 		return;
 	[self anticNow];
@@ -161,6 +139,52 @@ static const NSTimeInterval NekoAnticsAway = 150.0;
 	return [NSEvent mouseLocation];
 }
 
+/* The walk covers the latency: the cat sets off at once and the model is asked
+   while it crosses the desk, so a question that takes a second to write arrives
+   just as the cat sits down. If no engine is set up, or it fails, or it takes
+   longer than the walk plus a moment, the written-in line is used instead — the
+   antic still happens, which matters more than which words it ends with. */
+- (void)askForLineInsteadOf:(NSString *)fallback
+{
+	id<NekoAnswerProvider> provider = [[NekoAsk sharedAsk] provider];
+	if(![provider isConfigured])
+		return;
+
+	NekoCharacter *character = [[NekoController sharedController] character];
+	NSString *instructions = NekoCuriosityInstructionsFor([character persona]);
+	NSString *context = [[NekoDesktop sharedDesktop] summary];
+	NSDate *asked = [NSDate date];
+
+	[provider askQuestion:context
+	        instructions:instructions
+	          completion:^(NSString *answer, NSError *error) {
+		/* Only if this antic is still the one in progress: a slow answer that
+		   arrives after the cat has wandered off is a line nobody asked for. */
+		if(lastAntic == nil || [lastAntic compare:asked] == NSOrderedDescending)
+			return;
+		NSString *line = [self cleanUp:answer];
+		if([line length] == 0 || [line isEqualToString:@"-"])
+			return;
+		[pendingLine release];
+		pendingLine = [line copy];
+	}];
+}
+
+/* Small models bold their one sentence or wrap it in quotation marks, which
+   inside a speech bubble reads as somebody quoting somebody else. */
+- (NSString *)cleanUp:(NSString *)answer
+{
+	NSString *line = [answer stringByReplacingOccurrencesOfString:@"**" withString:@""];
+	line = [line stringByReplacingOccurrencesOfString:@"*" withString:@""];
+	line = [line stringByReplacingOccurrencesOfString:@"#" withString:@""];
+	NSRange stop = [line rangeOfString:@"\n"];
+	if(stop.location != NSNotFound)
+		line = [line substringToIndex:stop.location];
+	return [line stringByTrimmingCharactersInSet:
+		[NSCharacterSet characterSetWithCharactersInString:
+			@" \t\n\r\"'\u201c\u201d\u00ab\u00bb"]];
+}
+
 - (void)beginAntic:(NSString *)line
         goingTo:(NSPoint)spot
              pose:(NekoState)pose
@@ -175,6 +199,8 @@ static const NSTimeInterval NekoAnticsAway = 150.0;
 	[pendingLine release];
 	pendingLine = [line copy];
 	[panel errandTo:spot thenState:pose forTicks:ticks];
+	if(line != nil)
+		[self askForLineInsteadOf:line];
 
 	/* The line waits for the cat: saying "what are you writing?" from the other
 	   side of the screen is a different, worse joke. */
@@ -211,14 +237,15 @@ static const NSTimeInterval NekoAnticsAway = 150.0;
    somebody at work, and a cat that came over to read it is the joke. */
 - (NSString *)anticNow
 {
-	[self sample];
+	[[NekoDesktop sharedDesktop] sample];
 	MyPanel *panel = [[NekoController sharedController] panel];
 	if(panel == nil || ![panel isRoaming])
 		return NekoAnticsLocalized(@"Only while roaming.");
 
-	NSTimeInterval idle = [self idleSeconds];
+	NekoDesktop *desktop = [NekoDesktop sharedDesktop];
+	NSTimeInterval idle = [desktop idleSeconds];
 
-	if(keysPerMinute > 40) {
+	if([desktop keysPerMinute] > 40) {
 		/* Reading over your shoulder: it comes over, sits, and asks. */
 		[self beginAntic:[self questionAboutTyping]
 		         goingTo:[self pointerSpot]
@@ -226,7 +253,7 @@ static const NSTimeInterval NekoAnticsAway = 150.0;
 		        forTicks:40];
 		return NekoAnticsLocalized(@"It came over to ask what you are writing.");
 	}
-	if(movesPerMinute > 120) {
+	if([desktop movesPerMinute] > 120) {
 		[self beginAntic:(arc4random_uniform(2) == 0) ? [self lineAboutThePointer] : nil
 		         goingTo:[self pointerSpot]
 		            pose:NekoStateKaki

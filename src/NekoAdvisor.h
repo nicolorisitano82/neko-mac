@@ -21,11 +21,8 @@ extern NSString * const NekoSuggestLastKey;
 @interface NekoAdvisor : NSObject
 {
 	NSTimer *heartbeat;
-	NSString *frontApp;          /* what was in front when we last looked */
-	NSDate *frontSince;
 	NSDate *lastSpoke;
 	NSString *lastSubject;       /* the app the last suggestion was about */
-	NSMutableArray *switches;    /* NSDate of each application change */
 	BOOL waiting;                /* a suggestion is being written */
 }
 

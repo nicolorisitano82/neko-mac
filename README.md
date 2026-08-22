@@ -69,9 +69,9 @@ one nap, in the last minute and a half.
 Following, the cat closed to 16 pt of a parked pointer; roaming, it never came
 within 439 pt.
 
-**Curiosity** comes with that behaviour, no setting and no engine involved. Every
-so often — 45 to 120 seconds apart, and never while you are away — the cat drops
-what it was doing and takes an interest in you:
+**Curiosity** comes with that behaviour. Every so often — 45 to 120 seconds
+apart, and never while you are away — the cat drops what it was doing and takes
+an interest in you:
 
 * typing fast: it comes over to the pointer, sits down and asks what you are
   writing
@@ -85,6 +85,23 @@ happened, and how long since the last one. Not which keys, not where, nothing
 that identifies anything — typing fast is a number going up. The question waits
 until the cat has actually arrived, because asking what you are writing from the
 far corner of the screen is a worse joke.
+
+The question itself comes from whichever engine **Ask Neko** is set to, asked
+while the cat is still crossing the desk so the walk covers the wait. Written-in
+lines are the fallback for no engine, an error, or an answer that arrives after
+the cat has wandered off.
+
+**Reading the text you are working on** is a separate switch on the Suggestions
+tab, off until you turn it on, and it needs the Accessibility permission. With it
+on, the field you are typing in — or whatever is under the pointer — is read
+through `AXUIElementCopyAttributeValue` and included in what the engine is told,
+which is what turns *"what are you writing?"* into *"cosa stai scrivendo nelle
+note di rilascio?"*. Both measured, same desktop, with a file open in TextEdit.
+
+Password fields are refused by subrole, nothing at all is read while macOS has
+secure keyboard entry on, only the last few hundred characters are taken, and
+with a remote engine that text is sent to that service. The tab prints the exact
+block that would be sent, switch on or off.
 
 **Suggestions** live in that third behaviour and nowhere else, under their own
 tab, off until you turn them on. While roaming, the cat glances at what you are

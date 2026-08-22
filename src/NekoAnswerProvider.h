@@ -48,6 +48,10 @@ extern NSString *NekoAnswerInstructionsFor(NSString *persona);
    Shorter, humbler and allowed to say nothing at all. */
 extern NSString *NekoSuggestionInstructionsFor(NSString *persona);
 
+/* The voice for coming over and being nosy: a question about what you are doing,
+   shorter than a suggestion and with no advice in it at all. */
+extern NSString *NekoCuriosityInstructionsFor(NSString *persona);
+
 /* Errors every provider raises. */
 extern NSString * const NekoAskErrorDomain;
 enum {

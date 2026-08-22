@@ -3,6 +3,7 @@
 #import "NekoController.h"
 #import "NekoCharacter.h"
 #import "NekoAnswerProvider.h"
+#import "NekoDesktop.h"
 
 NSString * const NekoSuggestLastKey = @"NekoSuggestLast";
 
@@ -33,16 +34,10 @@ static const NSTimeInterval NekoAdvisorTyping = 3.0;
 {
 	self = [super init];
 	if(self != nil) {
-		switches = [[NSMutableArray alloc] init];
 		[[NSNotificationCenter defaultCenter]
 			addObserver:self
 			   selector:@selector(settingsChanged:)
 			       name:NekoSettingsDidChangeNotification
-			     object:nil];
-		[[[NSWorkspace sharedWorkspace] notificationCenter]
-			addObserver:self
-			   selector:@selector(applicationChanged:)
-			       name:NSWorkspaceDidActivateApplicationNotification
 			     object:nil];
 	}
 	return self;
@@ -51,13 +46,9 @@ static const NSTimeInterval NekoAdvisorTyping = 3.0;
 - (void)dealloc
 {
 	[[NSNotificationCenter defaultCenter] removeObserver:self];
-	[[[NSWorkspace sharedWorkspace] notificationCenter] removeObserver:self];
 	[heartbeat invalidate];
-	[frontApp release];
-	[frontSince release];
 	[lastSpoke release];
 	[lastSubject release];
-	[switches release];
 	[super dealloc];
 }
 
@@ -87,120 +78,11 @@ static const NSTimeInterval NekoAdvisorTyping = 3.0;
 
 #pragma mark Watching, shallowly
 
-- (void)applicationChanged:(NSNotification *)note
-{
-	NSRunningApplication *app = [[note userInfo]
-		objectForKey:NSWorkspaceApplicationKey];
-	NSString *name = [app localizedName];
-	if([name length] == 0 || [name isEqualToString:frontApp])
-		return;
-
-	[frontApp release];
-	frontApp = [name retain];
-	[frontSince release];
-	frontSince = [[NSDate date] retain];
-
-	[switches addObject:frontSince];
-	while([switches count] > 40)
-		[switches removeObjectAtIndex:0];
-}
-
-/* Filled in lazily as well as by the notification, so the first suggestion after
-   launch knows where it is without waiting for you to switch applications. */
-- (NSString *)currentApp
-{
-	NSString *name = [[[NSWorkspace sharedWorkspace] frontmostApplication]
-		localizedName];
-	if([name length] == 0)
-		return frontApp;
-	if(![name isEqualToString:frontApp]) {
-		[frontApp release];
-		frontApp = [name retain];
-		[frontSince release];
-		frontSince = [[NSDate date] retain];
-	}
-	return frontApp;
-}
-
-- (NSTimeInterval)secondsInFront
-{
-	return frontSince != nil ? -[frontSince timeIntervalSinceNow] : 0.0;
-}
-
-- (NSUInteger)switchesInTheLastQuarterHour
-{
-	NSUInteger count = 0;
-	NSEnumerator *e = [switches objectEnumerator];
-	NSDate *when;
-	while((when = [e nextObject]) != nil)
-		if(-[when timeIntervalSinceNow] < 900.0)
-			count++;
-	return count;
-}
-
-- (NSTimeInterval)idleSeconds
-{
-	return CGEventSourceSecondsSinceLastEventType(
-		kCGEventSourceStateCombinedSessionState, kCGAnyInputEventType);
-}
-
-/* Only when this Mac has already given Neko screen recording for some other
-   reason. The permission is never requested here: a pet asking to record your
-   screen so it can be chatty would be an outrageous trade. */
-- (NSString *)frontWindowTitleIfAllowed
-{
-	if(!CGPreflightScreenCaptureAccess())
-		return nil;
-
-	NSString *wanted = [self currentApp];
-	CFArrayRef windows = CGWindowListCopyWindowInfo(
-		kCGWindowListOptionOnScreenOnly | kCGWindowListExcludeDesktopElements,
-		kCGNullWindowID);
-	NSString *title = nil;
-	NSEnumerator *e = [(NSArray *)windows objectEnumerator];
-	NSDictionary *window;
-	while((window = [e nextObject]) != nil) {
-		NSString *owner = [window objectForKey:(NSString *)kCGWindowOwnerName];
-		NSString *name = [window objectForKey:(NSString *)kCGWindowName];
-		if([owner isEqualToString:wanted] && [name length] > 0) {
-			title = [[name copy] autorelease];
-			break;
-		}
-	}
-	if(windows != NULL)
-		CFRelease(windows);
-	return title;
-}
-
+/* All of it lives in NekoDesktop now, which the antics read too: one place that
+   knows what is going on, rather than two that each keep half of it. */
 - (NSString *)context
 {
-	NSString *app = [self currentApp];
-	NSString *title = [self frontWindowTitleIfAllowed];
-	NSDateFormatter *clock = [[[NSDateFormatter alloc] init] autorelease];
-	[clock setDateFormat:@"HH:mm"];
-
-	NSMutableString *lines = [NSMutableString string];
-	[lines appendString:@"Here is what I seem to be doing right now.\n"];
-	[lines appendFormat:@"The program in front of me: %@\n", app ?: @"unknown"];
-	if(title != nil)
-		[lines appendFormat:@"Its window is titled: %@\n", title];
-	[lines appendFormat:@"Minutes I have been in it: %.0f\n",
-		[self secondsInFront] / 60.0];
-	[lines appendFormat:@"Times I switched program in the last 15 minutes: %lu\n",
-		(unsigned long)[self switchesInTheLastQuarterHour]];
-	[lines appendFormat:@"Seconds since my last key or click: %.0f\n",
-		[self idleSeconds]];
-	[lines appendFormat:@"Local time: %@\n", [clock stringFromDate:[NSDate date]]];
-
-	NSString *before = [[NSUserDefaults standardUserDefaults]
-		stringForKey:NekoSuggestLastKey];
-	if([before length] > 0)
-		[lines appendFormat:@"What you told me last time, do not repeat it: %@\n", before];
-	/* Ending on the instruction rather than on data: a small model answers the
-	   last thing it read, and left to end on a list of numbers it describes the
-	   numbers back. */
-	[lines appendString:@"\nSay your one line to me now."];
-	return lines;
+	return [[NekoDesktop sharedDesktop] summary];
 }
 
 /* Small models wrap their one sentence in quotation marks or bold it, both of
@@ -234,15 +116,16 @@ static const NSTimeInterval NekoAdvisorTyping = 3.0;
 	if([[NekoAsk sharedAsk] isBusy] || ![[NekoAsk sharedAsk] canSpeakUnprompted])
 		return NO;
 
-	NSTimeInterval idle = [self idleSeconds];
+	NekoDesktop *desktop = [NekoDesktop sharedDesktop];
+	NSTimeInterval idle = [desktop idleSeconds];
 	if(idle > NekoAdvisorAway || idle < NekoAdvisorTyping)
 		return NO;
 	if(lastSpoke != nil
 	   && -[lastSpoke timeIntervalSinceNow] < [controller suggestionInterval])
 		return NO;
 
-	NSString *app = [self currentApp];
-	if([app length] == 0 || [self secondsInFront] < NekoAdvisorSettled)
+	NSString *app = [desktop frontApp];
+	if([app length] == 0 || [desktop secondsInFront] < NekoAdvisorSettled)
 		return NO;
 
 	/* Twice the interval before saying anything else about the same
@@ -257,6 +140,7 @@ static const NSTimeInterval NekoAdvisorTyping = 3.0;
 
 - (void)look:(NSTimer *)timer
 {
+	[[NekoDesktop sharedDesktop] sample];
 	if(![self shouldSpeakNow])
 		return;
 	[self suggestNow:NULL];
@@ -277,7 +161,7 @@ static const NSTimeInterval NekoAdvisorTyping = 3.0;
 
 	NekoCharacter *character = [[NekoController sharedController] character];
 	NSString *instructions = NekoSuggestionInstructionsFor([character persona]);
-	NSString *subject = [[[self currentApp] copy] autorelease];
+	NSString *subject = [[[[NekoDesktop sharedDesktop] frontApp] copy] autorelease];
 	NSString *context = [self context];
 	void (^callerReport)(NSString *, NSError *) =
 		report != NULL ? Block_copy(report) : nil;

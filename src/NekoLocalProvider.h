@@ -33,8 +33,12 @@
 	dispatch_queue_t loader;        /* the model file is opened off the main thread */
 }
 
-/* The identifier of the model to use, from the store's catalogue. */
+/* The identifier of the model that will actually answer: whatever was chosen if
+   it is on the disk, otherwise something that is. */
 - (NSString *)modelIdentifier;
+
+/* What the menu says, installed or not. */
+- (NSString *)chosenModelIdentifier;
 
 /* nil until an engine is compiled into the app. The provider reports itself
    unconfigured while this is the case, and says so in the preferences rather

@@ -37,15 +37,29 @@ NSString * const NekoAskLocalModelKey = @"NekoAskLocalModel";
 
 - (NSString *)modelIdentifier
 {
+	NSArray *installed = [[NekoModelStore sharedStore] installedIdentifiers];
 	NSString *chosen = [[NSUserDefaults standardUserDefaults]
 		stringForKey:NekoAskLocalModelKey];
-	if([chosen length] > 0)
+
+	/* Picking a model in the menu and never downloading it used to leave the
+	   provider unconfigured for ever: questions fell back to the canned reply
+	   and the roaming cat went silent, with nothing anywhere saying why. A model
+	   that is actually on the disk beats the one that was merely chosen. */
+	if([chosen length] > 0 && [installed containsObject:chosen])
 		return chosen;
-	NSArray *installed = [[NekoModelStore sharedStore] installedIdentifiers];
 	if([installed count] > 0)
 		return [installed firstObject];
+	if([chosen length] > 0)
+		return chosen;                 /* nothing installed: name the intent */
 	NekoLocalModel *first = [[[NekoModelStore sharedStore] catalogue] firstObject];
 	return [first identifier];
+}
+
+/* What was chosen, whether or not it is here — the preferences need to say
+   "using X because Y was never downloaded" rather than quietly swapping. */
+- (NSString *)chosenModelIdentifier
+{
+	return [[NSUserDefaults standardUserDefaults] stringForKey:NekoAskLocalModelKey];
 }
 
 - (BOOL)isConfigured
