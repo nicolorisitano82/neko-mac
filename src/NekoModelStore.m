@@ -69,22 +69,37 @@
 	if(cached != nil)
 		return cached;
 
-	/* Small instruction-tuned models in GGUF, the format a local engine reads.
-	   Sizes are the published ones, used to show progress before the server
-	   says how long the file is. */
+	/* Instruction-tuned models in GGUF, the format the engine reads, ordered by
+	   size. The descriptions are what they actually do: the half-billion one was
+	   asked for the capital of Italy and answered "Italie, la capitale d'Italia,
+	   è Roma", which is the sort of thing worth warning about rather than
+	   dressing up. Sizes are the published ones, used to show progress before
+	   the server says how long the file is. */
 	cached = [[NSArray alloc] initWithObjects:
 		[[[NekoLocalModel alloc]
 			initWithIdentifier:@"qwen2.5-0.5b-instruct-q4"
 			              name:@"Qwen2.5 0.5B Instruct"
-			            detail:NSLocalizedString(@"468 MB, 4-bit — quick, and about as clever as a small cat", nil)
+			            detail:NSLocalizedString(@"468 MB — answers in a blink, and gets simple facts wrong", nil)
 			               url:[NSURL URLWithString:@"https://huggingface.co/Qwen/Qwen2.5-0.5B-Instruct-GGUF/resolve/main/qwen2.5-0.5b-instruct-q4_k_m.gguf"]
 			             bytes:491544576LL] autorelease],
 		[[[NekoLocalModel alloc]
 			initWithIdentifier:@"qwen2.5-1.5b-instruct-q4"
 			              name:@"Qwen2.5 1.5B Instruct"
-			            detail:NSLocalizedString(@"1.0 GB, 4-bit — slower, and rather better at answering", nil)
+			            detail:NSLocalizedString(@"1.0 GB — the smallest one worth believing", nil)
 			               url:[NSURL URLWithString:@"https://huggingface.co/Qwen/Qwen2.5-1.5B-Instruct-GGUF/resolve/main/qwen2.5-1.5b-instruct-q4_k_m.gguf"]
 			             bytes:1117320192LL] autorelease],
+		[[[NekoLocalModel alloc]
+			initWithIdentifier:@"llama-3.2-3b-instruct-q4"
+			              name:@"Llama 3.2 3B Instruct"
+			            detail:NSLocalizedString(@"1.9 GB — good in several languages, a second or two to answer", nil)
+			               url:[NSURL URLWithString:@"https://huggingface.co/bartowski/Llama-3.2-3B-Instruct-GGUF/resolve/main/Llama-3.2-3B-Instruct-Q4_K_M.gguf"]
+			             bytes:2019377696LL] autorelease],
+		[[[NekoLocalModel alloc]
+			initWithIdentifier:@"qwen2.5-3b-instruct-q4"
+			              name:@"Qwen2.5 3B Instruct"
+			            detail:NSLocalizedString(@"2.0 GB — the best of these at being both right and brief", nil)
+			               url:[NSURL URLWithString:@"https://huggingface.co/Qwen/Qwen2.5-3B-Instruct-GGUF/resolve/main/qwen2.5-3b-instruct-q4_k_m.gguf"]
+			             bytes:2104521312LL] autorelease],
 		nil];
 	return cached;
 }
@@ -142,6 +157,69 @@
 		if([self installedURLForIdentifier:[model identifier]] != nil)
 			[found addObject:[model identifier]];
 	return found;
+}
+
+/* Everything downloaded that is not the one in use, and what it costs. Models
+   are hundreds of megabytes each: trying two and forgetting is easy, and a
+   gigabyte quietly parked in Application Support is not obvious from anywhere
+   else. */
+- (NSArray *)identifiersOtherThan:(NSString *)keep
+{
+	NSMutableArray *others = [NSMutableArray array];
+	NSEnumerator *e = [[self installedIdentifiers] objectEnumerator];
+	NSString *identifier;
+	while((identifier = [e nextObject]) != nil)
+		if(![identifier isEqualToString:keep])
+			[others addObject:identifier];
+	return others;
+}
+
+- (long long)installedBytesOtherThan:(NSString *)keep
+{
+	long long total = 0;
+	NSEnumerator *e = [[self identifiersOtherThan:keep] objectEnumerator];
+	NSString *identifier;
+	while((identifier = [e nextObject]) != nil)
+		total += [self installedBytesForIdentifier:identifier];
+	return total;
+}
+
+- (long long)totalInstalledBytes
+{
+	long long total = 0;
+	NSEnumerator *e = [[self installedIdentifiers] objectEnumerator];
+	NSString *identifier;
+	while((identifier = [e nextObject]) != nil)
+		total += [self installedBytesForIdentifier:identifier];
+	return total;
+}
+
+/* Returns how many went. Also sweeps away anything left in the folder that is
+   not in the catalogue at all — a half finished download from an older version,
+   or a model dropped by hand. */
+- (NSUInteger)removeAllExcept:(NSString *)keep
+{
+	NSUInteger removed = 0;
+	NSEnumerator *e = [[self identifiersOtherThan:keep] objectEnumerator];
+	NSString *identifier;
+	while((identifier = [e nextObject]) != nil)
+		if([self removeIdentifier:identifier])
+			removed++;
+
+	NSArray *known = [[self catalogue] valueForKey:@"identifier"];
+	NSArray *contents = [[NSFileManager defaultManager]
+		contentsOfDirectoryAtPath:[[self modelsDirectory] path] error:NULL];
+	NSEnumerator *files = [contents objectEnumerator];
+	NSString *file;
+	while((file = [files nextObject]) != nil) {
+		NSString *stem = [file stringByDeletingPathExtension];
+		if([known containsObject:stem] || [stem isEqualToString:keep])
+			continue;
+		NSURL *stray = [[self modelsDirectory] URLByAppendingPathComponent:file];
+		if([[NSFileManager defaultManager] removeItemAtURL:stray error:NULL])
+			removed++;
+	}
+	return removed;
 }
 
 - (BOOL)removeIdentifier:(NSString *)identifier

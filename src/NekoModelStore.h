@@ -56,6 +56,13 @@
 - (NSArray *)installedIdentifiers;
 - (BOOL)removeIdentifier:(NSString *)identifier;
 
+/* Housekeeping: what is downloaded besides the one in use, what it costs, and
+   one call to be rid of it — strays that are not in the catalogue included. */
+- (NSArray *)identifiersOtherThan:(NSString *)keep;
+- (long long)installedBytesOtherThan:(NSString *)keep;
+- (long long)totalInstalledBytes;
+- (NSUInteger)removeAllExcept:(NSString *)keep;
+
 /* One download at a time; asking for a second cancels the first. Progress is
    0 to 1, and both blocks arrive on the main thread. */
 - (void)downloadModel:(NekoLocalModel *)model

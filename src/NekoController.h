@@ -49,6 +49,7 @@ extern NSString * const NekoSettingsDidChangeNotification;
 	NSButton *localActionButton;
 	NSProgressIndicator *localProgress;
 	NSTextField *localStatusField;
+	NSButton *localCleanButton;
 	NSButton *loginCheck;
 }
 

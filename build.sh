@@ -39,6 +39,47 @@ FRAMEWORKS="-framework Cocoa -framework ServiceManagement -framework Carbon
 	-framework Security -framework AVFoundation
 	-Xlinker -weak_framework -Xlinker Speech"
 DEPLOYMENT=11.0
+
+# A local model needs an engine, and the engine is llama.cpp. It is built once
+# into a cache rather than vendored: 200 MB of C++ has no business in this
+# repository, and pinning the tag keeps the result reproducible. Only the
+# machine doing the building needs the network and cmake — the app that comes
+# out is self-contained.
+LLAMA_TAG=b10581
+LLAMA_CACHE="$HOME/Library/Caches/neko-llama/$LLAMA_TAG"
+# Found rather than listed: the layout under build/ has moved between releases.
+llama_libs() {
+	find "$LLAMA_CACHE/build" -name "libllama.a" -o -name "libggml*.a" | tr '\n' ' '
+}
+
+ensure_llama() {
+	[ -f "$LLAMA_CACHE/build/src/libllama.a" ] && return 0
+	if ! command -v cmake >/dev/null 2>&1; then
+		echo "note: cmake is missing, so the app is built without a local model engine"
+		return 1
+	fi
+	echo "building llama.cpp $LLAMA_TAG once, into $LLAMA_CACHE (a few minutes)"
+	mkdir -p "$LLAMA_CACHE"
+	if [ ! -d "$LLAMA_CACHE/src" ]; then
+		git clone --depth 1 --branch "$LLAMA_TAG" \
+			https://github.com/ggml-org/llama.cpp "$LLAMA_CACHE/src" >/dev/null 2>&1 || return 1
+	fi
+	cmake -S "$LLAMA_CACHE/src" -B "$LLAMA_CACHE/build" \
+		-DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS=OFF \
+		-DLLAMA_BUILD_TESTS=OFF -DLLAMA_BUILD_TOOLS=OFF \
+		-DLLAMA_BUILD_EXAMPLES=OFF -DLLAMA_BUILD_SERVER=OFF -DLLAMA_CURL=OFF \
+		-DGGML_METAL=ON -DGGML_METAL_EMBED_LIBRARY=ON \
+		-DCMAKE_OSX_ARCHITECTURES=arm64 \
+		-DCMAKE_OSX_DEPLOYMENT_TARGET=$DEPLOYMENT >/dev/null 2>&1 || return 1
+	cmake --build "$LLAMA_CACHE/build" --target llama -j 8 >/dev/null 2>&1 || return 1
+	return 0
+}
+
+if ensure_llama; then
+	HAVE_LLAMA=yes
+else
+	HAVE_LLAMA=no
+fi
 SLICES=""
 
 for ARCH in arm64 x86_64; do
@@ -49,6 +90,17 @@ for ARCH in arm64 x86_64; do
 			-mmacosx-version-min=$DEPLOYMENT -Wno-deprecated-declarations \
 			-c "$SOURCE" -o "$SLICE/$(basename "$SOURCE" .m).o"
 	done
+	if [ "$ARCH" = arm64 ] && [ "$HAVE_LLAMA" = yes ]; then
+		# Objective-C++: llama.cpp is C with C++ headers.
+		clang++ -arch "$ARCH" -fno-objc-arc -x objective-c++ -std=c++17 -O2 \
+			-isysroot "$SDK" -mmacosx-version-min=$DEPLOYMENT \
+			-Isrc -I"$LLAMA_CACHE/src/include" -I"$LLAMA_CACHE/src/ggml/include" \
+			-c src/NekoLlamaEngine.mm -o "$SLICE/NekoLlamaEngine.o"
+		LLAMA_LINK="$(llama_libs) -lc++ -framework Metal -framework MetalKit -framework Accelerate"
+	else
+		LLAMA_LINK=""
+	fi
+
 	if [ "$ARCH" = arm64 ]; then
 		# -parse-as-library: without it a lone Swift file is treated as a script
 		# and brings its own main().
@@ -56,7 +108,8 @@ for ARCH in arm64 x86_64; do
 			-c src/NekoAppleModel.swift -o "$SLICE/NekoAppleModel.o"
 		# Linked by swiftc, which knows where the Swift runtime lives.
 		swiftc -target "$ARCH-apple-macos$DEPLOYMENT" -sdk "$SDK" \
-			"$SLICE"/*.o $FRAMEWORKS -framework FoundationModels -o "$SLICE/Neko"
+			"$SLICE"/*.o $LLAMA_LINK $FRAMEWORKS -framework FoundationModels \
+			-o "$SLICE/Neko"
 	else
 		# No Swift in the Intel slice: the Command Line Tools ship the Swift
 		# compatibility libraries for arm64 only. Nothing is lost — Apple

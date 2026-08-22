@@ -13,8 +13,18 @@ NSString * const NekoAskLocalModelKey = @"NekoAskLocalModel";
 	return engineClass != Nil ? [[[engineClass alloc] init] autorelease] : nil;
 }
 
+- (id)init
+{
+	self = [super init];
+	if(self != nil)
+		loader = dispatch_queue_create("neko.local.loader", DISPATCH_QUEUE_SERIAL);
+	return self;
+}
+
 - (void)dealloc
 {
+	if(loader != NULL)
+		dispatch_release(loader);
 	[engine cancel];
 	[(id)engine release];
 	[super dealloc];
@@ -85,18 +95,35 @@ NSString * const NekoAskLocalModelKey = @"NekoAskLocalModel";
             partial:(void (^)(NSString *sofar))partial
          completion:(void (^)(NSString *answer, NSError *error))completion
 {
-	NSError *problem = nil;
-	if(![self prepareEngine:&problem]) {
-		completion(nil, problem ?: [NSError errorWithDomain:NekoAskErrorDomain
-		                                              code:NekoAskErrorNotConfigured
-		                                          userInfo:nil]);
-		return;
-	}
+	/* Opening a GGUF means reading a gigabyte or two and compiling the Metal
+	   kernels: seconds, the first time. Doing that here on the main thread would
+	   freeze the whole app — the cat, the bubble, the spinner that is meant to
+	   say something is happening — so the load goes to a queue of its own and
+	   the question follows it there. */
+	void (^partialCopy)(NSString *) = partial ? Block_copy(partial) : nil;
+	void (^completionCopy)(NSString *, NSError *) = Block_copy(completion);
 
-	[engine generateFor:question
-	       instructions:instructions
-	            partial:partial
-	         completion:completion];
+	dispatch_async(loader, ^{
+		NSError *problem = nil;
+		BOOL ready = [self prepareEngine:&problem];
+		NSError *failure = ready ? nil :
+			(problem ?: [NSError errorWithDomain:NekoAskErrorDomain
+			                                code:NekoAskErrorNotConfigured
+			                            userInfo:nil]);
+		dispatch_async(dispatch_get_main_queue(), ^{
+			if(!ready) {
+				completionCopy(nil, failure);
+			} else {
+				[engine generateFor:question
+				       instructions:instructions
+				            partial:partialCopy
+				         completion:completionCopy];
+			}
+			if(partialCopy)
+				Block_release(partialCopy);
+			Block_release(completionCopy);
+		});
+	});
 }
 
 - (void)cancel

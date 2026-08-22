@@ -84,3 +84,24 @@
 "Models are kept in %@ and nothing else is installed: no daemon, no package manager, no other application." = "Les modèles sont conservés dans %@ et rien d’autre n’est installé : aucun démon, aucun gestionnaire de paquets, aucune autre application.";
 "468 MB, 4-bit — quick, and about as clever as a small cat" = "468 Mo, 4 bits — rapide, à peu près aussi malin qu’un petit chat";
 "1.0 GB, 4-bit — slower, and rather better at answering" = "1,0 Go, 4 bits — plus lent, et bien meilleur pour répondre";
+"sniffing the question" = "je renifle la question";
+"scratching my head" = "je me grattouille la tête";
+"consulting the ball of yarn" = "je consulte la pelote";
+"staring out of the window" = "je regarde par la fenêtre";
+"chasing the thought" = "je poursuis l’idée";
+"There was nothing else to remove." = "Il n’y avait rien d’autre à supprimer.";
+"Removed %lu model(s) that were not in use." = "%lu modèles inutilisés supprimés.";
+"No unused models to remove" = "Aucun modèle à supprimer";
+"Remove %lu unused model(s) — %@" = "Supprimer %lu modèles inutilisés — %@";
+"%@ of models on disk. " = "%@ de modèles sur le disque. ";
+"They are kept in %@ and nothing else is installed: no daemon, no package manager, no other application." = "Ils sont conservés dans %@ et rien d’autre n’est installé : aucun démon, aucun gestionnaire de paquets, aucune autre application.";
+"468 MB — answers in a blink, and gets simple facts wrong" = "468 Mo — répond en un clin d’œil, et se trompe sur des faits simples";
+"1.0 GB — the smallest one worth believing" = "1,0 Go — le plus petit auquel se fier";
+"1.9 GB — good in several languages, a second or two to answer" = "1,9 Go — bon en plusieurs langues, une ou deux secondes";
+"2.0 GB — the best of these at being both right and brief" = "2,0 Go — de ceux-là, le meilleur pour être juste et bref";
+"That model file could not be read" = "Ce fichier de modèle n’a pas pu être lu";
+
+/* model housekeeping */
+"Remove %lu model(s) you are not using?" = "Supprimer %lu modèles que vous n’utilisez pas ?";
+"%@ is kept. The others free %@ and can be downloaded again later." = "%@ est conservé. Les autres libèrent %@ et pourront être téléchargés à nouveau.";
+"Cancel" = "Annuler";

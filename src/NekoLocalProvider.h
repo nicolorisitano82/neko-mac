@@ -30,6 +30,7 @@
 @interface NekoLocalProvider : NSObject <NekoAnswerProvider>
 {
 	id<NekoLocalEngine> engine;
+	dispatch_queue_t loader;        /* the model file is opened off the main thread */
 }
 
 /* The identifier of the model to use, from the store's catalogue. */

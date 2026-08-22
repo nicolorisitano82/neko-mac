@@ -185,6 +185,7 @@ enum { NekoPhaseIdle = 0, NekoPhaseListening, NekoPhaseThinking, NekoPhaseAnswer
 
 - (void)cancelEverything
 {
+	[self stopThinking];
 	[listener cancel];
 	[[self provider] cancel];
 	[self finish];
@@ -290,6 +291,62 @@ enum { NekoPhaseIdle = 0, NekoPhaseListening, NekoPhaseThinking, NekoPhaseAnswer
 	[self ask:text];
 }
 
+#pragma mark Waiting, visibly
+
+/* Something has to happen between the question and the answer. A spinner would
+   do; a cat that is visibly busy doing cat things is better, and the wait is
+   where the character has the most room. */
+- (NSArray *)thinkingLines
+{
+	return [NSArray arrayWithObjects:
+		NekoAskLocalized(@"sniffing the question"),
+		NekoAskLocalized(@"scratching my head"),
+		NekoAskLocalized(@"consulting the ball of yarn"),
+		NekoAskLocalized(@"staring out of the window"),
+		NekoAskLocalized(@"chasing the thought"), nil];
+}
+
+- (void)startThinkingAbout:(NSString *)question
+{
+	[thinkingQuestion release];
+	thinkingQuestion = [question copy];
+	thinkingTick = 0;
+	[thinking invalidate];
+	thinking = [NSTimer scheduledTimerWithTimeInterval:0.25
+	                                           target:self
+	                                         selector:@selector(thinkingTick:)
+	                                         userInfo:nil
+	                                          repeats:YES];
+	[self thinkingTick:nil];
+}
+
+- (void)thinkingTick:(NSTimer *)timer
+{
+	if(phase != NekoPhaseThinking) {
+		[self stopThinking];
+		return;
+	}
+
+	NSArray *lines = [self thinkingLines];
+	/* A new occupation every couple of seconds, and the tail grows in between. */
+	NSString *line = [lines objectAtIndex:(thinkingTick / 8) % [lines count]];
+	static const char *paws[] = {"🐾", "🐾 ", "🐾  ", "🐾   "};
+	NSString *paw = [NSString stringWithUTF8String:paws[thinkingTick % 4]];
+	NSString *dots = [@"..." substringToIndex:1 + (thinkingTick % 3)];
+
+	[self showBubble:[NSString stringWithFormat:@"%@\n\n%@%@%@",
+		thinkingQuestion, paw, line, dots] dismissAfter:0.0];
+	thinkingTick++;
+}
+
+- (void)stopThinking
+{
+	[thinking invalidate];
+	thinking = nil;
+	[thinkingQuestion release];
+	thinkingQuestion = nil;
+}
+
 #pragma mark Answering
 
 - (void)ask:(NSString *)question
@@ -303,9 +360,9 @@ enum { NekoPhaseIdle = 0, NekoPhaseListening, NekoPhaseThinking, NekoPhaseAnswer
 
 	phase = NekoPhaseThinking;
 	[[self panel] holdWithState:NekoStateKaki];
-	/* The question stays up while it thinks, so you can see what it understood
-	   rather than a row of dots. */
-	[self showBubble:question dismissAfter:0.0];
+	/* The question stays up while it thinks, so you can see what it understood,
+	   with the cat visibly busy underneath it. */
+	[self startThinkingAbout:question];
 
 	/* Whoever is on screen is who answers. */
 	NekoCharacter *character = [[NekoController sharedController] character];
@@ -314,6 +371,7 @@ enum { NekoPhaseIdle = 0, NekoPhaseListening, NekoPhaseThinking, NekoPhaseAnswer
 	void (^finished)(NSString *, NSError *) = ^(NSString *answer, NSError *error) {
 		if(phase != NekoPhaseThinking && phase != NekoPhaseAnswering)
 			return;                            /* cancelled while it thought */
+		[self stopThinking];
 		if([answer length] > 0)
 			[self answer:answer];
 		else
@@ -332,6 +390,7 @@ enum { NekoPhaseIdle = 0, NekoPhaseListening, NekoPhaseThinking, NekoPhaseAnswer
 		             partial:^(NSString *sofar) {
 			if(phase != NekoPhaseThinking || [sofar length] == 0)
 				return;
+			[self stopThinking];       /* words are arriving; stop fidgeting */
 			if(lastDrawn != nil && [lastDrawn timeIntervalSinceNow] > -0.1)
 				return;
 			[lastDrawn release];

@@ -36,6 +36,9 @@ extern NSString * const NekoAskSpeakKey;
 	NekoLocalProvider *localProvider;
 	int phase;
 	NSDate *lastDrawn;           /* throttles the streaming redraw */
+	NSTimer *thinking;           /* the animation while it waits */
+	NSString *thinkingQuestion;
+	unsigned thinkingTick;
 	BOOL hotKeyFailed;
 }
 

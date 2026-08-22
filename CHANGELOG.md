@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 1.8 — 2026-08-22
 
 ### Four places an answer can come from
 
@@ -13,19 +13,47 @@ Apple's own ChatGPT integration still cannot be reached from another
 application — it answers inside Siri and the writing tools, never to a program —
 so the Shortcut remains the sanctioned route to it.
 
-### Groundwork for a model of your own
+### A model of your own, running here
 
-A **Local model** tab offers small instruction-tuned Qwen builds in GGUF — 468 MB
-and 1 GB — downloaded straight over HTTPS into the app's own Application Support
-folder, with progress, a stop button and a remove button. Nothing else is
-installed: no daemon, no package manager, no second application to keep running.
+The **Local model** tab downloads a GGUF over HTTPS into the app's own
+Application Support folder and answers from it, with nothing else installed: no
+daemon, no package manager, no second application to keep running. llama.cpp is
+built once as a static library and linked in, Metal and all, so the model runs on
+the GPU of the Mac it was downloaded to.
 
-What is not there yet is the engine that reads the file. `NekoLocalEngine` is the
-one protocol left to implement — load a GGUF, generate with partial results,
-cancel — and the intended implementation is llama.cpp built as a static library
-and linked in, which is a day of work and 33 MB of C++ to bring into the build.
-The tab says all of this in as many words, because letting someone download a
-gigabyte and only then discover it cannot answer would be indefensible.
+Four models are offered rather than two, because size is the whole decision here
+and the differences matter more than the names suggest:
+
+| Model | Size | What it is for |
+| --- | --- | --- |
+| Qwen2.5 0.5B Instruct | 468 MB | fits anywhere, and gets simple facts wrong |
+| Qwen2.5 1.5B Instruct | 1.0 GB | the smallest one worth believing |
+| Llama 3.2 3B Instruct | 1.9 GB | warmer wording, slower |
+| Qwen2.5 3B Instruct | 2.0 GB | the best answers of the four |
+
+Measured on the 1.5B build, on this Mac: the first answer after launch takes
+**0.40 s** to its first word and **0.45 s** in full, and once the model is in
+memory the next question comes back in **0.03 s**. The answer streams, like the
+Apple one.
+
+Opening a model means reading a gigabyte and compiling Metal kernels, which is
+seconds the first time — so it happens on a queue of its own. Doing it on the
+main thread froze the cat, the bubble and the spinner meant to say something was
+happening, which was exactly the wrong moment to be frozen.
+
+A **Remove unused models** button says how many models are not the one selected
+and how much disk they hold, asks before deleting gigabytes that took a while to
+fetch, and sweeps stray files that are no longer in the catalogue. The tab also
+prints how much of the disk the models take altogether.
+
+### A cat visibly thinking
+
+Between the question and the answer the bubble now shows the cat at work rather
+than the question sitting still: a paw pacing back and forth, growing dots, and
+five things a cat might plausibly be doing — sniffing the question, scratching
+its head, consulting the ball of yarn, staring out of the window, chasing the
+thought — one every two seconds. The question stays above it, and the first word
+of the answer ends the whole animation.
 
 ### Faster where it was actually slow
 

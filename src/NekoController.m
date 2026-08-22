@@ -783,8 +783,15 @@ static const float NekoMaxStopRadius = 200.0f;
 	[content addSubview:localProgress];
 	[localProgress release];
 
+	localCleanButton = [[NSButton alloc] initWithFrame:NSMakeRect(20.0f, 160.0f, 424.0f, 32.0f)];
+	[localCleanButton setBezelStyle:NSBezelStyleRounded];
+	[localCleanButton setTarget:self];
+	[localCleanButton setAction:@selector(localCleanPressed:)];
+	[content addSubview:localCleanButton];
+	[localCleanButton release];
+
 	localStatusField = [self labelWithString:@""
-	                                   frame:NSMakeRect(20.0f, 40.0f, 424.0f, 140.0f)];
+	                                   frame:NSMakeRect(20.0f, 30.0f, 424.0f, 120.0f)];
 	[localStatusField setAlignment:NSTextAlignmentLeft];
 	[[localStatusField cell] setWraps:YES];
 	[content addSubview:localStatusField];
@@ -841,6 +848,40 @@ static const float NekoMaxStopRadius = 200.0f;
 	[self syncLocalControls];
 }
 
+- (void)localCleanPressed:(id)sender
+{
+	NekoModelStore *store = [NekoModelStore sharedStore];
+	NekoLocalModel *keeper = [self selectedLocalModel];
+	NSString *keep = [keeper identifier];
+	NSUInteger others = [[store identifiersOtherThan:keep] count];
+	if(others == 0)
+		return;
+
+	/* Gigabytes are about to leave the disk, and downloading them again is a
+	   long wait: say plainly what goes and what stays before doing it. */
+	NSAlert *alert = [[[NSAlert alloc] init] autorelease];
+	[alert setMessageText:[NSString stringWithFormat:
+		NekoLocalized(@"Remove %lu model(s) you are not using?"), (unsigned long)others]];
+	[alert setInformativeText:[NSString stringWithFormat:
+		NekoLocalized(@"%@ is kept. The others free %@ and can be downloaded again later."),
+		[keeper name],
+		[NSByteCountFormatter stringFromByteCount:[store installedBytesOtherThan:keep]
+		                               countStyle:NSByteCountFormatterCountStyleFile]]];
+	[alert addButtonWithTitle:NekoLocalized(@"Remove")];
+	[alert addButtonWithTitle:NekoLocalized(@"Cancel")];
+	if([alert runModal] != NSAlertFirstButtonReturn)
+		return;
+
+	NSUInteger removed = [store removeAllExcept:keep];
+	[self syncLocalControls];
+	[self syncAskControls];
+	/* After the refresh, so the outcome is what stays on screen. */
+	[localStatusField setStringValue:removed == 0
+		? NekoLocalized(@"There was nothing else to remove.")
+		: [NSString stringWithFormat:
+			NekoLocalized(@"Removed %lu model(s) that were not in use."), (unsigned long)removed]];
+}
+
 - (void)syncLocalControls
 {
 	NekoModelStore *store = [NekoModelStore sharedStore];
@@ -868,6 +909,18 @@ static const float NekoMaxStopRadius = 200.0f;
 	if(busy)
 		[localProgress setDoubleValue:[store fraction]];
 
+	/* What the housekeeping button is for, and whether there is any. */
+	NekoLocalModel *selected = [self selectedLocalModel];
+	long long spare = [store installedBytesOtherThan:[selected identifier]];
+	NSUInteger others = [[store identifiersOtherThan:[selected identifier]] count];
+	[localCleanButton setEnabled:!busy && others > 0];
+	[localCleanButton setTitle:others == 0
+		? NekoLocalized(@"No unused models to remove")
+		: [NSString stringWithFormat:
+			NekoLocalized(@"Remove %lu unused model(s) — %@"), (unsigned long)others,
+			[NSByteCountFormatter stringFromByteCount:spare
+			                               countStyle:NSByteCountFormatterCountStyleFile]]];
+
 	if(!busy)
 		[localStatusField setStringValue:[self localStatusLine:installed]];
 }
@@ -883,7 +936,12 @@ static const float NekoMaxStopRadius = 200.0f;
 		[line appendString:NekoLocalized(@"Nothing downloaded yet.")];
 
 	[line appendString:@"\n\n"];
-	[line appendFormat:NekoLocalized(@"Models are kept in %@ and nothing else is installed: no daemon, no package manager, no other application."),
+	long long total = [[NekoModelStore sharedStore] totalInstalledBytes];
+	if(total > 0)
+		[line appendFormat:NekoLocalized(@"%@ of models on disk. "),
+			[NSByteCountFormatter stringFromByteCount:total
+			                               countStyle:NSByteCountFormatterCountStyleFile]];
+	[line appendFormat:NekoLocalized(@"They are kept in %@ and nothing else is installed: no daemon, no package manager, no other application."),
 		[[[NekoModelStore sharedStore] modelsDirectory] path]];
 	return line;
 }

@@ -118,21 +118,31 @@ be reached from another application — it answers inside Siri and the writing
 tools, never to a program — so a Shortcut ending in a ChatGPT action is the other
 way to it.
 
-*A model on this Mac* is a GGUF you download from the **Local model** tab — small
-instruction-tuned Qwen builds, 468 MB or 1 GB — kept in the app's own Application
-Support folder. Nothing else is installed for it: no daemon, no package manager,
-no second application. The download, the disk management and the settings are
-done; the inference engine is not in the build yet, and the tab says so plainly
-rather than letting someone download a gigabyte and then discover it.
+*A model on this Mac* is a GGUF you download from the **Local model** tab — four
+instruction-tuned builds between 468 MB and 2.0 GB, Qwen2.5 and Llama 3.2 — kept
+in the app's own Application Support folder. llama.cpp is built once as a static
+library and linked in, with Metal, so the model runs on this Mac's GPU and
+nothing else is installed for it: no daemon, no package manager, no second
+application. A **Remove unused models** button clears everything but the model
+you chose, after saying how much disk that frees.
 
-The on-device model answers as it goes: the first words appear in about half a
-second, where waiting for the whole answer takes nearer two. The other providers
+Both local routes answer as they go. Apple's model puts the first words in the
+bubble in about half a second, where the whole answer takes nearer two. The 1.5B
+GGUF reaches its first word in 0.40 s including opening the file, and answers a
+second question in 0.03 s once the model is in memory. The two remote providers
 answer in one piece.
 
-The on-device model is reached through `src/NekoAppleModel.swift`, the only Swift
-file in the project: `FoundationModels` ships no headers, so a Swift shim is the
-only way in. The Intel half of the universal binary leaves it out, since Apple
-Intelligence needs Apple silicon anyway. [docs/ask-neko.md](docs/ask-neko.md) has the design,
+While an answer is on its way the bubble shows the cat thinking — a pacing paw
+and one of five feline occupations — under the question you asked, until the
+first word of the answer arrives.
+
+Apple's model is reached through `src/NekoAppleModel.swift`, the only Swift file
+in the project: `FoundationModels` ships no headers, so a Swift shim is the only
+way in. The GGUF engine is `src/NekoLlamaEngine.mm`, and `build.sh` clones and
+builds llama.cpp once into `~/Library/Caches/neko-llama` before linking it — the
+Xcode project lists the file but does not compile it, since it has no llama
+libraries to link. The Intel half of the universal binary leaves both out: Apple
+Intelligence needs Apple silicon, and so does the Metal build here. [docs/ask-neko.md](docs/ask-neko.md) has the design,
 including the part that cannot work: Siri has no public API that hands an answer
 back to another application.
 

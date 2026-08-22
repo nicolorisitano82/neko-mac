@@ -87,6 +87,7 @@
 		D1C0117A1B00000000000092 /* NekoLocalProvider.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = NekoLocalProvider.m; sourceTree = "<group>"; };
 		D1C0117A1B00000000000094 /* NekoModelStore.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = NekoModelStore.h; sourceTree = "<group>"; };
 		D1C0117A1B00000000000096 /* NekoLocalProvider.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = NekoLocalProvider.h; sourceTree = "<group>"; };
+		D1C0117A1B000000000000A0 /* NekoLlamaEngine.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = NekoLlamaEngine.mm; sourceTree = "<group>"; };
 		D1C0117A1B00000000000001 /* NekoController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = NekoController.h; sourceTree = "<group>"; };
 		D1C0117A1B00000000000002 /* NekoController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = NekoController.m; sourceTree = "<group>"; };
 		8D1107320486CEB800E47090 /* Neko.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Neko.app; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -151,6 +152,7 @@
 				D1C0117A1B00000000000092 /* NekoLocalProvider.m */,
 				D1C0117A1B00000000000094 /* NekoModelStore.h */,
 				D1C0117A1B00000000000096 /* NekoLocalProvider.h */,
+				D1C0117A1B000000000000A0 /* NekoLlamaEngine.mm */,
 				D1C0117A1B00000000000001 /* NekoController.h */,
 				D1C0117A1B00000000000002 /* NekoController.m */,
 			);
