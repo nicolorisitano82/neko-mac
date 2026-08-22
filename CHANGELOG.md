@@ -1,5 +1,39 @@
 # Changelog
 
+## Unreleased
+
+### Four places an answer can come from
+
+The provider list now reads Apple Intelligence, ChatGPT, Claude, a Shortcut of
+mine. ChatGPT is asked directly, with a key of its own: each provider keeps its
+key under its own Keychain account, so switching between them loses neither, and
+the Keychain code they were both growing copies of moved into one class.
+
+Apple's own ChatGPT integration still cannot be reached from another
+application — it answers inside Siri and the writing tools, never to a program —
+so the Shortcut remains the sanctioned route to it.
+
+### Faster where it was actually slow
+
+The twelve second figure was a timeout, not a wait: the on-device model was
+already answering in under two seconds. What felt slow was elsewhere, and both
+have been dealt with.
+
+The answer now streams. `streamResponse` hands over snapshots as they are
+generated, so the first words reach the bubble in **0.42 s** where the complete
+answer took **1.89 s** — measured on the same question, which also finished
+sooner streaming (1.35 s). The bubble is redrawn ten times a second at most,
+because the model produces snapshots far faster than that and resizing a window
+on each one looks like a stutter.
+
+The listener waited two and a half seconds of silence before deciding a sentence
+was over — dead time after you stopped talking, and the largest single delay in
+the feature. It is a second and a half now, and the recogniser usually declares
+the sentence finished on its own first.
+
+Timeouts came down with it: eight seconds for the two direct providers, ten for
+a Shortcut, whose clipboard is now watched every 80 ms instead of every 150.
+
 ## 1.7.1 — 2026-08-22
 
 ### The answer sounds like whoever is on screen

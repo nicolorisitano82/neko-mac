@@ -27,6 +27,16 @@
 
 - (void)cancel;
 
+@optional
+
+/* Answers as it goes: `partial` receives the whole answer so far, `completion`
+   closes it. A provider that can do this is preferred, because words on screen
+   in half a second read as quick even when the whole answer takes two. */
+- (void)askQuestion:(NSString *)question
+       instructions:(NSString *)instructions
+            partial:(void (^)(NSString *sofar))partial
+         completion:(void (^)(NSString *answer, NSError *error))completion;
+
 @end
 
 /* The voice the character answers in, built around who it is. Shared by every

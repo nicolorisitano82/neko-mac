@@ -76,6 +76,41 @@ public final class NekoAppleModel: NSObject {
         }
     }
 
+    /// Answers piece by piece: `partial` receives the whole answer so far, as
+    /// often as the model produces more, and `completion` closes it. The first
+    /// words arrive in a fraction of the time the full answer takes, which is
+    /// the difference between a cat that is thinking and a cat that is stuck.
+    @objc public func askStreaming(_ question: String,
+                                  instructions: String,
+                                  partial: @escaping (String) -> Void,
+                                  completion: @escaping (String?, String?) -> Void) {
+        guard #available(macOS 26.0, *) else {
+            completion(nil, NekoAppleModel.unavailableReason())
+            return
+        }
+        cancel()
+        work = Task { [weak self] in
+            do {
+                let session = LanguageModelSession(instructions: instructions)
+                var latest = ""
+                for try await snapshot in session.streamResponse(to: question) {
+                    if Task.isCancelled { return }
+                    latest = snapshot.content
+                    let sofar = latest
+                    await MainActor.run { partial(sofar) }
+                }
+                if Task.isCancelled { return }
+                let whole = latest
+                await MainActor.run { completion(whole, nil) }
+            } catch {
+                if Task.isCancelled { return }
+                let message = error.localizedDescription
+                await MainActor.run { completion(nil, message) }
+            }
+            self?.work = nil
+        }
+    }
+
     @objc public func cancel() {
         work?.cancel()
         work = nil

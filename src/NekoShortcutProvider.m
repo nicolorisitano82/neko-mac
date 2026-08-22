@@ -2,8 +2,11 @@
 
 /* Long enough for a model to answer, short enough that a broken Shortcut does
    not leave the cat staring into space. */
-static const NSTimeInterval NekoShortcutTimeout = 12.0;
-static const NSTimeInterval NekoShortcutPollInterval = 0.15;
+/* A Shortcut can be a chain of actions ending in a model, so it gets longer
+   than the direct providers — but the clipboard is watched more closely, since
+   the wait ends the moment it changes. */
+static const NSTimeInterval NekoShortcutTimeout = 10.0;
+static const NSTimeInterval NekoShortcutPollInterval = 0.08;
 
 @implementation NekoShortcutProvider
 

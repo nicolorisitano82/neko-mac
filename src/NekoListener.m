@@ -3,9 +3,11 @@
 #import <AVFoundation/AVFoundation.h>
 #import <Speech/Speech.h>
 
-/* Long enough to think mid-sentence, short enough that a forgotten hotkey does
-   not leave the microphone open. */
-static const NSTimeInterval NekoSilenceTimeout = 2.5;
+/* The felt cost of the whole feature was here: after you stop talking, nothing
+   happens until this expires. A second and a half still tolerates a pause for
+   thought, and the recogniser usually declares the sentence finished on its own
+   before it runs out. */
+static const NSTimeInterval NekoSilenceTimeout = 1.5;
 static const NSTimeInterval NekoListeningLimit = 15.0;
 
 @implementation NekoListener

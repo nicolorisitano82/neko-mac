@@ -8,6 +8,10 @@
 - (void)ask:(NSString *)question
 	instructions:(NSString *)instructions
 	  completion:(void (^)(NSString *answer, NSString *error))completion;
+- (void)askStreaming:(NSString *)question
+	    instructions:(NSString *)instructions
+	         partial:(void (^)(NSString *sofar))partial
+	      completion:(void (^)(NSString *answer, NSString *error))completion;
 - (void)cancel;
 @end
 
@@ -68,6 +72,34 @@
 	[[self model] ask:question
 	     instructions:instructions
 	       completion:^(NSString *answer, NSString *failure) {
+		if([answer length] > 0) {
+			completion(answer, nil);
+			return;
+		}
+		completion(nil, [NSError errorWithDomain:NekoAskErrorDomain
+		                                    code:NekoAskErrorNoAnswer
+		                                userInfo:failure != nil
+			? [NSDictionary dictionaryWithObject:failure forKey:NSLocalizedDescriptionKey]
+			: nil]);
+	}];
+}
+
+- (void)askQuestion:(NSString *)question
+       instructions:(NSString *)instructions
+            partial:(void (^)(NSString *sofar))partial
+         completion:(void (^)(NSString *answer, NSError *error))completion
+{
+	if(![self isConfigured]) {
+		completion(nil, [NSError errorWithDomain:NekoAskErrorDomain
+		                                    code:NekoAskErrorNotConfigured
+		                                userInfo:nil]);
+		return;
+	}
+
+	[[self model] askStreaming:question
+	              instructions:instructions
+	                   partial:partial
+	                completion:^(NSString *answer, NSString *failure) {
 		if([answer length] > 0) {
 			completion(answer, nil);
 			return;

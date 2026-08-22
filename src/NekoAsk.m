@@ -5,6 +5,7 @@
 #import "NekoShortcutProvider.h"
 #import "NekoModelProvider.h"
 #import "NekoAppleProvider.h"
+#import "NekoOpenAIProvider.h"
 #import "NekoController.h"
 #import "MyPanel.h"
 #import <AVFoundation/AVFoundation.h>
@@ -120,12 +121,21 @@ enum { NekoPhaseIdle = 0, NekoPhaseListening, NekoPhaseThinking, NekoPhaseAnswer
 	return appleProvider;
 }
 
+- (NekoOpenAIProvider *)openaiProvider
+{
+	if(openaiProvider == nil)
+		openaiProvider = [[NekoOpenAIProvider alloc] init];
+	return openaiProvider;
+}
+
 - (id<NekoAnswerProvider>)provider
 {
 	NSString *choice = [[NSUserDefaults standardUserDefaults]
 		stringForKey:NekoAskProviderKey];
 	if([choice isEqualToString:@"model"])
 		return [self modelProvider];
+	if([choice isEqualToString:@"openai"])
+		return [self openaiProvider];
 	if([choice isEqualToString:@"apple"] || [choice length] == 0)
 		return [self appleProvider];
 
@@ -295,16 +305,39 @@ enum { NekoPhaseIdle = 0, NekoPhaseListening, NekoPhaseThinking, NekoPhaseAnswer
 	NekoCharacter *character = [[NekoController sharedController] character];
 	NSString *instructions = NekoAnswerInstructionsFor([character persona]);
 
-	[provider askQuestion:question
-	         instructions:instructions
-	           completion:^(NSString *answer, NSError *error) {
-		if(phase != NekoPhaseThinking)
+	void (^finished)(NSString *, NSError *) = ^(NSString *answer, NSError *error) {
+		if(phase != NekoPhaseThinking && phase != NekoPhaseAnswering)
 			return;                            /* cancelled while it thought */
 		if([answer length] > 0)
 			[self answer:answer];
 		else
 			[self failed:error];
-	}];
+	};
+
+	/* Streaming when the provider can: the first words land in about half a
+	   second, which reads as quick even though the whole answer takes longer.
+	   The bubble is only redrawn ten times a second — the model produces
+	   snapshots far faster than that, and resizing a window on every one of
+	   them looks like a stutter. */
+	if([provider respondsToSelector:@selector(askQuestion:instructions:partial:completion:)]) {
+		lastDrawn = nil;
+		[provider askQuestion:question
+		        instructions:instructions
+		             partial:^(NSString *sofar) {
+			if(phase != NekoPhaseThinking || [sofar length] == 0)
+				return;
+			if(lastDrawn != nil && [lastDrawn timeIntervalSinceNow] > -0.1)
+				return;
+			[lastDrawn release];
+			lastDrawn = [[NSDate date] retain];
+			[[self panel] holdWithState:NekoStateStop];
+			[self showBubble:sofar dismissAfter:0.0];
+		}
+		          completion:finished];
+		return;
+	}
+
+	[provider askQuestion:question instructions:instructions completion:finished];
 }
 
 - (void)answer:(NSString *)text

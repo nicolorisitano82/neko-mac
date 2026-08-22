@@ -17,6 +17,7 @@
 /* Stored in the Keychain. Pass nil to forget it. */
 - (BOOL)setApiKey:(NSString *)key;
 - (BOOL)hasApiKey;
++ (NSString *)keychainAccount;
 
 /* Which model to ask. Defaults to Claude Opus 5. */
 - (NSString *)model;

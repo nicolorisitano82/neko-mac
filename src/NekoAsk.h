@@ -4,13 +4,13 @@
 #import "NekoAnswerProvider.h"
 
 @class NekoHotKey, NekoListener, NekoBubble;
-@class NekoShortcutProvider, NekoModelProvider, NekoAppleProvider;
+@class NekoShortcutProvider, NekoModelProvider, NekoAppleProvider, NekoOpenAIProvider;
 
 /* NSUserDefaults keys */
 extern NSString * const NekoAskEnabledKey;
 extern NSString * const NekoAskHotKeyCodeKey;
 extern NSString * const NekoAskHotKeyModifiersKey;
-extern NSString * const NekoAskProviderKey;      /* "apple", "shortcut" or "model" */
+extern NSString * const NekoAskProviderKey;      /* apple, openai, model, shortcut */
 extern NSString * const NekoAskShortcutNameKey;
 extern NSString * const NekoAskSpeakKey;
 
@@ -31,7 +31,9 @@ extern NSString * const NekoAskSpeakKey;
 	NekoShortcutProvider *shortcutProvider;
 	NekoModelProvider *modelProvider;
 	NekoAppleProvider *appleProvider;
+	NekoOpenAIProvider *openaiProvider;
 	int phase;
+	NSDate *lastDrawn;           /* throttles the streaming redraw */
 	BOOL hotKeyFailed;
 }
 
@@ -50,6 +52,7 @@ extern NSString * const NekoAskSpeakKey;
 
 - (id<NekoAnswerProvider>)provider;
 - (NekoModelProvider *)modelProvider;   /* the preferences hold its key */
+- (NekoOpenAIProvider *)openaiProvider;
 
 /* Starts a question, or abandons the one in progress. */
 - (void)toggle:(id)sender;

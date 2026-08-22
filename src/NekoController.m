@@ -2,6 +2,8 @@
 #import "NekoHotKey.h"
 #import "NekoModelProvider.h"
 #import "NekoAppleProvider.h"
+#import "NekoOpenAIProvider.h"
+#import "NekoModelProvider.h"
 
 NSString * const NekoCharacterKey  = @"NekoCharacter";
 NSString * const NekoSpeedKey      = @"NekoSpeed";
@@ -624,9 +626,11 @@ static const float NekoMaxStopRadius = 200.0f;
 	                                    frame:NSMakeRect(20.0f, 222.0f, 125.0f, 17.0f)]];
 	askProviderPopUp = [[NSPopUpButton alloc]
 		initWithFrame:NSMakeRect(152.0f, 217.0f, 220.0f, 26.0f) pullsDown:NO];
+	/* Same order as askProviderKeys. */
 	[askProviderPopUp addItemWithTitle:NekoLocalized(@"Apple Intelligence, on this Mac")];
+	[askProviderPopUp addItemWithTitle:NekoLocalized(@"ChatGPT")];
+	[askProviderPopUp addItemWithTitle:NekoLocalized(@"Claude")];
 	[askProviderPopUp addItemWithTitle:NekoLocalized(@"A Shortcut of mine")];
-	[askProviderPopUp addItemWithTitle:NekoLocalized(@"Claude, directly")];
 	[askProviderPopUp setTarget:self];
 	[askProviderPopUp setAction:@selector(takeAskProviderFrom:)];
 	[content addSubview:askProviderPopUp];
@@ -691,18 +695,21 @@ static const float NekoMaxStopRadius = 200.0f;
 	NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
 	BOOL on = [ask isEnabled];
 	NSString *choice = [defaults stringForKey:NekoAskProviderKey];
-	BOOL model = [choice isEqualToString:@"model"];
 	BOOL shortcut = [choice isEqualToString:@"shortcut"];
+	id keyed = [self askKeyedProvider];
+	NSUInteger providerIndex = [[self askProviderKeys] indexOfObject:choice ?: @"apple"];
+	if(providerIndex == NSNotFound)
+		providerIndex = 0;
 
 	[askCheck setState:on ? NSControlStateValueOn : NSControlStateValueOff];
 	[askHotKeyPopUp setEnabled:on];
 	[askProviderPopUp setEnabled:on];
-	[askProviderPopUp selectItemAtIndex:model ? 2 : (shortcut ? 1 : 0)];
+	[askProviderPopUp selectItemAtIndex:providerIndex];
 	[askShortcutField setEnabled:on && shortcut];
 	[askShortcutField setStringValue:
 		[defaults stringForKey:NekoAskShortcutNameKey] ?: @""];
-	[askKeyField setEnabled:on && model];
-	[askKeyField setStringValue:[[ask modelProvider] hasApiKey] ? @"••••••••••••" : @""];
+	[askKeyField setEnabled:on && keyed != nil];
+	[askKeyField setStringValue:[keyed hasApiKey] ? @"••••••••••••" : @""];
 	[askSpeakCheck setEnabled:on];
 	[askSpeakCheck setState:[defaults boolForKey:NekoAskSpeakKey]
 		? NSControlStateValueOn : NSControlStateValueOff];
@@ -764,14 +771,32 @@ static const float NekoMaxStopRadius = 200.0f;
 	[self syncAskControls];
 }
 
+/* The order the popup is built in. */
+- (NSArray *)askProviderKeys
+{
+	return [NSArray arrayWithObjects:@"apple", @"openai", @"model", @"shortcut", nil];
+}
+
 - (void)takeAskProviderFrom:(id)sender
 {
-	NSArray *choices = [NSArray arrayWithObjects:@"apple", @"shortcut", @"model", nil];
+	NSArray *keys = [self askProviderKeys];
 	NSInteger index = [sender indexOfSelectedItem];
 	[[NSUserDefaults standardUserDefaults]
-		setObject:[choices objectAtIndex:(index >= 0 && index < 3) ? index : 0]
+		setObject:[keys objectAtIndex:(index >= 0 && index < (NSInteger)[keys count]) ? index : 0]
 		   forKey:NekoAskProviderKey];
 	[self syncAskControls];
+}
+
+/* Whichever key-holding provider is selected, or nil for the two that need no
+   key. The field below writes to this one. */
+- (id)askKeyedProvider
+{
+	NSString *choice = [[NSUserDefaults standardUserDefaults] stringForKey:NekoAskProviderKey];
+	if([choice isEqualToString:@"model"])
+		return [[NekoAsk sharedAsk] modelProvider];
+	if([choice isEqualToString:@"openai"])
+		return [[NekoAsk sharedAsk] openaiProvider];
+	return nil;
 }
 
 - (void)takeAskShortcutNameFrom:(id)sender
@@ -786,7 +811,8 @@ static const float NekoMaxStopRadius = 200.0f;
 	NSString *typed = [sender stringValue];
 	if([typed hasPrefix:@"•"])
 		return;                  /* the placeholder, not a new key */
-	[[[NekoAsk sharedAsk] modelProvider] setApiKey:typed];
+	/* Each provider keeps its own key, so switching between them loses neither. */
+	[[self askKeyedProvider] setApiKey:typed];
 	[self syncAskControls];
 }
 

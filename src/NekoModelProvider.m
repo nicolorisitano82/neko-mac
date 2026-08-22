@@ -1,11 +1,13 @@
 #import "NekoModelProvider.h"
+#import "NekoKeychain.h"
 
 static NSString * const NekoModelKey = @"NekoAskModel";
-static NSString * const NekoKeychainService = @"Neko Ask";
 static NSString * const NekoKeychainAccount = @"anthropic-api-key";
 
 static NSString * const NekoDefaultModel = @"claude-opus-5";
-static const NSTimeInterval NekoModelTimeout = 12.0;
+/* Eight seconds: long enough for a sentence over the network, short enough
+   that a stuck request does not leave the cat staring. */
+static const NSTimeInterval NekoModelTimeout = 8.0;
 
 @implementation NekoModelProvider
 
@@ -17,7 +19,7 @@ static const NSTimeInterval NekoModelTimeout = 12.0;
 
 - (NSString *)name
 {
-	return NSLocalizedString(@"Claude, directly", nil);
+	return NSLocalizedString(@"Claude", nil);
 }
 
 - (NSString *)model
@@ -38,43 +40,24 @@ static const NSTimeInterval NekoModelTimeout = 12.0;
 
 #pragma mark The key, in the Keychain
 
-- (NSMutableDictionary *)keychainQuery
++ (NSString *)keychainAccount
 {
-	NSMutableDictionary *query = [NSMutableDictionary dictionary];
-	[query setObject:(id)kSecClassGenericPassword forKey:(id)kSecClass];
-	[query setObject:NekoKeychainService forKey:(id)kSecAttrService];
-	[query setObject:NekoKeychainAccount forKey:(id)kSecAttrAccount];
-	return query;
+	return NekoKeychainAccount;
 }
 
 - (BOOL)setApiKey:(NSString *)key
 {
-	NSMutableDictionary *query = [self keychainQuery];
-	SecItemDelete((CFDictionaryRef)query);
-	if([key length] == 0)
-		return YES;              /* asked to forget it */
-
-	[query setObject:[key dataUsingEncoding:NSUTF8StringEncoding]
-	          forKey:(id)kSecValueData];
-	return SecItemAdd((CFDictionaryRef)query, NULL) == errSecSuccess;
+	return [NekoKeychain setSecret:key forAccount:NekoKeychainAccount];
 }
 
 - (NSString *)apiKey
 {
-	NSMutableDictionary *query = [self keychainQuery];
-	[query setObject:(id)kCFBooleanTrue forKey:(id)kSecReturnData];
-	[query setObject:(id)kSecMatchLimitOne forKey:(id)kSecMatchLimit];
-
-	CFTypeRef result = NULL;
-	if(SecItemCopyMatching((CFDictionaryRef)query, &result) != errSecSuccess)
-		return nil;
-	NSData *data = [(NSData *)result autorelease];
-	return [[[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding] autorelease];
+	return [NekoKeychain secretForAccount:NekoKeychainAccount];
 }
 
 - (BOOL)hasApiKey
 {
-	return [[self apiKey] length] > 0;
+	return [NekoKeychain hasSecretForAccount:NekoKeychainAccount];
 }
 
 #pragma mark Asking

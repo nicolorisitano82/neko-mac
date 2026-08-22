@@ -77,10 +77,10 @@ permission and works inside the sandbox. The microphone is asked for the first
 time the feature is used and opens only between the keystroke and the end of the
 sentence; recognition stays on this Mac when the language supports it.
 
-Answers come from one of three places, chosen in the preferences:
+Answers come from one of four places, chosen in the preferences:
 
 *Apple Intelligence, on this Mac* is the default: the on-device model, the same
-one behind Apple Intelligence. Nothing leaves the Mac, there is no key and there
+one Siri's own features run on. Nothing leaves the Mac, there is no key and there
 is no bill. It needs macOS 26 or newer on a Mac that supports Apple
 Intelligence, with the feature switched on; when any of that is missing the
 preferences say which.
@@ -110,6 +110,17 @@ name.
 
 With none of the providers available the cat answers in character anyway, which
 is the whole joke and needs no setup at all.
+
+*ChatGPT* and *Claude* are asked directly, each with a key of your own kept in
+the Keychain under its own account, so switching between them loses neither. The
+model name is a preference in both cases. Apple's own ChatGPT integration cannot
+be reached from another application — it answers inside Siri and the writing
+tools, never to a program — so a Shortcut ending in a ChatGPT action is the other
+way to it.
+
+The on-device model answers as it goes: the first words appear in about half a
+second, where waiting for the whole answer takes nearer two. The other providers
+answer in one piece.
 
 The on-device model is reached through `src/NekoAppleModel.swift`, the only Swift
 file in the project: `FoundationModels` ships no headers, so a Swift shim is the
