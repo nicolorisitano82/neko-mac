@@ -1,6 +1,8 @@
 #import "NekoBubble.h"
 
 static const float NekoBubbleMaxWidth = 420.0f;
+static const float NekoBubbleMaxPicture = 320.0f;
+static const float NekoBubbleGapUnderPicture = 8.0f;
 static const float NekoBubblePadding = 12.0f;
 static const float NekoBubbleTail = 9.0f;
 static const float NekoBubbleGap = 6.0f;
@@ -107,6 +109,11 @@ static const float NekoBubbleRadius = 10.0f;
 	[[label cell] setWraps:YES];
 	[[label cell] setUsesSingleLineMode:NO];
 	[[self contentView] addSubview:label];
+
+	picture = [[NSImageView alloc] initWithFrame:NSZeroRect];
+	[picture setImageScaling:NSImageScaleProportionallyUpOrDown];
+	[picture setHidden:YES];
+	[[self contentView] addSubview:picture];
 	return self;
 }
 
@@ -114,6 +121,7 @@ static const float NekoBubbleRadius = 10.0f;
 {
 	[dismissal invalidate];
 	[label release];
+	[picture release];
 	[super dealloc];
 }
 
@@ -139,6 +147,18 @@ static const float NekoBubbleRadius = 10.0f;
         nearRect:(NSRect)catFrame
     dismissAfter:(NSTimeInterval)seconds
 {
+	[self showText:text picture:nil nearRect:catFrame dismissAfter:seconds];
+}
+
+/* A drawing sits above its caption, in a bubble that is as wide as the picture
+   or as wide as the words, whichever needs more. Everything else — where the
+   bubble goes, which way the tail points, when it goes away — is the same
+   arithmetic as for text alone. */
+- (void)showText:(NSString *)text
+         picture:(NSImage *)image
+        nearRect:(NSRect)catFrame
+    dismissAfter:(NSTimeInterval)seconds
+{
 	NSFont *font = [NSFont systemFontOfSize:0.0];
 	[label setFont:font];
 	[label setStringValue:(text ?: @"")];
@@ -153,9 +173,25 @@ static const float NekoBubbleRadius = 10.0f;
 		NSMakeRect(0.0f, 0.0f, room, 10000.0f)];
 
 	float textWidth = ceilf(MIN(needed.width, room));
-	float textHeight = ceilf(needed.height);
-	float width = textWidth + 2.0f * NekoBubblePadding;
-	float height = textHeight + 2.0f * NekoBubblePadding + NekoBubbleTail;
+	float textHeight = [text length] > 0 ? ceilf(needed.height) : 0.0f;
+
+	/* The picture is shown at whatever size fits the bubble's own limit, keeping
+	   its proportions: a 512 pixel square becomes a 320 pixel square on screen,
+	   which is a picture rather than a poster. */
+	NSSize drawn = NSZeroSize;
+	if(image != nil) {
+		NSSize natural = [image size];
+		float side = MIN(NekoBubbleMaxPicture, MAX(natural.width, natural.height));
+		float scale = natural.width > 0.0f && natural.height > 0.0f
+			? side / MAX(natural.width, natural.height) : 1.0f;
+		drawn = NSMakeSize(ceilf(natural.width * scale), ceilf(natural.height * scale));
+	}
+
+	float contentWidth = MAX(textWidth, drawn.width);
+	float gap = (image != nil && [text length] > 0) ? NekoBubbleGapUnderPicture : 0.0f;
+	float width = contentWidth + 2.0f * NekoBubblePadding;
+	float height = textHeight + drawn.height + gap
+		+ 2.0f * NekoBubblePadding + NekoBubbleTail;
 
 	NSScreen *screen = [self screenForRect:catFrame];
 	NSRect visible = [screen visibleFrame];
@@ -171,9 +207,14 @@ static const float NekoBubbleRadius = 10.0f;
 	[self setFrame:NSMakeRect(x, y, width, height) display:NO];
 	[(NekoBubbleView *)[self contentView] setTailAtBottom:above
 	                                               offset:NSMidX(catFrame) - (x + width / 2.0f)];
-	[label setFrame:NSMakeRect(NekoBubblePadding,
-	                           (above ? NekoBubbleTail : 0.0f) + NekoBubblePadding,
-	                           width - 2.0f * NekoBubblePadding, textHeight)];
+	float bottom = (above ? NekoBubbleTail : 0.0f) + NekoBubblePadding;
+	[label setFrame:NSMakeRect(NekoBubblePadding, bottom, contentWidth, textHeight)];
+	[picture setImage:image];
+	[picture setHidden:(image == nil)];
+	if(image != nil)
+		[picture setFrame:NSMakeRect(NekoBubblePadding + (contentWidth - drawn.width) / 2.0f,
+		                             bottom + textHeight + gap,
+		                             drawn.width, drawn.height)];
 
 	[self orderFront:nil];
 

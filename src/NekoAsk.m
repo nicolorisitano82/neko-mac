@@ -1,4 +1,5 @@
 #import "NekoAsk.h"
+#import "NekoPainter.h"
 #import "NekoHotKey.h"
 #import "NekoListener.h"
 #import "NekoBubble.h"
@@ -202,9 +203,22 @@ enum { NekoPhaseIdle = 0, NekoPhaseListening, NekoPhaseThinking, NekoPhaseAnswer
 	[self performSelector:@selector(finish) withObject:nil afterDelay:showing];
 }
 
+- (void)showDrawing:(NSImage *)picture near:(id)ignored
+{
+	if(picture == nil)
+		return;
+	phase = NekoPhaseAnswering;
+	[[self panel] holdWithState:NekoStateStop];
+	[bubble showText:@"" picture:picture nearRect:[[self panel] frame] dismissAfter:20.0];
+	[NSObject cancelPreviousPerformRequestsWithTarget:self
+	                                         selector:@selector(finish) object:nil];
+	[self performSelector:@selector(finish) withObject:nil afterDelay:20.0];
+}
+
 - (void)cancelEverything
 {
 	[self stopThinking];
+	[[NekoPainter sharedPainter] cancel];
 	[listener cancel];
 	[[self provider] cancel];
 	[self finish];
@@ -385,7 +399,11 @@ enum { NekoPhaseIdle = 0, NekoPhaseListening, NekoPhaseThinking, NekoPhaseAnswer
 
 	/* Whoever is on screen is who answers. */
 	NekoCharacter *character = [[NekoController sharedController] character];
-	NSString *instructions = NekoAnswerInstructionsFor([character persona]);
+	/* Only offer the model the drawing route when there is something to draw
+	   with: told it may draw when it cannot, it answers "IMAGE: a cat" to
+	   somebody who asked a question and gets nothing back. */
+	NSString *instructions = NekoAnswerInstructionsDrawing(
+		[character persona], [[NekoPainter sharedPainter] isReady]);
 
 	void (^finished)(NSString *, NSError *) = ^(NSString *answer, NSError *error) {
 		if(phase != NekoPhaseThinking && phase != NekoPhaseAnswering)
@@ -409,6 +427,8 @@ enum { NekoPhaseIdle = 0, NekoPhaseListening, NekoPhaseThinking, NekoPhaseAnswer
 		             partial:^(NSString *sofar) {
 			if(phase != NekoPhaseThinking || [sofar length] == 0)
 				return;
+			if([self looksLikeADrawing:sofar])
+				return;              /* it is asking for a picture, not talking */
 			[self stopThinking];       /* words are arriving; stop fidgeting */
 			if(lastDrawn != nil && [lastDrawn timeIntervalSinceNow] > -0.1)
 				return;
@@ -424,8 +444,63 @@ enum { NekoPhaseIdle = 0, NekoPhaseListening, NekoPhaseThinking, NekoPhaseAnswer
 	[provider askQuestion:question instructions:instructions completion:finished];
 }
 
+/* A model that wants a picture answers with the marker and nothing else. */
+- (BOOL)looksLikeADrawing:(NSString *)text
+{
+	NSString *trimmed = [text stringByTrimmingCharactersInSet:
+		[NSCharacterSet whitespaceAndNewlineCharacterSet]];
+	return [[trimmed uppercaseString] hasPrefix:NekoImageMarker];
+}
+
+- (NSString *)drawingPromptIn:(NSString *)text
+{
+	NSString *trimmed = [text stringByTrimmingCharactersInSet:
+		[NSCharacterSet whitespaceAndNewlineCharacterSet]];
+	NSRange colon = [trimmed rangeOfString:@":"];
+	if(colon.location == NSNotFound)
+		return nil;
+	NSString *prompt = [[trimmed substringFromIndex:NSMaxRange(colon)]
+		stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]];
+	NSRange newline = [prompt rangeOfString:@"\n"];
+	if(newline.location != NSNotFound)
+		prompt = [prompt substringToIndex:newline.location];
+	return [prompt length] > 0 ? prompt : nil;
+}
+
+/* Twenty odd seconds pass between asking and the picture, so the cat says it is
+   drawing and stays put — an empty bubble for that long reads as broken. */
+- (void)draw:(NSString *)prompt
+{
+	phase = NekoPhaseAnswering;
+	[[self panel] holdWithState:NekoStateKaki];
+	[self showBubble:NekoAskLocalized(@"Hold on, I will draw it.") dismissAfter:0.0];
+
+	[[NekoPainter sharedPainter] draw:prompt completion:^(NSImage *picture, NSError *error) {
+		if(phase != NekoPhaseAnswering)
+			return;                   /* dismissed while it drew */
+		if(picture == nil) {
+			[self failed:error];
+			return;
+		}
+		NSTimeInterval showing = 30.0;
+		[[self panel] holdWithState:NekoStateStop];
+		[bubble showText:@"" picture:picture
+		        nearRect:[[self panel] frame] dismissAfter:showing];
+		[NSObject cancelPreviousPerformRequestsWithTarget:self
+		                                         selector:@selector(finish) object:nil];
+		[self performSelector:@selector(finish) withObject:nil afterDelay:showing];
+	}];
+}
+
 - (void)answer:(NSString *)text
 {
+	if([self looksLikeADrawing:text] && [[NekoPainter sharedPainter] isReady]) {
+		NSString *prompt = [self drawingPromptIn:text];
+		if([prompt length] > 0) {
+			[self draw:prompt];
+			return;
+		}
+	}
 	phase = NekoPhaseAnswering;
 	[[self panel] holdWithState:NekoStateStop];
 	[self showBubble:text dismissAfter:[NekoBubble readingTimeFor:text]];

@@ -39,6 +39,7 @@
 		D1C0117A1B000000000000A3 /* NekoAdvisor.m in Sources */ = {isa = PBXBuildFile; fileRef = D1C0117A1B000000000000A2 /* NekoAdvisor.m */; };
 		D1C0117A1B000000000000A7 /* NekoAntics.m in Sources */ = {isa = PBXBuildFile; fileRef = D1C0117A1B000000000000A6 /* NekoAntics.m */; };
 		D1C0117A1B000000000000B1 /* NekoDesktop.m in Sources */ = {isa = PBXBuildFile; fileRef = D1C0117A1B000000000000B0 /* NekoDesktop.m */; };
+		D1C0117A1B000000000000C1 /* NekoPainter.m in Sources */ = {isa = PBXBuildFile; fileRef = D1C0117A1B000000000000C0 /* NekoPainter.m */; };
 		D1C0117A1B00000000000003 /* NekoController.m in Sources */ = {isa = PBXBuildFile; fileRef = D1C0117A1B00000000000002 /* NekoController.m */; };
 		A70027B30CA6447E0057F7E4 /* MyView.m in Sources */ = {isa = PBXBuildFile; fileRef = A70027B20CA6447E0057F7E4 /* MyView.m */; };
 		A7B9FF1D1A575C310074B4D4 /* Neko.icns in Resources */ = {isa = PBXBuildFile; fileRef = A7B9FF1C1A575C310074B4D4 /* Neko.icns */; };
@@ -91,6 +92,8 @@
 		D1C0117A1B000000000000A2 /* NekoAdvisor.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = NekoAdvisor.m; sourceTree = "<group>"; };
 		D1C0117A1B000000000000A6 /* NekoAntics.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = NekoAntics.m; sourceTree = "<group>"; };
 		D1C0117A1B000000000000B0 /* NekoDesktop.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = NekoDesktop.m; sourceTree = "<group>"; };
+		D1C0117A1B000000000000C0 /* NekoPainter.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = NekoPainter.m; sourceTree = "<group>"; };
+		D1C0117A1B000000000000C2 /* NekoPainter.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = NekoPainter.h; sourceTree = "<group>"; };
 		D1C0117A1B000000000000B2 /* NekoDesktop.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = NekoDesktop.h; sourceTree = "<group>"; };
 		D1C0117A1B000000000000A8 /* NekoAntics.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = NekoAntics.h; sourceTree = "<group>"; };
 		D1C0117A1B000000000000A4 /* NekoAdvisor.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = NekoAdvisor.h; sourceTree = "<group>"; };
@@ -162,6 +165,8 @@
 				D1C0117A1B000000000000A2 /* NekoAdvisor.m */,
 				D1C0117A1B000000000000A6 /* NekoAntics.m */,
 				D1C0117A1B000000000000B0 /* NekoDesktop.m */,
+				D1C0117A1B000000000000C0 /* NekoPainter.m */,
+				D1C0117A1B000000000000C2 /* NekoPainter.h */,
 				D1C0117A1B000000000000B2 /* NekoDesktop.h */,
 				D1C0117A1B000000000000A8 /* NekoAntics.h */,
 				D1C0117A1B000000000000A4 /* NekoAdvisor.h */,
@@ -353,6 +358,7 @@
 				D1C0117A1B000000000000A3 /* NekoAdvisor.m in Sources */,
 				D1C0117A1B000000000000A7 /* NekoAntics.m in Sources */,
 				D1C0117A1B000000000000B1 /* NekoDesktop.m in Sources */,
+				D1C0117A1B000000000000C1 /* NekoPainter.m in Sources */,
 				D1C0117A1B00000000000003 /* NekoController.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

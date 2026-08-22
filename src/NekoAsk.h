@@ -71,4 +71,7 @@ extern NSString * const NekoAskSpeakKey;
    holds the cat still while it does. */
 - (void)sayUnprompted:(NSString *)text;
 
+/* Shows a picture beside the cat, for the preferences' own test button. */
+- (void)showDrawing:(NSImage *)picture near:(id)panel;
+
 @end

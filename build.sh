@@ -35,7 +35,7 @@ SOURCES="src/main.m src/MyView.m src/MyPanel.m src/NekoCharacter.m src/NekoContr
 	src/NekoAppleProvider.m src/NekoOpenAIProvider.m src/NekoKeychain.m
 	src/NekoModelStore.m src/NekoLocalProvider.m
 	src/NekoHotKey.m src/NekoListener.m src/NekoBubble.m src/NekoAsk.m
-	src/NekoAdvisor.m src/NekoAntics.m src/NekoDesktop.m"
+	src/NekoAdvisor.m src/NekoAntics.m src/NekoDesktop.m src/NekoPainter.m"
 FRAMEWORKS="-framework Cocoa -framework ServiceManagement -framework Carbon
 	-framework Security -framework AVFoundation
 	-Xlinker -weak_framework -Xlinker Speech"
@@ -46,6 +46,9 @@ DEPLOYMENT=11.0
 # repository, and pinning the tag keeps the result reproducible. Only the
 # machine doing the building needs the network and cmake — the app that comes
 # out is self-contained.
+SD_COMMIT=97d2990807fe6d558e395f8764198d7c7e7b411c
+SD_CACHE="$HOME/Library/Caches/neko-sd"
+
 LLAMA_TAG=b10581
 LLAMA_CACHE="$HOME/Library/Caches/neko-llama/$LLAMA_TAG"
 # Found rather than listed: the layout under build/ has moved between releases.
@@ -80,6 +83,41 @@ if ensure_llama; then
 	HAVE_LLAMA=yes
 else
 	HAVE_LLAMA=no
+fi
+
+# The drawing half is a separate program rather than a library, because
+# stable-diffusion.cpp carries its own ggml and the app already has llama.cpp's:
+# linked together, every ggml symbol would be defined twice. A helper also means
+# a model that crashes or eats a gigabyte takes nothing of the cat with it.
+ensure_diffusion() {
+	[ -x "$SD_CACHE/build/bin/sd-cli" ] && return 0
+	command -v cmake >/dev/null 2>&1 || return 1
+	echo "building stable-diffusion.cpp once, into $SD_CACHE (several minutes)"
+	mkdir -p "$SD_CACHE"
+	if [ ! -d "$SD_CACHE/src/.git" ]; then
+		mkdir -p "$SD_CACHE/src"
+		( cd "$SD_CACHE/src" \
+		  && git init -q . \
+		  && git remote add origin https://github.com/leejet/stable-diffusion.cpp \
+		  && git fetch -q --depth 1 origin "$SD_COMMIT" \
+		  && git checkout -q FETCH_HEAD \
+		  && git submodule update -q --init --depth 1 --recursive ) >/dev/null 2>&1 || return 1
+	fi
+	cmake -S "$SD_CACHE/src" -B "$SD_CACHE/build" \
+		-DCMAKE_BUILD_TYPE=Release -DSD_METAL=ON \
+		-DGGML_METAL_EMBED_LIBRARY=ON -DSD_BUILD_SHARED_LIBS=OFF \
+		-DCMAKE_OSX_ARCHITECTURES=arm64 >/dev/null 2>&1 || return 1
+	# Only the command line target: the server example wants pnpm and Node to
+	# build a web front end nobody here is going to look at.
+	cmake --build "$SD_CACHE/build" --config Release -j 8 --target sd-cli >/dev/null 2>&1 || return 1
+	return 0
+}
+
+if ensure_diffusion; then
+	HAVE_DIFFUSION=yes
+else
+	HAVE_DIFFUSION=no
+	echo "note: the app is built without the drawing helper"
 fi
 SLICES=""
 
@@ -123,6 +161,14 @@ for ARCH in arm64 x86_64; do
 done
 
 lipo -create $SLICES -output "$APP/Contents/MacOS/Neko"
+
+# The drawing helper travels inside the bundle, signed with everything else.
+if [ "$HAVE_DIFFUSION" = yes ]; then
+	cp "$SD_CACHE/build/bin/sd-cli" "$APP/Contents/MacOS/neko-paint"
+	chmod +x "$APP/Contents/MacOS/neko-paint"
+else
+	rm -f "$APP/Contents/MacOS/neko-paint"
+fi
 
 xattr -cr "$APP"
 codesign --sign - --entitlements Neko.entitlements --force "$APP"

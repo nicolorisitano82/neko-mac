@@ -2,6 +2,7 @@
 #import "NekoAdvisor.h"
 #import "NekoAntics.h"
 #import "NekoDesktop.h"
+#import "NekoPainter.h"
 #import "NekoHotKey.h"
 #import "NekoModelProvider.h"
 #import "NekoModelStore.h"
@@ -540,6 +541,14 @@ static const float NekoMaxStopRadius = 200.0f;
 	[suggestTab setLabel:NekoLocalized(@"Suggestions")];
 	[suggestTab setView:suggestContent];
 	[tabs addTabViewItem:suggestTab];
+
+	NSView *drawContent = [[[NSView alloc]
+		initWithFrame:NSMakeRect(0.0f, 0.0f, 470.0f, 340.0f)] autorelease];
+	[self buildDrawTabInView:drawContent];
+	NSTabViewItem *drawTab = [[[NSTabViewItem alloc] initWithIdentifier:@"draw"] autorelease];
+	[drawTab setLabel:NekoLocalized(@"Drawings")];
+	[drawTab setView:drawContent];
+	[tabs addTabViewItem:drawTab];
 	[tabs release];
 
 	/* Behaviour */
@@ -817,6 +826,224 @@ static const float NekoMaxStopRadius = 200.0f;
 /* The suggestions tab. The switch is the small part; the paragraph under it is
    the point, because this is the one feature that looks at what you are doing
    and, with a remote engine chosen, tells somebody else about it. */
+/* The drawing tab. A gigabyte and a half of model and twenty seconds a picture,
+   both of which are said here rather than discovered. */
+- (void)buildDrawTabInView:(NSView *)content
+{
+	drawCheck = [[NSButton alloc] initWithFrame:NSMakeRect(20.0f, 300.0f, 430.0f, 18.0f)];
+	[drawCheck setButtonType:NSButtonTypeSwitch];
+	[drawCheck setTitle:NekoLocalized(@"Let Neko draw when I ask to see something")];
+	[drawCheck setTarget:self];
+	[drawCheck setAction:@selector(takeDrawEnabledFrom:)];
+	[content addSubview:drawCheck];
+	[drawCheck release];
+
+	drawActionButton = [[NSButton alloc] initWithFrame:NSMakeRect(20.0f, 254.0f, 180.0f, 32.0f)];
+	[drawActionButton setBezelStyle:NSBezelStyleRounded];
+	[drawActionButton setTarget:self];
+	[drawActionButton setAction:@selector(drawActionPressed:)];
+	[content addSubview:drawActionButton];
+	[drawActionButton release];
+
+	drawProgress = [[NSProgressIndicator alloc]
+		initWithFrame:NSMakeRect(212.0f, 262.0f, 230.0f, 16.0f)];
+	[drawProgress setStyle:NSProgressIndicatorStyleBar];
+	[drawProgress setIndeterminate:NO];
+	[drawProgress setMinValue:0.0];
+	[drawProgress setMaxValue:1.0];
+	[drawProgress setHidden:YES];
+	[content addSubview:drawProgress];
+	[drawProgress release];
+
+	[content addSubview:[self labelWithString:NekoLocalized(@"Effort:")
+	                                    frame:NSMakeRect(20.0f, 220.0f, 125.0f, 17.0f)]];
+	drawStepsPopUp = [[NSPopUpButton alloc]
+		initWithFrame:NSMakeRect(152.0f, 215.0f, 200.0f, 26.0f) pullsDown:NO];
+	NSEnumerator *e = [[self drawStepChoices] objectEnumerator];
+	NSNumber *steps;
+	while((steps = [e nextObject]) != nil)
+		[drawStepsPopUp addItemWithTitle:[NSString stringWithFormat:
+			NekoLocalized(@"%ld steps"), (long)[steps integerValue]]];
+	[drawStepsPopUp setTarget:self];
+	[drawStepsPopUp setAction:@selector(takeDrawStepsFrom:)];
+	[content addSubview:drawStepsPopUp];
+	[drawStepsPopUp release];
+
+	[content addSubview:[self labelWithString:NekoLocalized(@"Size:")
+	                                    frame:NSMakeRect(20.0f, 186.0f, 125.0f, 17.0f)]];
+	drawSizePopUp = [[NSPopUpButton alloc]
+		initWithFrame:NSMakeRect(152.0f, 181.0f, 200.0f, 26.0f) pullsDown:NO];
+	NSEnumerator *sizes = [[self drawSizeChoices] objectEnumerator];
+	NSNumber *side;
+	while((side = [sizes nextObject]) != nil)
+		[drawSizePopUp addItemWithTitle:[NSString stringWithFormat:@"%ld × %ld",
+			(long)[side integerValue], (long)[side integerValue]]];
+	[drawSizePopUp setTarget:self];
+	[drawSizePopUp setAction:@selector(takeDrawSizeFrom:)];
+	[content addSubview:drawSizePopUp];
+	[drawSizePopUp release];
+
+	drawNowButton = [[NSButton alloc] initWithFrame:NSMakeRect(20.0f, 138.0f, 200.0f, 32.0f)];
+	[drawNowButton setBezelStyle:NSBezelStyleRounded];
+	[drawNowButton setTitle:NekoLocalized(@"Draw a cat now")];
+	[drawNowButton setTarget:self];
+	[drawNowButton setAction:@selector(drawNowPressed:)];
+	[content addSubview:drawNowButton];
+	[drawNowButton release];
+
+	drawStatusField = [self labelWithString:@""
+	                                  frame:NSMakeRect(20.0f, 16.0f, 430.0f, 112.0f)];
+	[drawStatusField setAlignment:NSTextAlignmentLeft];
+	[[drawStatusField cell] setWraps:YES];
+	[content addSubview:drawStatusField];
+
+	[self syncDrawControls];
+}
+
+- (NSArray *)drawStepChoices
+{
+	return [NSArray arrayWithObjects:[NSNumber numberWithInt:8],
+		[NSNumber numberWithInt:14], [NSNumber numberWithInt:20],
+		[NSNumber numberWithInt:30], nil];
+}
+
+- (NSArray *)drawSizeChoices
+{
+	return [NSArray arrayWithObjects:[NSNumber numberWithInt:384],
+		[NSNumber numberWithInt:512], [NSNumber numberWithInt:768], nil];
+}
+
+- (NekoLocalModel *)pictureModel
+{
+	return [[[NekoModelStore sharedStore] pictureCatalogue] firstObject];
+}
+
+- (void)takeDrawEnabledFrom:(id)sender
+{
+	[[NSUserDefaults standardUserDefaults]
+		setBool:([sender state] == NSControlStateValueOn) forKey:NekoDrawEnabledKey];
+	[self syncDrawControls];
+}
+
+- (void)takeDrawStepsFrom:(id)sender
+{
+	NSArray *choices = [self drawStepChoices];
+	NSUInteger index = MIN((NSUInteger)[sender indexOfSelectedItem], [choices count] - 1);
+	[[NSUserDefaults standardUserDefaults]
+		setObject:[choices objectAtIndex:index] forKey:NekoDrawStepsKey];
+	[self syncDrawControls];
+}
+
+- (void)takeDrawSizeFrom:(id)sender
+{
+	NSArray *choices = [self drawSizeChoices];
+	NSUInteger index = MIN((NSUInteger)[sender indexOfSelectedItem], [choices count] - 1);
+	[[NSUserDefaults standardUserDefaults]
+		setObject:[choices objectAtIndex:index] forKey:NekoDrawSizeKey];
+	[self syncDrawControls];
+}
+
+- (void)drawActionPressed:(id)sender
+{
+	NekoModelStore *store = [NekoModelStore sharedStore];
+	NekoLocalModel *model = [self pictureModel];
+	if([store isDownloading]) {
+		[store cancelDownload];
+		[self syncDrawControls];
+		return;
+	}
+	if([store installedURLForIdentifier:[model identifier]] != nil) {
+		[store removeIdentifier:[model identifier]];
+		[self syncDrawControls];
+		return;
+	}
+	[store downloadModel:model progress:^(double fraction) {
+		[drawProgress setDoubleValue:fraction];
+	} completion:^(NSURL *file, NSError *error) {
+		if(error != nil)
+			[drawStatusField setStringValue:[error localizedDescription]];
+		[self syncDrawControls];
+	}];
+	[self syncDrawControls];
+}
+
+/* Something small and quick to prove the thing works, without making anyone
+   speak to the cat first. */
+- (void)drawNowPressed:(id)sender
+{
+	[drawNowButton setEnabled:NO];
+	[drawStatusField setStringValue:NekoLocalized(@"Drawing…")];
+	NSDate *started = [NSDate date];
+	[[NekoPainter sharedPainter] draw:@"a small tabby cat sitting on a desk, photograph"
+	                       completion:^(NSImage *picture, NSError *error) {
+		[drawNowButton setEnabled:YES];
+		if(picture == nil) {
+			[drawStatusField setStringValue:[error localizedDescription]
+				?: NekoLocalized(@"The drawing did not come out.")];
+			return;
+		}
+		[drawStatusField setStringValue:[NSString stringWithFormat:
+			NekoLocalized(@"Drawn in %.0f seconds."), -[started timeIntervalSinceNow]]];
+		MyPanel *catPanel = [self panel];
+		[[NekoAsk sharedAsk] showDrawing:picture near:catPanel];
+	}];
+}
+
+- (void)syncDrawControls
+{
+	NekoModelStore *store = [NekoModelStore sharedStore];
+	NekoLocalModel *model = [self pictureModel];
+	BOOL installed = [store installedURLForIdentifier:[model identifier]] != nil;
+	BOOL busy = [store isDownloading]
+		&& [[[store downloadingModel] identifier] isEqualToString:[model identifier]];
+	NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
+	BOOL on = [defaults boolForKey:NekoDrawEnabledKey];
+
+	[drawCheck setState:on ? NSControlStateValueOn : NSControlStateValueOff];
+	[drawActionButton setTitle:busy ? NekoLocalized(@"Stop")
+	                                : (installed ? NekoLocalized(@"Remove")
+	                                             : NekoLocalized(@"Download"))];
+	[drawProgress setHidden:!busy];
+	if(busy)
+		[drawProgress setDoubleValue:[store fraction]];
+	[drawStepsPopUp setEnabled:on && installed];
+	[drawSizePopUp setEnabled:on && installed];
+	[drawNowButton setEnabled:on && installed && ![[NekoPainter sharedPainter] isDrawing]];
+
+	NSArray *steps = [self drawStepChoices];
+	NSUInteger index = [steps indexOfObject:
+		[NSNumber numberWithInteger:[defaults integerForKey:NekoDrawStepsKey]]];
+	[drawStepsPopUp selectItemAtIndex:(index == NSNotFound) ? 1 : index];
+	NSArray *sizes = [self drawSizeChoices];
+	index = [sizes indexOfObject:
+		[NSNumber numberWithInteger:[defaults integerForKey:NekoDrawSizeKey]]];
+	[drawSizePopUp selectItemAtIndex:(index == NSNotFound) ? 1 : index];
+
+	if(!busy)
+		[drawStatusField setStringValue:[self drawStatusLine:installed]];
+}
+
+- (NSString *)drawStatusLine:(BOOL)installed
+{
+	NSMutableString *line = [NSMutableString string];
+	if([[NekoPainter sharedPainter] helperPath] == nil) {
+		[line appendString:NekoLocalized(@"This build has no drawing program in it, so nothing here can work yet.")];
+		return line;
+	}
+	[line appendString:NekoLocalized(@"Ask to be shown something — “show me the Colosseum” — and the cat draws it here, on this Mac's GPU, with Stable Diffusion. Nothing is sent anywhere, and it costs nothing but the time.")];
+	[line appendString:@"\n\n"];
+	if(!installed)
+		[line appendFormat:NekoLocalized(@"The model is %@ and has not been downloaded yet. "),
+			[[self pictureModel] detail]];
+	else
+		[line appendFormat:NekoLocalized(@"Measured on this Mac: a 512 pixel picture at 14 steps took 14 seconds to draw, plus about nine to open the model the first time. More steps means a better picture and a longer wait. The model takes %@ of disk. "),
+			[NSByteCountFormatter stringFromByteCount:
+				[[NekoModelStore sharedStore] installedBytesForIdentifier:[[self pictureModel] identifier]]
+			                               countStyle:NSByteCountFormatterCountStyleFile]];
+	[line appendString:NekoLocalized(@"The words that describe the picture come from whichever engine Ask Neko is set to; only that sentence leaves the Mac, and only if that engine is a remote one.")];
+	return line;
+}
+
 - (void)buildSuggestTabInView:(NSView *)content
 {
 	suggestCheck = [[NSButton alloc] initWithFrame:NSMakeRect(20.0f, 300.0f, 430.0f, 18.0f)];
@@ -1301,6 +1528,7 @@ static const float NekoMaxStopRadius = 200.0f;
 	[behaviourPopUp selectItemAtIndex:[self behaviourIndex]];
 	[self updateWanderAvailability];
 	[self syncSuggestControls];
+	[self syncDrawControls];
 	[self syncAskControls];
 	/* The system owns this one, so it is read back rather than remembered. */
 	[loginCheck setState:[self opensAtLogin] ? NSControlStateValueOn : NSControlStateValueOff];

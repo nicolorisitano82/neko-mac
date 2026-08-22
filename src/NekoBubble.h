@@ -11,6 +11,7 @@
 @interface NekoBubble : NSPanel
 {
 	NSTextField *label;
+	NSImageView *picture;
 	NSTimer *dismissal;
 	id owner;                    /* not retained */
 	SEL dismissedAction;
@@ -21,6 +22,12 @@
 /* Places the bubble against the cat's frame, flipping below and sliding
    sideways as the screen requires. Pass 0 to leave it up until told. */
 - (void)showText:(NSString *)text
+        nearRect:(NSRect)catFrame
+    dismissAfter:(NSTimeInterval)seconds;
+
+/* The same, with a drawing above the words. Pass nil for either. */
+- (void)showText:(NSString *)text
+         picture:(NSImage *)image
         nearRect:(NSRect)catFrame
     dismissAfter:(NSTimeInterval)seconds;
 

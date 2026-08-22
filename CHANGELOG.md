@@ -2,6 +2,32 @@
 
 ## Unreleased
 
+### Show me the Colosseum
+
+Ask the cat to be shown something and it draws it, on this Mac's GPU, with
+nothing sent anywhere. A new **Drawings** tab holds the switch, a 1.6 GB Stable
+Diffusion 1.5 model to download, the effort and size of the picture, and a button
+that draws a cat on the spot so the feature can be judged without talking to
+anyone.
+
+The understanding is the text model's, not the app's: told it may draw, it
+answers *"mi mostri il Colosseo?"* with `IMAGE: the Colosseum in Rome,
+photograph, golden hour` instead of a sentence, and the app recognises five
+characters and hands the rest to the painter. Whatever language the question was
+in, and whatever "show me" turns out to mean, is the model's problem.
+
+Measured here: 14.5 s to draw 512 pixels at 14 steps, about nine more the first
+time while the model opens, 15.8 s from question to picture in the bubble. The
+bubble learned to hold a picture above its words, sized to the drawing or to the
+text, whichever is wider.
+
+`neko-paint` is a separate program in the bundle rather than a linked library,
+because stable-diffusion.cpp brings its own ggml and llama.cpp is already in
+there with another: together they would define every ggml symbol twice. A crash
+in it also costs a picture rather than the cat. Apple's own Image Playground was
+tried first and refused: `ImageCreator`, the headless API, answers `notSupported`
+on macOS 27 where it is deprecated in favour of a panel the user has to drive.
+
 ### The cat asks about what you are actually doing
 
 The curious questions were written in and localized: five of them, picked at

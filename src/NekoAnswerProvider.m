@@ -3,6 +3,7 @@
 /* Lives here rather than in either provider, so each of them can be built and
    tested without dragging the other in. */
 NSString * const NekoAskErrorDomain = @"NekoAsk";
+NSString * const NekoImageMarker = @"IMAGE:";
 
 /* The language Neko answers in: the one it is running in, named outright.
    "The same language as the question" is too weak an instruction for a small
@@ -25,6 +26,23 @@ static NSString *NekoAnswerLanguage(void)
    one model narrate it back, answering inside a <small sprite 32px: …> tag. */
 NSString *NekoAnswerInstructionsFor(NSString *persona)
 {
+	return NekoAnswerInstructionsDrawing(persona, NO);
+}
+
+/* With drawing switched on, one more thing the answer may be: a request for a
+   picture. The marker is answered instead of the sentence, and the app turns it
+   into a drawing — which means the model decides what "show me the Colosseum"
+   means in any language, and the app only has to recognise five characters. */
+NSString *NekoAnswerInstructionsDrawing(NSString *persona, BOOL mayDraw)
+{
+	NSString *drawing = mayDraw ? [NSString stringWithFormat:
+		@"\n\nIf they are asking to be shown something — a picture of a place, an "
+		@"animal, an object, anything they want to look at rather than read about "
+		@"— do not describe it. Answer with exactly IMAGE: followed by a short "
+		@"description in English of what to draw, and nothing else, on one line. "
+		@"For example: IMAGE: the Colosseum in Rome, photograph, golden hour. Use "
+		@"this only when they want to see something; a question about a place they "
+		@"merely asked about is still a question."] : @"";
 	return [NSString stringWithFormat:
 		@"You are %@, living on someone's computer desktop, and you have just been "
 		@"asked a question out loud.\n\n"
@@ -36,8 +54,9 @@ NSString *NekoAnswerInstructionsFor(NSString *persona)
 		@"the answer is a single fact.\n\n"
 		@"Reply in %@. Reply in %@ even if the question sounded like another "
 		@"language, and never switch part way through. Keep it to one or two short "
-		@"sentences. No lists, no headings, no preamble, and no stage directions.",
-		persona ?: @"a small pixel-art cat", NekoAnswerLanguage(), NekoAnswerLanguage()];
+		@"sentences. No lists, no headings, no preamble, and no stage directions.%@",
+		persona ?: @"a small pixel-art cat", NekoAnswerLanguage(), NekoAnswerLanguage(),
+		drawing];
 }
 
 /* Unasked advice is harder to get right than an answer: it arrives uninvited, it

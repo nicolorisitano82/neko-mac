@@ -150,3 +150,23 @@
 "Window titles are included only if this Mac has already granted Neko screen recording; that permission is never asked for. With Apple Intelligence or a model on this Mac, none of it leaves the Mac; with ChatGPT, Claude or a Shortcut, it is sent to that service like any other question." = "Los títulos de las ventanas se incluyen solo si este Mac ya le concedió a Neko la grabación de pantalla; ese permiso nunca se pide. Con Apple Intelligence o un modelo en este Mac, nada sale del Mac; con ChatGPT, Claude o un atajo, se envía a ese servicio como cualquier otra pregunta.";
 "Reading the text is on: what is in the field you are typing in, or under the pointer, is included above and goes wherever the rest of it goes. Password fields are refused, nothing at all is read while macOS has secure keyboard entry on, and only the last few hundred characters are taken." = "La lectura del texto está activada: lo que hay en el campo donde escribes, o bajo el puntero, aparece arriba y va a donde va todo lo demás. Los campos de contraseña se rechazan, no se lee nada mientras macOS tiene la entrada segura de teclado activa, y solo se toman los últimos cientos de caracteres.";
 "Reading the text is switched on but Neko has no Accessibility permission, so nothing is being read. Open System Settings, Privacy & Security, Accessibility, and allow Neko." = "La lectura del texto está activada pero Neko no tiene permiso de Accesibilidad, así que no lee nada. Abre Ajustes del Sistema, Privacidad y seguridad, Accesibilidad, y autoriza a Neko.";
+
+/* drawings */
+"Hold on, I will draw it." = "Un momento, te lo dibujo.";
+"Drawings" = "Dibujos";
+"Let Neko draw when I ask to see something" = "Deja que Neko dibuje cuando pido ver algo";
+"Effort:" = "Esfuerzo:";
+"%ld steps" = "%ld pasos";
+"Draw a cat now" = "Dibuja un gato ahora";
+"Drawing…" = "Dibujando…";
+"Drawn in %.0f seconds." = "Dibujado en %.0f segundos.";
+"The drawing did not come out." = "El dibujo no salió.";
+"This build has no drawing program in it." = "Esta versión no lleva dentro el programa de dibujo.";
+"Download the picture model first." = "Descarga primero el modelo de imágenes.";
+"Drawing is switched off." = "El dibujo está apagado.";
+"1.6 GB, 8-bit — draws a 512 pixel picture on this Mac's GPU" = "1,6 GB, 8 bits — dibuja una imagen de 512 píxeles en la GPU de este Mac";
+"This build has no drawing program in it, so nothing here can work yet." = "Esta versión no lleva el programa de dibujo, así que aquí no puede funcionar nada.";
+"Ask to be shown something — “show me the Colosseum” — and the cat draws it here, on this Mac's GPU, with Stable Diffusion. Nothing is sent anywhere, and it costs nothing but the time." = "Pide ver algo — «enséñame el Coliseo» — y el gato lo dibuja aquí, en la GPU de este Mac, con Stable Diffusion. No se envía nada a ninguna parte, y solo cuesta tiempo.";
+"The model is %@ and has not been downloaded yet. " = "El modelo ocupa %@ y aún no se ha descargado. ";
+"Measured on this Mac: a 512 pixel picture at 14 steps took 14 seconds to draw, plus about nine to open the model the first time. More steps means a better picture and a longer wait. The model takes %@ of disk. " = "Medido en este Mac: una imagen de 512 píxeles con 14 pasos tardó 14 segundos, más unos nueve para abrir el modelo la primera vez. Más pasos significa mejor imagen y más espera. El modelo ocupa %@ de disco. ";
+"The words that describe the picture come from whichever engine Ask Neko is set to; only that sentence leaves the Mac, and only if that engine is a remote one." = "Las palabras que describen la imagen vienen del motor elegido en Pregunta a Neko; solo esa frase sale del Mac, y solo si ese motor es remoto.";

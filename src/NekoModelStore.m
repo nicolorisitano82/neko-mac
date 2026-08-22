@@ -106,6 +106,11 @@
 
 - (NekoLocalModel *)modelWithIdentifier:(NSString *)identifier
 {
+	NSEnumerator *pictures = [[self pictureCatalogue] objectEnumerator];
+	NekoLocalModel *picture;
+	while((picture = [pictures nextObject]) != nil)
+		if([[picture identifier] isEqualToString:identifier])
+			return picture;
 	NSEnumerator *e = [[self catalogue] objectEnumerator];
 	NekoLocalModel *model;
 	while((model = [e nextObject]) != nil)
@@ -115,6 +120,48 @@
 }
 
 #pragma mark What is on disk
+
+/* One picture model, because the choice here is not really a choice: Stable
+   Diffusion 1.5 quantised to 8 bits is the smallest thing that draws a
+   recognisable Colosseum, and the alternatives are either the same model a
+   hundred megabytes lighter or four times the size. */
+- (NSArray *)pictureCatalogue
+{
+	static NSArray *cached = nil;
+	if(cached != nil)
+		return cached;
+	cached = [[NSArray alloc] initWithObjects:
+		[[[NekoLocalModel alloc]
+			initWithIdentifier:@"sd15-q8"
+			              name:@"Stable Diffusion 1.5"
+			            detail:NSLocalizedString(@"1.6 GB, 8-bit — draws a 512 pixel picture on this Mac's GPU", nil)
+			               url:[NSURL URLWithString:@"https://huggingface.co/second-state/stable-diffusion-v1-5-GGUF/resolve/main/stable-diffusion-v1-5-pruned-emaonly-Q8_0.gguf"]
+			             bytes:1717986918LL] autorelease], nil];
+	return cached;
+}
+
+- (BOOL)isPicture:(NSString *)identifier
+{
+	NSEnumerator *e = [[self pictureCatalogue] objectEnumerator];
+	NekoLocalModel *model;
+	while((model = [e nextObject]) != nil)
+		if([[model identifier] isEqualToString:identifier])
+			return YES;
+	return NO;
+}
+
+- (NSURL *)picturesDirectory
+{
+	NSArray *support = NSSearchPathForDirectoriesInDomains(
+		NSApplicationSupportDirectory, NSUserDomainMask, YES);
+	NSString *path = [[[support firstObject] stringByAppendingPathComponent:@"Neko"]
+		stringByAppendingPathComponent:@"Images"];
+	[[NSFileManager defaultManager] createDirectoryAtPath:path
+	                         withIntermediateDirectories:YES
+	                                          attributes:nil
+	                                               error:NULL];
+	return [NSURL fileURLWithPath:path];
+}
 
 - (NSURL *)modelsDirectory
 {
@@ -131,7 +178,9 @@
 
 - (NSURL *)fileURLForIdentifier:(NSString *)identifier
 {
-	return [[self modelsDirectory] URLByAppendingPathComponent:
+	NSURL *directory = [self isPicture:identifier] ? [self picturesDirectory]
+	                                               : [self modelsDirectory];
+	return [directory URLByAppendingPathComponent:
 		[identifier stringByAppendingPathExtension:@"gguf"]];
 }
 

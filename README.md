@@ -272,6 +272,32 @@ Intelligence needs Apple silicon, and so does the Metal build here. [docs/ask-ne
 including the part that cannot work: Siri has no public API that hands an answer
 back to another application.
 
+## Drawings
+
+Ask to be shown something — *"mi mostri il Colosseo?"* — and the cat draws it,
+here, on this Mac's GPU. The **Drawings** tab has the switch, a 1.6 GB Stable
+Diffusion 1.5 model to download, and a **Draw a cat now** button that proves the
+thing works without anyone having to talk to a cat first.
+
+Nothing about the picture leaves the Mac. What does leave, if the engine chosen
+for **Ask Neko** is a remote one, is the one sentence describing what to draw:
+the text model decides that *"mi mostri il Colosseo"* means a picture and answers
+with `IMAGE: the Colosseum in Rome, photograph, golden hour`, which the app turns
+into a drawing. Five characters of protocol, and the model does the understanding
+in whatever language it was asked.
+
+Measured on this Mac, 512 pixels at 14 steps: **14.5 s** to draw, plus about nine
+the first time while the model opens. End to end, from the question to a picture
+in the bubble, **15.8 s** with Apple's model writing the description.
+
+The drawing half is a separate program inside the bundle, `neko-paint`, built
+from [stable-diffusion.cpp](https://github.com/leejet/stable-diffusion.cpp) with
+Metal. It is a helper rather than a library because stable-diffusion.cpp carries
+its own copy of ggml and the app already has llama.cpp's: linked together, every
+ggml symbol would be defined twice. `build.sh` clones and builds it once into
+`~/Library/Caches/neko-sd`, the same way it does llama.cpp, and a build without
+it simply has no drawing tab worth using — the tab says so.
+
 ## Characters
 
 Every sprite set is a folder in `Resources/Characters`, and the whole directory

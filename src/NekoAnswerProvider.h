@@ -43,6 +43,13 @@
    provider so they cannot drift apart. */
 extern NSString *NekoAnswerInstructionsFor(NSString *persona);
 
+/* The same, plus the one extra rule that lets an answer be a picture: reply with
+   "IMAGE: something to draw" and the app draws it instead. */
+extern NSString *NekoAnswerInstructionsDrawing(NSString *persona, BOOL mayDraw);
+
+/* The marker a model uses to ask for a drawing. */
+extern NSString * const NekoImageMarker;
+
 /* The voice for something nobody asked for: a remark about what you appear to
    be doing, offered by a cat that only knows which application is in front.
    Shorter, humbler and allowed to say nothing at all. */

@@ -45,10 +45,17 @@
 
 /* What can be downloaded, in ascending size. */
 - (NSArray *)catalogue;
+
+/* The ones that draw rather than write. Kept apart from the others in every
+   sense — their own folder, their own list — so that the housekeeping button on
+   the Local model tab cannot sweep away a picture model it does not recognise. */
+- (NSArray *)pictureCatalogue;
+
 - (NekoLocalModel *)modelWithIdentifier:(NSString *)identifier;
 
 /* Where they are kept, created on demand. */
 - (NSURL *)modelsDirectory;
+- (NSURL *)picturesDirectory;
 
 /* nil when that one is not on disk. */
 - (NSURL *)installedURLForIdentifier:(NSString *)identifier;
