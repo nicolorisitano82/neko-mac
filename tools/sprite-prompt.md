@@ -207,6 +207,44 @@ flipped copies of the right-facing ones, so the two halves match even when the
 generator drew them as two different characters, which is the usual outcome.
 Drop it only if the left-facing poses came out genuinely better.
 
+## When the poses overflow their cells
+
+Three sheets in a row came back with the figures drawn taller than the cell they
+belong to and sitting high in it, so the feet of one row lay over the hair of the
+next: no empty gutter anywhere, 100 to 500 opaque pixels crossing every
+horizontal boundary. A straight grid cut lops off shoes and hat tips, and moving
+each cut to the quietest line only got it down to thirty of the thirty-two poses
+still touching an edge.
+
+`--split` handles those. It ignores the grid as a set of cuts and uses it only to
+place one seed per cell, then shares out every opaque pixel between the seeds by
+a breadth-first sweep from all of them at once, staying inside the figures as it
+travels. Each pose comes out as its own image, so a neighbour's foot stays with
+the neighbour, and two figures drawn into each other are separated along the line
+where they actually meet.
+
+```sh
+python3 tools/grid2char.py ~/Downloads/sheet.png Resources/Characters/Foo.nekochar \
+        --name "Foo" --size 48 --mirror --split
+```
+
+It prints what it found, and the numbers are worth reading:
+
+    poses shared out pixel by pixel, 121x119 to 239x230, 38 stray pixels
+    dropped, 606 pixels where two poses were drawn into each other
+
+The size range should look like one character in different poses. "Stray pixels
+dropped" are specks nothing claimed; loose clumps of two dozen pixels or more —
+the Zzz over a sleeper, the surprise marks beside a startled pose — are kept and
+filed with the pose whose cell they fall in. The last number is how much the
+figures genuinely overlap: a few hundred pixels over thirty-two poses is a shoe
+resting against some hair, and invisible once the sprite is 48 points across.
+
+The other two modes are for tidier sheets: `--autogrid` takes the cell boxes from
+the bands of content when the poses are cleanly separated, and `--snap` keeps the
+grid but moves each cut to where the fewest pixels cross it, choosing the
+horizontal cuts per column.
+
 ## Shorter alternative: half a sheet, 16 cells
 
 Asking a generator for eight directions gets eight loosely related drawings:

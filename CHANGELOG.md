@@ -2,11 +2,34 @@
 
 ## Unreleased
 
+### Sheets that draw outside the lines
+
+Three redrawn sheets — Pinup, Gandalf, Frodo — came back with the figures taller
+than the cells they belong to and sitting high in them, so the feet of one row
+lay over the hair of the next. No empty gutter anywhere, and 100 to 500 opaque
+pixels crossing every horizontal boundary: the plain grid cut took off shoes and
+hat tips, and snapping each cut to the quietest line still left thirty of the
+thirty-two poses touching an edge.
+
+`grid2char.py --split` stops cutting. The grid places one seed per cell, and then
+every opaque pixel is shared out between the seeds by a breadth-first sweep from
+all of them at once, travelling only inside the figures. Each pose comes out as
+its own image: a neighbour's foot stays with the neighbour, and two figures drawn
+into each other are separated along the line where they meet — 884, 732 and 606
+pixels of genuine overlap across the three sheets, which is a shoe against some
+hair and invisible at 48 points. Loose clumps like the Zzz over a sleeper or the
+marks beside a startled pose are kept and filed with the pose whose cell they
+fall in; single specks are dropped.
+
+`--snap`, which moves each cut to where the fewest pixels cross it and picks the
+horizontal cuts per column, is in there too: not enough for these sheets, but the
+right thing for one that is merely a few pixels out.
+
 ### Gandalf, Frodo, and a new Pinup
 
 **Gandalf** and **Frodo** join the drawn characters at 48 and 64 points, and
-**Pinup** was redrawn from a new sheet — with a **Pinup XL** at 64 to match the
-other large ones. 39 characters now.
+**Pinup** was redrawn — all three from sheets that needed `--split`, and all
+three imported again once it existed. 39 characters now.
 
 ### A cat that roams like it means it
 

@@ -248,7 +248,10 @@ Ace, Black, Bunny, Calico, Eevee, Esmeralda, Fox, Ghost, Gray, Jess, Kina,
 Lucy, Maia, Maria, Mike, Moka, Silver, Silversky, Snuupy, Spirit, Valentine,
 Vaporwave.
 
-**Drawn for this app** — generated pixel art imported with `tools/grid2char.py`,
+**Drawn for this app** — generated pixel art imported with `tools/grid2char.py`
+(with `--split`, which shares the sheet's pixels out between the poses instead of
+cutting cells: these sheets draw the figures taller than their cell, and a
+straight cut takes off shoes and hat tips),
 and the first characters here that are not 32 points across: **Merlin** the
 wizard cat, **Owl**, **Alien**, **Pinup**, **Gandalf** and **Frodo** at 48, with
 **Merlin XL**, **Owl XL**, **Pinup XL**, **Gandalf XL** and **Frodo XL** at 64.
