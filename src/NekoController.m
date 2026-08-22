@@ -1,5 +1,6 @@
 #import "NekoController.h"
 #import "NekoAdvisor.h"
+#import "NekoAntics.h"
 #import "NekoHotKey.h"
 #import "NekoModelProvider.h"
 #import "NekoModelStore.h"
@@ -237,6 +238,7 @@ static const float NekoMaxStopRadius = 200.0f;
 	   should be running, and during -init the shared instance does not exist
 	   yet — asking would build a second one, which would ask again. */
 	[[NekoAdvisor sharedAdvisor] applySettings];
+	[[NekoAntics sharedAntics] applySettings];
 }
 
 #pragma mark Settings
@@ -402,6 +404,7 @@ static const float NekoMaxStopRadius = 200.0f;
 	[self syncSuggestControls];
 	[self syncAskControls];
 	[self settingsChanged];
+	[[NekoAntics sharedAntics] applySettings];
 }
 
 /* Wandering is what an idle cursor-chaser does. A cat living on the Dock is
@@ -923,6 +926,8 @@ static const float NekoMaxStopRadius = 200.0f;
 		return NekoLocalized(@"This belongs to one behaviour only. Set Behaviour to “Roams on its own” in the Pet tab: a cat chasing the cursor has its attention elsewhere, and one living on the Dock is already busy.");
 
 	NSMutableString *line = [NSMutableString string];
+	[line appendString:NekoLocalized(@"Curiosity comes with roaming whatever this switch says: every minute or two the cat comes over to the pointer, asks what you are writing, or goes to claw the edge of the screen. That part needs no engine and sends nothing anywhere.")];
+	[line appendString:@"\n\n"];
 	[line appendString:NekoLocalized(@"While roaming, Neko glances at what you are doing and now and then says something about it — a tip, a nudge, or a joke. It waits until you have been in one application for a while, keeps quiet when you are away from the keyboard, and says nothing at all when it has nothing worth saying.")];
 	[line appendString:@"\n\n"];
 	[line appendString:NekoLocalized(@"All it can see, and all that is sent, is this:")];

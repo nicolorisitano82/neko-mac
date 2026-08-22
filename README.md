@@ -48,12 +48,37 @@ needs no permission and works inside the sandbox; nothing is read but geometry.
 
 *Roams on its own* is the third: the cat goes wherever it likes on the desk and
 the pointer means nothing to it — not a destination, not something to avoid. It
-walks somewhere, sits for a dozen seconds, and sets off again. Moving the mouse
-does not interrupt it, which is the difference between this and wandering.
+picks somewhere at least a third of the desk away, walks there, sits for a second
+or three, and sets off again. Moving the mouse does not interrupt it, which is
+the difference between this and wandering.
 
-Measured over three quarters of a minute with the pointer parked: following, the
-cat closed to 16 pt of it; roaming, it never came within 439 pt and covered
-875 pt of desk.
+Sleeping is on a longer clock here. The idle chain would have it dozing three
+seconds into its first pause, which looks broken rather than sleepy, so it stays
+awake for five minutes of roaming before a nap is allowed, sleeps for half a
+minute, and then the five minutes start again. Measured: over 150 s it walked
+10 650 pt across 14 trips, on its feet 57% of the time and asleep for none of it;
+over 400 s, 27 793 pt across 35 trips, still 57% on its feet, 6% of it asleep —
+one nap, in the last minute and a half.
+
+Following, the cat closed to 16 pt of a parked pointer; roaming, it never came
+within 439 pt.
+
+**Curiosity** comes with that behaviour, no setting and no engine involved. Every
+so often — 45 to 120 seconds apart, and never while you are away — the cat drops
+what it was doing and takes an interest in you:
+
+* typing fast: it comes over to the pointer, sits down and asks what you are
+  writing
+* moving the mouse about: it runs over and pounces on the cursor
+* neither, for twenty seconds: it goes and claws the edge of the screen
+* anything else: it wanders over to see what you are up to
+
+What it goes on is what the system tells anyone without a permission prompt:
+`CGEventSourceCounterForEventType` for how many keys and mouse moves have
+happened, and how long since the last one. Not which keys, not where, nothing
+that identifies anything — typing fast is a number going up. The question waits
+until the cat has actually arrived, because asking what you are writing from the
+far corner of the screen is a worse joke.
 
 **Suggestions** live in that third behaviour and nowhere else, under their own
 tab, off until you turn them on. While roaming, the cat glances at what you are
@@ -211,7 +236,7 @@ diagonals fall back to the nearest cardinal direction, the wall-scratching
 so a partial character still animates. Any image format `NSImage` reads works,
 mixed extensions included.
 
-34 characters ship with the app, in three families.
+39 characters ship with the app, in three families.
 
 **From oneko itself** — public domain sprites, converted from oneko's 1-bit XBM
 pairs: **Neko** (the original cat), **Tora** (its tiger, which reuses the cat's
@@ -225,8 +250,8 @@ Vaporwave.
 
 **Drawn for this app** — generated pixel art imported with `tools/grid2char.py`,
 and the first characters here that are not 32 points across: **Merlin** the
-wizard cat and **Owl** at 48, **Merlin XL** and **Owl XL** at 64, **Alien** and
-**Pinup** at 48.
+wizard cat, **Owl**, **Alien**, **Pinup**, **Gandalf** and **Frodo** at 48, with
+**Merlin XL**, **Owl XL**, **Pinup XL**, **Gandalf XL** and **Frodo XL** at 64.
 
 The Sakura and Tomoyo sprites derive from Card Captor Sakura artwork, the
 oneko.js skins are fan-made sheets from collections that state no licence, and

@@ -28,6 +28,13 @@
 	NSPoint wanderTarget;        /* where it decided to go on its own */
 	NSPoint wanderMouse;         /* the pointer when it set off, to notice you moving */
 	unsigned restedTicks;        /* how long it has been settled and asleep */
+	unsigned roamTicks;          /* how long this roaming stretch has lasted */
+	unsigned roamRest;           /* ticks to sit still before the next errand */
+
+	int errandPhase;             /* 0 none, 1 on its way, 2 doing the thing */
+	NekoState errandState;       /* what it does when it arrives */
+	unsigned errandHold;         /* how long it does it for */
+	unsigned errandTicks;
 	
 	NSArray *shelves;            /* top edges of other apps' windows */
 	unsigned shelvesAge;
@@ -39,6 +46,14 @@
 
 /* Stops chasing and shows one pose, for as long as something more important
    than the pointer is going on. The frames still animate. */
+/* Somewhere to go, on somebody else's behalf, and something to do when it gets
+   there — the curious antics are built out of this. Pass NekoStateCount to
+   arrive and carry on as normal. Roaming only: the other two behaviours have
+   their own ideas about where the cat belongs. */
+- (void)errandTo:(NSPoint)point thenState:(NekoState)state forTicks:(unsigned)ticks;
+- (BOOL)isOnErrand;
+- (BOOL)isRoaming;
+
 - (void)holdWithState:(NekoState)state;
 - (void)releaseHold;
 - (BOOL)isHeld;

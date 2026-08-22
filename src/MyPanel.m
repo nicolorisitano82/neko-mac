@@ -92,6 +92,10 @@
 	wanderEnabled = [controller wandersWhenIdle];
 	if(!wanderEnabled && !windowsMode && !roamMode)
 		wandering = NO;
+	if(!roamMode) {
+		roamTicks = 0;
+		errandPhase = 0;
+	}
 	shelvesAge = 0;
 	
 	NekoCharacter *newCharacter = [controller character];
@@ -151,6 +155,13 @@
 	return held;
 }
 
+/* Roaming, in ticks of an eighth of a second: a couple of seconds' pause
+   between errands, and five minutes of that before the cat has earned a nap. */
+static const unsigned NekoRoamMinRest = 8;       /* one second */
+static const unsigned NekoRoamRestSpread = 24;   /* up to four */
+static const unsigned NekoRoamBeforeNap = 2400;  /* five minutes */
+static const unsigned NekoRoamNap = 240;         /* half a minute asleep */
+
 #pragma mark Wandering
 
 /* Somewhere else on the desk, a few sprites away, pointing away from wherever
@@ -208,10 +219,23 @@
 	NSRect frame = [self frame];
 	float roomX = MAX(bounds.size.width - frame.size.width, 1.0f);
 	float roomY = MAX(bounds.size.height - frame.size.height, 1.0f);
+	NSPoint here = NSMakePoint(NSMidX(frame), NSMinY(frame));
 
-	wanderTarget = NSMakePoint(NSMinX(bounds) + frame.size.width / 2.0f
-	                           + (float)arc4random_uniform((unsigned)roomX),
-	                           NSMinY(bounds) + (float)arc4random_uniform((unsigned)roomY));
+	/* A worthwhile walk rather than a shuffle: somewhere at least a third of
+	   the desk away, given a few tries to find one. Uniform points came out
+	   next door often enough that the cat looked like it could not decide. */
+	float wanted = MIN(bounds.size.width, bounds.size.height) / 3.0f;
+	NSPoint spot = here;
+	unsigned try;
+	for(try = 0; try < 8; try++) {
+		spot = NSMakePoint(NSMinX(bounds) + frame.size.width / 2.0f
+		                   + (float)arc4random_uniform((unsigned)roomX),
+		                   NSMinY(bounds) + (float)arc4random_uniform((unsigned)roomY));
+		if(hypotf(spot.x - here.x, spot.y - here.y) >= wanted)
+			break;
+	}
+
+	wanderTarget = spot;
 	wanderMouse = [NSEvent mouseLocation];
 	wandering = YES;
 }
@@ -228,8 +252,15 @@
 {
 	if(wandering)
 		return NO;
-	if(roamMode)
-		return restedTicks > 100;     /* twelve seconds anywhere it fancies */
+	if(roamMode) {
+		if(errandPhase != 0)
+			return NO;                 /* it is already going somewhere */
+		if(nekoState == NekoStateSleep)
+			return restedTicks > NekoRoamNap;   /* nap over, back on its feet */
+		if(roamTicks > NekoRoamBeforeNap)
+			return NO;                 /* let the idle chain put it to sleep */
+		return restedTicks > roamRest;
+	}
 	if(windowsMode)
 		return restedTicks > 80;      /* ten seconds on a window top */
 	return wanderEnabled && restedTicks > 240;   /* thirty seconds asleep */
@@ -237,13 +268,58 @@
 
 - (void)beginWandering
 {
-	if(roamMode)
+	if(roamMode) {
+		/* A different pause each time, so it does not tick round like a
+		   metronome. */
+		roamRest = NekoRoamMinRest + arc4random_uniform(NekoRoamRestSpread);
+		if(nekoState == NekoStateSleep)
+			roamTicks = 0;             /* the nap paid for the next five minutes */
 		[self startWanderingAnywhere];
+	}
 	else if(windowsMode)
 		[self startWanderingOntoShelf];
 	else
 		[self startWanderingAwayFromPointer];
 	restedTicks = 0;
+}
+
+/* Sleeping is for cats that have earned it. A roamer that dozed off three
+   seconds into its first pause — which is what the idle chain does — looked
+   broken rather than sleepy. */
+- (BOOL)mayFallAsleep
+{
+	if(!idleSleep)
+		return NO;
+	return !roamMode || roamTicks > NekoRoamBeforeNap;
+}
+
+#pragma mark Errands
+
+- (void)errandTo:(NSPoint)point thenState:(NekoState)state forTicks:(unsigned)ticks
+{
+	if(!roamMode || held)
+		return;
+	wanderTarget = point;
+	wanderMouse = [NSEvent mouseLocation];
+	wandering = YES;
+	errandPhase = 1;
+	errandState = state;
+	errandHold = ticks;
+	errandTicks = 0;
+	restedTicks = 0;
+	if(![self isWalking])
+		[self setStateTo:NekoStateAwake];
+	[self startTimer];
+}
+
+- (BOOL)isOnErrand
+{
+	return errandPhase != 0;
+}
+
+- (BOOL)isRoaming
+{
+	return roamMode;
 }
 
 /* What the cat is walking towards: the pointer, or wherever it decided to go. */
@@ -517,6 +593,31 @@
 		restedTicks = 0;
 	else if(restedTicks < 60000)
 		restedTicks++;
+
+	if(roamMode && roamTicks < 60000)
+		roamTicks++;
+
+	/* An errand has two halves — getting there and doing the thing — and a
+	   clock on each, so a target that turns out to be unreachable cannot leave
+	   the cat walking into a wall for ever. */
+	if(errandPhase == 2) {
+		if(++errandTicks > errandHold) {
+			errandPhase = 0;
+			[self releaseHold];
+		}
+	} else if(errandPhase == 1) {
+		errandTicks++;
+		if(!wandering || errandTicks > 480) {
+			BOOL arrived = !wandering;
+			errandPhase = 0;
+			errandTicks = 0;
+			[self stopWandering];
+			if(arrived && errandState != NekoStateCount && errandHold > 0) {
+				errandPhase = 2;
+				[self holdWithState:errandState];
+			}
+		}
+	}
 	
 	/* Whatever it had in mind, you moving the pointer wins — except when it is
 	   roaming, where the pointer was never the point. */
@@ -587,7 +688,7 @@
 		if (stateCount < 6) {
 			goto breakout;
 		}
-		[self setStateTo:(idleSleep ? NekoStateSleep : NekoStateStop)];
+		[self setStateTo:([self mayFallAsleep] ? NekoStateSleep : NekoStateStop)];
 	} else if(nekoState == NekoStateSleep) {
 		if (isNekoMoveStart) {
 			[self setStateTo:NekoStateAwake];

@@ -125,3 +125,19 @@
 "While roaming, Neko glances at what you are doing and now and then says something about it — a tip, a nudge, or a joke. It waits until you have been in one application for a while, keeps quiet when you are away from the keyboard, and says nothing at all when it has nothing worth saying." = "En vagabondant, Neko jette un œil à ce que vous faites et lâche de temps en temps une remarque — un conseil, un encouragement ou une blague. Il attend que vous soyez dans une application depuis un moment, se tait quand vous n’êtes pas au clavier, et ne dit rien du tout quand il n’a rien à dire.";
 "All it can see, and all that is sent, is this:" = "Tout ce qu’il voit, et tout ce qui est envoyé, c’est ceci :";
 "Nothing is read from inside your documents. Window titles are included only if this Mac has already granted Neko screen recording; the permission is never asked for. With Apple Intelligence or a model on this Mac, none of it leaves the Mac; with ChatGPT, Claude or a Shortcut, it is sent to that service like any other question." = "Rien n’est lu à l’intérieur de vos documents. Les titres de fenêtres ne sont inclus que si ce Mac a déjà accordé à Neko l’enregistrement de l’écran ; l’autorisation n’est jamais demandée. Avec Apple Intelligence ou un modèle sur ce Mac, rien ne quitte le Mac ; avec ChatGPT, Claude ou un raccourci, c’est envoyé à ce service comme n’importe quelle question.";
+
+/* curious antics */
+"What are you writing?" = "Qu’est-ce que tu écris ?";
+"Is it about me?" = "C’est à propos de moi ?";
+"That is a lot of words. Any of them mine?" = "Beaucoup de mots. Certains sont à moi ?";
+"May I watch you type?" = "Je peux te regarder taper ?";
+"Need a hand? I only have paws." = "Besoin d’un coup de main ? Je n’ai que des pattes.";
+"Got it. It was getting away." = "Attrapé. Il s’échappait.";
+"This arrow keeps moving. Suspicious." = "Cette flèche bouge sans arrêt. Suspect.";
+"Caught your cursor. You may have it back." = "J’ai attrapé ton curseur. Tu peux le reprendre.";
+"Only while roaming." = "Seulement en vagabondage.";
+"It came over to ask what you are writing." = "Il est venu demander ce que vous écrivez.";
+"It pounced on the cursor." = "Il a bondi sur le curseur.";
+"It went to claw the edge of the screen." = "Il est allé griffer le bord de l’écran.";
+"It wandered over to see what you were up to." = "Il s’est approché pour voir ce que vous faisiez.";
+"Curiosity comes with roaming whatever this switch says: every minute or two the cat comes over to the pointer, asks what you are writing, or goes to claw the edge of the screen. That part needs no engine and sends nothing anywhere." = "La curiosité vient avec le vagabondage, quoi que dise cet interrupteur : toutes les une ou deux minutes le chat s’approche du curseur, demande ce que vous écrivez, ou va griffer le bord de l’écran. Cette partie n’utilise aucun moteur et n’envoie rien.";

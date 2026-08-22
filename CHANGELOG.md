@@ -2,6 +2,45 @@
 
 ## Unreleased
 
+### Gandalf, Frodo, and a new Pinup
+
+**Gandalf** and **Frodo** join the drawn characters at 48 and 64 points, and
+**Pinup** was redrawn from a new sheet — with a **Pinup XL** at 64 to match the
+other large ones. 39 characters now.
+
+### A cat that roams like it means it
+
+Roaming was too sedentary and fell asleep almost at once. Two numbers were wrong:
+the pause between errands, now one to four seconds instead of twelve, and the
+target, now somewhere at least a third of the desk away rather than uniformly
+anywhere — uniform points landed next door often enough that the cat looked
+indecisive. Sleep is on a clock of its own: five minutes awake and roaming before
+a nap is earned, half a minute of it, then five minutes again. The idle chain
+otherwise put it to sleep three seconds into its first pause, which reads as
+broken rather than sleepy.
+
+Measured: over 150 s it walked 10 650 pt across 14 trips, on its feet 57% of the
+time and asleep for none of it; over a 400 s run, 27 793 pt across 35 trips, 57%
+on its feet again and 6% asleep — the nap arriving once the five minutes were
+up, and lasting the half minute it is meant to.
+
+### A cat that gets curious
+
+Roaming now comes with antics, no setting and no engine involved. Every 45 to 120
+seconds, and never while nobody is at the keyboard, the cat takes an interest:
+typing fast brings it over to the pointer to sit down and ask what you are
+writing — measured, it crossed 275 pt, stopped 58 pt from the cursor, and only
+then said *"Serve una mano? Io ho solo zampe."*, a lot of mouse movement gets the cursor pounced on, twenty seconds of
+nothing sends it to claw the edge of the screen, and otherwise it just wanders
+over to have a look.
+
+The signals are counters the system hands out without any permission —
+`CGEventSourceCounterForEventType` for keys and mouse moves, and the seconds
+since the last one. Not which keys, not where. The line waits until the cat has
+arrived: "what are you writing?" from the far side of the screen is a worse joke,
+so the errand has a two-part clock — getting there, then doing the thing — and
+gives up rather than walking into a wall for ever.
+
 ### A third behaviour, and a cat with opinions
 
 **Roams on its own** joins *Follows the cursor* and *Lives on the Dock*: the cat

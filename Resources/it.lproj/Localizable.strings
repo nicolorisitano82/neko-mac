@@ -125,3 +125,19 @@
 "While roaming, Neko glances at what you are doing and now and then says something about it — a tip, a nudge, or a joke. It waits until you have been in one application for a while, keeps quiet when you are away from the keyboard, and says nothing at all when it has nothing worth saying." = "Mentre gironzola, Neko dà un’occhiata a quello che stai facendo e di tanto in tanto dice la sua — un consiglio, una spinta o una battuta. Aspetta che tu sia in un programma da un po’, tace quando non sei alla tastiera, e non dice niente quando non ha niente da dire.";
 "All it can see, and all that is sent, is this:" = "Tutto quello che vede, e tutto quello che viene inviato, è questo:";
 "Nothing is read from inside your documents. Window titles are included only if this Mac has already granted Neko screen recording; the permission is never asked for. With Apple Intelligence or a model on this Mac, none of it leaves the Mac; with ChatGPT, Claude or a Shortcut, it is sent to that service like any other question." = "Niente viene letto dentro i tuoi documenti. I titoli delle finestre sono inclusi solo se questo Mac ha già concesso a Neko la registrazione dello schermo; il permesso non viene mai chiesto. Con Apple Intelligence o un modello su questo Mac non esce niente dal Mac; con ChatGPT, Claude o un comando rapido viene inviato a quel servizio come qualsiasi altra domanda.";
+
+/* curious antics */
+"What are you writing?" = "Cosa stai scrivendo?";
+"Is it about me?" = "Parla di me?";
+"That is a lot of words. Any of them mine?" = "Quante parole. Qualcuna è mia?";
+"May I watch you type?" = "Posso guardarti scrivere?";
+"Need a hand? I only have paws." = "Serve una mano? Io ho solo zampe.";
+"Got it. It was getting away." = "Preso. Stava scappando.";
+"This arrow keeps moving. Suspicious." = "Questa freccia si muove sempre. Sospetta.";
+"Caught your cursor. You may have it back." = "Ho catturato il cursore. Te lo restituisco.";
+"Only while roaming." = "Solo mentre gironzola.";
+"It came over to ask what you are writing." = "È venuto a chiedere cosa stai scrivendo.";
+"It pounced on the cursor." = "Si è lanciato sul cursore.";
+"It went to claw the edge of the screen." = "È andato a graffiare il bordo dello schermo.";
+"It wandered over to see what you were up to." = "Si è avvicinato per vedere cosa combini.";
+"Curiosity comes with roaming whatever this switch says: every minute or two the cat comes over to the pointer, asks what you are writing, or goes to claw the edge of the screen. That part needs no engine and sends nothing anywhere." = "La curiosità arriva con il gironzolare qualunque cosa dica questo interruttore: ogni minuto o due il gatto si avvicina al puntatore, chiede cosa stai scrivendo, o va a graffiare il bordo dello schermo. Quella parte non usa nessun motore e non invia niente da nessuna parte.";
