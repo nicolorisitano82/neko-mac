@@ -23,6 +23,34 @@ A and B are the two frames of a two frame animation. "claw *direction*" is the
 cat scratching a wall in that direction. "sit still" is the resting pose and the
 only one a character cannot do without.
 
+## Cell geometry, spelled out
+
+Generators drift on canvas size — the last three sheets came back 1774 x 887,
+which is a cell of 221.75 pixels and not a whole number anywhere. The importer
+copes, but the poses land off-centre. Stating the arithmetic cell by cell is what
+stops it.
+
+    canvas        2048 x 1024 pixels
+    grid          8 columns x 4 rows
+    cell          256 x 256 pixels, exactly
+    cell origin   x = (column - 1) * 256, y = (row - 1) * 256
+    safe area     224 x 224, centred: 16 pixels clear on all four sides
+    baseline      y = cell top + 232, where the feet rest
+    figure        about 200 pixels tall in every cell
+
+Which gives these corners, top-left of each cell:
+
+| | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 |
+|---|---|---|---|---|---|---|---|---|
+| **row 1** | 0,0 | 256,0 | 512,0 | 768,0 | 1024,0 | 1280,0 | 1536,0 | 1792,0 |
+| **row 2** | 0,256 | 256,256 | 512,256 | 768,256 | 1024,256 | 1280,256 | 1536,256 | 1792,256 |
+| **row 3** | 0,512 | 256,512 | 512,512 | 768,512 | 1024,512 | 1280,512 | 1536,512 | 1792,512 |
+| **row 4** | 0,768 | 256,768 | 512,768 | 768,768 | 1024,768 | 1280,768 | 1536,768 | 1792,768 |
+
+The app's characters are 32, 48 or 64 points across, so 256 is four to eight
+times what is needed: plenty for the importer to trim and scale down, and small
+enough that a generator keeps the details consistent across 32 cells.
+
 ## Full sheet prompt, 8 x 4
 
 Two things decide whether the result is usable, and both were learned the hard
@@ -94,6 +122,76 @@ around the head.
 
 Output a single PNG, exactly 2048 x 1024 pixels, transparent background, no
 padding around the grid.
+
+
+### The prompt, with the geometry inside it
+
+Paste this as one message, with the character described in the second paragraph.
+
+---
+
+Create one PNG image, exactly 2048 x 1024 pixels, fully transparent background.
+
+It is a sprite sheet: 8 columns x 4 rows = 32 cells. Every cell is exactly
+256 x 256 pixels. The cell in column C, row R occupies the pixels from
+x = (C-1)*256 to x = C*256-1 and y = (R-1)*256 to y = R*256-1. Nothing is drawn
+outside the 2048 x 1024 canvas, and there is no margin around the grid: the grid
+fills the image.
+
+The character: [two or three sentences — species, clothes, one or two props, and
+the colours that must be identical in all 32 cells].
+
+Style: hard-edged pixel art, no anti-aliasing, no gradients, at most six colours
+plus transparency. The same character, the same size, the same style, in every
+one of the 32 cells.
+
+Geometry, mandatory in every cell:
+- One pose per cell, drawn inside a 224 x 224 safe area centred in the cell, so
+  at least 16 transparent pixels remain on all four sides. No pose touches or
+  crosses a cell boundary.
+- The figure is about 200 pixels tall, the same height in every cell give or take
+  a few pixels.
+- The feet rest on a baseline 232 pixels below the top of the cell, the same line
+  in every cell. Sleeping and sitting poses sit on that line too.
+- Fully transparent background. Nothing outside the character: no glow, no halo,
+  no soft shadow under the feet, no faint wash, no near-invisible tint. A pixel
+  is either part of the character or fully transparent.
+- No grid lines, no cell borders, no numbers, no labels, no captions.
+
+What the views mean, because this is where sheets go wrong:
+- Walking right: profile, facing the right edge of the cell, one eye visible.
+- Walking left: the same pose mirrored, facing the left edge.
+- Walking up: from behind — the back of the head, no face at all.
+- Walking down: from the front, face fully visible.
+- Diagonals: three-quarter views. Up-right and up-left mostly back with a sliver
+  of cheek; down-right and down-left mostly face, turned.
+- Clawing in a direction: reaching out with both front paws or hands, scratching
+  an unseen wall towards that edge of the cell.
+- Frames A and B are two frames of one animation: only the legs differ, plus
+  arms, wings or tail if they swing. Nothing else moves.
+
+The 32 cells, left to right then top to bottom:
+
+Row 1: clawing upwards frame B; walking up-left frame B; curled up asleep frame
+B; walking right frame B; clawing left frame B; sitting and grooming frame B;
+sitting and grooming frame A; sitting and licking a front paw.
+
+Row 2: clawing upwards frame A; walking up-left frame A; curled up asleep frame
+A; walking right frame A; clawing left frame A; walking down-right frame B;
+walking down-left frame A; clawing downwards frame B.
+
+Row 3: walking up-right frame B; walking up (away from the viewer) frame A;
+clawing right frame B; sitting and yawning, eyes shut; walking left frame B;
+walking down-right frame A; clawing downwards frame A; walking down (towards the
+viewer) frame A.
+
+Row 4: walking up-right frame A; walking up (away from the viewer) frame B;
+clawing right frame A; sitting still and calm facing the viewer — the resting
+pose, the most important cell; walking left frame A; walking down-left frame B;
+walking down (towards the viewer) frame B; alert and startled, eyes wide, small
+motion marks beside the head.
+
+Output the single 2048 x 1024 PNG and nothing else.
 
 ---
 
