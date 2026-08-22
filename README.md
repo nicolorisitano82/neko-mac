@@ -77,7 +77,7 @@ permission and works inside the sandbox. The microphone is asked for the first
 time the feature is used and opens only between the keystroke and the end of the
 sentence; recognition stays on this Mac when the language supports it.
 
-Answers come from one of four places, chosen in the preferences:
+Answers come from one of five places, chosen in the preferences:
 
 *Apple Intelligence, on this Mac* is the default: the on-device model, the same
 one Siri's own features run on. Nothing leaves the Mac, there is no key and there
@@ -117,6 +117,13 @@ model name is a preference in both cases. Apple's own ChatGPT integration cannot
 be reached from another application — it answers inside Siri and the writing
 tools, never to a program — so a Shortcut ending in a ChatGPT action is the other
 way to it.
+
+*A model on this Mac* is a GGUF you download from the **Local model** tab — small
+instruction-tuned Qwen builds, 468 MB or 1 GB — kept in the app's own Application
+Support folder. Nothing else is installed for it: no daemon, no package manager,
+no second application. The download, the disk management and the settings are
+done; the inference engine is not in the build yet, and the tab says so plainly
+rather than letting someone download a gigabyte and then discover it.
 
 The on-device model answers as it goes: the first words appear in about half a
 second, where waiting for the whole answer takes nearer two. The other providers

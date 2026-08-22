@@ -6,6 +6,7 @@
 #import "NekoModelProvider.h"
 #import "NekoAppleProvider.h"
 #import "NekoOpenAIProvider.h"
+#import "NekoLocalProvider.h"
 #import "NekoController.h"
 #import "MyPanel.h"
 #import <AVFoundation/AVFoundation.h>
@@ -136,6 +137,11 @@ enum { NekoPhaseIdle = 0, NekoPhaseListening, NekoPhaseThinking, NekoPhaseAnswer
 		return [self modelProvider];
 	if([choice isEqualToString:@"openai"])
 		return [self openaiProvider];
+	if([choice isEqualToString:@"local"]) {
+		if(localProvider == nil)
+			localProvider = [[NekoLocalProvider alloc] init];
+		return localProvider;
+	}
 	if([choice isEqualToString:@"apple"] || [choice length] == 0)
 		return [self appleProvider];
 

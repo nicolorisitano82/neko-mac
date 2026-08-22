@@ -33,6 +33,7 @@ ditto --noextattr --noqtn Resources "$APP/Contents/Resources"
 SOURCES="src/main.m src/MyView.m src/MyPanel.m src/NekoCharacter.m src/NekoController.m
 	src/NekoAnswerProvider.m src/NekoShortcutProvider.m src/NekoModelProvider.m
 	src/NekoAppleProvider.m src/NekoOpenAIProvider.m src/NekoKeychain.m
+	src/NekoModelStore.m src/NekoLocalProvider.m
 	src/NekoHotKey.m src/NekoListener.m src/NekoBubble.m src/NekoAsk.m"
 FRAMEWORKS="-framework Cocoa -framework ServiceManagement -framework Carbon
 	-framework Security -framework AVFoundation

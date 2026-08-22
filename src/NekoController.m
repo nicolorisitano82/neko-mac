@@ -1,6 +1,8 @@
 #import "NekoController.h"
 #import "NekoHotKey.h"
 #import "NekoModelProvider.h"
+#import "NekoModelStore.h"
+#import "NekoLocalProvider.h"
 #import "NekoAppleProvider.h"
 #import "NekoOpenAIProvider.h"
 #import "NekoModelProvider.h"
@@ -464,6 +466,14 @@ static const float NekoMaxStopRadius = 200.0f;
 	[askTab setLabel:NekoLocalized(@"Ask Neko")];
 	[askTab setView:askContent];
 	[tabs addTabViewItem:askTab];
+
+	NSView *localContent = [[[NSView alloc]
+		initWithFrame:NSMakeRect(0.0f, 0.0f, 470.0f, 340.0f)] autorelease];
+	[self buildLocalTabInView:localContent];
+	NSTabViewItem *localTab = [[[NSTabViewItem alloc] initWithIdentifier:@"local"] autorelease];
+	[localTab setLabel:NekoLocalized(@"Local model")];
+	[localTab setView:localContent];
+	[tabs addTabViewItem:localTab];
 	[tabs release];
 
 	/* Behaviour */
@@ -630,6 +640,7 @@ static const float NekoMaxStopRadius = 200.0f;
 	[askProviderPopUp addItemWithTitle:NekoLocalized(@"Apple Intelligence, on this Mac")];
 	[askProviderPopUp addItemWithTitle:NekoLocalized(@"ChatGPT")];
 	[askProviderPopUp addItemWithTitle:NekoLocalized(@"Claude")];
+	[askProviderPopUp addItemWithTitle:NekoLocalized(@"A model on this Mac")];
 	[askProviderPopUp addItemWithTitle:NekoLocalized(@"A Shortcut of mine")];
 	[askProviderPopUp setTarget:self];
 	[askProviderPopUp setAction:@selector(takeAskProviderFrom:)];
@@ -731,6 +742,152 @@ static const float NekoMaxStopRadius = 200.0f;
 	[askStatusField setStringValue:[self askStatusLine]];
 }
 
+#pragma mark The local model
+
+- (void)buildLocalTabInView:(NSView *)content
+{
+	[content addSubview:[self labelWithString:NekoLocalized(@"Model:")
+	                                    frame:NSMakeRect(20.0f, 276.0f, 125.0f, 17.0f)]];
+
+	localModelPopUp = [[NSPopUpButton alloc]
+		initWithFrame:NSMakeRect(152.0f, 271.0f, 280.0f, 26.0f) pullsDown:NO];
+	NSEnumerator *e = [[[NekoModelStore sharedStore] catalogue] objectEnumerator];
+	NekoLocalModel *model;
+	while((model = [e nextObject]) != nil)
+		[localModelPopUp addItemWithTitle:[model name]];
+	[localModelPopUp setTarget:self];
+	[localModelPopUp setAction:@selector(takeLocalModelFrom:)];
+	[content addSubview:localModelPopUp];
+	[localModelPopUp release];
+
+	localDetailField = [self labelWithString:@""
+	                                   frame:NSMakeRect(152.0f, 246.0f, 290.0f, 17.0f)];
+	[localDetailField setAlignment:NSTextAlignmentLeft];
+	[[localDetailField cell] setWraps:YES];
+	[content addSubview:localDetailField];
+
+	localActionButton = [[NSButton alloc] initWithFrame:NSMakeRect(152.0f, 200.0f, 150.0f, 32.0f)];
+	[localActionButton setBezelStyle:NSBezelStyleRounded];
+	[localActionButton setTarget:self];
+	[localActionButton setAction:@selector(localActionPressed:)];
+	[content addSubview:localActionButton];
+	[localActionButton release];
+
+	localProgress = [[NSProgressIndicator alloc]
+		initWithFrame:NSMakeRect(312.0f, 208.0f, 130.0f, 16.0f)];
+	[localProgress setStyle:NSProgressIndicatorStyleBar];
+	[localProgress setIndeterminate:NO];
+	[localProgress setMinValue:0.0];
+	[localProgress setMaxValue:1.0];
+	[localProgress setHidden:YES];
+	[content addSubview:localProgress];
+	[localProgress release];
+
+	localStatusField = [self labelWithString:@""
+	                                   frame:NSMakeRect(20.0f, 40.0f, 424.0f, 140.0f)];
+	[localStatusField setAlignment:NSTextAlignmentLeft];
+	[[localStatusField cell] setWraps:YES];
+	[content addSubview:localStatusField];
+
+	[self syncLocalControls];
+}
+
+- (NekoLocalModel *)selectedLocalModel
+{
+	NSArray *catalogue = [[NekoModelStore sharedStore] catalogue];
+	NSInteger index = [localModelPopUp indexOfSelectedItem];
+	if(index < 0 || index >= (NSInteger)[catalogue count])
+		index = 0;
+	return [catalogue objectAtIndex:index];
+}
+
+- (void)takeLocalModelFrom:(id)sender
+{
+	[[NSUserDefaults standardUserDefaults]
+		setObject:[[self selectedLocalModel] identifier] forKey:@"NekoAskLocalModel"];
+	[self syncLocalControls];
+}
+
+/* One button, three jobs, depending on what there is to do. */
+- (void)localActionPressed:(id)sender
+{
+	NekoModelStore *store = [NekoModelStore sharedStore];
+	NekoLocalModel *model = [self selectedLocalModel];
+
+	if([store isDownloading]) {
+		[store cancelDownload];
+		[self syncLocalControls];
+		return;
+	}
+	if([store installedURLForIdentifier:[model identifier]] != nil) {
+		[store removeIdentifier:[model identifier]];
+		[self syncLocalControls];
+		return;
+	}
+
+	[store downloadModel:model
+	            progress:^(double fraction) {
+		[localProgress setDoubleValue:fraction];
+		[localStatusField setStringValue:[NSString stringWithFormat:
+			NekoLocalized(@"Downloading %@ — %.0f%%"), [model name], fraction * 100.0]];
+	}
+	          completion:^(NSURL *file, NSError *error) {
+		if(error != nil)
+			[localStatusField setStringValue:[NSString stringWithFormat:
+				NekoLocalized(@"That download failed: %@"), [error localizedDescription]]];
+		[self syncLocalControls];
+		[self syncAskControls];
+	}];
+	[self syncLocalControls];
+}
+
+- (void)syncLocalControls
+{
+	NekoModelStore *store = [NekoModelStore sharedStore];
+	NekoLocalModel *model = [self selectedLocalModel];
+	BOOL installed = [store installedURLForIdentifier:[model identifier]] != nil;
+	BOOL busy = [store isDownloading];
+
+	NSString *chosen = [[NSUserDefaults standardUserDefaults] stringForKey:@"NekoAskLocalModel"];
+	NSUInteger index = 0, i = 0;
+	NSEnumerator *e = [[store catalogue] objectEnumerator];
+	NekoLocalModel *each;
+	while((each = [e nextObject]) != nil) {
+		if([[each identifier] isEqualToString:chosen])
+			index = i;
+		i++;
+	}
+	[localModelPopUp selectItemAtIndex:index];
+	[localDetailField setStringValue:[model detail]];
+
+	[localActionButton setTitle:busy ? NekoLocalized(@"Stop")
+	                                 : (installed ? NekoLocalized(@"Remove")
+	                                              : NekoLocalized(@"Download"))];
+	[localActionButton setEnabled:YES];
+	[localProgress setHidden:!busy];
+	if(busy)
+		[localProgress setDoubleValue:[store fraction]];
+
+	if(!busy)
+		[localStatusField setStringValue:[self localStatusLine:installed]];
+}
+
+- (NSString *)localStatusLine:(BOOL)installed
+{
+	NSMutableString *line = [NSMutableString string];
+	if([NekoLocalProvider makeEngine] == nil)
+		[line appendString:NekoLocalized(@"No engine is compiled into this build yet, so a downloaded model cannot answer. Everything around it is ready: the model can be fetched now and will be used the moment the engine lands.")];
+	else if(installed)
+		[line appendString:NekoLocalized(@"Ready. Choose “A model on this Mac” under Ask Neko.")];
+	else
+		[line appendString:NekoLocalized(@"Nothing downloaded yet.")];
+
+	[line appendString:@"\n\n"];
+	[line appendFormat:NekoLocalized(@"Models are kept in %@ and nothing else is installed: no daemon, no package manager, no other application."),
+		[[[NekoModelStore sharedStore] modelsDirectory] path]];
+	return line;
+}
+
 - (NSString *)askStatusLine
 {
 	NekoAsk *ask = [NekoAsk sharedAsk];
@@ -774,7 +931,7 @@ static const float NekoMaxStopRadius = 200.0f;
 /* The order the popup is built in. */
 - (NSArray *)askProviderKeys
 {
-	return [NSArray arrayWithObjects:@"apple", @"openai", @"model", @"shortcut", nil];
+	return [NSArray arrayWithObjects:@"apple", @"openai", @"model", @"local", @"shortcut", nil];
 }
 
 - (void)takeAskProviderFrom:(id)sender

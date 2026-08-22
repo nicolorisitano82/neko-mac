@@ -13,6 +13,20 @@ Apple's own ChatGPT integration still cannot be reached from another
 application — it answers inside Siri and the writing tools, never to a program —
 so the Shortcut remains the sanctioned route to it.
 
+### Groundwork for a model of your own
+
+A **Local model** tab offers small instruction-tuned Qwen builds in GGUF — 468 MB
+and 1 GB — downloaded straight over HTTPS into the app's own Application Support
+folder, with progress, a stop button and a remove button. Nothing else is
+installed: no daemon, no package manager, no second application to keep running.
+
+What is not there yet is the engine that reads the file. `NekoLocalEngine` is the
+one protocol left to implement — load a GGUF, generate with partial results,
+cancel — and the intended implementation is llama.cpp built as a static library
+and linked in, which is a day of work and 33 MB of C++ to bring into the build.
+The tab says all of this in as many words, because letting someone download a
+gigabyte and only then discover it cannot answer would be indefensible.
+
 ### Faster where it was actually slow
 
 The twelve second figure was a timeout, not a wait: the on-device model was

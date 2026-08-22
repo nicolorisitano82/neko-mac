@@ -4,7 +4,8 @@
 #import "NekoAnswerProvider.h"
 
 @class NekoHotKey, NekoListener, NekoBubble;
-@class NekoShortcutProvider, NekoModelProvider, NekoAppleProvider, NekoOpenAIProvider;
+@class NekoShortcutProvider, NekoModelProvider, NekoAppleProvider;
+@class NekoOpenAIProvider, NekoLocalProvider;
 
 /* NSUserDefaults keys */
 extern NSString * const NekoAskEnabledKey;
@@ -32,6 +33,7 @@ extern NSString * const NekoAskSpeakKey;
 	NekoModelProvider *modelProvider;
 	NekoAppleProvider *appleProvider;
 	NekoOpenAIProvider *openaiProvider;
+	NekoLocalProvider *localProvider;
 	int phase;
 	NSDate *lastDrawn;           /* throttles the streaming redraw */
 	BOOL hotKeyFailed;
