@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 1.9 — 2026-08-22
 
 ### Sheets that draw outside the lines
 
