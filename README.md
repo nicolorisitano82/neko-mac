@@ -11,9 +11,9 @@ cat icon for
 * **Pause Neko** / **Resume Neko** — hide and freeze the cat, or bring it back
 * **Character ▸** — pick the sprite set; the menu bar icon follows it
 * **Preferences…** (⌘,) — character, speed, how close it comes to the pointer,
-  size (1× or 2×), which of the two behaviours it follows, whether the cat falls
-  asleep when the mouse sits still, whether it wanders off on its own, and
-  whether it opens at login
+  size (1× or 2×), which of the three behaviours it follows, whether the cat
+  falls asleep when the mouse sits still, whether it wanders off on its own,
+  whether it comments on what you are doing, and whether it opens at login
 * **Ask Neko** (⌃⌥N) — hold a question out loud, get an answer in a bubble.
   Until it is set up the same slot reads **Set up Ask Neko…** and opens its
   preferences instead
@@ -25,10 +25,10 @@ the language the system asks for.
 
 Settings are stored in `NSUserDefaults` (`NekoCharacter`, `NekoSpeed`,
 `NekoStopRadius`, `NekoScale`, `NekoIdleSleep`, `NekoWander`, `NekoBehaviour`,
-`NekoPaused`) and take effect
+`NekoPaused`, `NekoSuggest`, `NekoSuggestEvery`) and take effect
 immediately.
 
-**Behaviour** is a choice between two, because they do not mix:
+**Behaviour** is a choice between three, because they do not mix:
 
 *Follows the cursor* is the classic one. The cat chases the pointer, stops at
 the ring described above, and rests wherever it stopped — in mid-air if that is
@@ -45,6 +45,40 @@ The Dock's own window covers the whole screen and says nothing useful, so the
 room it takes is read from the difference between a screen's `frame` and its
 `visibleFrame`. Window rectangles come from `CGWindowListCopyWindowInfo`, which
 needs no permission and works inside the sandbox; nothing is read but geometry.
+
+*Roams on its own* is the third: the cat goes wherever it likes on the desk and
+the pointer means nothing to it — not a destination, not something to avoid. It
+walks somewhere, sits for a dozen seconds, and sets off again. Moving the mouse
+does not interrupt it, which is the difference between this and wandering.
+
+Measured over three quarters of a minute with the pointer parked: following, the
+cat closed to 16 pt of it; roaming, it never came within 439 pt and covered
+875 pt of desk.
+
+**Suggestions** live in that third behaviour and nowhere else, under their own
+tab, off until you turn them on. While roaming, the cat glances at what you are
+doing and now and then says something about it in the bubble — a tip, a nudge or
+a joke — through whichever engine **Ask Neko** is set to.
+
+What it can see is deliberately shallow and needs no permission at all: which
+application is in front, how long you have been in it, how often you have been
+switching, whether you are at the keyboard, and the time. Window titles are read
+only if this Mac has already granted Neko screen recording for some other reason;
+the permission is never requested. Nothing is read from inside your documents.
+The tab prints the exact text that would be sent before you switch it on, and
+with a remote provider that text goes to that service like any other question.
+
+It stays quiet while you are away from the keyboard, waits until you have been in
+one application for twenty-five seconds, keeps at most one remark per interval
+(two to sixty minutes, ten by default), and doubles that before commenting on the
+same application twice. A remark it decided not to make still costs the interval,
+so a refusal cannot turn into a loop.
+
+Quality follows the engine rather than the plumbing. Apple's on-device model
+answers in about 0.8 s with something like *"Safari ti tiene incollato: prova a
+chiuderne qualcuna"*; the 1.5B GGUF, given the same context, manages *"Navigo
+verso i siti web"* — grammatical, pointless. For this feature the bigger models
+are worth their disk.
 
 **Wander off when idle** belongs to the first behaviour and is disabled in the
 second, where the cat is already moving about on its own. Once it has arrived,

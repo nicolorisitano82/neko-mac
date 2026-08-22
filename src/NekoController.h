@@ -13,7 +13,9 @@ extern NSString * const NekoScaleKey;      /* 1.0 or 2.0 */
 extern NSString * const NekoStopRadiusKey; /* points to keep from the pointer */
 extern NSString * const NekoIdleSleepKey;  /* BOOL, cat falls asleep when idle */
 extern NSString * const NekoWanderKey;     /* BOOL, cat strolls off on its own */
-extern NSString * const NekoBehaviourKey; /* "follow" or "windows" */
+extern NSString * const NekoBehaviourKey; /* "follow", "windows" or "roam" */
+extern NSString * const NekoSuggestKey;    /* BOOL, unasked suggestions while roaming */
+extern NSString * const NekoSuggestEveryKey; /* minutes between suggestions */
 extern NSString * const NekoPausedKey;     /* BOOL, cat hidden and frozen */
 
 /* Posted whenever a setting changes. */
@@ -51,6 +53,10 @@ extern NSString * const NekoSettingsDidChangeNotification;
 	NSTextField *localStatusField;
 	NSButton *localCleanButton;
 	NSButton *loginCheck;
+	NSButton *suggestCheck;
+	NSPopUpButton *suggestEveryPopUp;
+	NSTextField *suggestStatusField;
+	NSButton *suggestNowButton;
 }
 
 + (NekoController *)sharedController;
@@ -65,6 +71,17 @@ extern NSString * const NekoSettingsDidChangeNotification;
 - (BOOL)idleSleep;
 - (BOOL)wandersWhenIdle;
 - (BOOL)livesOnWindowEdges;
+
+/* The third behaviour: the cat goes where it likes and the pointer means
+   nothing to it. Suggestions live here and nowhere else. */
+- (BOOL)roamsOnItsOwn;
+
+/* YES only while roaming and switched on: the flag alone is not enough. */
+- (BOOL)suggestsUnasked;
+
+/* Minutes between one suggestion and the next. */
+- (NSTimeInterval)suggestionInterval;
+
 - (BOOL)isPaused;
 
 /* Whether the system has been told to open Neko at login. Always NO before

@@ -105,3 +105,23 @@
 "Remove %lu model(s) you are not using?" = "Supprimer %lu modèles que vous n’utilisez pas ?";
 "%@ is kept. The others free %@ and can be downloaded again later." = "%@ est conservé. Les autres libèrent %@ et pourront être téléchargés à nouveau.";
 "Cancel" = "Annuler";
+
+/* suggestions while roaming */
+"Seven programs in ten minutes: pick one and stay in it." = "Sept programmes en dix minutes : choisis-en un et restes-y.";
+"Still that same window. Whatever it is, you are winning." = "Toujours cette même fenêtre. Quoi que ce soit, tu gagnes.";
+"A cat would have taken a break by now. Just saying." = "Un chat aurait déjà fait une pause. Je dis ça comme ça.";
+"Let Neko suggest things while it roams" = "Laisser Neko faire des suggestions pendant qu’il vagabonde";
+"Suggestions" = "Suggestions";
+"Roams on its own" = "Vagabonde à sa guise";
+"At most every:" = "Au plus toutes les :";
+"%ld minutes" = "%ld minutes";
+"Suggest something now" = "Suggérer quelque chose maintenant";
+"Having a look…" = "Il jette un œil…";
+"It said: %@" = "Il a dit : %@";
+"No engine answered." = "Aucun moteur n’a répondu.";
+"It had nothing worth saying about this." = "Il n’avait rien à dire là-dessus.";
+"Only in the “Roams on its own” behaviour" = "Seulement dans le comportement « Vagabonde à sa guise »";
+"This belongs to one behaviour only. Set Behaviour to “Roams on its own” in the Pet tab: a cat chasing the cursor has its attention elsewhere, and one living on the Dock is already busy." = "Cela n’existe que dans un seul comportement. Choisissez « Vagabonde à sa guise » dans l’onglet Animal : un chat qui court après le curseur a la tête ailleurs, et celui qui vit sur le Dock est déjà occupé.";
+"While roaming, Neko glances at what you are doing and now and then says something about it — a tip, a nudge, or a joke. It waits until you have been in one application for a while, keeps quiet when you are away from the keyboard, and says nothing at all when it has nothing worth saying." = "En vagabondant, Neko jette un œil à ce que vous faites et lâche de temps en temps une remarque — un conseil, un encouragement ou une blague. Il attend que vous soyez dans une application depuis un moment, se tait quand vous n’êtes pas au clavier, et ne dit rien du tout quand il n’a rien à dire.";
+"All it can see, and all that is sent, is this:" = "Tout ce qu’il voit, et tout ce qui est envoyé, c’est ceci :";
+"Nothing is read from inside your documents. Window titles are included only if this Mac has already granted Neko screen recording; the permission is never asked for. With Apple Intelligence or a model on this Mac, none of it leaves the Mac; with ChatGPT, Claude or a Shortcut, it is sent to that service like any other question." = "Rien n’est lu à l’intérieur de vos documents. Les titres de fenêtres ne sont inclus que si ce Mac a déjà accordé à Neko l’enregistrement de l’écran ; l’autorisation n’est jamais demandée. Avec Apple Intelligence ou un modèle sur ce Mac, rien ne quitte le Mac ; avec ChatGPT, Claude ou un raccourci, c’est envoyé à ce service comme n’importe quelle question.";

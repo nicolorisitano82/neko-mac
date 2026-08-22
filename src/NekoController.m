@@ -1,4 +1,5 @@
 #import "NekoController.h"
+#import "NekoAdvisor.h"
 #import "NekoHotKey.h"
 #import "NekoModelProvider.h"
 #import "NekoModelStore.h"
@@ -15,6 +16,8 @@ NSString * const NekoIdleSleepKey  = @"NekoIdleSleep";
 NSString * const NekoWanderKey     = @"NekoWander";
 NSString * const NekoBehaviourKey  = @"NekoBehaviour";
 NSString * const NekoPausedKey     = @"NekoPaused";
+NSString * const NekoSuggestKey    = @"NekoSuggest";
+NSString * const NekoSuggestEveryKey = @"NekoSuggestEvery";
 
 NSString * const NekoSettingsDidChangeNotification = @"NekoSettingsDidChange";
 
@@ -67,7 +70,12 @@ static const float NekoMaxStopRadius = 200.0f;
 			[NSNumber numberWithBool:YES], NekoIdleSleepKey,
 			[NSNumber numberWithBool:YES], NekoWanderKey,
 			@"follow", NekoBehaviourKey,
-			[NSNumber numberWithBool:NO], NekoPausedKey, nil]];
+			[NSNumber numberWithBool:NO], NekoPausedKey,
+			/* Off: a cat that starts talking about your work on first launch,
+			   sending what it saw to whichever engine is set, would be a
+			   decision made for you. */
+			[NSNumber numberWithBool:NO], NekoSuggestKey,
+			[NSNumber numberWithInt:10], NekoSuggestEveryKey, nil]];
 }
 
 + (NekoController *)sharedController
@@ -225,6 +233,10 @@ static const float NekoMaxStopRadius = 200.0f;
 - (void)setPanel:(MyPanel *)thePanel
 {
 	panel = thePanel;
+	/* Here rather than in -init: the advisor asks this controller whether it
+	   should be running, and during -init the shared instance does not exist
+	   yet — asking would build a second one, which would ask again. */
+	[[NekoAdvisor sharedAdvisor] applySettings];
 }
 
 #pragma mark Settings
@@ -271,12 +283,38 @@ static const float NekoMaxStopRadius = 200.0f;
 	return [[NSUserDefaults standardUserDefaults] boolForKey:NekoWanderKey];
 }
 
-/* Two behaviours that cannot be mixed: chasing the pointer means resting
-   wherever it stopped, living on windows means being pulled down onto them. */
+/* Three behaviours that cannot be mixed: chasing the pointer means resting
+   wherever it stopped, living on windows means being pulled down onto them, and
+   roaming means the pointer is simply not part of the cat's day. */
 - (BOOL)livesOnWindowEdges
 {
 	return [[[NSUserDefaults standardUserDefaults] stringForKey:NekoBehaviourKey]
 		isEqualToString:@"windows"];
+}
+
+- (BOOL)roamsOnItsOwn
+{
+	return [[[NSUserDefaults standardUserDefaults] stringForKey:NekoBehaviourKey]
+		isEqualToString:@"roam"];
+}
+
+/* Deliberately an AND rather than the flag alone: a cat that follows the cursor
+   and comments on your work at the same time is two features fighting for the
+   bubble, and the suggestion was always meant to come from the one wandering
+   around looking at what you are up to. */
+- (BOOL)suggestsUnasked
+{
+	return [self roamsOnItsOwn]
+		&& [[NSUserDefaults standardUserDefaults] boolForKey:NekoSuggestKey];
+}
+
+- (NSTimeInterval)suggestionInterval
+{
+	NSInteger minutes = [[NSUserDefaults standardUserDefaults]
+		integerForKey:NekoSuggestEveryKey];
+	if(minutes < 1)
+		minutes = 10;
+	return (NSTimeInterval)minutes * 60.0;
 }
 
 - (BOOL)isPaused
@@ -346,12 +384,23 @@ static const float NekoMaxStopRadius = 200.0f;
 	[self settingsChanged];
 }
 
+- (NSUInteger)behaviourIndex
+{
+	if([self livesOnWindowEdges])
+		return 1;
+	return [self roamsOnItsOwn] ? 2 : 0;
+}
+
 - (void)takeBehaviourFrom:(id)sender
 {
+	NSArray *names = [NSArray arrayWithObjects:@"follow", @"windows", @"roam", nil];
+	NSUInteger index = (NSUInteger)[sender indexOfSelectedItem];
 	[[NSUserDefaults standardUserDefaults]
-		setObject:([sender indexOfSelectedItem] == 1) ? @"windows" : @"follow"
+		setObject:[names objectAtIndex:MIN(index, [names count] - 1)]
 		   forKey:NekoBehaviourKey];
 	[self updateWanderAvailability];
+	[self syncSuggestControls];
+	[self syncAskControls];
 	[self settingsChanged];
 }
 
@@ -359,7 +408,7 @@ static const float NekoMaxStopRadius = 200.0f;
    already moving about on its own, so the two cannot both be on. */
 - (void)updateWanderAvailability
 {
-	BOOL follows = ![self livesOnWindowEdges];
+	BOOL follows = [self behaviourIndex] == 0;
 	[wanderCheck setEnabled:follows];
 	[wanderCheck setToolTip:follows ? nil
 		: NekoLocalized(@"Only while following the cursor")];
@@ -474,6 +523,14 @@ static const float NekoMaxStopRadius = 200.0f;
 	[localTab setLabel:NekoLocalized(@"Local model")];
 	[localTab setView:localContent];
 	[tabs addTabViewItem:localTab];
+
+	NSView *suggestContent = [[[NSView alloc]
+		initWithFrame:NSMakeRect(0.0f, 0.0f, 470.0f, 340.0f)] autorelease];
+	[self buildSuggestTabInView:suggestContent];
+	NSTabViewItem *suggestTab = [[[NSTabViewItem alloc] initWithIdentifier:@"suggest"] autorelease];
+	[suggestTab setLabel:NekoLocalized(@"Suggestions")];
+	[suggestTab setView:suggestContent];
+	[tabs addTabViewItem:suggestTab];
 	[tabs release];
 
 	/* Behaviour */
@@ -484,7 +541,8 @@ static const float NekoMaxStopRadius = 200.0f;
 		initWithFrame:NSMakeRect(152.0f, 91.0f, 260.0f, 26.0f) pullsDown:NO];
 	[behaviourPopUp addItemWithTitle:NekoLocalized(@"Follows the cursor")];
 	[behaviourPopUp addItemWithTitle:NekoLocalized(@"Lives on the Dock")];
-	[behaviourPopUp selectItemAtIndex:[self livesOnWindowEdges] ? 1 : 0];
+	[behaviourPopUp addItemWithTitle:NekoLocalized(@"Roams on its own")];
+	[behaviourPopUp selectItemAtIndex:[self behaviourIndex]];
 	[behaviourPopUp setTarget:self];
 	[behaviourPopUp setAction:@selector(takeBehaviourFrom:)];
 	[content addSubview:behaviourPopUp];
@@ -705,6 +763,9 @@ static const float NekoMaxStopRadius = 200.0f;
 	NekoAsk *ask = [NekoAsk sharedAsk];
 	NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
 	BOOL on = [ask isEnabled];
+	/* The engine is chosen here but used by two features, so these controls stay
+	   live for someone who wants suggestions and no talking cat. */
+	BOOL engineWanted = on || [self suggestsUnasked];
 	NSString *choice = [defaults stringForKey:NekoAskProviderKey];
 	BOOL shortcut = [choice isEqualToString:@"shortcut"];
 	id keyed = [self askKeyedProvider];
@@ -714,12 +775,12 @@ static const float NekoMaxStopRadius = 200.0f;
 
 	[askCheck setState:on ? NSControlStateValueOn : NSControlStateValueOff];
 	[askHotKeyPopUp setEnabled:on];
-	[askProviderPopUp setEnabled:on];
+	[askProviderPopUp setEnabled:engineWanted];
 	[askProviderPopUp selectItemAtIndex:providerIndex];
-	[askShortcutField setEnabled:on && shortcut];
+	[askShortcutField setEnabled:engineWanted && shortcut];
 	[askShortcutField setStringValue:
 		[defaults stringForKey:NekoAskShortcutNameKey] ?: @""];
-	[askKeyField setEnabled:on && keyed != nil];
+	[askKeyField setEnabled:engineWanted && keyed != nil];
 	[askKeyField setStringValue:[keyed hasApiKey] ? @"••••••••••••" : @""];
 	[askSpeakCheck setEnabled:on];
 	[askSpeakCheck setState:[defaults boolForKey:NekoAskSpeakKey]
@@ -743,6 +804,134 @@ static const float NekoMaxStopRadius = 200.0f;
 }
 
 #pragma mark The local model
+
+/* The suggestions tab. The switch is the small part; the paragraph under it is
+   the point, because this is the one feature that looks at what you are doing
+   and, with a remote engine chosen, tells somebody else about it. */
+- (void)buildSuggestTabInView:(NSView *)content
+{
+	suggestCheck = [[NSButton alloc] initWithFrame:NSMakeRect(20.0f, 300.0f, 430.0f, 18.0f)];
+	[suggestCheck setButtonType:NSButtonTypeSwitch];
+	[suggestCheck setTitle:NekoLocalized(@"Let Neko suggest things while it roams")];
+	[suggestCheck setTarget:self];
+	[suggestCheck setAction:@selector(takeSuggestFrom:)];
+	[content addSubview:suggestCheck];
+	[suggestCheck release];
+
+	[content addSubview:[self labelWithString:NekoLocalized(@"At most every:")
+	                                    frame:NSMakeRect(20.0f, 266.0f, 125.0f, 17.0f)]];
+
+	suggestEveryPopUp = [[NSPopUpButton alloc]
+		initWithFrame:NSMakeRect(152.0f, 261.0f, 160.0f, 26.0f) pullsDown:NO];
+	NSEnumerator *e = [[self suggestIntervalChoices] objectEnumerator];
+	NSNumber *minutes;
+	while((minutes = [e nextObject]) != nil)
+		[suggestEveryPopUp addItemWithTitle:[NSString stringWithFormat:
+			NekoLocalized(@"%ld minutes"), (long)[minutes integerValue]]];
+	[suggestEveryPopUp setTarget:self];
+	[suggestEveryPopUp setAction:@selector(takeSuggestEveryFrom:)];
+	[content addSubview:suggestEveryPopUp];
+	[suggestEveryPopUp release];
+
+	suggestNowButton = [[NSButton alloc] initWithFrame:NSMakeRect(20.0f, 210.0f, 200.0f, 32.0f)];
+	[suggestNowButton setBezelStyle:NSBezelStyleRounded];
+	[suggestNowButton setTitle:NekoLocalized(@"Suggest something now")];
+	[suggestNowButton setTarget:self];
+	[suggestNowButton setAction:@selector(suggestNowPressed:)];
+	[content addSubview:suggestNowButton];
+	[suggestNowButton release];
+
+	suggestStatusField = [self labelWithString:@""
+	                                     frame:NSMakeRect(20.0f, 20.0f, 430.0f, 180.0f)];
+	[suggestStatusField setAlignment:NSTextAlignmentLeft];
+	[[suggestStatusField cell] setWraps:YES];
+	[content addSubview:suggestStatusField];
+
+	[self syncSuggestControls];
+}
+
+- (NSArray *)suggestIntervalChoices
+{
+	return [NSArray arrayWithObjects:
+		[NSNumber numberWithInt:2], [NSNumber numberWithInt:5],
+		[NSNumber numberWithInt:10], [NSNumber numberWithInt:30],
+		[NSNumber numberWithInt:60], nil];
+}
+
+- (void)takeSuggestFrom:(id)sender
+{
+	[[NSUserDefaults standardUserDefaults]
+		setBool:([sender state] == NSControlStateValueOn) forKey:NekoSuggestKey];
+	[[NekoAdvisor sharedAdvisor] applySettings];
+	[self syncSuggestControls];
+	[self syncAskControls];
+}
+
+- (void)takeSuggestEveryFrom:(id)sender
+{
+	NSArray *choices = [self suggestIntervalChoices];
+	NSUInteger index = MIN((NSUInteger)[sender indexOfSelectedItem], [choices count] - 1);
+	[[NSUserDefaults standardUserDefaults]
+		setObject:[choices objectAtIndex:index] forKey:NekoSuggestEveryKey];
+	[self syncSuggestControls];
+}
+
+/* One suggestion on demand, so the feature can be judged in ten seconds instead
+   of waited for. Failures land in the status line rather than in a dialogue. */
+- (void)suggestNowPressed:(id)sender
+{
+	[suggestNowButton setEnabled:NO];
+	[suggestStatusField setStringValue:NekoLocalized(@"Having a look…")];
+	[[NekoAdvisor sharedAdvisor] suggestNow:^(NSString *line, NSError *error) {
+		[suggestNowButton setEnabled:YES];
+		if([line length] > 0 && ![line isEqualToString:@"-"])
+			[suggestStatusField setStringValue:[NSString stringWithFormat:
+				NekoLocalized(@"It said: %@"), line]];
+		else if(error != nil)
+			[suggestStatusField setStringValue:[error localizedDescription]
+				?: NekoLocalized(@"No engine answered.")];
+		else
+			[suggestStatusField setStringValue:
+				NekoLocalized(@"It had nothing worth saying about this.")];
+	}];
+}
+
+- (void)syncSuggestControls
+{
+	NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
+	BOOL roaming = [self roamsOnItsOwn];
+	BOOL on = [defaults boolForKey:NekoSuggestKey];
+
+	[suggestCheck setState:on ? NSControlStateValueOn : NSControlStateValueOff];
+	[suggestCheck setEnabled:roaming];
+	[suggestCheck setToolTip:roaming ? nil
+		: NekoLocalized(@"Only in the “Roams on its own” behaviour")];
+	[suggestEveryPopUp setEnabled:roaming && on];
+	[suggestNowButton setEnabled:roaming && on];
+
+	NSArray *choices = [self suggestIntervalChoices];
+	NSUInteger index = [choices indexOfObject:
+		[NSNumber numberWithInteger:[defaults integerForKey:NekoSuggestEveryKey]]];
+	[suggestEveryPopUp selectItemAtIndex:(index == NSNotFound) ? 2 : index];
+
+	[suggestStatusField setStringValue:[self suggestStatusLine:roaming]];
+}
+
+- (NSString *)suggestStatusLine:(BOOL)roaming
+{
+	if(!roaming)
+		return NekoLocalized(@"This belongs to one behaviour only. Set Behaviour to “Roams on its own” in the Pet tab: a cat chasing the cursor has its attention elsewhere, and one living on the Dock is already busy.");
+
+	NSMutableString *line = [NSMutableString string];
+	[line appendString:NekoLocalized(@"While roaming, Neko glances at what you are doing and now and then says something about it — a tip, a nudge, or a joke. It waits until you have been in one application for a while, keeps quiet when you are away from the keyboard, and says nothing at all when it has nothing worth saying.")];
+	[line appendString:@"\n\n"];
+	[line appendString:NekoLocalized(@"All it can see, and all that is sent, is this:")];
+	[line appendString:@"\n"];
+	[line appendString:[[NekoAdvisor sharedAdvisor] context]];
+	[line appendString:@"\n"];
+	[line appendString:NekoLocalized(@"Nothing is read from inside your documents. Window titles are included only if this Mac has already granted Neko screen recording; the permission is never asked for. With Apple Intelligence or a model on this Mac, none of it leaves the Mac; with ChatGPT, Claude or a Shortcut, it is sent to that service like any other question.")];
+	return line;
+}
 
 - (void)buildLocalTabInView:(NSView *)content
 {
@@ -1055,8 +1244,9 @@ static const float NekoMaxStopRadius = 200.0f;
 	[sizePopUp selectItemAtIndex:([self scale] >= 2.0f) ? 1 : 0];
 	[sleepCheck setState:[self idleSleep] ? NSControlStateValueOn : NSControlStateValueOff];
 	[wanderCheck setState:[self wandersWhenIdle] ? NSControlStateValueOn : NSControlStateValueOff];
-	[behaviourPopUp selectItemAtIndex:[self livesOnWindowEdges] ? 1 : 0];
+	[behaviourPopUp selectItemAtIndex:[self behaviourIndex]];
 	[self updateWanderAvailability];
+	[self syncSuggestControls];
 	[self syncAskControls];
 	/* The system owns this one, so it is read back rather than remembered. */
 	[loginCheck setState:[self opensAtLogin] ? NSControlStateValueOn : NSControlStateValueOff];
@@ -1123,6 +1313,8 @@ static const float NekoMaxStopRadius = 200.0f;
 	[defaults removeObjectForKey:NekoIdleSleepKey];
 	[defaults removeObjectForKey:NekoWanderKey];
 	[defaults removeObjectForKey:NekoBehaviourKey];
+	[defaults removeObjectForKey:NekoSuggestKey];
+	[defaults removeObjectForKey:NekoSuggestEveryKey];
 	[defaults removeObjectForKey:NekoPausedKey];
 	if(prefsPanel != nil)
 		[self syncPreferencesControls];

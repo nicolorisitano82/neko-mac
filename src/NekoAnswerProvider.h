@@ -43,6 +43,11 @@
    provider so they cannot drift apart. */
 extern NSString *NekoAnswerInstructionsFor(NSString *persona);
 
+/* The voice for something nobody asked for: a remark about what you appear to
+   be doing, offered by a cat that only knows which application is in front.
+   Shorter, humbler and allowed to say nothing at all. */
+extern NSString *NekoSuggestionInstructionsFor(NSString *persona);
+
 /* Errors every provider raises. */
 extern NSString * const NekoAskErrorDomain;
 enum {

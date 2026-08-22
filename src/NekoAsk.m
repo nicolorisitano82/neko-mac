@@ -183,6 +183,25 @@ enum { NekoPhaseIdle = 0, NekoPhaseListening, NekoPhaseThinking, NekoPhaseAnswer
 	[self beginListening];
 }
 
+#pragma mark Speaking unasked
+
+- (BOOL)canSpeakUnprompted
+{
+	return phase == NekoPhaseIdle && ![bubble isShowing];
+}
+
+- (void)sayUnprompted:(NSString *)text
+{
+	if(![self canSpeakUnprompted] || [text length] == 0)
+		return;
+	NSTimeInterval showing = [NekoBubble readingTimeFor:text];
+	phase = NekoPhaseAnswering;
+	[[self panel] holdWithState:NekoStateStop];
+	[self showBubble:text dismissAfter:showing];
+	[self speak:text];
+	[self performSelector:@selector(finish) withObject:nil afterDelay:showing];
+}
+
 - (void)cancelEverything
 {
 	[self stopThinking];

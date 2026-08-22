@@ -202,7 +202,11 @@ static const int NekoLlamaContext = 2048;
 		llama_sampler_chain_add(sampler, llama_sampler_init_top_k(40));
 		llama_sampler_chain_add(sampler, llama_sampler_init_top_p(0.9f, 1));
 		llama_sampler_chain_add(sampler, llama_sampler_init_temp(0.7f));
-		llama_sampler_chain_add(sampler, llama_sampler_init_dist(LLAMA_DEFAULT_SEED));
+		/* A fresh seed per generation. With the fixed default, the same prompt
+		   produced the same sentence word for word — which is fine for a
+		   question asked once and dismal for a cat that remarks on your work
+		   every ten minutes in an application you have not left. */
+		llama_sampler_chain_add(sampler, llama_sampler_init_dist(arc4random()));
 
 		std::string answer;
 		llama_batch batch = llama_batch_get_one(tokens.data(), (int32_t)tokens.size());

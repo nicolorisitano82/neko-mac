@@ -1,5 +1,57 @@
 # Changelog
 
+## Unreleased
+
+### A third behaviour, and a cat with opinions
+
+**Roams on its own** joins *Follows the cursor* and *Lives on the Dock*: the cat
+walks wherever it likes on the desk, sits for a dozen seconds and sets off again,
+and the pointer is neither a destination nor something to avoid — moving the mouse
+does not interrupt it. Measured over 45 s with the pointer parked: following, the
+cat closed to 16 pt of it; roaming, it never came within 439 pt, covering 875 pt
+of desk in the meantime.
+
+**Suggestions** is the new tab, and it exists only inside that behaviour: a cat
+chasing the cursor has its attention elsewhere and one on the Dock is already
+busy. Switched on, the roaming cat glances at what you are doing and now and then
+says something about it through whichever engine Ask Neko is set to — a tip, a
+nudge, or a joke.
+
+It sees five shallow things, none of which need a permission: the application in
+front, how long you have been in it, how often you have been switching, whether
+you are at the keyboard, and the time. Window titles are included only if this
+Mac has already granted Neko screen recording; the permission is never asked for.
+Nothing is read from inside documents. The tab prints the exact text that would
+be sent, before the switch is turned on, and says plainly that a remote engine
+receives it like any other question.
+
+Interruption was the hard part, not the asking. It stays quiet while you are away
+from the keyboard, waits twenty-five seconds into an application, allows one
+remark per interval — two to sixty minutes, ten by default — and doubles that
+before speaking twice about the same application. An attempt that produced
+nothing still costs the interval, so a model that declines cannot turn into a
+loop.
+
+The prompt took four measured attempts. Three paragraphs of rules made the 1.5B
+model worse, not better: markdown, a sentence in French, and *"Claude, Claude,
+Claude, Claude."* — it had latched onto the application name as the person's
+name. What works is short, first-person context ending in an instruction rather
+than in numbers, three localized examples instead of a description of the tone,
+and an explicit escape hatch — a single hyphen — for having nothing to say. Two
+smaller fixes came out of the same runs: markdown and quotation marks are
+stripped from the reply, and the sampler is seeded afresh each time, because with
+llama.cpp's fixed default seed the same desktop produced the same sentence word
+for word.
+
+Quality is the engine's, not the plumbing's. Apple's on-device model answers in
+0.6–1.3 s with something like *"Safari ti tiene incollato come una fusa senza
+fine"*; the 1.5B GGUF, same context, offers *"Navigo verso i siti web"*.
+
+Also fixed on the way: the controller asked the advisor to start from inside its
+own `-init`, and the advisor asked the controller whether it should — which built
+a second controller, which asked again. The app hung on launch until the start
+moved to where the shared instance already exists.
+
 ## 1.8 — 2026-08-22
 
 ### Four places an answer can come from

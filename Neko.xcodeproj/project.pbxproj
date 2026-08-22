@@ -36,6 +36,7 @@
 		D1C0117A1B00000000000083 /* NekoKeychain.m in Sources */ = {isa = PBXBuildFile; fileRef = D1C0117A1B00000000000082 /* NekoKeychain.m */; };
 		D1C0117A1B00000000000091 /* NekoModelStore.m in Sources */ = {isa = PBXBuildFile; fileRef = D1C0117A1B00000000000090 /* NekoModelStore.m */; };
 		D1C0117A1B00000000000093 /* NekoLocalProvider.m in Sources */ = {isa = PBXBuildFile; fileRef = D1C0117A1B00000000000092 /* NekoLocalProvider.m */; };
+		D1C0117A1B000000000000A3 /* NekoAdvisor.m in Sources */ = {isa = PBXBuildFile; fileRef = D1C0117A1B000000000000A2 /* NekoAdvisor.m */; };
 		D1C0117A1B00000000000003 /* NekoController.m in Sources */ = {isa = PBXBuildFile; fileRef = D1C0117A1B00000000000002 /* NekoController.m */; };
 		A70027B30CA6447E0057F7E4 /* MyView.m in Sources */ = {isa = PBXBuildFile; fileRef = A70027B20CA6447E0057F7E4 /* MyView.m */; };
 		A7B9FF1D1A575C310074B4D4 /* Neko.icns in Resources */ = {isa = PBXBuildFile; fileRef = A7B9FF1C1A575C310074B4D4 /* Neko.icns */; };
@@ -85,6 +86,8 @@
 		D1C0117A1B00000000000086 /* NekoKeychain.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = NekoKeychain.h; sourceTree = "<group>"; };
 		D1C0117A1B00000000000090 /* NekoModelStore.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = NekoModelStore.m; sourceTree = "<group>"; };
 		D1C0117A1B00000000000092 /* NekoLocalProvider.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = NekoLocalProvider.m; sourceTree = "<group>"; };
+		D1C0117A1B000000000000A2 /* NekoAdvisor.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = NekoAdvisor.m; sourceTree = "<group>"; };
+		D1C0117A1B000000000000A4 /* NekoAdvisor.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = NekoAdvisor.h; sourceTree = "<group>"; };
 		D1C0117A1B00000000000094 /* NekoModelStore.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = NekoModelStore.h; sourceTree = "<group>"; };
 		D1C0117A1B00000000000096 /* NekoLocalProvider.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = NekoLocalProvider.h; sourceTree = "<group>"; };
 		D1C0117A1B000000000000A0 /* NekoLlamaEngine.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = NekoLlamaEngine.mm; sourceTree = "<group>"; };
@@ -150,6 +153,8 @@
 				D1C0117A1B00000000000086 /* NekoKeychain.h */,
 				D1C0117A1B00000000000090 /* NekoModelStore.m */,
 				D1C0117A1B00000000000092 /* NekoLocalProvider.m */,
+				D1C0117A1B000000000000A2 /* NekoAdvisor.m */,
+				D1C0117A1B000000000000A4 /* NekoAdvisor.h */,
 				D1C0117A1B00000000000094 /* NekoModelStore.h */,
 				D1C0117A1B00000000000096 /* NekoLocalProvider.h */,
 				D1C0117A1B000000000000A0 /* NekoLlamaEngine.mm */,
@@ -335,6 +340,7 @@
 				D1C0117A1B00000000000083 /* NekoKeychain.m in Sources */,
 				D1C0117A1B00000000000091 /* NekoModelStore.m in Sources */,
 				D1C0117A1B00000000000093 /* NekoLocalProvider.m in Sources */,
+				D1C0117A1B000000000000A3 /* NekoAdvisor.m in Sources */,
 				D1C0117A1B00000000000003 /* NekoController.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

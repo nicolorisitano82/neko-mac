@@ -21,6 +21,7 @@
 	BOOL idleSleep;
 	BOOL held;                   /* frozen mid-conversation */
 	BOOL windowsMode;            /* lives on window tops instead of chasing */
+	BOOL roamMode;               /* goes where it likes, the pointer means nothing */
 	
 	BOOL wanderEnabled;
 	BOOL wandering;

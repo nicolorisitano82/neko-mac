@@ -88,8 +88,9 @@
 	stopRadius = [controller stopRadius];
 	idleSleep = [controller idleSleep];
 	windowsMode = [controller livesOnWindowEdges];
+	roamMode = [controller roamsOnItsOwn];
 	wanderEnabled = [controller wandersWhenIdle];
-	if(!wanderEnabled && !windowsMode)
+	if(!wanderEnabled && !windowsMode && !roamMode)
 		wandering = NO;
 	shelvesAge = 0;
 	
@@ -198,6 +199,23 @@
 	wandering = YES;
 }
 
+/* Roaming: anywhere on the desk at all. The pointer is not a destination and
+   not a repellent — this cat is going about its own business, and where you
+   happen to be pointing is none of it. */
+- (void)startWanderingAnywhere
+{
+	NSRect bounds = [self nekoBounds];
+	NSRect frame = [self frame];
+	float roomX = MAX(bounds.size.width - frame.size.width, 1.0f);
+	float roomY = MAX(bounds.size.height - frame.size.height, 1.0f);
+
+	wanderTarget = NSMakePoint(NSMinX(bounds) + frame.size.width / 2.0f
+	                           + (float)arc4random_uniform((unsigned)roomX),
+	                           NSMinY(bounds) + (float)arc4random_uniform((unsigned)roomY));
+	wanderMouse = [NSEvent mouseLocation];
+	wandering = YES;
+}
+
 - (void)stopWandering
 {
 	wandering = NO;
@@ -210,6 +228,8 @@
 {
 	if(wandering)
 		return NO;
+	if(roamMode)
+		return restedTicks > 100;     /* twelve seconds anywhere it fancies */
 	if(windowsMode)
 		return restedTicks > 80;      /* ten seconds on a window top */
 	return wanderEnabled && restedTicks > 240;   /* thirty seconds asleep */
@@ -217,7 +237,9 @@
 
 - (void)beginWandering
 {
-	if(windowsMode)
+	if(roamMode)
+		[self startWanderingAnywhere];
+	else if(windowsMode)
 		[self startWanderingOntoShelf];
 	else
 		[self startWanderingAwayFromPointer];
@@ -229,7 +251,7 @@
 {
 	if(wandering)
 		return wanderTarget;
-	if(windowsMode)
+	if(windowsMode || roamMode)
 		return NSMakePoint(NSMidX([self frame]), NSMinY([self frame]));  /* stay put */
 	return [NSEvent mouseLocation];
 }
@@ -496,8 +518,9 @@
 	else if(restedTicks < 60000)
 		restedTicks++;
 	
-	/* Whatever it had in mind, you moving the pointer wins. */
-	if(wandering) {
+	/* Whatever it had in mind, you moving the pointer wins — except when it is
+	   roaming, where the pointer was never the point. */
+	if(wandering && !roamMode) {
 		NSPoint mouse = [NSEvent mouseLocation];
 		if(hypotf(mouse.x - wanderMouse.x, mouse.y - wanderMouse.y) > 24.0f)
 			[self stopWandering];

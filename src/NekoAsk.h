@@ -62,4 +62,13 @@ extern NSString * const NekoAskSpeakKey;
 /* Starts a question, or abandons the one in progress. */
 - (void)toggle:(id)sender;
 
+/* For the cat's own remarks, which nobody asked for. NO while it is listening,
+   thinking, answering or already saying something: an interruption of an
+   interruption is worse than a missed suggestion. */
+- (BOOL)canSpeakUnprompted;
+
+/* Says something in the bubble without any question having been asked, and
+   holds the cat still while it does. */
+- (void)sayUnprompted:(NSString *)text;
+
 @end
