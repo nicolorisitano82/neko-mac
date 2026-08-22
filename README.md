@@ -236,7 +236,7 @@ diagonals fall back to the nearest cardinal direction, the wall-scratching
 so a partial character still animates. Any image format `NSImage` reads works,
 mixed extensions included.
 
-39 characters ship with the app, in three families.
+41 characters ship with the app, in three families.
 
 **From oneko itself** — public domain sprites, converted from oneko's 1-bit XBM
 pairs: **Neko** (the original cat), **Tora** (its tiger, which reuses the cat's
@@ -253,8 +253,9 @@ Vaporwave.
 cutting cells: these sheets draw the figures taller than their cell, and a
 straight cut takes off shoes and hat tips),
 and the first characters here that are not 32 points across: **Merlin** the
-wizard cat, **Owl**, **Alien**, **Pinup**, **Gandalf** and **Frodo** at 48, with
-**Merlin XL**, **Owl XL**, **Pinup XL**, **Gandalf XL** and **Frodo XL** at 64.
+wizard cat, **Owl**, **Alien**, **Pinup**, **Gandalf**, **Frodo** and **TS** the
+pop star at 48, with **Merlin XL**, **Owl XL**, **Pinup XL**, **Gandalf XL**,
+**Frodo XL** and **TS XL** at 64.
 
 The Sakura and Tomoyo sprites derive from Card Captor Sakura artwork, the
 oneko.js skins are fan-made sheets from collections that state no licence, and

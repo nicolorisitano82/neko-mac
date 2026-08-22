@@ -25,11 +25,12 @@ fall in; single specks are dropped.
 horizontal cuts per column, is in there too: not enough for these sheets, but the
 right thing for one that is merely a few pixels out.
 
-### Gandalf, Frodo, and a new Pinup
+### TS, Gandalf, Frodo, and a new Pinup
 
-**Gandalf** and **Frodo** join the drawn characters at 48 and 64 points, and
-**Pinup** was redrawn — all three from sheets that needed `--split`, and all
-three imported again once it existed. 39 characters now.
+**Gandalf**, **Frodo** and **TS** — a pop star with a pink guitar — join the
+drawn characters at 48 and 64 points, and **Pinup** was redrawn. Every one of
+these sheets needed `--split`, and the first three were imported again once it
+existed. 41 characters now.
 
 ### A cat that roams like it means it
 
