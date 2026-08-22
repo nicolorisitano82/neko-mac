@@ -494,6 +494,11 @@ static const float NekoMaxStopRadius = 200.0f;
 		            backing:NSBackingStoreBuffered
 		              defer:NO];
 	[prefsPanel setTitle:NekoLocalized(@"Neko Preferences")];
+	/* The opposite of the cat's rule: this one window should come to whichever
+	   desktop you are on rather than living on all of them, so that choosing
+	   Preferences from the menu bar does not throw you across Spaces to where it
+	   happened to be opened the first time. */
+	[prefsPanel setCollectionBehavior:NSWindowCollectionBehaviorMoveToActiveSpace];
 	[prefsPanel setReleasedWhenClosed:NO];
 	[prefsPanel setHidesOnDeactivate:NO];
 	[prefsPanel center];

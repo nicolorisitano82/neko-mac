@@ -86,6 +86,13 @@ static const float NekoBubbleRadius = 10.0f;
 	[self setBackgroundColor:[NSColor clearColor]];
 	[self setHasShadow:YES];
 	[self setLevel:NSStatusWindowLevel + 1];
+	/* Wherever the cat is allowed to be, so is what it says. Without this the
+	   answer arrives on the desktop the bubble was created on, while the cat
+	   asking to be looked at is on the one you are using. */
+	[self setCollectionBehavior:(NSWindowCollectionBehaviorCanJoinAllSpaces
+	                             | NSWindowCollectionBehaviorStationary
+	                             | NSWindowCollectionBehaviorIgnoresCycle
+	                             | NSWindowCollectionBehaviorFullScreenAuxiliary)];
 	[self setCanHide:NO];
 	[self setHidesOnDeactivate:NO];
 	[self setBecomesKeyOnlyIfNeeded:YES];

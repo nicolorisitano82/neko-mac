@@ -1,5 +1,35 @@
 # Changelog
 
+## Unreleased
+
+### The cat crosses desktops
+
+Reported: launch the app, the cat chases the cursor, swipe to another desktop with
+three fingers and it is left behind on the old one. Two displays were never
+affected, which made the whole thing look mysterious.
+
+It is not mysterious. Belonging to a Space is a property of the window, not of
+where the window is on screen, and a window that says nothing about it belongs to
+the Space it was created in — for ever. Two displays are only geometry: the cat
+crossing a display border keeps the Space it already had, which is why that case
+always worked.
+
+So the cat's panel and its speech bubble now declare the four flags the Dock and
+the menu bar extras use: `CanJoinAllSpaces` so they are present on every desktop,
+`Stationary` so they are not dragged along by the switching animation, and
+`IgnoresCycle` and `FullScreenAuxiliary` to stay out of window cycling and to be
+allowed above a full screen app. The preferences window takes the opposite flag,
+`MoveToActiveSpace`, so opening it from the menu bar brings it to the desktop you
+are on instead of throwing you across to where it first appeared.
+
+Measured with the window server's own `kCGWindowIsOnscreen`, switching desktop
+six seconds in and back again later. Two test windows, identical but for the
+behaviour: the plain one vanished from the current Space at the swipe and came
+back only on returning, the one with the new flags never left. Then the same
+check against the shipped 1.9 and the new build: 1.9's cat dropped off the
+current desktop at the swipe and stayed off, the new one stayed present through
+the whole sequence.
+
 ## 1.9 — 2026-08-22
 
 ### Sheets that draw outside the lines

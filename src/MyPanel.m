@@ -21,6 +21,19 @@
 	self = [super initWithContentRect:contentRect styleMask:NSWindowStyleMaskBorderless backing:bufferingType defer:deferCreation];
 	[self setBecomesKeyOnlyIfNeeded:YES];
 	[self setLevel:NSStatusWindowLevel];
+	/* Belonging to a Space is a property of the window, not of where it is on
+	   screen, and a window that says nothing belongs to the one it was born in:
+	   a three finger swipe left the cat stranded on the previous desktop. The
+	   same four flags the Dock and the menu bar extras use — present everywhere,
+	   not dragged along by the switching animation, out of the way of window
+	   cycling, and allowed to share a full screen app's Space.
+
+	   Two displays were never the same problem: screens are geometry, and the
+	   cat crossing a display border stays in the Space it was already in. */
+	[self setCollectionBehavior:(NSWindowCollectionBehaviorCanJoinAllSpaces
+	                             | NSWindowCollectionBehaviorStationary
+	                             | NSWindowCollectionBehaviorIgnoresCycle
+	                             | NSWindowCollectionBehaviorFullScreenAuxiliary)];
 	[self setOpaque:NO];
 	[self setCanHide:NO];
 	[self setIgnoresMouseEvents:YES];
