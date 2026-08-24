@@ -2,6 +2,36 @@
 
 ## Unreleased
 
+### It answers to its name
+
+A second way in, off until switched on: **Answer when I say "Neko"**. The
+microphone stays open for it, and the tab says so — orange light, battery, the
+lot — because that is the actual price and it should not be discovered later.
+
+Recognition is forced on-device, and where the interface language cannot be
+recognised without a server the switch refuses rather than quietly streaming the
+room to one. The transcript rolls past, is looked at for one word, and is thrown
+away.
+
+The name is matched loosely: a dictation engine has never met the cat and writes
+the nearest word it knows, so `neko`, `neco`, `necco`, `nekko`, `nico` and `niko`
+all wake it, accents and case ignored, whole words only. Fourteen cases measured,
+including the ones that must not wake it — "nekomata", "nekromante", "che ne
+kombini" — and all fourteen came out right.
+
+Speech drops a recognition task after about a minute of its own accord, so it is
+rebuilt every fifty seconds with the microphone tap running underneath. And since
+there is only one microphone, hearing the name or pressing the keystroke makes
+the wake word let go, and -finish gives it back.
+
+### The Local model tab offered to download what was already there
+
+Opening the preferences read the selected model out of the menu before putting
+the menu where the settings said, so it asked the first model in the catalogue
+whether it was installed. With Qwen 1.5B chosen and on disk, the button still
+said Download. Measured after: menu on Qwen2.5 1.5B Instruct, button says Remove,
+detail line matches.
+
 ### And now it can carry a file
 
 Two more verbs: `copy` and `move`, one file at a time, between Desktop,

@@ -2,6 +2,7 @@
 #import "NekoPainter.h"
 #import "NekoAction.h"
 #import "NekoFolderAccess.h"
+#import "NekoWakeWord.h"
 #import "NekoHotKey.h"
 #import "NekoListener.h"
 #import "NekoBubble.h"
@@ -237,6 +238,7 @@ enum { NekoPhaseIdle = 0, NekoPhaseListening, NekoPhaseThinking, NekoPhaseAnswer
 {
 	phase = NekoPhaseIdle;
 	[[self panel] releaseHold];
+	[[NekoWakeWord sharedWakeWord] applySettings];
 }
 
 - (void)bubbleDismissed:(id)sender
@@ -251,6 +253,10 @@ enum { NekoPhaseIdle = 0, NekoPhaseListening, NekoPhaseThinking, NekoPhaseAnswer
 
 - (void)beginListening
 {
+	/* One microphone, one holder: the wake word lets go before the question
+	   starts, and takes it back in -finish when the conversation is over. */
+	[[NekoWakeWord sharedWakeWord] stop];
+
 	if(![NekoListener isAvailable]) {
 		[self sayInCharacter:NekoAskLocalized(@"My ears do not work on this Mac.")];
 		return;

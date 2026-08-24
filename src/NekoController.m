@@ -6,6 +6,7 @@
 #import "NekoAppleProvider.h"
 #import "NekoAction.h"
 #import "NekoFolderAccess.h"
+#import "NekoWakeWord.h"
 #import "NekoHotKey.h"
 #import "NekoModelProvider.h"
 #import "NekoModelStore.h"
@@ -13,6 +14,7 @@
 #import "NekoAppleProvider.h"
 #import "NekoAction.h"
 #import "NekoFolderAccess.h"
+#import "NekoWakeWord.h"
 #import "NekoOpenAIProvider.h"
 #import "NekoModelProvider.h"
 
@@ -246,6 +248,7 @@ static const float NekoMaxStopRadius = 200.0f;
 	   yet — asking would build a second one, which would ask again. */
 	[[NekoAdvisor sharedAdvisor] applySettings];
 	[[NekoAntics sharedAntics] applySettings];
+	[[NekoWakeWord sharedWakeWord] applySettings];
 }
 
 #pragma mark Settings
@@ -752,6 +755,14 @@ static const float NekoMaxStopRadius = 200.0f;
 	[content addSubview:askSpeakCheck];
 	[askSpeakCheck release];
 
+	wakeCheck = [[NSButton alloc] initWithFrame:NSMakeRect(152.0f, 128.0f, 300.0f, 18.0f)];
+	[wakeCheck setButtonType:NSButtonTypeSwitch];
+	[wakeCheck setTitle:NekoLocalized(@"Answer when I say “Neko”")];
+	[wakeCheck setTarget:self];
+	[wakeCheck setAction:@selector(takeWakeWordFrom:)];
+	[content addSubview:wakeCheck];
+	[wakeCheck release];
+
 	actionsCheck = [[NSButton alloc] initWithFrame:NSMakeRect(152.0f, 84.0f, 300.0f, 18.0f)];
 	[actionsCheck setButtonType:NSButtonTypeSwitch];
 	[actionsCheck setTitle:NekoLocalized(@"Let it open things when I ask")];
@@ -805,6 +816,14 @@ static const float NekoMaxStopRadius = 200.0f;
 			[NSNumber numberWithUnsignedInteger:command | control], nil],
 		[NSArray arrayWithObjects:[NSNumber numberWithUnsignedShort:0x2D],
 			[NSNumber numberWithUnsignedInteger:option | shift], nil], nil];
+}
+
+- (void)takeWakeWordFrom:(id)sender
+{
+	[[NSUserDefaults standardUserDefaults]
+		setBool:([sender state] == NSControlStateValueOn) forKey:NekoWakeWordKey];
+	[[NekoWakeWord sharedWakeWord] applySettings];
+	[self syncAskControls];
 }
 
 - (void)takeActionsFrom:(id)sender
@@ -876,6 +895,10 @@ static const float NekoMaxStopRadius = 200.0f;
 	[askKeyField setEnabled:engineWanted && keyed != nil];
 	[askKeyField setStringValue:[keyed hasApiKey] ? @"••••••••••••" : @""];
 	[askSpeakCheck setEnabled:on];
+	[wakeCheck setEnabled:on && [NekoWakeWord isAvailable]];
+	[wakeCheck setState:[defaults boolForKey:NekoWakeWordKey]
+		? NSControlStateValueOn : NSControlStateValueOff];
+	[wakeCheck setToolTip:[NekoWakeWord unavailableReason]];
 	[actionsCheck setEnabled:on];
 	BOOL acting = on && [defaults boolForKey:NekoActionsEnabledKey];
 	[foldersButton setEnabled:acting];
@@ -1444,10 +1467,11 @@ static const float NekoMaxStopRadius = 200.0f;
 - (void)syncLocalControls
 {
 	NekoModelStore *store = [NekoModelStore sharedStore];
-	NekoLocalModel *model = [self selectedLocalModel];
-	BOOL installed = [store installedURLForIdentifier:[model identifier]] != nil;
-	BOOL busy = [store isDownloading];
 
+	/* The menu is put where the settings say before anything is read from it.
+	   The other way round — which is how this was — every freshly opened window
+	   asked the first model in the catalogue whether it was installed, so a
+	   downloaded model that was selected still offered a Download button. */
 	NSString *chosen = [[NSUserDefaults standardUserDefaults] stringForKey:@"NekoAskLocalModel"];
 	NSUInteger index = 0, i = 0;
 	NSEnumerator *e = [[store catalogue] objectEnumerator];
@@ -1458,6 +1482,10 @@ static const float NekoMaxStopRadius = 200.0f;
 		i++;
 	}
 	[localModelPopUp selectItemAtIndex:index];
+
+	NekoLocalModel *model = [self selectedLocalModel];
+	BOOL installed = [store installedURLForIdentifier:[model identifier]] != nil;
+	BOOL busy = [store isDownloading];
 	[localDetailField setStringValue:[model detail]];
 
 	[localActionButton setTitle:busy ? NekoLocalized(@"Stop")
@@ -1531,6 +1559,11 @@ static const float NekoMaxStopRadius = 200.0f;
 	NSMutableString *line = [NSMutableString stringWithFormat:
 		NekoLocalized(@"Press %@ and ask. Neko listens until you stop talking."),
 		[ask hotKeyDisplayName]];
+	if([[NSUserDefaults standardUserDefaults] boolForKey:NekoWakeWordKey]
+	   && [NekoWakeWord isAvailable]) {
+		[line appendString:@" "];
+		[line appendString:NekoLocalized(@"Saying its name works too — which means the microphone stays open, the orange recording light stays on, and the battery notices. The listening is done on this Mac and the audio goes nowhere; it hears one word and forgets the rest.")];
+	}
 	if([[NSUserDefaults standardUserDefaults] boolForKey:NekoActionsEnabledKey]) {
 		[line appendString:@"\n\n"];
 		[line appendString:NekoLocalized(@"It can open an application, an address in a browser, one of your folders in the Finder, run one of your own Shortcuts, and copy or move a single file between your folders. That list is all of it. It always shows what it is about to do and waits for a yes; dismissing the bubble is a no. It never overwrites, never deletes, and never acts on text it read from the screen — only on what you said out loud.")];

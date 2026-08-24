@@ -272,6 +272,31 @@ Intelligence needs Apple silicon, and so does the Metal build here. [docs/ask-ne
 including the part that cannot work: Siri has no public API that hands an answer
 back to another application.
 
+## Saying its name
+
+There is a second way to start a question, off unless switched on: **Answer when
+I say "Neko"**, on the Ask Neko tab. With it on the microphone stays open, which
+is the whole cost and is said plainly in the tab — the orange recording light in
+the menu bar stays lit and the battery notices.
+
+What it does with the audio is the part worth reading. Recognition is forced
+on-device (`requiresOnDeviceRecognition`), and where this Mac cannot recognise
+the interface language without a server the switch refuses to work at all rather
+than streaming a room to one. The rolling transcript is looked at for one word
+and thrown away; nothing is written down.
+
+The name is matched loosely, because a dictation engine has never heard of the
+cat and writes down the nearest word it knows: `neko`, `neco`, `necco`, `nekko`,
+`nico`, `niko`, accent- and case-insensitive, and only as a whole word — so
+*"nekomata"*, *"nekromante"* and *"che ne kombini"* leave it alone. Fourteen
+cases measured, all correct.
+
+Two practicalities. Speech ends a recognition task of its own accord after about
+a minute, so the task is torn down and rebuilt every fifty seconds while the
+microphone tap carries on underneath. And there is only one microphone: hearing
+its name, or the keystroke being pressed, makes the wake word let go, and it
+picks up again when the conversation is over.
+
 ## Doing things
 
 Off until switched on, on the **Ask Neko** tab. With it on, an order — *"neko
