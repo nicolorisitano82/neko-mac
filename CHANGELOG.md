@@ -2,6 +2,39 @@
 
 ## Unreleased
 
+### Questions with an answer on this Mac
+
+"Che ore sono?" had no honest answer: a model has no clock and invents one. The
+things a question is most likely to be about — time, date, uptime, battery, the
+program in front, how many screens — are now looked up and handed over with the
+question, so the answer comes from the Mac rather than from the model's
+imagination. A question about anything else is refused in one sentence instead of
+guessed at.
+
+Two rounds of measurement went into the wording. The first put the facts in
+English in the middle of the instructions, and the answers came back in English;
+the language rule now comes last, after every English block, which is the same
+lesson the action verbs taught. The first version also apologised after every
+answer — "I cannot know what day it is about anything else" — so it is now told
+to answer and stop.
+
+### The preferences had two controls on top of each other
+
+The wake word switch was laid over the API key field: 220 by 7 points of overlap,
+found by walking the tab views and intersecting every pair of frames. The window
+is 80 points taller now, every row moved with it, and the paragraph at the bottom
+of the Ask Neko tab has 86 points instead of 30 — it had been truncating for a
+while. All five tabs check clean.
+
+### The wake word went deaf
+
+It answered sometimes and not others. Speech ends a recognition task of its own
+accord when it decides a sentence is finished, and until the fifty second timer
+came round the audio after that went to nobody. It is now rebuilt the moment a
+result comes back final, the new request is put in place before the old task is
+cancelled so the tap is never appending to nothing, and a watchdog rebuilds it
+anyway if the recogniser has said nothing at all for twenty seconds.
+
 ### It answers to its name
 
 A second way in, off until switched on: **Answer when I say "Neko"**. The

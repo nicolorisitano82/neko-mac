@@ -28,8 +28,10 @@ extern NSString * const NekoWakeWordKey;
 	id task;                     /* SFSpeechRecognitionTask */
 	id engine;                   /* AVAudioEngine */
 	NSTimer *renewal;            /* rebuilds the task before Speech drops it */
+	NSTimer *watchdog;           /* and again if it went quiet without saying so */
 	NSTimer *resume;             /* waits for the conversation to finish */
 	NSDate *lastHeard;
+	NSDate *lastResult;          /* when the recogniser last said anything */
 	BOOL running;
 }
 

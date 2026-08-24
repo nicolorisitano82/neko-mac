@@ -1,9 +1,42 @@
 #import "NekoAnswerProvider.h"
+#import <IOKit/ps/IOPowerSources.h>
+#import <IOKit/ps/IOPSKeys.h>
 
 /* Lives here rather than in either provider, so each of them can be built and
    tested without dragging the other in. */
 NSString * const NekoAskErrorDomain = @"NekoAsk";
 NSString * const NekoImageMarker = @"IMAGE:";
+
+/* Charge and whether it is plugged in, or nil on a Mac with no battery. */
+static NSString *NekoBatteryNow(void)
+{
+	CFTypeRef blob = IOPSCopyPowerSourcesInfo();
+	if(blob == NULL)
+		return nil;
+	CFArrayRef sources = IOPSCopyPowerSourcesList(blob);
+	NSString *answer = nil;
+	if(sources != NULL) {
+		CFIndex i;
+		for(i = 0; i < CFArrayGetCount(sources) && answer == nil; i++) {
+			CFDictionaryRef description = IOPSGetPowerSourceDescription(blob,
+				CFArrayGetValueAtIndex(sources, i));
+			if(description == NULL)
+				continue;
+			NSNumber *capacity = (NSNumber *)CFDictionaryGetValue(description,
+				CFSTR(kIOPSCurrentCapacityKey));
+			NSString *state = (NSString *)CFDictionaryGetValue(description,
+				CFSTR(kIOPSPowerSourceStateKey));
+			if(capacity == nil)
+				continue;
+			answer = [NSString stringWithFormat:@"%@%%, %@", capacity,
+				[state isEqualToString:(NSString *)CFSTR(kIOPSACPowerValue)]
+					? @"plugged in" : @"on battery"];
+		}
+		CFRelease(sources);
+	}
+	CFRelease(blob);
+	return answer;
+}
 
 /* The language Neko answers in: the one it is running in, named outright.
    "The same language as the question" is too weak an instruction for a small
@@ -16,6 +49,49 @@ static NSString *NekoAnswerLanguage(void)
 	NSLocale *english = [NSLocale localeWithLocaleIdentifier:@"en_US"];
 	NSString *name = [english displayNameForKey:NSLocaleLanguageCode value:code];
 	return [name length] > 0 ? name : @"English";
+}
+
+/* What the cat can actually know, as opposed to what a model can guess.
+
+   Asked the time, a model invents one: it has no clock, and the hour it was
+   trained on is not this one. So the handful of facts that a question is likely
+   to be about — the time, the date, the day, the battery, how long the Mac has
+   been awake — are looked up here and handed over with the question. Six lines,
+   costing nothing, and they turn "che ore sono?" from an invention into an
+   answer. */
+NSString *NekoFactsNow(void)
+{
+	NSDate *now = [NSDate date];
+	NSLocale *locale = [NSLocale localeWithLocaleIdentifier:
+		[[[NSBundle mainBundle] preferredLocalizations] firstObject] ?: @"en"];
+
+	NSDateFormatter *clock = [[[NSDateFormatter alloc] init] autorelease];
+	[clock setLocale:locale];
+	[clock setDateStyle:NSDateFormatterNoStyle];
+	[clock setTimeStyle:NSDateFormatterShortStyle];
+
+	NSDateFormatter *calendar = [[[NSDateFormatter alloc] init] autorelease];
+	[calendar setLocale:locale];
+	[calendar setDateStyle:NSDateFormatterFullStyle];
+	[calendar setTimeStyle:NSDateFormatterNoStyle];
+
+	NSMutableString *facts = [NSMutableString string];
+	[facts appendFormat:@"The time right now: %@\n", [clock stringFromDate:now]];
+	[facts appendFormat:@"Today's date: %@\n", [calendar stringFromDate:now]];
+
+	NSTimeInterval up = [[NSProcessInfo processInfo] systemUptime];
+	[facts appendFormat:@"This Mac has been awake for %.0f hours %.0f minutes\n",
+		floor(up / 3600.0), floor(fmod(up, 3600.0) / 60.0)];
+
+	NSString *battery = NekoBatteryNow();
+	if(battery != nil)
+		[facts appendFormat:@"Battery: %@\n", battery];
+
+	NSString *front = [[[NSWorkspace sharedWorkspace] frontmostApplication] localizedName];
+	if([front length] > 0)
+		[facts appendFormat:@"The program in front of them: %@\n", front];
+	[facts appendFormat:@"Screens attached: %lu\n", (unsigned long)[[NSScreen screens] count]];
+	return facts;
 }
 
 /* Two things at once, and the order matters: a small model given a character
@@ -102,16 +178,23 @@ NSString *NekoAnswerInstructionsWith(NSString *persona, BOOL mayDraw, BOOL mayAc
 		@"the answer is a single fact.\n\n"
 		@"Reply in %@. Reply in %@ even if the question sounded like another "
 		@"language, and never switch part way through. Keep it to one or two short "
-		@"sentences. No lists, no headings, no preamble, and no stage directions."
+		@"sentences. No lists, no headings, no preamble, and no stage directions.\n\n"
+		@"THINGS YOU CAN SEE RIGHT NOW. These are true. When the question is about "
+		@"one of them, answer it straight from the list and stop there — no "
+		@"caveats, no explaining what else you cannot know. When it is about "
+		@"something not on the list, and you have no way to know it, say that in "
+		@"one short sentence instead.\n%@"
 		@"%@%@%@",
-		persona ?: @"a small pixel-art cat", language, language, drawing, doing,
+		persona ?: @"a small pixel-art cat", language, language, NekoFactsNow(),
+		drawing, doing,
 		/* Last word, because the last instruction is the one a model keeps: the
 		   English block above was pulling whole refusals into English. */
-		mayAct ? [NSString stringWithFormat:
-			@"\n\nOne more time, because the lines above are in English and your "
-			@"answers are not: everything you say to them is in %@. The only "
-			@"English you ever write is an ACTION: line.", language]
-		       : @""];
+		[NSString stringWithFormat:
+			@"\n\nLast and above all, because everything above is written in "
+			@"English and your answer is not: you write to them in %@. Dates and "
+			@"times you were given are turned into %@ as you say them.%@",
+			language, language,
+			mayAct ? @" The only English you ever write is an ACTION: line." : @""]];
 }
 
 /* Unasked advice is harder to get right than an answer: it arrives uninvited, it

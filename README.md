@@ -272,6 +272,26 @@ Intelligence needs Apple silicon, and so does the Metal build here. [docs/ask-ne
 including the part that cannot work: Siri has no public API that hands an answer
 back to another application.
 
+## What it can actually know
+
+A model has no clock. Asked the time it invents one, which is worse than
+refusing, so the handful of facts a question is likely to be about are looked up
+and handed over with every question: the time, the date, how long the Mac has
+been awake, the battery and whether it is plugged in, the program in front, how
+many screens are attached. Six lines, costing nothing.
+
+Measured, in Italian, through Apple's on-device model:
+
+| question | answer |
+| --- | --- |
+| *che ore sono?* | Sono le 00:15 di martedì 25 agosto 2026. |
+| *quanta batteria ho?* | La batteria è al 100%, collegata. |
+| *da quanto è acceso il mac?* | Il Mac è acceso da 25 ore e 30 minuti. |
+| *che tempo fa a Roma?* | Non posso sapere il tempo a Roma… |
+
+The last one is the point: a fact that is not on the list is refused rather than
+guessed. Adding another fact is a few lines in `NekoFactsNow`.
+
 ## Saying its name
 
 There is a second way to start a question, off unless switched on: **Answer when

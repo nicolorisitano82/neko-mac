@@ -50,6 +50,11 @@ extern NSString *NekoAnswerInstructionsDrawing(NSString *persona, BOOL mayDraw);
 /* And with the four things it is allowed to actually do. */
 extern NSString *NekoAnswerInstructionsWith(NSString *persona, BOOL mayDraw, BOOL mayAct);
 
+/* The handful of things the cat can truthfully know at this moment — the time,
+   the date, the battery, how long the Mac has been awake — as plain lines for a
+   model to read. */
+extern NSString *NekoFactsNow(void);
+
 /* The example lines the instructions carry, which a model will sometimes hand
    straight back and which are therefore worth recognising. */
 extern NSArray *NekoInstructionExamples(void);

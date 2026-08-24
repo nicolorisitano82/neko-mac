@@ -499,7 +499,7 @@ static const float NekoMaxStopRadius = 200.0f;
 - (void)buildPreferencesPanel
 {
 	prefsPanel = [[NSPanel alloc]
-		initWithContentRect:NSMakeRect(0.0f, 0.0f, 494.0f, 390.0f)
+		initWithContentRect:NSMakeRect(0.0f, 0.0f, 494.0f, 470.0f)
 		          styleMask:(NSWindowStyleMaskTitled | NSWindowStyleMaskClosable)
 		            backing:NSBackingStoreBuffered
 		              defer:NO];
@@ -521,21 +521,21 @@ static const float NekoMaxStopRadius = 200.0f;
 	prefsTabs = tabs;            /* to open straight onto a tab */
 
 	NSView *content = [[[NSView alloc]
-		initWithFrame:NSMakeRect(0.0f, 0.0f, 470.0f, 340.0f)] autorelease];
+		initWithFrame:NSMakeRect(0.0f, 0.0f, 470.0f, 420.0f)] autorelease];
 	NSTabViewItem *petTab = [[[NSTabViewItem alloc] initWithIdentifier:@"pet"] autorelease];
 	[petTab setLabel:NekoLocalized(@"Pet")];
 	[petTab setView:content];
 	[tabs addTabViewItem:petTab];
 
 	NSView *askContent = [[[NSView alloc]
-		initWithFrame:NSMakeRect(0.0f, 0.0f, 470.0f, 340.0f)] autorelease];
+		initWithFrame:NSMakeRect(0.0f, 0.0f, 470.0f, 420.0f)] autorelease];
 	NSTabViewItem *askTab = [[[NSTabViewItem alloc] initWithIdentifier:@"ask"] autorelease];
 	[askTab setLabel:NekoLocalized(@"Ask Neko")];
 	[askTab setView:askContent];
 	[tabs addTabViewItem:askTab];
 
 	NSView *localContent = [[[NSView alloc]
-		initWithFrame:NSMakeRect(0.0f, 0.0f, 470.0f, 340.0f)] autorelease];
+		initWithFrame:NSMakeRect(0.0f, 0.0f, 470.0f, 420.0f)] autorelease];
 	[self buildLocalTabInView:localContent];
 	NSTabViewItem *localTab = [[[NSTabViewItem alloc] initWithIdentifier:@"local"] autorelease];
 	[localTab setLabel:NekoLocalized(@"Local model")];
@@ -543,7 +543,7 @@ static const float NekoMaxStopRadius = 200.0f;
 	[tabs addTabViewItem:localTab];
 
 	NSView *suggestContent = [[[NSView alloc]
-		initWithFrame:NSMakeRect(0.0f, 0.0f, 470.0f, 340.0f)] autorelease];
+		initWithFrame:NSMakeRect(0.0f, 0.0f, 470.0f, 420.0f)] autorelease];
 	[self buildSuggestTabInView:suggestContent];
 	NSTabViewItem *suggestTab = [[[NSTabViewItem alloc] initWithIdentifier:@"suggest"] autorelease];
 	[suggestTab setLabel:NekoLocalized(@"Suggestions")];
@@ -551,7 +551,7 @@ static const float NekoMaxStopRadius = 200.0f;
 	[tabs addTabViewItem:suggestTab];
 
 	NSView *drawContent = [[[NSView alloc]
-		initWithFrame:NSMakeRect(0.0f, 0.0f, 470.0f, 340.0f)] autorelease];
+		initWithFrame:NSMakeRect(0.0f, 0.0f, 470.0f, 420.0f)] autorelease];
 	[self buildDrawTabInView:drawContent];
 	NSTabViewItem *drawTab = [[[NSTabViewItem alloc] initWithIdentifier:@"draw"] autorelease];
 	[drawTab setLabel:NekoLocalized(@"Drawings")];
@@ -561,10 +561,10 @@ static const float NekoMaxStopRadius = 200.0f;
 
 	/* Behaviour */
 	[content addSubview:[self labelWithString:NekoLocalized(@"Behaviour:")
-	                                    frame:NSMakeRect(20.0f, 96.0f, 125.0f, 17.0f)]];
+	                                    frame:NSMakeRect(20.0f, 176.0f, 125.0f, 17.0f)]];
 
 	behaviourPopUp = [[NSPopUpButton alloc]
-		initWithFrame:NSMakeRect(152.0f, 91.0f, 260.0f, 26.0f) pullsDown:NO];
+		initWithFrame:NSMakeRect(152.0f, 171.0f, 260.0f, 26.0f) pullsDown:NO];
 	[behaviourPopUp addItemWithTitle:NekoLocalized(@"Follows the cursor")];
 	[behaviourPopUp addItemWithTitle:NekoLocalized(@"Lives on the Dock")];
 	[behaviourPopUp addItemWithTitle:NekoLocalized(@"Roams on its own")];
@@ -576,10 +576,10 @@ static const float NekoMaxStopRadius = 200.0f;
 
 	/* Character */
 	[content addSubview:[self labelWithString:NekoLocalized(@"Character:")
-	                                    frame:NSMakeRect(20.0f, 298.0f, 125.0f, 17.0f)]];
+	                                    frame:NSMakeRect(20.0f, 378.0f, 125.0f, 17.0f)]];
 
 	characterPopUp = [[NSPopUpButton alloc]
-		initWithFrame:NSMakeRect(152.0f, 293.0f, 170.0f, 26.0f) pullsDown:NO];
+		initWithFrame:NSMakeRect(152.0f, 373.0f, 170.0f, 26.0f) pullsDown:NO];
 	NSEnumerator *e = [[NekoCharacter availableCharacters] objectEnumerator];
 	NekoCharacter *character;
 	while((character = [e nextObject]) != nil)
@@ -592,9 +592,9 @@ static const float NekoMaxStopRadius = 200.0f;
 
 	/* Speed */
 	[content addSubview:[self labelWithString:NekoLocalized(@"Speed:")
-	                                    frame:NSMakeRect(20.0f, 258.0f, 125.0f, 17.0f)]];
+	                                    frame:NSMakeRect(20.0f, 338.0f, 125.0f, 17.0f)]];
 
-	speedSlider = [[NSSlider alloc] initWithFrame:NSMakeRect(152.0f, 255.0f, 200.0f, 21.0f)];
+	speedSlider = [[NSSlider alloc] initWithFrame:NSMakeRect(152.0f, 335.0f, 200.0f, 21.0f)];
 	[speedSlider setMinValue:NekoMinSpeed];
 	[speedSlider setMaxValue:NekoMaxSpeed];
 	[speedSlider setFloatValue:[self speed]];
@@ -604,14 +604,14 @@ static const float NekoMaxStopRadius = 200.0f;
 	[content addSubview:speedSlider];
 	[speedSlider release];
 
-	speedField = [self labelWithString:@"" frame:NSMakeRect(362.0f, 258.0f, 90.0f, 17.0f)];
+	speedField = [self labelWithString:@"" frame:NSMakeRect(362.0f, 338.0f, 90.0f, 17.0f)];
 	[content addSubview:speedField];
 
 	/* How close it comes */
 	[content addSubview:[self labelWithString:NekoLocalized(@"Stops short by:")
-	                                    frame:NSMakeRect(20.0f, 218.0f, 125.0f, 17.0f)]];
+	                                    frame:NSMakeRect(20.0f, 298.0f, 125.0f, 17.0f)]];
 
-	radiusSlider = [[NSSlider alloc] initWithFrame:NSMakeRect(152.0f, 215.0f, 200.0f, 21.0f)];
+	radiusSlider = [[NSSlider alloc] initWithFrame:NSMakeRect(152.0f, 295.0f, 200.0f, 21.0f)];
 	[radiusSlider setMinValue:NekoMinStopRadius];
 	[radiusSlider setMaxValue:NekoMaxStopRadius];
 	[radiusSlider setFloatValue:[self stopRadius]];
@@ -621,15 +621,15 @@ static const float NekoMaxStopRadius = 200.0f;
 	[content addSubview:radiusSlider];
 	[radiusSlider release];
 
-	radiusField = [self labelWithString:@"" frame:NSMakeRect(362.0f, 218.0f, 90.0f, 17.0f)];
+	radiusField = [self labelWithString:@"" frame:NSMakeRect(362.0f, 298.0f, 90.0f, 17.0f)];
 	[content addSubview:radiusField];
 
 	/* Size */
 	[content addSubview:[self labelWithString:NekoLocalized(@"Size:")
-	                                    frame:NSMakeRect(20.0f, 176.0f, 125.0f, 17.0f)]];
+	                                    frame:NSMakeRect(20.0f, 256.0f, 125.0f, 17.0f)]];
 
 	sizePopUp = [[NSPopUpButton alloc]
-		initWithFrame:NSMakeRect(152.0f, 171.0f, 100.0f, 26.0f) pullsDown:NO];
+		initWithFrame:NSMakeRect(152.0f, 251.0f, 100.0f, 26.0f) pullsDown:NO];
 	[sizePopUp addItemWithTitle:@"1\u00d7"];
 	[sizePopUp addItemWithTitle:@"2\u00d7"];
 	[sizePopUp selectItemAtIndex:([self scale] >= 2.0f) ? 1 : 0];
@@ -639,7 +639,7 @@ static const float NekoMaxStopRadius = 200.0f;
 	[sizePopUp release];
 
 	/* Idle sleep */
-	sleepCheck = [[NSButton alloc] initWithFrame:NSMakeRect(154.0f, 144.0f, 300.0f, 18.0f)];
+	sleepCheck = [[NSButton alloc] initWithFrame:NSMakeRect(154.0f, 224.0f, 300.0f, 18.0f)];
 	[sleepCheck setButtonType:NSButtonTypeSwitch];
 	[sleepCheck setTitle:NekoLocalized(@"Fall asleep when idle")];
 	[sleepCheck setState:[self idleSleep] ? NSControlStateValueOn : NSControlStateValueOff];
@@ -649,7 +649,7 @@ static const float NekoMaxStopRadius = 200.0f;
 	[sleepCheck release];
 
 	/* Wandering */
-	wanderCheck = [[NSButton alloc] initWithFrame:NSMakeRect(154.0f, 120.0f, 300.0f, 18.0f)];
+	wanderCheck = [[NSButton alloc] initWithFrame:NSMakeRect(154.0f, 200.0f, 300.0f, 18.0f)];
 	[wanderCheck setButtonType:NSButtonTypeSwitch];
 	[wanderCheck setTitle:NekoLocalized(@"Wander off when idle")];
 	[wanderCheck setState:[self wandersWhenIdle] ? NSControlStateValueOn : NSControlStateValueOff];
@@ -659,7 +659,7 @@ static const float NekoMaxStopRadius = 200.0f;
 	[wanderCheck release];
 
 	/* Opening at login */
-	loginCheck = [[NSButton alloc] initWithFrame:NSMakeRect(154.0f, 72.0f, 300.0f, 18.0f)];
+	loginCheck = [[NSButton alloc] initWithFrame:NSMakeRect(154.0f, 152.0f, 300.0f, 18.0f)];
 	[loginCheck setButtonType:NSButtonTypeSwitch];
 	[loginCheck setTitle:NekoLocalized(@"Open at login")];
 	[loginCheck setState:[self opensAtLogin] ? NSControlStateValueOn : NSControlStateValueOff];
@@ -673,7 +673,7 @@ static const float NekoMaxStopRadius = 200.0f;
 	[loginCheck release];
 
 	/* Restore defaults */
-	NSButton *reset = [[NSButton alloc] initWithFrame:NSMakeRect(16.0f, 20.0f, 180.0f, 32.0f)];
+	NSButton *reset = [[NSButton alloc] initWithFrame:NSMakeRect(16.0f, 100.0f, 180.0f, 32.0f)];
 	[reset setBezelStyle:NSBezelStyleRounded];
 	[reset setTitle:NekoLocalized(@"Restore Defaults")];
 	[reset setTarget:self];
@@ -692,7 +692,7 @@ static const float NekoMaxStopRadius = 200.0f;
 {
 	NekoAsk *ask = [NekoAsk sharedAsk];
 
-	askCheck = [[NSButton alloc] initWithFrame:NSMakeRect(20.0f, 300.0f, 400.0f, 18.0f)];
+	askCheck = [[NSButton alloc] initWithFrame:NSMakeRect(20.0f, 380.0f, 400.0f, 18.0f)];
 	[askCheck setButtonType:NSButtonTypeSwitch];
 	[askCheck setTitle:NekoLocalized(@"Let me ask Neko questions out loud")];
 	[askCheck setState:[ask isEnabled] ? NSControlStateValueOn : NSControlStateValueOff];
@@ -702,9 +702,9 @@ static const float NekoMaxStopRadius = 200.0f;
 	[askCheck release];
 
 	[content addSubview:[self labelWithString:NekoLocalized(@"Keystroke:")
-	                                    frame:NSMakeRect(20.0f, 262.0f, 125.0f, 17.0f)]];
+	                                    frame:NSMakeRect(20.0f, 342.0f, 125.0f, 17.0f)]];
 	askHotKeyPopUp = [[NSPopUpButton alloc]
-		initWithFrame:NSMakeRect(152.0f, 257.0f, 160.0f, 26.0f) pullsDown:NO];
+		initWithFrame:NSMakeRect(152.0f, 337.0f, 160.0f, 26.0f) pullsDown:NO];
 	NSEnumerator *e = [[self hotKeyChoices] objectEnumerator];
 	NSArray *choice;
 	while((choice = [e nextObject]) != nil)
@@ -717,9 +717,9 @@ static const float NekoMaxStopRadius = 200.0f;
 	[askHotKeyPopUp release];
 
 	[content addSubview:[self labelWithString:NekoLocalized(@"Answers from:")
-	                                    frame:NSMakeRect(20.0f, 222.0f, 125.0f, 17.0f)]];
+	                                    frame:NSMakeRect(20.0f, 302.0f, 125.0f, 17.0f)]];
 	askProviderPopUp = [[NSPopUpButton alloc]
-		initWithFrame:NSMakeRect(152.0f, 217.0f, 220.0f, 26.0f) pullsDown:NO];
+		initWithFrame:NSMakeRect(152.0f, 297.0f, 220.0f, 26.0f) pullsDown:NO];
 	/* Same order as askProviderKeys. */
 	[askProviderPopUp addItemWithTitle:NekoLocalized(@"Apple Intelligence, on this Mac")];
 	[askProviderPopUp addItemWithTitle:NekoLocalized(@"ChatGPT")];
@@ -732,22 +732,22 @@ static const float NekoMaxStopRadius = 200.0f;
 	[askProviderPopUp release];
 
 	[content addSubview:[self labelWithString:NekoLocalized(@"Shortcut name:")
-	                                    frame:NSMakeRect(20.0f, 182.0f, 125.0f, 17.0f)]];
-	askShortcutField = [[NSTextField alloc] initWithFrame:NSMakeRect(152.0f, 179.0f, 220.0f, 22.0f)];
+	                                    frame:NSMakeRect(20.0f, 262.0f, 125.0f, 17.0f)]];
+	askShortcutField = [[NSTextField alloc] initWithFrame:NSMakeRect(152.0f, 259.0f, 220.0f, 22.0f)];
 	[askShortcutField setTarget:self];
 	[askShortcutField setAction:@selector(takeAskShortcutNameFrom:)];
 	[content addSubview:askShortcutField];
 	[askShortcutField release];
 
 	[content addSubview:[self labelWithString:NekoLocalized(@"API key:")
-	                                    frame:NSMakeRect(20.0f, 142.0f, 125.0f, 17.0f)]];
-	askKeyField = [[NSSecureTextField alloc] initWithFrame:NSMakeRect(152.0f, 139.0f, 220.0f, 22.0f)];
+	                                    frame:NSMakeRect(20.0f, 222.0f, 125.0f, 17.0f)]];
+	askKeyField = [[NSSecureTextField alloc] initWithFrame:NSMakeRect(152.0f, 219.0f, 220.0f, 22.0f)];
 	[askKeyField setTarget:self];
 	[askKeyField setAction:@selector(takeAskKeyFrom:)];
 	[content addSubview:askKeyField];
 	[askKeyField release];
 
-	askSpeakCheck = [[NSButton alloc] initWithFrame:NSMakeRect(152.0f, 106.0f, 300.0f, 18.0f)];
+	askSpeakCheck = [[NSButton alloc] initWithFrame:NSMakeRect(152.0f, 162.0f, 300.0f, 18.0f)];
 	[askSpeakCheck setButtonType:NSButtonTypeSwitch];
 	[askSpeakCheck setTitle:NekoLocalized(@"Read the answer aloud")];
 	[askSpeakCheck setTarget:self];
@@ -755,7 +755,7 @@ static const float NekoMaxStopRadius = 200.0f;
 	[content addSubview:askSpeakCheck];
 	[askSpeakCheck release];
 
-	wakeCheck = [[NSButton alloc] initWithFrame:NSMakeRect(152.0f, 128.0f, 300.0f, 18.0f)];
+	wakeCheck = [[NSButton alloc] initWithFrame:NSMakeRect(152.0f, 186.0f, 300.0f, 18.0f)];
 	[wakeCheck setButtonType:NSButtonTypeSwitch];
 	[wakeCheck setTitle:NekoLocalized(@"Answer when I say “Neko”")];
 	[wakeCheck setTarget:self];
@@ -763,7 +763,7 @@ static const float NekoMaxStopRadius = 200.0f;
 	[content addSubview:wakeCheck];
 	[wakeCheck release];
 
-	actionsCheck = [[NSButton alloc] initWithFrame:NSMakeRect(152.0f, 84.0f, 300.0f, 18.0f)];
+	actionsCheck = [[NSButton alloc] initWithFrame:NSMakeRect(152.0f, 138.0f, 300.0f, 18.0f)];
 	[actionsCheck setButtonType:NSButtonTypeSwitch];
 	[actionsCheck setTitle:NekoLocalized(@"Let it open things when I ask")];
 	[actionsCheck setTarget:self];
@@ -771,7 +771,7 @@ static const float NekoMaxStopRadius = 200.0f;
 	[content addSubview:actionsCheck];
 	[actionsCheck release];
 
-	foldersButton = [[NSButton alloc] initWithFrame:NSMakeRect(148.0f, 46.0f, 168.0f, 28.0f)];
+	foldersButton = [[NSButton alloc] initWithFrame:NSMakeRect(148.0f, 100.0f, 168.0f, 28.0f)];
 	[foldersButton setBezelStyle:NSBezelStyleRounded];
 	[foldersButton setControlSize:NSControlSizeSmall];
 	[foldersButton setTitle:NekoLocalized(@"Show it a folder…")];
@@ -780,7 +780,7 @@ static const float NekoMaxStopRadius = 200.0f;
 	[content addSubview:foldersButton];
 	[foldersButton release];
 
-	forgetFoldersButton = [[NSButton alloc] initWithFrame:NSMakeRect(320.0f, 46.0f, 130.0f, 28.0f)];
+	forgetFoldersButton = [[NSButton alloc] initWithFrame:NSMakeRect(320.0f, 100.0f, 130.0f, 28.0f)];
 	[forgetFoldersButton setBezelStyle:NSBezelStyleRounded];
 	[forgetFoldersButton setControlSize:NSControlSizeSmall];
 	[forgetFoldersButton setTitle:NekoLocalized(@"Forget them")];
@@ -789,7 +789,7 @@ static const float NekoMaxStopRadius = 200.0f;
 	[content addSubview:forgetFoldersButton];
 	[forgetFoldersButton release];
 
-	askStatusField = [self labelWithString:@"" frame:NSMakeRect(20.0f, 12.0f, 430.0f, 30.0f)];
+	askStatusField = [self labelWithString:@"" frame:NSMakeRect(20.0f, 8.0f, 430.0f, 86.0f)];
 	[askStatusField setAlignment:NSTextAlignmentLeft];
 	[[askStatusField cell] setWraps:YES];
 	[askStatusField setFont:[NSFont systemFontOfSize:11.0f]];
@@ -935,7 +935,7 @@ static const float NekoMaxStopRadius = 200.0f;
    both of which are said here rather than discovered. */
 - (void)buildDrawTabInView:(NSView *)content
 {
-	drawCheck = [[NSButton alloc] initWithFrame:NSMakeRect(20.0f, 300.0f, 430.0f, 18.0f)];
+	drawCheck = [[NSButton alloc] initWithFrame:NSMakeRect(20.0f, 380.0f, 430.0f, 18.0f)];
 	[drawCheck setButtonType:NSButtonTypeSwitch];
 	[drawCheck setTitle:NekoLocalized(@"Let Neko draw when I ask to see something")];
 	[drawCheck setTarget:self];
@@ -943,7 +943,7 @@ static const float NekoMaxStopRadius = 200.0f;
 	[content addSubview:drawCheck];
 	[drawCheck release];
 
-	drawActionButton = [[NSButton alloc] initWithFrame:NSMakeRect(20.0f, 254.0f, 180.0f, 32.0f)];
+	drawActionButton = [[NSButton alloc] initWithFrame:NSMakeRect(20.0f, 334.0f, 180.0f, 32.0f)];
 	[drawActionButton setBezelStyle:NSBezelStyleRounded];
 	[drawActionButton setTarget:self];
 	[drawActionButton setAction:@selector(drawActionPressed:)];
@@ -951,7 +951,7 @@ static const float NekoMaxStopRadius = 200.0f;
 	[drawActionButton release];
 
 	drawProgress = [[NSProgressIndicator alloc]
-		initWithFrame:NSMakeRect(212.0f, 262.0f, 230.0f, 16.0f)];
+		initWithFrame:NSMakeRect(212.0f, 342.0f, 230.0f, 16.0f)];
 	[drawProgress setStyle:NSProgressIndicatorStyleBar];
 	[drawProgress setIndeterminate:NO];
 	[drawProgress setMinValue:0.0];
@@ -961,9 +961,9 @@ static const float NekoMaxStopRadius = 200.0f;
 	[drawProgress release];
 
 	[content addSubview:[self labelWithString:NekoLocalized(@"Effort:")
-	                                    frame:NSMakeRect(20.0f, 220.0f, 125.0f, 17.0f)]];
+	                                    frame:NSMakeRect(20.0f, 300.0f, 125.0f, 17.0f)]];
 	drawStepsPopUp = [[NSPopUpButton alloc]
-		initWithFrame:NSMakeRect(152.0f, 215.0f, 200.0f, 26.0f) pullsDown:NO];
+		initWithFrame:NSMakeRect(152.0f, 295.0f, 200.0f, 26.0f) pullsDown:NO];
 	NSEnumerator *e = [[self drawStepChoices] objectEnumerator];
 	NSNumber *steps;
 	while((steps = [e nextObject]) != nil)
@@ -975,9 +975,9 @@ static const float NekoMaxStopRadius = 200.0f;
 	[drawStepsPopUp release];
 
 	[content addSubview:[self labelWithString:NekoLocalized(@"Size:")
-	                                    frame:NSMakeRect(20.0f, 186.0f, 125.0f, 17.0f)]];
+	                                    frame:NSMakeRect(20.0f, 266.0f, 125.0f, 17.0f)]];
 	drawSizePopUp = [[NSPopUpButton alloc]
-		initWithFrame:NSMakeRect(152.0f, 181.0f, 200.0f, 26.0f) pullsDown:NO];
+		initWithFrame:NSMakeRect(152.0f, 261.0f, 200.0f, 26.0f) pullsDown:NO];
 	NSEnumerator *sizes = [[self drawSizeChoices] objectEnumerator];
 	NSNumber *side;
 	while((side = [sizes nextObject]) != nil)
@@ -988,7 +988,7 @@ static const float NekoMaxStopRadius = 200.0f;
 	[content addSubview:drawSizePopUp];
 	[drawSizePopUp release];
 
-	drawNowButton = [[NSButton alloc] initWithFrame:NSMakeRect(20.0f, 138.0f, 200.0f, 32.0f)];
+	drawNowButton = [[NSButton alloc] initWithFrame:NSMakeRect(20.0f, 218.0f, 200.0f, 32.0f)];
 	[drawNowButton setBezelStyle:NSBezelStyleRounded];
 	[drawNowButton setTitle:NekoLocalized(@"Draw a cat now")];
 	[drawNowButton setTarget:self];
@@ -997,7 +997,7 @@ static const float NekoMaxStopRadius = 200.0f;
 	[drawNowButton release];
 
 	drawStatusField = [self labelWithString:@""
-	                                  frame:NSMakeRect(20.0f, 16.0f, 430.0f, 112.0f)];
+	                                  frame:NSMakeRect(20.0f, 96.0f, 430.0f, 112.0f)];
 	[drawStatusField setAlignment:NSTextAlignmentLeft];
 	[[drawStatusField cell] setWraps:YES];
 	[content addSubview:drawStatusField];
@@ -1151,7 +1151,7 @@ static const float NekoMaxStopRadius = 200.0f;
 
 - (void)buildSuggestTabInView:(NSView *)content
 {
-	suggestCheck = [[NSButton alloc] initWithFrame:NSMakeRect(20.0f, 300.0f, 430.0f, 18.0f)];
+	suggestCheck = [[NSButton alloc] initWithFrame:NSMakeRect(20.0f, 380.0f, 430.0f, 18.0f)];
 	[suggestCheck setButtonType:NSButtonTypeSwitch];
 	[suggestCheck setTitle:NekoLocalized(@"Let Neko suggest things while it roams")];
 	[suggestCheck setTarget:self];
@@ -1159,7 +1159,7 @@ static const float NekoMaxStopRadius = 200.0f;
 	[content addSubview:suggestCheck];
 	[suggestCheck release];
 
-	readTextCheck = [[NSButton alloc] initWithFrame:NSMakeRect(20.0f, 274.0f, 430.0f, 18.0f)];
+	readTextCheck = [[NSButton alloc] initWithFrame:NSMakeRect(20.0f, 354.0f, 430.0f, 18.0f)];
 	[readTextCheck setButtonType:NSButtonTypeSwitch];
 	[readTextCheck setTitle:NekoLocalized(@"Let it read the text I am working on")];
 	[readTextCheck setTarget:self];
@@ -1168,10 +1168,10 @@ static const float NekoMaxStopRadius = 200.0f;
 	[readTextCheck release];
 
 	[content addSubview:[self labelWithString:NekoLocalized(@"At most every:")
-	                                    frame:NSMakeRect(20.0f, 240.0f, 125.0f, 17.0f)]];
+	                                    frame:NSMakeRect(20.0f, 320.0f, 125.0f, 17.0f)]];
 
 	suggestEveryPopUp = [[NSPopUpButton alloc]
-		initWithFrame:NSMakeRect(152.0f, 235.0f, 160.0f, 26.0f) pullsDown:NO];
+		initWithFrame:NSMakeRect(152.0f, 315.0f, 160.0f, 26.0f) pullsDown:NO];
 	NSEnumerator *e = [[self suggestIntervalChoices] objectEnumerator];
 	NSNumber *minutes;
 	while((minutes = [e nextObject]) != nil)
@@ -1182,7 +1182,7 @@ static const float NekoMaxStopRadius = 200.0f;
 	[content addSubview:suggestEveryPopUp];
 	[suggestEveryPopUp release];
 
-	suggestNowButton = [[NSButton alloc] initWithFrame:NSMakeRect(20.0f, 192.0f, 200.0f, 32.0f)];
+	suggestNowButton = [[NSButton alloc] initWithFrame:NSMakeRect(20.0f, 272.0f, 200.0f, 32.0f)];
 	[suggestNowButton setBezelStyle:NSBezelStyleRounded];
 	[suggestNowButton setTitle:NekoLocalized(@"Suggest something now")];
 	[suggestNowButton setTarget:self];
@@ -1191,7 +1191,7 @@ static const float NekoMaxStopRadius = 200.0f;
 	[suggestNowButton release];
 
 	suggestStatusField = [self labelWithString:@""
-	                                     frame:NSMakeRect(20.0f, 16.0f, 430.0f, 168.0f)];
+	                                     frame:NSMakeRect(20.0f, 96.0f, 430.0f, 168.0f)];
 	[suggestStatusField setAlignment:NSTextAlignmentLeft];
 	[[suggestStatusField cell] setWraps:YES];
 	[content addSubview:suggestStatusField];
@@ -1329,10 +1329,10 @@ static const float NekoMaxStopRadius = 200.0f;
 - (void)buildLocalTabInView:(NSView *)content
 {
 	[content addSubview:[self labelWithString:NekoLocalized(@"Model:")
-	                                    frame:NSMakeRect(20.0f, 276.0f, 125.0f, 17.0f)]];
+	                                    frame:NSMakeRect(20.0f, 356.0f, 125.0f, 17.0f)]];
 
 	localModelPopUp = [[NSPopUpButton alloc]
-		initWithFrame:NSMakeRect(152.0f, 271.0f, 280.0f, 26.0f) pullsDown:NO];
+		initWithFrame:NSMakeRect(152.0f, 351.0f, 280.0f, 26.0f) pullsDown:NO];
 	NSEnumerator *e = [[[NekoModelStore sharedStore] catalogue] objectEnumerator];
 	NekoLocalModel *model;
 	while((model = [e nextObject]) != nil)
@@ -1343,12 +1343,12 @@ static const float NekoMaxStopRadius = 200.0f;
 	[localModelPopUp release];
 
 	localDetailField = [self labelWithString:@""
-	                                   frame:NSMakeRect(152.0f, 246.0f, 290.0f, 17.0f)];
+	                                   frame:NSMakeRect(152.0f, 326.0f, 290.0f, 17.0f)];
 	[localDetailField setAlignment:NSTextAlignmentLeft];
 	[[localDetailField cell] setWraps:YES];
 	[content addSubview:localDetailField];
 
-	localActionButton = [[NSButton alloc] initWithFrame:NSMakeRect(152.0f, 200.0f, 150.0f, 32.0f)];
+	localActionButton = [[NSButton alloc] initWithFrame:NSMakeRect(152.0f, 280.0f, 150.0f, 32.0f)];
 	[localActionButton setBezelStyle:NSBezelStyleRounded];
 	[localActionButton setTarget:self];
 	[localActionButton setAction:@selector(localActionPressed:)];
@@ -1356,7 +1356,7 @@ static const float NekoMaxStopRadius = 200.0f;
 	[localActionButton release];
 
 	localProgress = [[NSProgressIndicator alloc]
-		initWithFrame:NSMakeRect(312.0f, 208.0f, 130.0f, 16.0f)];
+		initWithFrame:NSMakeRect(312.0f, 288.0f, 130.0f, 16.0f)];
 	[localProgress setStyle:NSProgressIndicatorStyleBar];
 	[localProgress setIndeterminate:NO];
 	[localProgress setMinValue:0.0];
@@ -1365,7 +1365,7 @@ static const float NekoMaxStopRadius = 200.0f;
 	[content addSubview:localProgress];
 	[localProgress release];
 
-	localCleanButton = [[NSButton alloc] initWithFrame:NSMakeRect(20.0f, 160.0f, 424.0f, 32.0f)];
+	localCleanButton = [[NSButton alloc] initWithFrame:NSMakeRect(20.0f, 240.0f, 424.0f, 32.0f)];
 	[localCleanButton setBezelStyle:NSBezelStyleRounded];
 	[localCleanButton setTarget:self];
 	[localCleanButton setAction:@selector(localCleanPressed:)];
@@ -1373,7 +1373,7 @@ static const float NekoMaxStopRadius = 200.0f;
 	[localCleanButton release];
 
 	localStatusField = [self labelWithString:@""
-	                                   frame:NSMakeRect(20.0f, 30.0f, 424.0f, 120.0f)];
+	                                   frame:NSMakeRect(20.0f, 110.0f, 424.0f, 120.0f)];
 	[localStatusField setAlignment:NSTextAlignmentLeft];
 	[[localStatusField cell] setWraps:YES];
 	[content addSubview:localStatusField];
