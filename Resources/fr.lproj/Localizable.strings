@@ -172,3 +172,13 @@
 "The words that describe the picture come from whichever engine Ask Neko is set to; only that sentence leaves the Mac, and only if that engine is a remote one." = "Les mots qui décrivent l’image viennent du moteur choisi dans Demander à Neko ; seule cette phrase quitte le Mac, et seulement si ce moteur est distant.";
 "A remark is a harder thing to write than an answer, and the smaller local models are not good at it — they come out bland, or in the wrong language, or repeat a word four times. Apple Intelligence, on the Ask Neko tab, does this one much better and costs nothing." = "Une remarque est plus difficile à écrire qu’une réponse, et les petits modèles locaux n’y arrivent pas : elles sortent fades, dans la mauvaise langue, ou répètent quatre fois le même mot. Apple Intelligence, dans l’onglet Demander à Neko, fait bien mieux et ne coûte rien.";
 "A remark is a harder thing to write than an answer, and the smaller local models are not good at it. A larger model on the Local model tab, or a remote one, will do better." = "Une remarque est plus difficile à écrire qu’une réponse, et les petits modèles locaux n’y arrivent pas. Un modèle plus grand dans l’onglet Modèle local, ou un modèle distant, s’en sortira mieux.";
+
+/* saving a drawing, and newer models */
+"Save" = "Enregistrer";
+"Saved" = "Enregistrée";
+"Failed" = "Échec";
+"Neko %@.png" = "Neko %@.png";
+"1.7 GB — newer than the 1.5B and better at holding to an instruction" = "1,7 Go — plus récent que le 1.5B et plus fidèle aux consignes";
+"2.3 GB — the best of these outside English" = "2,3 Go — le meilleur de ceux-ci hors de l’anglais";
+"2.3 GB — the most recent, and the one that follows a brief best" = "2,3 Go — le plus récent, et celui qui respecte le mieux la consigne";
+"2.0 GB — right and brief, and a year older than the two below" = "2,0 Go — juste et bref, et un an plus vieux que les deux du dessous";

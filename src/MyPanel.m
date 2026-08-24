@@ -1,6 +1,7 @@
 #import "MyPanel.h"
 #import "NekoController.h"
 #import "NekoAsk.h"
+#import "NekoAdvisor.h"
 
 @implementation MyPanel
 - (void)setStateTo:(NekoState)theState
@@ -268,7 +269,12 @@ static const unsigned NekoRoamNap = 240;         /* half a minute asleep */
    comes back the cat stops again. */
 - (BOOL)isSpeaking
 {
-	return [[NekoAsk sharedAsk] isSpeaking];
+	NekoAsk *ask = [NekoAsk sharedAsk];
+	/* Three states, one rule: a bubble on screen, a question being handled —
+	   listening, thinking, drawing — or a suggestion being written. All of them
+	   are the cat's attention being elsewhere, and a cat whose attention is
+	   elsewhere does not cross the desk. */
+	return [ask isSpeaking] || [ask isBusy] || [[NekoAdvisor sharedAdvisor] isThinking];
 }
 
 - (BOOL)shouldWanderNow

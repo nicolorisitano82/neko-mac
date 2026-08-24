@@ -28,6 +28,11 @@ extern NSString * const NekoSuggestLastKey;
 
 + (NekoAdvisor *)sharedAdvisor;
 
+/* YES while an engine is writing a suggestion. The cat stands still for it:
+   wandering off mid-thought and then speaking from the far side of the desk
+   reads as two unrelated events. */
+- (BOOL)isThinking;
+
 /* Reads the settings and starts or stops accordingly. Safe to call often. */
 - (void)applySettings;
 

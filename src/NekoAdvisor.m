@@ -53,6 +53,11 @@ static const NSTimeInterval NekoAdvisorTyping = 3.0;
 	[super dealloc];
 }
 
+- (BOOL)isThinking
+{
+	return waiting;
+}
+
 - (void)settingsChanged:(NSNotification *)note
 {
 	[self applySettings];

@@ -97,9 +97,27 @@
 		[[[NekoLocalModel alloc]
 			initWithIdentifier:@"qwen2.5-3b-instruct-q4"
 			              name:@"Qwen2.5 3B Instruct"
-			            detail:NSLocalizedString(@"2.0 GB — the best of these at being both right and brief", nil)
+			            detail:NSLocalizedString(@"2.0 GB — right and brief, and a year older than the two below", nil)
 			               url:[NSURL URLWithString:@"https://huggingface.co/Qwen/Qwen2.5-3B-Instruct-GGUF/resolve/main/qwen2.5-3b-instruct-q4_k_m.gguf"]
 			             bytes:2104521312LL] autorelease],
+		[[[NekoLocalModel alloc]
+			initWithIdentifier:@"qwen3-1.7b-q8"
+			              name:@"Qwen3 1.7B"
+			            detail:NSLocalizedString(@"1.7 GB — newer than the 1.5B and better at holding to an instruction", nil)
+			               url:[NSURL URLWithString:@"https://huggingface.co/Qwen/Qwen3-1.7B-GGUF/resolve/main/Qwen3-1.7B-Q8_0.gguf"]
+			             bytes:1834426016LL] autorelease],
+		[[[NekoLocalModel alloc]
+			initWithIdentifier:@"gemma-3-4b-it-q4"
+			              name:@"Gemma 3 4B"
+			            detail:NSLocalizedString(@"2.3 GB — the best of these outside English", nil)
+			               url:[NSURL URLWithString:@"https://huggingface.co/ggml-org/gemma-3-4b-it-GGUF/resolve/main/gemma-3-4b-it-Q4_K_M.gguf"]
+			             bytes:2489757856LL] autorelease],
+		[[[NekoLocalModel alloc]
+			initWithIdentifier:@"qwen3-4b-instruct-q4"
+			              name:@"Qwen3 4B Instruct"
+			            detail:NSLocalizedString(@"2.3 GB — the most recent, and the one that follows a brief best", nil)
+			               url:[NSURL URLWithString:@"https://huggingface.co/unsloth/Qwen3-4B-Instruct-2507-GGUF/resolve/main/Qwen3-4B-Instruct-2507-Q4_K_M.gguf"]
+			             bytes:2497281120LL] autorelease],
 		nil];
 	return cached;
 }

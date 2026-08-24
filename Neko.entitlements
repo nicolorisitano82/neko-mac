@@ -8,5 +8,8 @@
 	<true/>
 	<key>com.apple.security.network.client</key>
 	<true/>
+	<!-- The Save button under a drawing writes there and nowhere else. -->
+	<key>com.apple.security.files.downloads.read-write</key>
+	<true/>
 </dict>
 </plist>

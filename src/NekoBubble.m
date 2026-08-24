@@ -110,10 +110,21 @@ static const float NekoBubbleRadius = 10.0f;
 	[[label cell] setUsesSingleLineMode:NO];
 	[[self contentView] addSubview:label];
 
+	saveButton = [[NSButton alloc] initWithFrame:NSZeroRect];
+	[saveButton setBezelStyle:NSBezelStyleRounded];
+	[saveButton setControlSize:NSControlSizeSmall];
+	[saveButton setFont:[NSFont systemFontOfSize:
+		[NSFont systemFontSizeForControlSize:NSControlSizeSmall]]];
+	[saveButton setTitle:NSLocalizedString(@"Save", nil)];
+	[saveButton setTarget:self];
+	[saveButton setAction:@selector(savePicture:)];
+	[saveButton setHidden:YES];
+
 	picture = [[NSImageView alloc] initWithFrame:NSZeroRect];
 	[picture setImageScaling:NSImageScaleProportionallyUpOrDown];
 	[picture setHidden:YES];
 	[[self contentView] addSubview:picture];
+	[[self contentView] addSubview:saveButton];   /* above the picture */
 	return self;
 }
 
@@ -122,6 +133,8 @@ static const float NekoBubbleRadius = 10.0f;
 	[dismissal invalidate];
 	[label release];
 	[picture release];
+	[saveButton release];
+	[hover release];
 	[super dealloc];
 }
 
@@ -211,10 +224,37 @@ static const float NekoBubbleRadius = 10.0f;
 	[label setFrame:NSMakeRect(NekoBubblePadding, bottom, contentWidth, textHeight)];
 	[picture setImage:image];
 	[picture setHidden:(image == nil)];
-	if(image != nil)
-		[picture setFrame:NSMakeRect(NekoBubblePadding + (contentWidth - drawn.width) / 2.0f,
-		                             bottom + textHeight + gap,
-		                             drawn.width, drawn.height)];
+	[saveButton setHidden:YES];
+	[saveButton setTitle:NSLocalizedString(@"Save", nil)];
+	[saveButton setEnabled:YES];
+	if(image != nil) {
+		NSRect where = NSMakeRect(NekoBubblePadding + (contentWidth - drawn.width) / 2.0f,
+		                          bottom + textHeight + gap,
+		                          drawn.width, drawn.height);
+		[picture setFrame:where];
+		/* Top right of the drawing, a few points in, out of the way of whatever
+		   the picture is of. */
+		NSSize wanted = [saveButton intrinsicContentSize];
+		[saveButton setFrame:NSMakeRect(NSMaxX(where) - wanted.width - 8.0f,
+		                                NSMaxY(where) - wanted.height - 8.0f,
+		                                wanted.width, wanted.height)];
+	}
+
+	/* The button only exists while the pointer is over the bubble, so a picture
+	   is a picture until somebody reaches for it. */
+	if(hover != nil) {
+		[[self contentView] removeTrackingArea:hover];
+		[hover release];
+		hover = nil;
+	}
+	if(image != nil) {
+		hover = [[NSTrackingArea alloc]
+			initWithRect:[[self contentView] bounds]
+			     options:(NSTrackingMouseEnteredAndExited | NSTrackingActiveAlways)
+			       owner:self
+			    userInfo:nil];
+		[[self contentView] addTrackingArea:hover];
+	}
 
 	[self orderFront:nil];
 
@@ -236,6 +276,59 @@ static const float NekoBubbleRadius = 10.0f;
 		if(NSIntersectsRect([screen frame], rect))
 			return screen;
 	return [NSScreen mainScreen];
+}
+
+- (void)mouseEntered:(NSEvent *)event
+{
+	if([picture image] != nil)
+		[saveButton setHidden:NO];
+}
+
+- (void)mouseExited:(NSEvent *)event
+{
+	[saveButton setHidden:YES];
+}
+
+/* Straight into Downloads, with the date in the name, and the button says so.
+   No panel to fill in: the picture was asked for out loud, and being made to
+   choose a folder afterwards is a strange price to pay for a joke. */
+- (void)savePicture:(id)sender
+{
+	NSImage *image = [picture image];
+	if(image == nil)
+		return;
+
+	NSBitmapImageRep *bitmap = [[[NSBitmapImageRep alloc]
+		initWithData:[image TIFFRepresentation]] autorelease];
+	NSData *png = [bitmap representationUsingType:NSBitmapImageFileTypePNG
+	                                   properties:[NSDictionary dictionary]];
+	NSString *folder = [NSSearchPathForDirectoriesInDomains(
+		NSDownloadsDirectory, NSUserDomainMask, YES) firstObject];
+	if(png == nil || folder == nil) {
+		[saveButton setTitle:NSLocalizedString(@"Failed", nil)];
+		return;
+	}
+
+	NSDateFormatter *stamp = [[[NSDateFormatter alloc] init] autorelease];
+	[stamp setDateFormat:@"yyyy-MM-dd HH.mm.ss"];
+	NSString *file = [folder stringByAppendingPathComponent:
+		[NSString stringWithFormat:NSLocalizedString(@"Neko %@.png", nil),
+			[stamp stringFromDate:[NSDate date]]]];
+
+	if([png writeToFile:file atomically:YES]) {
+		[saveButton setTitle:NSLocalizedString(@"Saved", nil)];
+		[saveButton setEnabled:NO];
+		/* The bubble was going to close on its own; give it long enough for the
+		   word "Saved" to be read. */
+		[dismissal invalidate];
+		dismissal = [NSTimer scheduledTimerWithTimeInterval:4.0
+		                                            target:self
+		                                          selector:@selector(hideByTimer:)
+		                                          userInfo:nil
+		                                           repeats:NO];
+	} else {
+		[saveButton setTitle:NSLocalizedString(@"Failed", nil)];
+	}
 }
 
 - (void)hideByTimer:(NSTimer *)timer

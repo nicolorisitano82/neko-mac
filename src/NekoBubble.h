@@ -12,6 +12,8 @@
 {
 	NSTextField *label;
 	NSImageView *picture;
+	NSButton *saveButton;        /* over a drawing, while the pointer is inside */
+	NSTrackingArea *hover;
 	NSTimer *dismissal;
 	id owner;                    /* not retained */
 	SEL dismissedAction;
