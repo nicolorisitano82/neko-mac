@@ -182,3 +182,17 @@
 "2.3 GB — the best of these outside English" = "2,3 GB — el mejor de estos fuera del inglés";
 "2.3 GB — the most recent, and the one that follows a brief best" = "2,3 GB — el más reciente, y el que mejor cumple el encargo";
 "2.0 GB — right and brief, and a year older than the two below" = "2,0 GB — correcto y breve, y un año más viejo que los dos de abajo";
+
+/* doing things */
+"Let it open things when I ask" = "Deja que abra cosas cuando se lo pido";
+"Open %@?" = "¿Abro %@?";
+"Open %@ in %@?" = "¿Abro %@ en %@?";
+"Open the %@ folder?" = "¿Abro la carpeta %@?";
+"Run your shortcut “%@”?" = "¿Ejecuto tu atajo «%@»?";
+"All right, I will not." = "Vale, lo dejo.";
+"Done." = "Hecho.";
+"That did not work." = "No ha funcionado.";
+"I cannot do that one." = "Esa no la sé hacer.";
+"Yes" = "Sí";
+"No" = "No";
+"It can open an application, an address in a browser, one of your folders in the Finder, or one of your own Shortcuts — those four things and nothing else. It always shows you what it is about to do and waits for a yes; dismissing the bubble is a no. It will not move, copy or delete a file, and it never acts on text it read from the screen: only on what you said out loud." = "Puede abrir una aplicación, una dirección en el navegador, una de tus carpetas en el Finder, o uno de tus atajos: esas cuatro cosas y nada más. Siempre enseña lo que va a hacer y espera un sí; cerrar el globo cuenta como no. No mueve, copia ni borra archivos, y nunca actúa sobre texto leído de la pantalla: solo sobre lo que dijiste en voz alta.";

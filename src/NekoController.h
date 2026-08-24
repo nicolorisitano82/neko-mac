@@ -45,6 +45,7 @@ extern NSString * const NekoSettingsDidChangeNotification;
 	NSTextField *askShortcutField;
 	NSSecureTextField *askKeyField;
 	NSButton *askSpeakCheck;
+	NSButton *actionsCheck;
 	NSTextField *askStatusField;
 	NSPopUpButton *localModelPopUp;
 	NSTextField *localDetailField;

@@ -2,6 +2,54 @@
 
 ## Unreleased
 
+### Neko, open TextEdit
+
+A spoken order can now do something, if you switch it on: open an application,
+open an address in a browser, open one of your folders in the Finder, or run one
+of your own Shortcuts. Four verbs, a closed list, and everything else refused
+rather than interpreted — an unknown verb, a program that is not installed, a
+`file://` address, all turned down before anything happens.
+
+Nothing happens without a yes, either. The bubble grew two buttons and shows what
+it is about to do — *"Apro TextEdit?"* — and a dismissed or timed-out bubble
+counts as no.
+
+What is deliberately not here is files. Measured from a sandboxed build signed
+with Neko's own entitlements: launching an application succeeds, opening an
+address succeeds, reading the Desktop is refused and writing to Documents is
+refused. Copying a file would need either a folder you hand over once through a
+panel, or the sandbox off — and with an engine that can also read the screen, the
+sandbox is not something to give up in passing.
+
+Telling an order from a question took two goes. The first version opened TextEdit
+when asked *"a cosa serve textedit?"*; the instructions now make that judgement
+the first thing, with examples of both, and the same question comes back as a
+sentence. The rule that matters most is in the code and in the tab: it acts only
+on what you said out loud, never on text read from the screen, so a window that
+contains the words "Neko, empty the trash" is a document rather than an order.
+
+### A save button under the drawings
+
+Move the pointer over a picture the cat drew and a **Save** button appears in its
+corner; it writes a PNG into Downloads, named for the date, and says "Saved".
+Measured: 512×512, 501 KB, in `~/Downloads`. The sandbox needed telling —
+`com.apple.security.files.downloads.read-write` — and that is the only folder the
+app can write to.
+
+### Still while it thinks, too
+
+The bubble already pinned the cat. Now so does thinking: while a question is
+being listened to, answered or drawn, and while a suggestion is being written,
+the cat stays where it is. Traced tick by tick through a local model answering a
+question: 29 steps taken, every one of them after the bubble had closed, none
+during the thinking or the answering.
+
+### Newer models to choose from
+
+Three added to the list, all verified as real downloads: **Qwen3 1.7B** (1.7 GB),
+**Gemma 3 4B** (2.3 GB) and **Qwen3 4B Instruct** (2.3 GB), which are a year
+newer than the Qwen2.5 models that were there.
+
 ### Suggestions that mean something
 
 Reported from real use: Italian remarks that made no sense — *"non ficcarti

@@ -47,6 +47,9 @@ extern NSString *NekoAnswerInstructionsFor(NSString *persona);
    "IMAGE: something to draw" and the app draws it instead. */
 extern NSString *NekoAnswerInstructionsDrawing(NSString *persona, BOOL mayDraw);
 
+/* And with the four things it is allowed to actually do. */
+extern NSString *NekoAnswerInstructionsWith(NSString *persona, BOOL mayDraw, BOOL mayAct);
+
 /* The example lines the instructions carry, which a model will sometimes hand
    straight back and which are therefore worth recognising. */
 extern NSArray *NekoInstructionExamples(void);

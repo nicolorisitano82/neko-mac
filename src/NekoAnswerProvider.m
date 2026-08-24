@@ -26,14 +26,19 @@ static NSString *NekoAnswerLanguage(void)
    one model narrate it back, answering inside a <small sprite 32px: …> tag. */
 NSString *NekoAnswerInstructionsFor(NSString *persona)
 {
-	return NekoAnswerInstructionsDrawing(persona, NO);
+	return NekoAnswerInstructionsWith(persona, NO, NO);
+}
+
+NSString *NekoAnswerInstructionsDrawing(NSString *persona, BOOL mayDraw)
+{
+	return NekoAnswerInstructionsWith(persona, mayDraw, NO);
 }
 
 /* With drawing switched on, one more thing the answer may be: a request for a
    picture. The marker is answered instead of the sentence, and the app turns it
    into a drawing — which means the model decides what "show me the Colosseum"
    means in any language, and the app only has to recognise five characters. */
-NSString *NekoAnswerInstructionsDrawing(NSString *persona, BOOL mayDraw)
+NSString *NekoAnswerInstructionsWith(NSString *persona, BOOL mayDraw, BOOL mayAct)
 {
 	NSString *drawing = mayDraw ? [NSString stringWithFormat:
 		@"\n\nIf they are asking to be shown something — a picture of a place, an "
@@ -43,6 +48,39 @@ NSString *NekoAnswerInstructionsDrawing(NSString *persona, BOOL mayDraw)
 		@"For example: IMAGE: the Colosseum in Rome, photograph, golden hour. Use "
 		@"this only when they want to see something; a question about a place they "
 		@"merely asked about is still a question."] : @"";
+
+	/* Four verbs and no others. The model is told the shape exactly, because
+	   what it writes is matched literally: anything else is refused rather than
+	   interpreted, and nothing happens until the person has said yes.
+
+	   Said twice and shown three times, because the first wording — one polite
+	   paragraph at the end — was ignored: asked "neko apri textedit", the model
+	   answered "Apertura TextEdit." in Italian prose, which does nothing. */
+	NSString *doing = mayAct ? [NSString stringWithFormat:
+		@"\n\nDOING THINGS. First decide whether the sentence is an order or a "
+		@"question. An order tells you to do something — open, launch, start, show "
+		@"me this address. A question asks about something, and is answered with "
+		@"words like any other question: \"a cosa serve TextEdit?\", \"che browser "
+		@"uso?\", \"come si apre un file?\" are questions, and answering them by "
+		@"opening something is wrong.\n\n"
+		@"If, and only if, they are ordering you to open something, your whole "
+		@"answer is one line in this exact English form and nothing else — no "
+		@"sentence before it, no sentence after it, and this one line is not "
+		@"translated:\n"
+		@"ACTION: open-app <application>\n"
+		@"ACTION: open-url <address> in <browser>   (\"in ...\" may be left out)\n"
+		@"ACTION: open-folder <desktop|documents|downloads|pictures|music|movies>\n"
+		@"ACTION: run-shortcut <one of their Shortcuts>\n\n"
+		@"For example, \"apri textedit\" is answered with exactly:\n"
+		@"ACTION: open-app TextEdit\n"
+		@"and \"apri google.it su chrome\" with exactly:\n"
+		@"ACTION: open-url https://google.it in Chrome\n\n"
+		@"Those four are all you can do. Anything else they ask you to do — moving "
+		@"or deleting files, typing, changing settings, sending anything — say "
+		@"plainly in one sentence that you cannot. Never invent another verb, and "
+		@"never use one of these lines to answer something that was only a "
+		@"question: \"what is Photoshop for\" is a question, \"open Photoshop\" is "
+		@"not."] : @"";
 	return [NSString stringWithFormat:
 		@"You are %@, living on someone's computer desktop, and you have just been "
 		@"asked a question out loud.\n\n"
@@ -54,9 +92,9 @@ NSString *NekoAnswerInstructionsDrawing(NSString *persona, BOOL mayDraw)
 		@"the answer is a single fact.\n\n"
 		@"Reply in %@. Reply in %@ even if the question sounded like another "
 		@"language, and never switch part way through. Keep it to one or two short "
-		@"sentences. No lists, no headings, no preamble, and no stage directions.%@",
+		@"sentences. No lists, no headings, no preamble, and no stage directions.%@%@",
 		persona ?: @"a small pixel-art cat", NekoAnswerLanguage(), NekoAnswerLanguage(),
-		drawing];
+		drawing, doing];
 }
 
 /* Unasked advice is harder to get right than an answer: it arrives uninvited, it

@@ -4,11 +4,13 @@
 #import "NekoDesktop.h"
 #import "NekoPainter.h"
 #import "NekoAppleProvider.h"
+#import "NekoAction.h"
 #import "NekoHotKey.h"
 #import "NekoModelProvider.h"
 #import "NekoModelStore.h"
 #import "NekoLocalProvider.h"
 #import "NekoAppleProvider.h"
+#import "NekoAction.h"
 #import "NekoOpenAIProvider.h"
 #import "NekoModelProvider.h"
 
@@ -748,7 +750,15 @@ static const float NekoMaxStopRadius = 200.0f;
 	[content addSubview:askSpeakCheck];
 	[askSpeakCheck release];
 
-	askStatusField = [self labelWithString:@"" frame:NSMakeRect(20.0f, 20.0f, 430.0f, 68.0f)];
+	actionsCheck = [[NSButton alloc] initWithFrame:NSMakeRect(152.0f, 84.0f, 300.0f, 18.0f)];
+	[actionsCheck setButtonType:NSButtonTypeSwitch];
+	[actionsCheck setTitle:NekoLocalized(@"Let it open things when I ask")];
+	[actionsCheck setTarget:self];
+	[actionsCheck setAction:@selector(takeActionsFrom:)];
+	[content addSubview:actionsCheck];
+	[actionsCheck release];
+
+	askStatusField = [self labelWithString:@"" frame:NSMakeRect(20.0f, 16.0f, 430.0f, 60.0f)];
 	[askStatusField setAlignment:NSTextAlignmentLeft];
 	[[askStatusField cell] setWraps:YES];
 	[askStatusField setFont:[NSFont systemFontOfSize:11.0f]];
@@ -777,6 +787,13 @@ static const float NekoMaxStopRadius = 200.0f;
 			[NSNumber numberWithUnsignedInteger:option | shift], nil], nil];
 }
 
+- (void)takeActionsFrom:(id)sender
+{
+	[[NSUserDefaults standardUserDefaults]
+		setBool:([sender state] == NSControlStateValueOn) forKey:NekoActionsEnabledKey];
+	[self syncAskControls];
+}
+
 - (void)syncAskControls
 {
 	NekoAsk *ask = [NekoAsk sharedAsk];
@@ -802,6 +819,9 @@ static const float NekoMaxStopRadius = 200.0f;
 	[askKeyField setEnabled:engineWanted && keyed != nil];
 	[askKeyField setStringValue:[keyed hasApiKey] ? @"••••••••••••" : @""];
 	[askSpeakCheck setEnabled:on];
+	[actionsCheck setEnabled:on];
+	[actionsCheck setState:[defaults boolForKey:NekoActionsEnabledKey]
+		? NSControlStateValueOn : NSControlStateValueOff];
 	[askSpeakCheck setState:[defaults boolForKey:NekoAskSpeakKey]
 		? NSControlStateValueOn : NSControlStateValueOff];
 
@@ -1446,9 +1466,15 @@ static const float NekoMaxStopRadius = 200.0f;
 	NSString *hint = [[ask provider] configurationHint];
 	if(hint != nil)
 		return hint;
-	return [NSString stringWithFormat:
+
+	NSMutableString *line = [NSMutableString stringWithFormat:
 		NekoLocalized(@"Press %@ and ask. Neko listens until you stop talking."),
 		[ask hotKeyDisplayName]];
+	if([[NSUserDefaults standardUserDefaults] boolForKey:NekoActionsEnabledKey]) {
+		[line appendString:@"\n\n"];
+		[line appendString:NekoLocalized(@"It can open an application, an address in a browser, one of your folders in the Finder, or one of your own Shortcuts — those four things and nothing else. It always shows you what it is about to do and waits for a yes; dismissing the bubble is a no. It will not move, copy or delete a file, and it never acts on text it read from the screen: only on what you said out loud.")];
+	}
+	return line;
 }
 
 #pragma mark Ask Neko actions

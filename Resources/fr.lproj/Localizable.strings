@@ -182,3 +182,17 @@
 "2.3 GB — the best of these outside English" = "2,3 Go — le meilleur de ceux-ci hors de l’anglais";
 "2.3 GB — the most recent, and the one that follows a brief best" = "2,3 Go — le plus récent, et celui qui respecte le mieux la consigne";
 "2.0 GB — right and brief, and a year older than the two below" = "2,0 Go — juste et bref, et un an plus vieux que les deux du dessous";
+
+/* doing things */
+"Let it open things when I ask" = "Le laisser ouvrir des choses quand je le demande";
+"Open %@?" = "J’ouvre %@ ?";
+"Open %@ in %@?" = "J’ouvre %@ dans %@ ?";
+"Open the %@ folder?" = "J’ouvre le dossier %@ ?";
+"Run your shortcut “%@”?" = "J’exécute votre raccourci « %@ » ?";
+"All right, I will not." = "D’accord, je laisse tomber.";
+"Done." = "C’est fait.";
+"That did not work." = "Ça n’a pas marché.";
+"I cannot do that one." = "Celle-là, je ne sais pas la faire.";
+"Yes" = "Oui";
+"No" = "Non";
+"It can open an application, an address in a browser, one of your folders in the Finder, or one of your own Shortcuts — those four things and nothing else. It always shows you what it is about to do and waits for a yes; dismissing the bubble is a no. It will not move, copy or delete a file, and it never acts on text it read from the screen: only on what you said out loud." = "Il peut ouvrir une application, une adresse dans un navigateur, un de vos dossiers dans le Finder, ou un de vos raccourcis — ces quatre choses et rien d’autre. Il montre toujours ce qu’il s’apprête à faire et attend un oui ; fermer la bulle vaut non. Il ne déplace, ne copie et ne supprime aucun fichier, et n’agit jamais sur du texte lu à l’écran : seulement sur ce que vous avez dit.";

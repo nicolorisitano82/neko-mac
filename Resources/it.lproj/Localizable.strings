@@ -182,3 +182,17 @@
 "2.3 GB — the best of these outside English" = "2,3 GB — il migliore di questi fuori dall'inglese";
 "2.3 GB — the most recent, and the one that follows a brief best" = "2,3 GB — il più recente, e quello che sta meglio alle consegne";
 "2.0 GB — right and brief, and a year older than the two below" = "2,0 GB — preciso e breve, e un anno più vecchio dei due sotto";
+
+/* doing things */
+"Let it open things when I ask" = "Lascia che apra le cose quando glielo chiedo";
+"Open %@?" = "Apro %@?";
+"Open %@ in %@?" = "Apro %@ in %@?";
+"Open the %@ folder?" = "Apro la cartella %@?";
+"Run your shortcut “%@”?" = "Eseguo il tuo comando rapido “%@”?";
+"All right, I will not." = "Va bene, lascio stare.";
+"Done." = "Fatto.";
+"That did not work." = "Non ha funzionato.";
+"I cannot do that one." = "Quello non lo so fare.";
+"Yes" = "Sì";
+"No" = "No";
+"It can open an application, an address in a browser, one of your folders in the Finder, or one of your own Shortcuts — those four things and nothing else. It always shows you what it is about to do and waits for a yes; dismissing the bubble is a no. It will not move, copy or delete a file, and it never acts on text it read from the screen: only on what you said out loud." = "Può aprire un'applicazione, un indirizzo nel browser, una delle tue cartelle nel Finder, o un tuo comando rapido — queste quattro cose e nient'altro. Mostra sempre cosa sta per fare e aspetta un sì; chiudere il fumetto vale come no. Non sposta, non copia e non cancella file, e non agisce mai su testo letto dallo schermo: solo su quello che hai detto tu.";

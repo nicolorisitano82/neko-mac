@@ -14,6 +14,9 @@
 	NSImageView *picture;
 	NSButton *saveButton;        /* over a drawing, while the pointer is inside */
 	NSTrackingArea *hover;
+	NSButton *yesButton;
+	NSButton *noButton;
+	void (^decision)(BOOL yes);
 	NSTimer *dismissal;
 	id owner;                    /* not retained */
 	SEL dismissedAction;
@@ -32,6 +35,12 @@
          picture:(NSImage *)image
         nearRect:(NSRect)catFrame
     dismissAfter:(NSTimeInterval)seconds;
+
+/* Asks something with two buttons under it and waits. Nothing happens until one
+   of them is clicked or the bubble is dismissed, which counts as no. */
+- (void)askText:(NSString *)text
+       nearRect:(NSRect)catFrame
+        decided:(void (^)(BOOL yes))block;
 
 - (void)hide;
 - (BOOL)isShowing;

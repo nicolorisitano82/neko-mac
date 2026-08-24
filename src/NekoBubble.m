@@ -16,6 +16,7 @@ static const float NekoBubbleRadius = 10.0f;
 	float tailOffset;            /* from the centre, to keep it on the cat */
 }
 - (void)setTailAtBottom:(BOOL)atBottom offset:(float)offset;
+- (BOOL)tailAtBottom;
 @end
 
 @implementation NekoBubbleView
@@ -25,6 +26,11 @@ static const float NekoBubbleRadius = 10.0f;
 	tailAtBottom = atBottom;
 	tailOffset = offset;
 	[self setNeedsDisplay:YES];
+}
+
+- (BOOL)tailAtBottom
+{
+	return tailAtBottom;
 }
 
 - (BOOL)isOpaque
@@ -120,11 +126,29 @@ static const float NekoBubbleRadius = 10.0f;
 	[saveButton setAction:@selector(savePicture:)];
 	[saveButton setHidden:YES];
 
+	yesButton = [[NSButton alloc] initWithFrame:NSZeroRect];
+	[yesButton setBezelStyle:NSBezelStyleRounded];
+	[yesButton setControlSize:NSControlSizeSmall];
+	[yesButton setTitle:NSLocalizedString(@"Yes", nil)];
+	[yesButton setTarget:self];
+	[yesButton setAction:@selector(saidYes:)];
+	[yesButton setHidden:YES];
+
+	noButton = [[NSButton alloc] initWithFrame:NSZeroRect];
+	[noButton setBezelStyle:NSBezelStyleRounded];
+	[noButton setControlSize:NSControlSizeSmall];
+	[noButton setTitle:NSLocalizedString(@"No", nil)];
+	[noButton setTarget:self];
+	[noButton setAction:@selector(saidNo:)];
+	[noButton setHidden:YES];
+
 	picture = [[NSImageView alloc] initWithFrame:NSZeroRect];
 	[picture setImageScaling:NSImageScaleProportionallyUpOrDown];
 	[picture setHidden:YES];
 	[[self contentView] addSubview:picture];
 	[[self contentView] addSubview:saveButton];   /* above the picture */
+	[[self contentView] addSubview:yesButton];
+	[[self contentView] addSubview:noButton];
 	return self;
 }
 
@@ -134,6 +158,9 @@ static const float NekoBubbleRadius = 10.0f;
 	[label release];
 	[picture release];
 	[saveButton release];
+	[yesButton release];
+	[noButton release];
+	[decision release];
 	[hover release];
 	[super dealloc];
 }
@@ -225,6 +252,8 @@ static const float NekoBubbleRadius = 10.0f;
 	[picture setImage:image];
 	[picture setHidden:(image == nil)];
 	[saveButton setHidden:YES];
+	[yesButton setHidden:YES];
+	[noButton setHidden:YES];
 	[saveButton setTitle:NSLocalizedString(@"Save", nil)];
 	[saveButton setEnabled:YES];
 	if(image != nil) {
@@ -267,6 +296,60 @@ static const float NekoBubbleRadius = 10.0f;
 		                                          userInfo:nil
 		                                           repeats:NO];
 }
+
+/* A question is the text bubble with room for two buttons under the words. The
+   arithmetic is the same; only the height grows. */
+- (void)askText:(NSString *)text
+       nearRect:(NSRect)catFrame
+        decided:(void (^)(BOOL yes))block
+{
+	[decision release];
+	decision = [block copy];
+
+	[self showText:text nearRect:catFrame dismissAfter:0.0];
+
+	NSSize yesSize = [yesButton intrinsicContentSize];
+	NSSize noSize = [noButton intrinsicContentSize];
+	float row = MAX(yesSize.height, noSize.height);
+	NSRect frame = [self frame];
+	frame.size.height += row + NekoBubbleGapUnderPicture;
+	if(![(NekoBubbleView *)[self contentView] tailAtBottom])
+		frame.origin.y -= row + NekoBubbleGapUnderPicture;
+	[self setFrame:frame display:NO];
+
+	/* The label was placed against the bottom padding; the buttons take that
+	   place and the label moves up by their height. */
+	NSRect words = [label frame];
+	words.origin.y += row + NekoBubbleGapUnderPicture;
+	[label setFrame:words];
+
+	float right = NSWidth(frame) - NekoBubblePadding;
+	float bottom = ([(NekoBubbleView *)[self contentView] tailAtBottom]
+		? NekoBubbleTail : 0.0f) + NekoBubblePadding;
+	[noButton setFrame:NSMakeRect(right - noSize.width, bottom, noSize.width, row)];
+	[yesButton setFrame:NSMakeRect(right - noSize.width - yesSize.width - 8.0f,
+	                               bottom, yesSize.width, row)];
+	[yesButton setHidden:NO];
+	[noButton setHidden:NO];
+	[self orderFront:nil];
+}
+
+- (void)answerWith:(BOOL)yes
+{
+	void (^block)(BOOL) = [decision retain];
+	[decision release];
+	decision = nil;
+	[yesButton setHidden:YES];
+	[noButton setHidden:YES];
+	[self hide];
+	if(block != nil) {
+		block(yes);
+		[block release];
+	}
+}
+
+- (void)saidYes:(id)sender { [self answerWith:YES]; }
+- (void)saidNo:(id)sender  { [self answerWith:NO]; }
 
 - (NSScreen *)screenForRect:(NSRect)rect
 {
@@ -333,11 +416,19 @@ static const float NekoBubbleRadius = 10.0f;
 
 - (void)hideByTimer:(NSTimer *)timer
 {
+	if(decision != nil) {
+		[self answerWith:NO];
+		return;
+	}
 	[self hide];
 }
 
 - (void)dismissByClick
 {
+	if(decision != nil) {
+		[self answerWith:NO];   /* clicking the bubble away is not a yes */
+		return;
+	}
 	[self hide];
 	if(owner != nil && dismissedAction != NULL)
 		[owner performSelector:dismissedAction withObject:self];

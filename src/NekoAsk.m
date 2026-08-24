@@ -1,5 +1,6 @@
 #import "NekoAsk.h"
 #import "NekoPainter.h"
+#import "NekoAction.h"
 #import "NekoHotKey.h"
 #import "NekoListener.h"
 #import "NekoBubble.h"
@@ -407,8 +408,9 @@ enum { NekoPhaseIdle = 0, NekoPhaseListening, NekoPhaseThinking, NekoPhaseAnswer
 	/* Only offer the model the drawing route when there is something to draw
 	   with: told it may draw when it cannot, it answers "IMAGE: a cat" to
 	   somebody who asked a question and gets nothing back. */
-	NSString *instructions = NekoAnswerInstructionsDrawing(
-		[character persona], [[NekoPainter sharedPainter] isReady]);
+	NSString *instructions = NekoAnswerInstructionsWith(
+		[character persona], [[NekoPainter sharedPainter] isReady],
+		[[NSUserDefaults standardUserDefaults] boolForKey:NekoActionsEnabledKey]);
 
 	void (^finished)(NSString *, NSError *) = ^(NSString *answer, NSError *error) {
 		if(phase != NekoPhaseThinking && phase != NekoPhaseAnswering)
@@ -432,8 +434,8 @@ enum { NekoPhaseIdle = 0, NekoPhaseListening, NekoPhaseThinking, NekoPhaseAnswer
 		             partial:^(NSString *sofar) {
 			if(phase != NekoPhaseThinking || [sofar length] == 0)
 				return;
-			if([self looksLikeADrawing:sofar])
-				return;              /* it is asking for a picture, not talking */
+			if([self looksLikeADrawing:sofar] || [NekoAction looksLikeAnAction:sofar])
+				return;              /* asking for a picture or a deed, not talking */
 			[self stopThinking];       /* words are arriving; stop fidgeting */
 			if(lastDrawn != nil && [lastDrawn timeIntervalSinceNow] > -0.1)
 				return;
@@ -497,8 +499,43 @@ enum { NekoPhaseIdle = 0, NekoPhaseListening, NekoPhaseThinking, NekoPhaseAnswer
 	}];
 }
 
+/* Nothing is done on the strength of a model's sentence alone: the deed is read
+   back in the bubble and waits for a yes. A dismissed bubble, or one that timed
+   out, is a no. */
+- (void)propose:(NekoAction *)action
+{
+	phase = NekoPhaseAnswering;
+	[[self panel] holdWithState:NekoStateAwake];
+	[bubble askText:[action summary] nearRect:[[self panel] frame]
+	        decided:^(BOOL yes) {
+		if(!yes) {
+			[self sayInCharacter:NekoAskLocalized(@"All right, I will not.")];
+			return;
+		}
+		NSError *problem = nil;
+		if([action perform:&problem])
+			[self sayInCharacter:NekoAskLocalized(@"Done.")];
+		else
+			[self sayInCharacter:[problem localizedDescription]
+				?: NekoAskLocalized(@"That did not work.")];
+	}];
+}
+
 - (void)answer:(NSString *)text
 {
+	if([NekoAction looksLikeAnAction:text]
+	   && [[NSUserDefaults standardUserDefaults] boolForKey:NekoActionsEnabledKey]) {
+		NekoAction *action = [NekoAction actionFromLine:text];
+		if(action != nil) {
+			[self propose:action];
+			return;
+		}
+		/* It asked for something outside the four verbs, or named a program that
+		   is not here: better to say so than to say nothing. */
+		[self sayInCharacter:NekoAskLocalized(@"I cannot do that one.")];
+		return;
+	}
+
 	if([self looksLikeADrawing:text] && [[NekoPainter sharedPainter] isReady]) {
 		NSString *prompt = [self drawingPromptIn:text];
 		if([prompt length] > 0) {
