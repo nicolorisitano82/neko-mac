@@ -135,7 +135,12 @@
 		return;
 	}
 	if([identifier isEqualToString:@"accessibility"]) {
+		/* macOS shows the alert for this one exactly once in an app's life.
+		   After that the call returns no and puts nothing on screen, which is
+		   what "the Ask button does nothing" was: so if the answer is still no a
+		   moment later, the pane where it can be changed is opened instead. */
 		[NekoDesktop requestAccessibility];
+		[self performSelector:@selector(settingsIfStillRefused) withObject:nil afterDelay:1.2];
 		return;
 	}
 	if([identifier isEqualToString:@"screen"]) {
@@ -145,9 +150,19 @@
 		return;
 	}
 	if([identifier isEqualToString:@"folders"]) {
+		/* Which folder is a question, and the preferences ask it with a menu:
+		   see -permissionPressed: in the controller. Reaching here means nobody
+		   asked, so the Desktop is the sensible default. */
+		[NSApp activateIgnoringOtherApps:YES];
 		[[NekoFolderAccess sharedAccess] requestAccessTo:@"desktop"];
 		return;
 	}
+}
+
+- (void)settingsIfStillRefused
+{
+	if([self permissionState] != NekoPermissionGranted)
+		[self openSettings];
 }
 
 - (void)openSettings
@@ -161,6 +176,8 @@
 		pane = @"Privacy_Accessibility";
 	else if([identifier isEqualToString:@"screen"])
 		pane = @"Privacy_ScreenCapture";
+	else if([identifier isEqualToString:@"folders"])
+		pane = @"Privacy_AllFiles";
 	if(pane == nil)
 		return;
 	[[NSWorkspace sharedWorkspace] openURL:[NSURL URLWithString:

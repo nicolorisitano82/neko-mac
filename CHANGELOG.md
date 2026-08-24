@@ -29,6 +29,22 @@ with "that model file could not be read". A model shorter than nine tenths of it
 published size is now treated as absent, and the tab says the download did not
 finish and offers to resume it rather than pretending there is nothing there.
 
+### The Ask buttons that did nothing
+
+Two of them. **Accessibility**: macOS shows that alert exactly once in an app's
+life, and every call after it returns no and puts nothing on screen — which is
+precisely what "the button does nothing" looks like. It now asks, waits a moment,
+and opens the pane where the answer can be changed if the answer is still no.
+**Your folders** is not one permission but six, so its button now opens the same
+folder menu the Ask Neko tab uses, instead of silently assuming the Desktop.
+
+### A window wide enough for its tabs
+
+Six tabs in a 494 point window had their labels shoulder to shoulder. The window
+is 624 wide now, the tab views 600, and every paragraph in it went from 430 to
+556 points — which is the difference between a wrapped sentence and a truncated
+one. All six tabs checked again: no overlapping controls anywhere.
+
 ### A permissions tab
 
 Five permissions, one place: microphone, speech recognition, accessibility, your
