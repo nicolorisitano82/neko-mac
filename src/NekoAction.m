@@ -10,11 +10,21 @@ static NSString * const NekoActionMarker = @"ACTION:";
 
 @implementation NekoAction
 
+/* Small models bold what they think is important, so "**ACTION: open-app
+   TextEdit**" arrives and used to be read as a sentence. The markers are looked
+   for after the decoration is taken off. */
+NSString *NekoWithoutMarkdown(NSString *line)
+{
+	NSString *plain = [line stringByReplacingOccurrencesOfString:@"*" withString:@""];
+	plain = [plain stringByReplacingOccurrencesOfString:@"`" withString:@""];
+	plain = [plain stringByReplacingOccurrencesOfString:@"#" withString:@""];
+	return [plain stringByTrimmingCharactersInSet:
+		[NSCharacterSet whitespaceAndNewlineCharacterSet]];
+}
+
 + (BOOL)looksLikeAnAction:(NSString *)line
 {
-	NSString *trimmed = [line stringByTrimmingCharactersInSet:
-		[NSCharacterSet whitespaceAndNewlineCharacterSet]];
-	return [[trimmed uppercaseString] hasPrefix:NekoActionMarker];
+	return [[NekoWithoutMarkdown(line) uppercaseString] hasPrefix:NekoActionMarker];
 }
 
 #pragma mark Finding what was named
@@ -100,8 +110,7 @@ static NSString * const NekoActionMarker = @"ACTION:";
 	if(![self looksLikeAnAction:line])
 		return nil;
 
-	NSString *body = [line stringByTrimmingCharactersInSet:
-		[NSCharacterSet whitespaceAndNewlineCharacterSet]];
+	NSString *body = NekoWithoutMarkdown(line);
 	NSRange colon = [body rangeOfString:@":"];
 	if(colon.location == NSNotFound)
 		return nil;

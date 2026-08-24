@@ -22,6 +22,9 @@ extern NSString * const NekoActionsEnabledKey;
 
    Nothing is ever performed without being shown first. `summary` is what the
    bubble says before the Yes, in the language the app is running in. */
+/* A line with the asterisks and backticks a small model likes to add taken off. */
+extern NSString *NekoWithoutMarkdown(NSString *line);
+
 @interface NekoAction : NSObject
 {
 	NSString *verb;

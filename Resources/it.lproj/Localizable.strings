@@ -218,3 +218,29 @@
 "This Mac has no speech recognition." = "Questo Mac non ha il riconoscimento vocale.";
 "This Mac cannot recognise your language without sending the audio to a server, and an always-open microphone is not something to send anywhere." = "Questo Mac non riesce a riconoscere la tua lingua senza mandare l'audio a un server, e un microfono sempre aperto non è roba da mandare da nessuna parte.";
 "Saying its name works too — which means the microphone stays open, the orange recording light stays on, and the battery notices. The listening is done on this Mac and the audio goes nowhere; it hears one word and forgets the rest." = "Funziona anche dicendo il suo nome — il che vuol dire microfono sempre aperto, pallino arancione sempre acceso, e la batteria se ne accorge. L'ascolto avviene su questo Mac e l'audio non va da nessuna parte: sente una parola e dimentica il resto.";
+
+/* permissions */
+"Permissions" = "Autorizzazioni";
+"Microphone" = "Microfono";
+"Speech recognition" = "Riconoscimento vocale";
+"Accessibility" = "Accessibilità";
+"Screen recording" = "Registrazione schermo";
+"Your folders" = "Le tue cartelle";
+"Without it the cat cannot hear a question. Asked the first time you use the keystroke, never before." = "Senza, il gatto non può sentire una domanda. Viene chiesto al primo uso della scorciatoia, mai prima.";
+"Turns what you said into words. On this Mac it stays on this Mac." = "Trasforma quello che dici in parole. Su questo Mac resta su questo Mac.";
+"Only for reading the text you are working on, which is a switch of its own on the Suggestions tab. Nothing else uses it." = "Serve solo per leggere il testo su cui stai lavorando, che ha un interruttore suo nella scheda Suggerimenti. Nient'altro la usa.";
+"Window titles, and nothing else. Neko never asks for this one: it is used if you granted it for some other reason, and simply left out if not." = "Solo i titoli delle finestre. Neko non la chiede mai: la usa se l'hai concessa per altro, altrimenti fa senza.";
+"Handed over one folder at a time, in a panel, so the cat can copy or move a file. Nothing is read until you do." = "Si consegnano una cartella alla volta, da un pannello, così il gatto può copiare o spostare un file. Finché non lo fai, non legge niente.";
+"allowed" = "concessa";
+"refused" = "rifiutata";
+"not on this Mac" = "non disponibile su questo Mac";
+"not asked yet" = "mai chiesta";
+" — needed for what is switched on" = " — serve per quello che hai acceso";
+"Ask" = "Chiedi";
+"Settings…" = "Impostazioni…";
+"Check again" = "Ricontrolla";
+"Everything switched on has what it needs." = "Tutto quello che hai acceso ha quello che gli serve.";
+"Switched on but not allowed: %@." = "Acceso ma non autorizzato: %@.";
+"Download again" = "Scarica di nuovo";
+"That download did not finish: the file is there but too small to be read. Downloading it again picks up where it stopped." = "Quello scaricamento non è finito: il file c'è ma è troppo piccolo per essere letto. Scaricarlo di nuovo riprende da dove si era fermato.";
+"That was too much to think about at once." = "Era troppo da pensare tutto insieme.";

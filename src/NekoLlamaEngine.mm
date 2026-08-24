@@ -16,7 +16,14 @@
 
 /* Two short sentences, so there is no reason to let it run on. */
 static const int NekoLlamaMaxTokens = 200;
-static const int NekoLlamaContext = 2048;
+static const int NekoLlamaContext = 4096;
+
+/* How many tokens go into one llama_decode. The prompt is fed in pieces of this
+   size: handed the whole thing at once, llama.cpp does not return an error when
+   it is larger than the batch — it calls abort(), and the app goes with it. That
+   is exactly what happened when the instructions grew to carry the time, the
+   date and the list of things the cat may do. */
+static const int NekoLlamaBatch = 512;
 
 @interface NekoLlamaEngine : NSObject <NekoLocalEngine>
 @end
@@ -111,7 +118,7 @@ static const int NekoLlamaContext = 2048;
 
 	llama_context_params contextParams = llama_context_default_params();
 	contextParams.n_ctx = NekoLlamaContext;
-	contextParams.n_batch = 512;
+	contextParams.n_batch = NekoLlamaBatch;
 	context = llama_init_from_model(model, contextParams);
 	if(context == NULL) {
 		llama_model_free(model);
@@ -221,19 +228,37 @@ static const int NekoLlamaContext = 2048;
 		llama_memory_clear(llama_get_memory(context), true);
 
 		std::string answer;
-		llama_batch batch = llama_batch_get_one(tokens.data(), (int32_t)tokens.size());
 		int produced = 0;
 		NSError *problem = nil;
 
-		while(produced < NekoLlamaMaxTokens) {
+		/* A prompt longer than the context cannot be answered at all, and is
+		   refused here rather than left to the assert inside llama.cpp. */
+		if((int)tokens.size() + NekoLlamaMaxTokens > NekoLlamaContext) {
+			problem = [NSError errorWithDomain:NekoAskErrorDomain
+			                              code:NekoAskErrorTransport
+			                          userInfo:[NSDictionary dictionaryWithObject:
+				NSLocalizedString(@"That was too much to think about at once.", nil)
+				                                                          forKey:NSLocalizedDescriptionKey]];
+		}
+
+		/* The prompt goes in a batch at a time. */
+		for(size_t offset = 0; problem == nil && offset < tokens.size();
+		    offset += NekoLlamaBatch) {
 			if(stop.load())
 				break;
-			if(llama_decode(context, batch) != 0) {
+			int32_t piece = (int32_t)MIN((size_t)NekoLlamaBatch, tokens.size() - offset);
+			llama_batch part = llama_batch_get_one(tokens.data() + offset, piece);
+			if(llama_decode(context, part) != 0) {
 				problem = [NSError errorWithDomain:NekoAskErrorDomain
 				                              code:NekoAskErrorTransport
 				                          userInfo:nil];
 				break;
 			}
+		}
+
+		while(problem == nil && produced < NekoLlamaMaxTokens) {
+			if(stop.load())
+				break;
 
 			llama_token next = llama_sampler_sample(sampler, context, -1);
 			if(llama_vocab_is_eog(vocab, next))
@@ -251,9 +276,15 @@ static const int NekoLlamaContext = 2048;
 			}
 
 			produced++;
-			batch = llama_batch_get_one(&next, 1);
-			/* next lives until the following iteration replaces it, which is
-			   after llama_decode has read it. */
+			/* The token just sampled is fed back in, so the next sampling sees
+			   it. `next` outlives the call, which is all llama_decode needs. */
+			llama_batch batch = llama_batch_get_one(&next, 1);
+			if(llama_decode(context, batch) != 0) {
+				problem = [NSError errorWithDomain:NekoAskErrorDomain
+				                              code:NekoAskErrorTransport
+				                          userInfo:nil];
+				break;
+			}
 		}
 
 		llama_sampler_free(sampler);

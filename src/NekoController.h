@@ -57,6 +57,8 @@ extern NSString * const NekoSettingsDidChangeNotification;
 	NSTextField *localStatusField;
 	NSButton *localCleanButton;
 	NSButton *loginCheck;
+	NSView *permissionsContent;
+	NSTextField *permissionsSummary;
 	NSButton *suggestCheck;
 	NSButton *readTextCheck;
 	NSButton *drawCheck;

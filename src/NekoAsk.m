@@ -461,15 +461,12 @@ enum { NekoPhaseIdle = 0, NekoPhaseListening, NekoPhaseThinking, NekoPhaseAnswer
 /* A model that wants a picture answers with the marker and nothing else. */
 - (BOOL)looksLikeADrawing:(NSString *)text
 {
-	NSString *trimmed = [text stringByTrimmingCharactersInSet:
-		[NSCharacterSet whitespaceAndNewlineCharacterSet]];
-	return [[trimmed uppercaseString] hasPrefix:NekoImageMarker];
+	return [[NekoWithoutMarkdown(text) uppercaseString] hasPrefix:NekoImageMarker];
 }
 
 - (NSString *)drawingPromptIn:(NSString *)text
 {
-	NSString *trimmed = [text stringByTrimmingCharactersInSet:
-		[NSCharacterSet whitespaceAndNewlineCharacterSet]];
+	NSString *trimmed = NekoWithoutMarkdown(text);
 	NSRange colon = [trimmed rangeOfString:@":"];
 	if(colon.location == NSNotFound)
 		return nil;

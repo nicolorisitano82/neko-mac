@@ -59,6 +59,10 @@
 
 /* nil when that one is not on disk. */
 - (NSURL *)installedURLForIdentifier:(NSString *)identifier;
+
+/* A file that is there but far short of its published size: an interrupted
+   download, which reads as a broken model rather than a missing one. */
+- (BOOL)isIncomplete:(NSString *)identifier;
 - (long long)installedBytesForIdentifier:(NSString *)identifier;
 - (NSArray *)installedIdentifiers;
 - (BOOL)removeIdentifier:(NSString *)identifier;

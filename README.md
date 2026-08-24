@@ -272,6 +272,26 @@ Intelligence needs Apple silicon, and so does the Metal build here. [docs/ask-ne
 including the part that cannot work: Siri has no public API that hands an answer
 back to another application.
 
+## Permissions
+
+A tab of its own, because five separate prompts arriving weeks apart is how an
+app ends up with a permission nobody remembers granting. Each row says what macOS
+currently thinks, whether the thing that needs it is switched on, and offers the
+only move still available: **Ask** where the system will still ask, **Settings…**
+where a previous no can only be undone in System Settings.
+
+| | what it is for |
+| --- | --- |
+| Microphone | hearing a question at all |
+| Speech recognition | turning it into words, on this Mac |
+| Accessibility | reading the text you are working on — one switch, on the Suggestions tab |
+| Your folders | copying or moving a file, one folder at a time, in a panel |
+| Screen recording | window titles only, and never asked for: used if you granted it for something else |
+
+A line at the top names anything that is switched on and not allowed, and the
+rows are rebuilt every time the window opens, since all five can change behind
+the app's back.
+
 ## What it can actually know
 
 A model has no clock. Asked the time it invents one, which is worse than

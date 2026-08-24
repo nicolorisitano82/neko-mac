@@ -7,6 +7,7 @@
 #import "NekoAction.h"
 #import "NekoFolderAccess.h"
 #import "NekoWakeWord.h"
+#import "NekoPermissions.h"
 #import "NekoHotKey.h"
 #import "NekoModelProvider.h"
 #import "NekoModelStore.h"
@@ -15,6 +16,7 @@
 #import "NekoAction.h"
 #import "NekoFolderAccess.h"
 #import "NekoWakeWord.h"
+#import "NekoPermissions.h"
 #import "NekoOpenAIProvider.h"
 #import "NekoModelProvider.h"
 
@@ -557,6 +559,14 @@ static const float NekoMaxStopRadius = 200.0f;
 	[drawTab setLabel:NekoLocalized(@"Drawings")];
 	[drawTab setView:drawContent];
 	[tabs addTabViewItem:drawTab];
+
+	permissionsContent = [[[NSView alloc]
+		initWithFrame:NSMakeRect(0.0f, 0.0f, 470.0f, 420.0f)] autorelease];
+	NSTabViewItem *permissionsTab = [[[NSTabViewItem alloc] initWithIdentifier:@"permissions"] autorelease];
+	[permissionsTab setLabel:NekoLocalized(@"Permissions")];
+	[permissionsTab setView:permissionsContent];
+	[tabs addTabViewItem:permissionsTab];
+	[self buildPermissionsTab];
 	[tabs release];
 
 	/* Behaviour */
@@ -933,6 +943,130 @@ static const float NekoMaxStopRadius = 200.0f;
    and, with a remote engine chosen, tells somebody else about it. */
 /* The drawing tab. A gigabyte and a half of model and twenty seconds a picture,
    both of which are said here rather than discovered. */
+/* The permissions tab: five rows, each saying what the system currently thinks
+   and offering the only move that is still available — asking, or opening the
+   pane where a previous no can be undone. Rebuilt every time the window is
+   shown, since all five can change behind the app's back. */
+- (void)buildPermissionsTab
+{
+	NSEnumerator *old = [[[[permissionsContent subviews] copy] autorelease] objectEnumerator];
+	NSView *view;
+	while((view = [old nextObject]) != nil)
+		[view removeFromSuperview];
+
+	permissionsSummary = [self labelWithString:@""
+	                                     frame:NSMakeRect(20.0f, 384.0f, 430.0f, 20.0f)];
+	[permissionsSummary setAlignment:NSTextAlignmentLeft];
+	[permissionsContent addSubview:permissionsSummary];
+
+	float y = 330.0f;
+	NSEnumerator *e = [[NekoPermissions all] objectEnumerator];
+	NekoPermission *permission;
+	while((permission = [e nextObject]) != nil) {
+		NekoPermissionState state = [permission permissionState];
+		NSString *mark = state == NekoPermissionGranted ? @"●"
+			: (state == NekoPermissionDenied ? @"✕"
+			: (state == NekoPermissionUnavailable ? @"–" : @"○"));
+		NSTextField *dot = [self labelWithString:mark
+		                                   frame:NSMakeRect(20.0f, y + 32.0f, 16.0f, 17.0f)];
+		[dot setTextColor:state == NekoPermissionGranted ? [NSColor systemGreenColor]
+			: (state == NekoPermissionDenied ? [NSColor systemRedColor]
+			                                 : [NSColor secondaryLabelColor])];
+		[permissionsContent addSubview:dot];
+
+		NSTextField *title = [self labelWithString:[permission name]
+		                                     frame:NSMakeRect(42.0f, y + 32.0f, 240.0f, 17.0f)];
+		[title setAlignment:NSTextAlignmentLeft];
+		[title setFont:[NSFont boldSystemFontOfSize:[NSFont systemFontSize]]];
+		[permissionsContent addSubview:title];
+
+		NSString *word = state == NekoPermissionGranted ? NekoLocalized(@"allowed")
+			: (state == NekoPermissionDenied ? NekoLocalized(@"refused")
+			: (state == NekoPermissionUnavailable ? NekoLocalized(@"not on this Mac")
+			                                      : NekoLocalized(@"not asked yet")));
+		if([permission isNeeded] && state != NekoPermissionGranted)
+			word = [word stringByAppendingString:NekoLocalized(@" — needed for what is switched on")];
+		NSTextField *status = [self labelWithString:word
+		                                      frame:NSMakeRect(42.0f, y + 14.0f, 300.0f, 15.0f)];
+		[status setAlignment:NSTextAlignmentLeft];
+		[status setFont:[NSFont systemFontOfSize:11.0f]];
+		[status setTextColor:[NSColor secondaryLabelColor]];
+		[permissionsContent addSubview:status];
+
+		NSTextField *why = [self labelWithString:[permission explanation]
+		                                   frame:NSMakeRect(42.0f, y - 14.0f, 300.0f, 26.0f)];
+		[why setAlignment:NSTextAlignmentLeft];
+		[why setFont:[NSFont systemFontOfSize:11.0f]];
+		[[why cell] setWraps:YES];
+		[permissionsContent addSubview:why];
+
+		if(state != NekoPermissionGranted && state != NekoPermissionUnavailable) {
+			NSButton *button = [[NSButton alloc]
+				initWithFrame:NSMakeRect(350.0f, y + 22.0f, 100.0f, 28.0f)];
+			[button setBezelStyle:NSBezelStyleRounded];
+			[button setControlSize:NSControlSizeSmall];
+			[button setTitle:[permission canRequest] ? NekoLocalized(@"Ask")
+			                                         : NekoLocalized(@"Settings…")];
+			[button setTarget:self];
+			[button setAction:@selector(permissionPressed:)];
+			[button setTag:[[NekoPermissions all] indexOfObject:permission]];
+			[button setIdentifier:[permission identifier]];
+			[permissionsContent addSubview:button];
+			[button release];
+		}
+		y -= 66.0f;
+	}
+
+	NSButton *refresh = [[NSButton alloc] initWithFrame:NSMakeRect(20.0f, 12.0f, 140.0f, 28.0f)];
+	[refresh setBezelStyle:NSBezelStyleRounded];
+	[refresh setTitle:NekoLocalized(@"Check again")];
+	[refresh setTarget:self];
+	[refresh setAction:@selector(buildPermissionsTab)];
+	[permissionsContent addSubview:refresh];
+	[refresh release];
+
+	[self syncPermissionsSummary];
+}
+
+- (void)syncPermissionsSummary
+{
+	NSArray *missing = [NekoPermissions missing];
+	if([missing count] == 0) {
+		[permissionsSummary setStringValue:
+			NekoLocalized(@"Everything switched on has what it needs.")];
+		[permissionsSummary setTextColor:[NSColor labelColor]];
+		return;
+	}
+	NSMutableArray *names = [NSMutableArray array];
+	NSEnumerator *e = [missing objectEnumerator];
+	NekoPermission *permission;
+	while((permission = [e nextObject]) != nil)
+		[names addObject:[permission name]];
+	[permissionsSummary setStringValue:[NSString stringWithFormat:
+		NekoLocalized(@"Switched on but not allowed: %@."),
+		[names componentsJoinedByString:@", "]]];
+	[permissionsSummary setTextColor:[NSColor systemRedColor]];
+}
+
+/* Asking is asynchronous and the answer arrives in a system dialogue, so the
+   row is redrawn a moment later rather than immediately. */
+- (void)permissionPressed:(id)sender
+{
+	NSString *key = [sender identifier];
+	NSEnumerator *e = [[NekoPermissions all] objectEnumerator];
+	NekoPermission *permission;
+	while((permission = [e nextObject]) != nil) {
+		if(![[permission identifier] isEqualToString:key])
+			continue;
+		if([permission canRequest])
+			[permission request];
+		else
+			[permission openSettings];
+		break;
+	}
+	[self performSelector:@selector(buildPermissionsTab) withObject:nil afterDelay:1.5];
+}
+
 - (void)buildDrawTabInView:(NSView *)content
 {
 	drawCheck = [[NSButton alloc] initWithFrame:NSMakeRect(20.0f, 380.0f, 430.0f, 18.0f)];
@@ -1488,9 +1622,11 @@ static const float NekoMaxStopRadius = 200.0f;
 	BOOL busy = [store isDownloading];
 	[localDetailField setStringValue:[model detail]];
 
+	BOOL broken = [store isIncomplete:[model identifier]];
 	[localActionButton setTitle:busy ? NekoLocalized(@"Stop")
 	                                 : (installed ? NekoLocalized(@"Remove")
-	                                              : NekoLocalized(@"Download"))];
+	                                              : (broken ? NekoLocalized(@"Download again")
+	                                                        : NekoLocalized(@"Download")))];
 	[localActionButton setEnabled:YES];
 	[localProgress setHidden:!busy];
 	if(busy)
@@ -1530,6 +1666,8 @@ static const float NekoMaxStopRadius = 200.0f;
 		[line appendString:NekoLocalized(@"No engine is compiled into this build yet, so a downloaded model cannot answer. Everything around it is ready: the model can be fetched now and will be used the moment the engine lands.")];
 	else if(installed)
 		[line appendString:NekoLocalized(@"Ready. Choose “A model on this Mac” under Ask Neko.")];
+	else if([store isIncomplete:[[self selectedLocalModel] identifier]])
+		[line appendString:NekoLocalized(@"That download did not finish: the file is there but too small to be read. Downloading it again picks up where it stopped.")];
 	else
 		[line appendString:NekoLocalized(@"Nothing downloaded yet.")];
 
@@ -1692,8 +1830,10 @@ static const float NekoMaxStopRadius = 200.0f;
 {
 	if(prefsPanel == nil)
 		[self buildPreferencesPanel];
-	else
+	else {
 		[self syncPreferencesControls];
+		[self buildPermissionsTab];   /* all five can change outside the app */
+	}
 	[NSApp activateIgnoringOtherApps:YES];
 	[prefsPanel makeKeyAndOrderFront:sender];
 }

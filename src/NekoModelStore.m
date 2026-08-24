@@ -202,10 +202,37 @@
 		[identifier stringByAppendingPathExtension:@"gguf"]];
 }
 
+/* An interrupted download leaves a file that exists and cannot be read: two of
+   them, at half and at a seventh of their size, answered every question with
+   "that model file could not be read". A file more than a tenth short of what
+   the catalogue says is treated as not there, which is what it is. */
+- (BOOL)looksComplete:(NSString *)identifier at:(NSURL *)file
+{
+	NekoLocalModel *model = [self modelWithIdentifier:identifier];
+	long long expected = [model expectedBytes];
+	if(expected <= 0)
+		return YES;
+	long long actual = (long long)[[[NSFileManager defaultManager]
+		attributesOfItemAtPath:[file path] error:NULL] fileSize];
+	return actual >= (expected / 10) * 9;
+}
+
 - (NSURL *)installedURLForIdentifier:(NSString *)identifier
 {
 	NSURL *file = [self fileURLForIdentifier:identifier];
-	return [[NSFileManager defaultManager] fileExistsAtPath:[file path]] ? file : nil;
+	if(![[NSFileManager defaultManager] fileExistsAtPath:[file path]])
+		return nil;
+	return [self looksComplete:identifier at:file] ? file : nil;
+}
+
+/* There, but too small to be usable: the difference between "download this" and
+   "that download did not finish". */
+- (BOOL)isIncomplete:(NSString *)identifier
+{
+	NSURL *file = [self fileURLForIdentifier:identifier];
+	if(![[NSFileManager defaultManager] fileExistsAtPath:[file path]])
+		return NO;
+	return ![self looksComplete:identifier at:file];
 }
 
 - (long long)installedBytesForIdentifier:(NSString *)identifier

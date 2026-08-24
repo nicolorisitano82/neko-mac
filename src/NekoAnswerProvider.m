@@ -116,57 +116,31 @@ NSString *NekoAnswerInstructionsDrawing(NSString *persona, BOOL mayDraw)
    means in any language, and the app only has to recognise five characters. */
 NSString *NekoAnswerInstructionsWith(NSString *persona, BOOL mayDraw, BOOL mayAct)
 {
-	NSString *drawing = mayDraw ? [NSString stringWithFormat:
-		@"\n\nIf they are asking to be shown something — a picture of a place, an "
-		@"animal, an object, anything they want to look at rather than read about "
-		@"— do not describe it. Answer with exactly IMAGE: followed by a short "
-		@"description in English of what to draw, and nothing else, on one line. "
-		@"For example: IMAGE: the Colosseum in Rome, photograph, golden hour. Use "
-		@"this only when they want to see something; a question about a place they "
-		@"merely asked about is still a question."] : @"";
+	NSString *drawing = mayDraw ? (NSString *)
+		@"\n\nPICTURES. Only when they ask to be *shown* something — a picture of "
+		@"a place, an animal, a thing — reply with one line and nothing else:\n"
+		@"IMAGE: <short English description of the picture>\n"
+		@"A question about a place, or about anything at all, is still a question "
+		@"and is answered in words. The time, the date, the battery, how something "
+		@"works: words, never a picture."
+		: @"";
 
-	/* Four verbs and no others. The model is told the shape exactly, because
-	   what it writes is matched literally: anything else is refused rather than
-	   interpreted, and nothing happens until the person has said yes.
-
-	   Said twice and shown three times, because the first wording — one polite
-	   paragraph at the end — was ignored: asked "neko apri textedit", the model
-	   answered "Apertura TextEdit." in Italian prose, which does nothing. */
 	NSString *language = NekoAnswerLanguage();
-	NSString *doing = mayAct ? [NSString stringWithFormat:
-		@"\n\nDOING THINGS. First decide whether the sentence is an order or a "
-		@"question. An order tells you to do something — open, launch, start, show "
-		@"me this address. A question asks about something, and is answered with "
-		@"words like any other question: \"a cosa serve TextEdit?\", \"che browser "
-		@"uso?\", \"come si apre un file?\" are questions, and answering them by "
-		@"opening something is wrong.\n\n"
-		@"If, and only if, they are ordering you to open something, your whole "
-		@"answer is one line in this exact English form and nothing else — no "
-		@"sentence before it, no sentence after it, and this one line is not "
-		@"translated:\n"
+	NSString *doing = mayAct ? (NSString *)
+		@"\n\nDOING THINGS. Only when they order you to do something, not when "
+		@"they ask about it, reply with one line and nothing else, in this exact "
+		@"English form:\n"
 		@"ACTION: open-app <application>\n"
-		@"ACTION: open-url <address> in <browser>   (\"in ...\" may be left out)\n"
+		@"ACTION: open-url <address> in <browser>\n"
 		@"ACTION: open-folder <desktop|documents|downloads|pictures|music|movies>\n"
 		@"ACTION: run-shortcut <one of their Shortcuts>\n"
-		@"ACTION: copy <file name> from <folder> to <folder>\n"
-		@"ACTION: move <file name> from <folder> to <folder>\n\n"
-		@"For example, \"apri textedit\" is answered with exactly:\n"
-		@"ACTION: open-app TextEdit\n"
-		@"and \"apri google.it su chrome\" with exactly:\n"
-		@"ACTION: open-url https://google.it in Chrome\n"
-		@"and \"sposta pippo.txt dalla scrivania nei documenti\" with exactly:\n"
-		@"ACTION: move pippo.txt from desktop to documents\n\n"
-		@"For copy and move, the two folders are one of desktop, documents, "
-		@"downloads, pictures, music, movies, written in English, and the file is a "
-		@"plain name — never a path, never a pattern, never a folder.\n\n"
-		@"Those six are all you can do. If they order you to do anything else — "
-		@"delete, rename, type, change a setting, send something — answer with "
-		@"exactly this line and nothing else:\n"
-		@"ACTION: cannot\n"
-		@"You do not have to find the words for that: the app has them. Never invent another verb, and "
-		@"never use one of these lines to answer something that was only a "
-		@"question: \"what is Photoshop for\" is a question, \"open Photoshop\" is "
-		@"not."] : @"";
+		@"ACTION: copy <file> from <folder> to <folder>\n"
+		@"ACTION: move <file> from <folder> to <folder>\n"
+		@"ACTION: cannot   (for an order that is none of the above)\n"
+		@"\"apri textedit\" is ACTION: open-app TextEdit. \"a cosa serve textedit\" "
+		@"is a question, and gets a sentence."
+		: @"";
+
 	return [NSString stringWithFormat:
 		@"You are %@, living on someone's computer desktop, and you have just been "
 		@"asked a question out loud.\n\n"

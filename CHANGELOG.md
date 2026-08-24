@@ -2,6 +2,42 @@
 
 ## Unreleased
 
+### A crash, asking the time
+
+Reported: "che ore sono" and the app was gone. The crash log put it in
+`llama_decode` calling `ggml_abort` — the instructions had grown to carry the
+facts, the drawing rule and the six verbs, and a prompt of about 950 tokens went
+into a decode with a batch size of 512. llama.cpp does not return an error for
+that; it aborts, and takes the app with it.
+
+The prompt now goes in a batch at a time, the context is 4096 rather than 2048,
+and a prompt that genuinely cannot fit is refused with a sentence instead of an
+assert. Measured after: the same three questions through the 1.5B model, answered
+in half a second each, no crash.
+
+Two things came out of the same run. The instructions for drawing and for doing
+were cut to about a third, because a small model given three long English blocks
+answered everything with IMAGE: — the time, the day, the battery. And markers are
+now read through markdown: the 1.5B writes `**ACTION: open-app TextEdit**`, which
+used to be a sentence and is now an action.
+
+### Half a model is not a model
+
+Both 4B downloads had been interrupted, leaving files at a half and a seventh of
+their size. The app saw a file, called it installed, and answered every question
+with "that model file could not be read". A model shorter than nine tenths of its
+published size is now treated as absent, and the tab says the download did not
+finish and offers to resume it rather than pretending there is nothing there.
+
+### A permissions tab
+
+Five permissions, one place: microphone, speech recognition, accessibility, your
+folders, screen recording. Each row shows what macOS currently thinks, whether
+what needs it is switched on, and a button that does the only thing still
+possible — ask, or open the pane where a refusal can be undone. The line at the
+top names anything switched on and not allowed. Rebuilt on every opening, because
+all five can change outside the app.
+
 ### Questions with an answer on this Mac
 
 "Che ore sono?" had no honest answer: a model has no clock and invents one. The
