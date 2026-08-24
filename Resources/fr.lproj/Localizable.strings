@@ -196,3 +196,19 @@
 "Yes" = "Oui";
 "No" = "Non";
 "It can open an application, an address in a browser, one of your folders in the Finder, or one of your own Shortcuts — those four things and nothing else. It always shows you what it is about to do and waits for a yes; dismissing the bubble is a no. It will not move, copy or delete a file, and it never acts on text it read from the screen: only on what you said out loud." = "Il peut ouvrir une application, une adresse dans un navigateur, un de vos dossiers dans le Finder, ou un de vos raccourcis — ces quatre choses et rien d’autre. Il montre toujours ce qu’il s’apprête à faire et attend un oui ; fermer la bulle vaut non. Il ne déplace, ne copie et ne supprime aucun fichier, et n’agit jamais sur du texte lu à l’écran : seulement sur ce que vous avez dit.";
+
+/* files */
+"Copy “%@” from %@ to %@?" = "Je copie « %@ » de %@ vers %@ ?";
+"Move “%@” from %@ to %@?" = "Je déplace « %@ » de %@ vers %@ ?";
+"I have not been shown that folder." = "Ce dossier ne m’a jamais été montré.";
+"There is more than one “%@” there." = "Il y en a plusieurs qui s’appellent « %@ ».";
+"I cannot find “%@” there." = "Je n’y trouve pas « %@ ».";
+"That is a folder, and I only carry files." = "C’est un dossier, et je ne porte que des fichiers.";
+"Without your %@ folder I cannot." = "Sans votre dossier %@ je ne peux pas.";
+"Allow" = "Autoriser";
+"Choose your %@ folder so Neko can work in it. It is the only way in: nothing else can grant this." = "Choisissez votre dossier %@ pour que Neko puisse y travailler. C’est le seul moyen : rien d’autre ne peut l’accorder.";
+"Show it a folder…" = "Lui montrer un dossier…";
+"Forget them" = "Les oublier";
+"It has been shown no folders, so it cannot touch a file yet. Handing one over is a panel you fill in yourself; nothing else can grant it." = "Aucun dossier ne lui a été montré, il ne peut donc toucher aucun fichier. En confier un passe par un panneau que vous remplissez vous-même ; rien d’autre ne l’accorde.";
+"Folders it has been shown: %@." = "Dossiers qui lui ont été montrés : %@.";
+"It can open an application, an address in a browser, one of your folders in the Finder, run one of your own Shortcuts, and copy or move a single file between your folders. That list is all of it. It always shows what it is about to do and waits for a yes; dismissing the bubble is a no. It never overwrites, never deletes, and never acts on text it read from the screen — only on what you said out loud." = "Il peut ouvrir une application, une adresse dans un navigateur, un de vos dossiers dans le Finder, exécuter un de vos raccourcis, et copier ou déplacer un seul fichier entre vos dossiers. Cette liste, c’est tout. Il montre toujours ce qu’il va faire et attend un oui ; fermer la bulle vaut non. Il n’écrase jamais, ne supprime jamais, et n’agit jamais sur du texte lu à l’écran : seulement sur ce que vous avez dit.";

@@ -1,5 +1,6 @@
 #import "NekoAction.h"
 #import "NekoAnswerProvider.h"
+#import "NekoFolderAccess.h"
 
 NSString * const NekoActionsEnabledKey = @"NekoActionsEnabled";
 
@@ -112,12 +113,15 @@ static NSString * const NekoActionMarker = @"ACTION:";
 
 	NSRange space = [body rangeOfString:@" "];
 	if(space.location == NSNotFound)
-		return nil;
+		return nil;                 /* "ACTION: cannot" ends up here too */
 	NSString *word = [[body substringToIndex:space.location] lowercaseString];
 	NSString *rest = [[body substringFromIndex:NSMaxRange(space)]
 		stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]];
 	if([rest length] == 0)
 		return nil;
+
+	if([word isEqualToString:@"cannot"])
+		return nil;                 /* the app's own words, not the model's */
 
 	NekoAction *action = [[[NekoAction alloc] init] autorelease];
 	action->verb = [word retain];
@@ -162,11 +166,43 @@ static NSString * const NekoActionMarker = @"ACTION:";
 		action->target = [rest retain];
 		return action;
 	}
+	if([word isEqualToString:@"copy"] || [word isEqualToString:@"move"]) {
+		/* "pippo.txt from desktop to documents", and nothing more elaborate:
+		   no paths, no wildcards, no folders of its own choosing. */
+		NSRange from = [[rest lowercaseString] rangeOfString:@" from "];
+		NSRange to = [[rest lowercaseString] rangeOfString:@" to " options:NSBackwardsSearch];
+		if(from.location == NSNotFound || to.location == NSNotFound
+		   || to.location < NSMaxRange(from))
+			return nil;
+		NSString *file = [[rest substringToIndex:from.location]
+			stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceCharacterSet]];
+		NSString *source = [[[rest substringWithRange:NSMakeRange(NSMaxRange(from),
+			to.location - NSMaxRange(from))]
+			stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceCharacterSet]] lowercaseString];
+		NSString *destination = [[[rest substringFromIndex:NSMaxRange(to)]
+			stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceCharacterSet]] lowercaseString];
+
+		if([file length] == 0 || [file rangeOfString:@"/"].location != NSNotFound
+		   || [file rangeOfString:@"*"].location != NSNotFound
+		   || [file rangeOfString:@".."].location != NSNotFound)
+			return nil;              /* a name, not a path and not a pattern */
+		if(![NekoFolderAccess isFolderKey:source] || ![NekoFolderAccess isFolderKey:destination])
+			return nil;
+		if([source isEqualToString:destination])
+			return nil;
+
+		action->target = [file retain];
+		action->extra = [source retain];
+		action->resolved = nil;
+		action->other = [destination retain];
+		return action;
+	}
 	return nil;                     /* an unknown verb is refused, not guessed */
 }
 
 - (void)dealloc
 {
+	[other release];
 	[verb release];
 	[target release];
 	[extra release];
@@ -176,6 +212,67 @@ static NSString * const NekoActionMarker = @"ACTION:";
 
 - (NSString *)verb { return verb; }
 - (NSString *)target { return target; }
+
+- (NSArray *)needsFolders
+{
+	if(!([verb isEqualToString:@"copy"] || [verb isEqualToString:@"move"]))
+		return [NSArray array];
+	NekoFolderAccess *access = [NekoFolderAccess sharedAccess];
+	NSMutableArray *missing = [NSMutableArray array];
+	if(![access hasAccessTo:extra])
+		[missing addObject:extra];
+	if(![access hasAccessTo:other])
+		[missing addObject:other];
+	return missing;
+}
+
+/* The file as it is actually spelled on disk. "pippo" is asked for, "Pippo.txt"
+   is there, and two files called "pippo.txt" and "pippo.md" mean the cat has to
+   ask rather than choose. */
+- (NSString *)fileIn:(NSURL *)folder ambiguous:(BOOL *)ambiguous
+{
+	NSArray *entries = [[NSFileManager defaultManager]
+		contentsOfDirectoryAtPath:[folder path] error:NULL];
+	NSString *wanted = [target lowercaseString];
+	NSMutableArray *exact = [NSMutableArray array];
+	NSMutableArray *stem = [NSMutableArray array];
+	NSEnumerator *e = [entries objectEnumerator];
+	NSString *entry;
+	while((entry = [e nextObject]) != nil) {
+		if([entry hasPrefix:@"."])
+			continue;
+		NSString *plain = [entry lowercaseString];
+		if([plain isEqualToString:wanted])
+			[exact addObject:entry];
+		else if([[plain stringByDeletingPathExtension] isEqualToString:wanted])
+			[stem addObject:entry];
+	}
+	NSArray *found = [exact count] > 0 ? exact : stem;
+	if(ambiguous != NULL)
+		*ambiguous = [found count] > 1;
+	return [found count] == 1 ? [found firstObject] : nil;
+}
+
+/* Never over the top of something else: "pippo.txt" becomes "pippo 2.txt". */
+- (NSURL *)freeNameIn:(NSURL *)folder for:(NSString *)name
+{
+	NSFileManager *files = [NSFileManager defaultManager];
+	NSURL *candidate = [folder URLByAppendingPathComponent:name];
+	if(![files fileExistsAtPath:[candidate path]])
+		return candidate;
+	NSString *stem = [name stringByDeletingPathExtension];
+	NSString *extension = [name pathExtension];
+	unsigned n;
+	for(n = 2; n < 1000; n++) {
+		NSString *tried = [NSString stringWithFormat:@"%@ %u", stem, n];
+		if([extension length] > 0)
+			tried = [tried stringByAppendingPathExtension:extension];
+		candidate = [folder URLByAppendingPathComponent:tried];
+		if(![files fileExistsAtPath:[candidate path]])
+			return candidate;
+	}
+	return nil;
+}
 
 - (NSString *)summary
 {
@@ -196,6 +293,14 @@ static NSString * const NekoActionMarker = @"ACTION:";
 	}
 	if([verb isEqualToString:@"run-shortcut"])
 		return [NSString stringWithFormat:NekoActionLocalized(@"Run your shortcut “%@”?"), target];
+
+	NekoFolderAccess *access = [NekoFolderAccess sharedAccess];
+	if([verb isEqualToString:@"copy"])
+		return [NSString stringWithFormat:NekoActionLocalized(@"Copy “%@” from %@ to %@?"),
+			target, [access displayNameFor:extra], [access displayNameFor:other]];
+	if([verb isEqualToString:@"move"])
+		return [NSString stringWithFormat:NekoActionLocalized(@"Move “%@” from %@ to %@?"),
+			target, [access displayNameFor:extra], [access displayNameFor:other]];
 	return nil;
 }
 
@@ -219,6 +324,9 @@ static NSString * const NekoActionMarker = @"ACTION:";
 		                     error:error] != nil;
 	}
 
+	if([verb isEqualToString:@"copy"] || [verb isEqualToString:@"move"])
+		return [self moveOrCopy:error];
+
 	if([verb isEqualToString:@"run-shortcut"]) {
 		NSTask *task = [[[NSTask alloc] init] autorelease];
 		[task setLaunchPath:@"/usr/bin/shortcuts"];
@@ -235,6 +343,58 @@ static NSString * const NekoActionMarker = @"ACTION:";
 		return YES;
 	}
 	return NO;
+}
+
+/* One file, between two folders you handed over yourself. Nothing is
+   overwritten, nothing is deleted, and a name that matches two files is a
+   question rather than a guess. */
+- (BOOL)moveOrCopy:(NSError **)error
+{
+	NekoFolderAccess *access = [NekoFolderAccess sharedAccess];
+	NSURL *from = [access beginUsing:extra];
+	NSURL *to = [access beginUsing:other];
+	BOOL done = NO;
+	NSString *complaint = nil;
+
+	if(from == nil || to == nil) {
+		complaint = NekoActionLocalized(@"I have not been shown that folder.");
+	} else {
+		BOOL ambiguous = NO;
+		NSString *name = [self fileIn:from ambiguous:&ambiguous];
+		if(ambiguous)
+			complaint = [NSString stringWithFormat:
+				NekoActionLocalized(@"There is more than one “%@” there."), target];
+		else if(name == nil)
+			complaint = [NSString stringWithFormat:
+				NekoActionLocalized(@"I cannot find “%@” there."), target];
+		else {
+			NSURL *source = [from URLByAppendingPathComponent:name];
+			NSNumber *directory = nil;
+			[source getResourceValue:&directory forKey:NSURLIsDirectoryKey error:NULL];
+			if([directory boolValue]) {
+				complaint = NekoActionLocalized(@"That is a folder, and I only carry files.");
+			} else {
+				NSURL *destination = [self freeNameIn:to for:name];
+				NSError *problem = nil;
+				NSFileManager *files = [NSFileManager defaultManager];
+				done = [verb isEqualToString:@"move"]
+					? [files moveItemAtURL:source toURL:destination error:&problem]
+					: [files copyItemAtURL:source toURL:destination error:&problem];
+				if(!done)
+					complaint = [problem localizedDescription];
+			}
+		}
+	}
+
+	if(from != nil) [access doneWith:from];
+	if(to != nil) [access doneWith:to];
+	if(!done && error != NULL)
+		*error = [NSError errorWithDomain:NekoAskErrorDomain
+		                             code:NekoAskErrorTransport
+		                         userInfo:complaint != nil
+			? [NSDictionary dictionaryWithObject:complaint forKey:NSLocalizedDescriptionKey]
+			: nil];
+	return done;
 }
 
 @end

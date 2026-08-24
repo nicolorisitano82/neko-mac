@@ -14,6 +14,12 @@ extern NSString * const NekoActionsEnabledKey;
    yourself — which is the escape hatch for everything else, because a Shortcut
    is your own code that you authorised, not something a model invented.
 
+   The second round adds copying and moving a file between your own folders,
+   which the sandbox will not allow until you have handed the folder over in a
+   panel: `needsFolders` says which ones are still missing so they can be asked
+   for. Nothing here overwrites — a name already taken is given a number — and
+   nothing here deletes.
+
    Nothing is ever performed without being shown first. `summary` is what the
    bubble says before the Yes, in the language the app is running in. */
 @interface NekoAction : NSObject
@@ -22,6 +28,7 @@ extern NSString * const NekoActionsEnabledKey;
 	NSString *target;
 	NSString *extra;         /* the browser for open-url, otherwise nil */
 	NSURL *resolved;         /* the application or folder it worked out */
+	NSString *other;         /* the destination folder, for copy and move */
 }
 
 /* nil when the line is not an action, the verb is unknown, or what it names
@@ -34,6 +41,10 @@ extern NSString * const NekoActionsEnabledKey;
 
 - (NSString *)verb;
 - (NSString *)target;
+
+/* The folder keys this needs and does not have yet, in order. Empty when it can
+   go ahead. */
+- (NSArray *)needsFolders;
 
 /* "Apro Photoshop." — what the confirmation asks about. */
 - (NSString *)summary;

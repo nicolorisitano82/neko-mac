@@ -196,3 +196,19 @@
 "Yes" = "Sí";
 "No" = "No";
 "It can open an application, an address in a browser, one of your folders in the Finder, or one of your own Shortcuts — those four things and nothing else. It always shows you what it is about to do and waits for a yes; dismissing the bubble is a no. It will not move, copy or delete a file, and it never acts on text it read from the screen: only on what you said out loud." = "Puede abrir una aplicación, una dirección en el navegador, una de tus carpetas en el Finder, o uno de tus atajos: esas cuatro cosas y nada más. Siempre enseña lo que va a hacer y espera un sí; cerrar el globo cuenta como no. No mueve, copia ni borra archivos, y nunca actúa sobre texto leído de la pantalla: solo sobre lo que dijiste en voz alta.";
+
+/* files */
+"Copy “%@” from %@ to %@?" = "¿Copio «%@» de %@ a %@?";
+"Move “%@” from %@ to %@?" = "¿Muevo «%@» de %@ a %@?";
+"I have not been shown that folder." = "Esa carpeta no me la has enseñado nunca.";
+"There is more than one “%@” there." = "Ahí hay más de uno que se llama «%@».";
+"I cannot find “%@” there." = "Ahí no encuentro «%@».";
+"That is a folder, and I only carry files." = "Eso es una carpeta, y yo solo llevo archivos.";
+"Without your %@ folder I cannot." = "Sin tu carpeta %@ no puedo.";
+"Allow" = "Permitir";
+"Choose your %@ folder so Neko can work in it. It is the only way in: nothing else can grant this." = "Elige tu carpeta %@ para que Neko pueda trabajar en ella. Es la única vía: nada más puede concederlo.";
+"Show it a folder…" = "Enséñale una carpeta…";
+"Forget them" = "Olvidarlas";
+"It has been shown no folders, so it cannot touch a file yet. Handing one over is a panel you fill in yourself; nothing else can grant it." = "No se le ha enseñado ninguna carpeta, así que no puede tocar ningún archivo. Entregarle una es un panel que rellenas tú; nada más lo concede.";
+"Folders it has been shown: %@." = "Carpetas que le has enseñado: %@.";
+"It can open an application, an address in a browser, one of your folders in the Finder, run one of your own Shortcuts, and copy or move a single file between your folders. That list is all of it. It always shows what it is about to do and waits for a yes; dismissing the bubble is a no. It never overwrites, never deletes, and never acts on text it read from the screen — only on what you said out loud." = "Puede abrir una aplicación, una dirección en el navegador, una de tus carpetas en el Finder, ejecutar uno de tus atajos, y copiar o mover un solo archivo entre tus carpetas. Esa lista es todo. Siempre enseña lo que va a hacer y espera un sí; cerrar el globo cuenta como no. Nunca sobrescribe, nunca borra, y nunca actúa sobre texto leído de la pantalla: solo sobre lo que dijiste.";

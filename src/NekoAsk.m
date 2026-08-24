@@ -1,6 +1,7 @@
 #import "NekoAsk.h"
 #import "NekoPainter.h"
 #import "NekoAction.h"
+#import "NekoFolderAccess.h"
 #import "NekoHotKey.h"
 #import "NekoListener.h"
 #import "NekoBubble.h"
@@ -512,6 +513,21 @@ enum { NekoPhaseIdle = 0, NekoPhaseListening, NekoPhaseThinking, NekoPhaseAnswer
 			[self sayInCharacter:NekoAskLocalized(@"All right, I will not.")];
 			return;
 		}
+		/* Files need a folder handed over in a panel first. Asked for here,
+		   after the yes and never before it: a pet that opens a file chooser on
+		   its own would be a different kind of animal. */
+		NekoFolderAccess *access = [NekoFolderAccess sharedAccess];
+		NSEnumerator *missing = [[action needsFolders] objectEnumerator];
+		NSString *key;
+		while((key = [missing nextObject]) != nil) {
+			if(![access requestAccessTo:key]) {
+				[self sayInCharacter:[NSString stringWithFormat:
+					NekoAskLocalized(@"Without your %@ folder I cannot."),
+					[access displayNameFor:key]]];
+				return;
+			}
+		}
+
 		NSError *problem = nil;
 		if([action perform:&problem])
 			[self sayInCharacter:NekoAskLocalized(@"Done.")];

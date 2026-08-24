@@ -42,6 +42,7 @@
 		D1C0117A1B000000000000C1 /* NekoPainter.m in Sources */ = {isa = PBXBuildFile; fileRef = D1C0117A1B000000000000C0 /* NekoPainter.m */; };
 		D1C0117A1B000000000000D1 /* NekoSense.m in Sources */ = {isa = PBXBuildFile; fileRef = D1C0117A1B000000000000D0 /* NekoSense.m */; };
 		D1C0117A1B000000000000D5 /* NekoAction.m in Sources */ = {isa = PBXBuildFile; fileRef = D1C0117A1B000000000000D4 /* NekoAction.m */; };
+		D1C0117A1B000000000000E1 /* NekoFolderAccess.m in Sources */ = {isa = PBXBuildFile; fileRef = D1C0117A1B000000000000E0 /* NekoFolderAccess.m */; };
 		D1C0117A1B00000000000003 /* NekoController.m in Sources */ = {isa = PBXBuildFile; fileRef = D1C0117A1B00000000000002 /* NekoController.m */; };
 		A70027B30CA6447E0057F7E4 /* MyView.m in Sources */ = {isa = PBXBuildFile; fileRef = A70027B20CA6447E0057F7E4 /* MyView.m */; };
 		A7B9FF1D1A575C310074B4D4 /* Neko.icns in Resources */ = {isa = PBXBuildFile; fileRef = A7B9FF1C1A575C310074B4D4 /* Neko.icns */; };
@@ -97,6 +98,8 @@
 		D1C0117A1B000000000000C0 /* NekoPainter.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = NekoPainter.m; sourceTree = "<group>"; };
 		D1C0117A1B000000000000D0 /* NekoSense.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = NekoSense.m; sourceTree = "<group>"; };
 		D1C0117A1B000000000000D4 /* NekoAction.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = NekoAction.m; sourceTree = "<group>"; };
+		D1C0117A1B000000000000E0 /* NekoFolderAccess.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = NekoFolderAccess.m; sourceTree = "<group>"; };
+		D1C0117A1B000000000000E2 /* NekoFolderAccess.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = NekoFolderAccess.h; sourceTree = "<group>"; };
 		D1C0117A1B000000000000D6 /* NekoAction.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = NekoAction.h; sourceTree = "<group>"; };
 		D1C0117A1B000000000000D2 /* NekoSense.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = NekoSense.h; sourceTree = "<group>"; };
 		D1C0117A1B000000000000C2 /* NekoPainter.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = NekoPainter.h; sourceTree = "<group>"; };
@@ -174,6 +177,8 @@
 				D1C0117A1B000000000000C0 /* NekoPainter.m */,
 				D1C0117A1B000000000000D0 /* NekoSense.m */,
 				D1C0117A1B000000000000D4 /* NekoAction.m */,
+				D1C0117A1B000000000000E0 /* NekoFolderAccess.m */,
+				D1C0117A1B000000000000E2 /* NekoFolderAccess.h */,
 				D1C0117A1B000000000000D6 /* NekoAction.h */,
 				D1C0117A1B000000000000D2 /* NekoSense.h */,
 				D1C0117A1B000000000000C2 /* NekoPainter.h */,
@@ -371,6 +376,7 @@
 				D1C0117A1B000000000000C1 /* NekoPainter.m in Sources */,
 				D1C0117A1B000000000000D1 /* NekoSense.m in Sources */,
 				D1C0117A1B000000000000D5 /* NekoAction.m in Sources */,
+				D1C0117A1B000000000000E1 /* NekoFolderAccess.m in Sources */,
 				D1C0117A1B00000000000003 /* NekoController.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

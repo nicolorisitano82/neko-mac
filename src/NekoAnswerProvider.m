@@ -56,6 +56,7 @@ NSString *NekoAnswerInstructionsWith(NSString *persona, BOOL mayDraw, BOOL mayAc
 	   Said twice and shown three times, because the first wording — one polite
 	   paragraph at the end — was ignored: asked "neko apri textedit", the model
 	   answered "Apertura TextEdit." in Italian prose, which does nothing. */
+	NSString *language = NekoAnswerLanguage();
 	NSString *doing = mayAct ? [NSString stringWithFormat:
 		@"\n\nDOING THINGS. First decide whether the sentence is an order or a "
 		@"question. An order tells you to do something — open, launch, start, show "
@@ -70,14 +71,23 @@ NSString *NekoAnswerInstructionsWith(NSString *persona, BOOL mayDraw, BOOL mayAc
 		@"ACTION: open-app <application>\n"
 		@"ACTION: open-url <address> in <browser>   (\"in ...\" may be left out)\n"
 		@"ACTION: open-folder <desktop|documents|downloads|pictures|music|movies>\n"
-		@"ACTION: run-shortcut <one of their Shortcuts>\n\n"
+		@"ACTION: run-shortcut <one of their Shortcuts>\n"
+		@"ACTION: copy <file name> from <folder> to <folder>\n"
+		@"ACTION: move <file name> from <folder> to <folder>\n\n"
 		@"For example, \"apri textedit\" is answered with exactly:\n"
 		@"ACTION: open-app TextEdit\n"
 		@"and \"apri google.it su chrome\" with exactly:\n"
-		@"ACTION: open-url https://google.it in Chrome\n\n"
-		@"Those four are all you can do. Anything else they ask you to do — moving "
-		@"or deleting files, typing, changing settings, sending anything — say "
-		@"plainly in one sentence that you cannot. Never invent another verb, and "
+		@"ACTION: open-url https://google.it in Chrome\n"
+		@"and \"sposta pippo.txt dalla scrivania nei documenti\" with exactly:\n"
+		@"ACTION: move pippo.txt from desktop to documents\n\n"
+		@"For copy and move, the two folders are one of desktop, documents, "
+		@"downloads, pictures, music, movies, written in English, and the file is a "
+		@"plain name — never a path, never a pattern, never a folder.\n\n"
+		@"Those six are all you can do. If they order you to do anything else — "
+		@"delete, rename, type, change a setting, send something — answer with "
+		@"exactly this line and nothing else:\n"
+		@"ACTION: cannot\n"
+		@"You do not have to find the words for that: the app has them. Never invent another verb, and "
 		@"never use one of these lines to answer something that was only a "
 		@"question: \"what is Photoshop for\" is a question, \"open Photoshop\" is "
 		@"not."] : @"";
@@ -92,9 +102,16 @@ NSString *NekoAnswerInstructionsWith(NSString *persona, BOOL mayDraw, BOOL mayAc
 		@"the answer is a single fact.\n\n"
 		@"Reply in %@. Reply in %@ even if the question sounded like another "
 		@"language, and never switch part way through. Keep it to one or two short "
-		@"sentences. No lists, no headings, no preamble, and no stage directions.%@%@",
-		persona ?: @"a small pixel-art cat", NekoAnswerLanguage(), NekoAnswerLanguage(),
-		drawing, doing];
+		@"sentences. No lists, no headings, no preamble, and no stage directions."
+		@"%@%@%@",
+		persona ?: @"a small pixel-art cat", language, language, drawing, doing,
+		/* Last word, because the last instruction is the one a model keeps: the
+		   English block above was pulling whole refusals into English. */
+		mayAct ? [NSString stringWithFormat:
+			@"\n\nOne more time, because the lines above are in English and your "
+			@"answers are not: everything you say to them is in %@. The only "
+			@"English you ever write is an ACTION: line.", language]
+		       : @""];
 }
 
 /* Unasked advice is harder to get right than an answer: it arrives uninvited, it

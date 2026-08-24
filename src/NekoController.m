@@ -5,12 +5,14 @@
 #import "NekoPainter.h"
 #import "NekoAppleProvider.h"
 #import "NekoAction.h"
+#import "NekoFolderAccess.h"
 #import "NekoHotKey.h"
 #import "NekoModelProvider.h"
 #import "NekoModelStore.h"
 #import "NekoLocalProvider.h"
 #import "NekoAppleProvider.h"
 #import "NekoAction.h"
+#import "NekoFolderAccess.h"
 #import "NekoOpenAIProvider.h"
 #import "NekoModelProvider.h"
 
@@ -758,7 +760,25 @@ static const float NekoMaxStopRadius = 200.0f;
 	[content addSubview:actionsCheck];
 	[actionsCheck release];
 
-	askStatusField = [self labelWithString:@"" frame:NSMakeRect(20.0f, 16.0f, 430.0f, 60.0f)];
+	foldersButton = [[NSButton alloc] initWithFrame:NSMakeRect(148.0f, 46.0f, 168.0f, 28.0f)];
+	[foldersButton setBezelStyle:NSBezelStyleRounded];
+	[foldersButton setControlSize:NSControlSizeSmall];
+	[foldersButton setTitle:NekoLocalized(@"Show it a folder…")];
+	[foldersButton setTarget:self];
+	[foldersButton setAction:@selector(showFolderPressed:)];
+	[content addSubview:foldersButton];
+	[foldersButton release];
+
+	forgetFoldersButton = [[NSButton alloc] initWithFrame:NSMakeRect(320.0f, 46.0f, 130.0f, 28.0f)];
+	[forgetFoldersButton setBezelStyle:NSBezelStyleRounded];
+	[forgetFoldersButton setControlSize:NSControlSizeSmall];
+	[forgetFoldersButton setTitle:NekoLocalized(@"Forget them")];
+	[forgetFoldersButton setTarget:self];
+	[forgetFoldersButton setAction:@selector(forgetFoldersPressed:)];
+	[content addSubview:forgetFoldersButton];
+	[forgetFoldersButton release];
+
+	askStatusField = [self labelWithString:@"" frame:NSMakeRect(20.0f, 12.0f, 430.0f, 30.0f)];
 	[askStatusField setAlignment:NSTextAlignmentLeft];
 	[[askStatusField cell] setWraps:YES];
 	[askStatusField setFont:[NSFont systemFontOfSize:11.0f]];
@@ -794,6 +814,43 @@ static const float NekoMaxStopRadius = 200.0f;
 	[self syncAskControls];
 }
 
+/* Handing a folder over is the user's own act, in the system's own panel, and
+   this is where it is done on purpose rather than in the middle of a request. */
+- (void)showFolderPressed:(id)sender
+{
+	NekoFolderAccess *access = [NekoFolderAccess sharedAccess];
+	NSMenu *menu = [[[NSMenu alloc] initWithTitle:@""] autorelease];
+	NSEnumerator *e = [[NekoFolderAccess folderKeys] objectEnumerator];
+	NSString *key;
+	while((key = [e nextObject]) != nil) {
+		NSMenuItem *item = [menu addItemWithTitle:[access displayNameFor:key]
+		                                   action:@selector(chooseFolder:)
+		                            keyEquivalent:@""];
+		[item setTarget:self];
+		[item setRepresentedObject:key];
+		[item setState:[access hasAccessTo:key] ? NSControlStateValueOn : NSControlStateValueOff];
+	}
+	[menu popUpMenuPositioningItem:nil
+	                    atLocation:NSMakePoint(0.0f, NSHeight([sender bounds]))
+	                        inView:sender];
+}
+
+- (void)chooseFolder:(id)sender
+{
+	[[NekoFolderAccess sharedAccess] requestAccessTo:[sender representedObject]];
+	[self syncAskControls];
+}
+
+- (void)forgetFoldersPressed:(id)sender
+{
+	NekoFolderAccess *access = [NekoFolderAccess sharedAccess];
+	NSEnumerator *e = [[access allowedKeys] objectEnumerator];
+	NSString *key;
+	while((key = [e nextObject]) != nil)
+		[access forget:key];
+	[self syncAskControls];
+}
+
 - (void)syncAskControls
 {
 	NekoAsk *ask = [NekoAsk sharedAsk];
@@ -820,6 +877,10 @@ static const float NekoMaxStopRadius = 200.0f;
 	[askKeyField setStringValue:[keyed hasApiKey] ? @"••••••••••••" : @""];
 	[askSpeakCheck setEnabled:on];
 	[actionsCheck setEnabled:on];
+	BOOL acting = on && [defaults boolForKey:NekoActionsEnabledKey];
+	[foldersButton setEnabled:acting];
+	[forgetFoldersButton setEnabled:acting
+		&& [[[NekoFolderAccess sharedAccess] allowedKeys] count] > 0];
 	[actionsCheck setState:[defaults boolForKey:NekoActionsEnabledKey]
 		? NSControlStateValueOn : NSControlStateValueOff];
 	[askSpeakCheck setState:[defaults boolForKey:NekoAskSpeakKey]
@@ -1472,7 +1533,21 @@ static const float NekoMaxStopRadius = 200.0f;
 		[ask hotKeyDisplayName]];
 	if([[NSUserDefaults standardUserDefaults] boolForKey:NekoActionsEnabledKey]) {
 		[line appendString:@"\n\n"];
-		[line appendString:NekoLocalized(@"It can open an application, an address in a browser, one of your folders in the Finder, or one of your own Shortcuts — those four things and nothing else. It always shows you what it is about to do and waits for a yes; dismissing the bubble is a no. It will not move, copy or delete a file, and it never acts on text it read from the screen: only on what you said out loud.")];
+		[line appendString:NekoLocalized(@"It can open an application, an address in a browser, one of your folders in the Finder, run one of your own Shortcuts, and copy or move a single file between your folders. That list is all of it. It always shows what it is about to do and waits for a yes; dismissing the bubble is a no. It never overwrites, never deletes, and never acts on text it read from the screen — only on what you said out loud.")];
+		NekoFolderAccess *access = [NekoFolderAccess sharedAccess];
+		NSArray *allowed = [access allowedKeys];
+		[line appendString:@"\n\n"];
+		if([allowed count] == 0) {
+			[line appendString:NekoLocalized(@"It has been shown no folders, so it cannot touch a file yet. Handing one over is a panel you fill in yourself; nothing else can grant it.")];
+		} else {
+			NSMutableArray *names = [NSMutableArray array];
+			NSEnumerator *e = [allowed objectEnumerator];
+			NSString *key;
+			while((key = [e nextObject]) != nil)
+				[names addObject:[access displayNameFor:key]];
+			[line appendFormat:NekoLocalized(@"Folders it has been shown: %@."),
+				[names componentsJoinedByString:@", "]];
+		}
 	}
 	return line;
 }

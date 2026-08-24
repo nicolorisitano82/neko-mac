@@ -2,6 +2,33 @@
 
 ## Unreleased
 
+### And now it can carry a file
+
+Two more verbs: `copy` and `move`, one file at a time, between Desktop,
+Documents, Downloads, Pictures, Music and Movies. *"neko sposta relazione.pdf
+dalla scrivania nei documenti"* becomes `ACTION: move relazione.pdf from desktop
+to documents`, which becomes a bubble asking *"Sposto «relazione.pdf» da
+Scrivania a Documenti?"*, which becomes a moved file once you say yes.
+
+The sandbox stays on. Measured from a signed sandboxed build, the app cannot read
+the Desktop or write to Documents, so folders are handed over the way macOS
+intends: you pick one in a panel, once, and a security-scoped bookmark remembers
+it. The Ask Neko tab lists what has been handed over and forgets it all on
+request, and a file request for a folder it has not been shown puts the panel up
+after the yes, never before.
+
+The refusals are in code, not in wording. Measured: a path, a wildcard, a folder
+name where a file was meant, the same folder twice, a missing "to", an unknown
+verb, a folder outside the six — all refused. Copying twice does not overwrite:
+the second one becomes "neko-prova 2.txt". Moving takes the file away from where
+it was; copying leaves it. A name that matches two files is a question. A folder
+is refused with "that is a folder, and I only carry files".
+
+One thing had to be taken away from the model: asked to explain in Italian that
+it cannot delete a file, it answered in English however many times it was told
+otherwise — the instruction block around it is English, and that pulls harder
+than a rule. It now answers `ACTION: cannot` and the app supplies the sentence.
+
 ### Neko, open TextEdit
 
 A spoken order can now do something, if you switch it on: open an application,
