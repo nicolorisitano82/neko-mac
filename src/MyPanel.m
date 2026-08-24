@@ -1,5 +1,6 @@
 #import "MyPanel.h"
 #import "NekoController.h"
+#import "NekoAsk.h"
 
 @implementation MyPanel
 - (void)setStateTo:(NekoState)theState
@@ -261,9 +262,18 @@ static const unsigned NekoRoamNap = 240;         /* half a minute asleep */
 /* Chasing the pointer: it drifts off only after having properly settled and
    slept, about half a minute of being left alone. Living on windows: it moves
    between them whenever it has sat still long enough. */
+/* A bubble on screen pins the cat: whatever it was going to do, being read
+   comes first. In-place animations carry on — it can sit, wash, yawn — but the
+   walking states, the wandering and the errands all wait, and if the bubble
+   comes back the cat stops again. */
+- (BOOL)isSpeaking
+{
+	return [[NekoAsk sharedAsk] isSpeaking];
+}
+
 - (BOOL)shouldWanderNow
 {
-	if(wandering)
+	if(wandering || [self isSpeaking])
 		return NO;
 	if(roamMode) {
 		if(errandPhase != 0)
@@ -310,7 +320,7 @@ static const unsigned NekoRoamNap = 240;         /* half a minute asleep */
 
 - (void)errandTo:(NSPoint)point thenState:(NekoState)state forTicks:(unsigned)ticks
 {
-	if(!roamMode || held)
+	if(!roamMode || held || [self isSpeaking])
 		return;
 	wanderTarget = point;
 	wanderMouse = [NSEvent mouseLocation];
@@ -651,6 +661,19 @@ static const unsigned NekoRoamNap = 240;         /* half a minute asleep */
 	
 	if(held)
 		goto breakout;           /* being asked a question outranks the pointer */
+
+	if([self isSpeaking]) {
+		/* Anything that moves it across the desk is dropped; the idle chain is
+		   left alone so it still blinks and washes while you read. */
+		[self stopWandering];
+		errandPhase = 0;
+		moveDx = moveDy = 0.0f;
+		if([self isWalking])
+			[self setStateTo:NekoStateStop];
+		if(nekoState == NekoStateAwake)
+			[self setStateTo:NekoStateStop];
+		goto breakout;
+	}
 	
     if(nekoState == NekoStateStop) {
 		if (wall != NekoStateCount && isNekoMoveStart) {

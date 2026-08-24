@@ -3,6 +3,7 @@
 #import "NekoController.h"
 #import "MyPanel.h"
 #import "NekoDesktop.h"
+#import "NekoSense.h"
 #import "NekoAnswerProvider.h"
 #import "NekoCharacter.h"
 
@@ -163,7 +164,9 @@ static const NSTimeInterval NekoAnticsAway = 150.0;
 		if(lastAntic == nil || [lastAntic compare:asked] == NSOrderedDescending)
 			return;
 		NSString *line = [self cleanUp:answer];
-		if([line length] == 0 || [line isEqualToString:@"-"])
+		/* A question that came out badly leaves the written-in one in place,
+		   which is why pendingLine was set before asking. */
+		if(![NekoSense isWorthSaying:line])
 			return;
 		[pendingLine release];
 		pendingLine = [line copy];

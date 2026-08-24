@@ -3,6 +3,7 @@
 #import "NekoAntics.h"
 #import "NekoDesktop.h"
 #import "NekoPainter.h"
+#import "NekoAppleProvider.h"
 #import "NekoHotKey.h"
 #import "NekoModelProvider.h"
 #import "NekoModelStore.h"
@@ -1191,6 +1192,24 @@ static const float NekoMaxStopRadius = 200.0f;
 	[line appendString:@"\n"];
 	[line appendString:[[NekoAdvisor sharedAdvisor] context]];
 	[line appendString:@"\n"];
+	/* Said out loud rather than left to be discovered: a 1.5B model asked for one
+	   dry sentence in Italian produces bland or broken ones often enough that
+	   somebody would reasonably think the feature was broken. */
+	NSString *engine = [[NSUserDefaults standardUserDefaults] stringForKey:NekoAskProviderKey];
+	if([engine isEqualToString:@"local"]) {
+		NekoLocalProvider *local = [[[NekoLocalProvider alloc] init] autorelease];
+		long long size = [[NekoModelStore sharedStore]
+			installedBytesForIdentifier:[local modelIdentifier]];
+		if(size > 0 && size < 2000000000LL) {
+			NekoAppleProvider *apple = [[[NekoAppleProvider alloc] init] autorelease];
+			[line appendString:@"\n\n"];
+			[line appendString:[apple isConfigured]
+				? NekoLocalized(@"A remark is a harder thing to write than an answer, and the smaller local models are not good at it — they come out bland, or in the wrong language, or repeat a word four times. Apple Intelligence, on the Ask Neko tab, does this one much better and costs nothing.")
+				: NekoLocalized(@"A remark is a harder thing to write than an answer, and the smaller local models are not good at it. A larger model on the Local model tab, or a remote one, will do better.")];
+		}
+	}
+
+	[line appendString:@"\n\n"];
 	[line appendString:NekoLocalized(@"Window titles are included only if this Mac has already granted Neko screen recording; that permission is never asked for. With Apple Intelligence or a model on this Mac, none of it leaves the Mac; with ChatGPT, Claude or a Shortcut, it is sent to that service like any other question.")];
 
 	if([[NSUserDefaults standardUserDefaults] boolForKey:NekoReadTextKey]) {

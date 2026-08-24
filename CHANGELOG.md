@@ -2,6 +2,61 @@
 
 ## Unreleased
 
+### Suggestions that mean something
+
+Reported from real use: Italian remarks that made no sense — *"non ficcarti
+troppo tutto"*. Measuring a batch of ten found four separate faults underneath,
+three of them mine.
+
+**The sampler had no repetition penalty.** The 1.5B model, asked for one line
+about Xcode, answered *"Codice, codice, codice, codice."* — and *"Safari, Safari,
+Safari, Safari"*, and *"Mail, Mail, Mail, Mail"*. Sixty-four tokens of history at
+1.15 breaks the groove.
+
+**The context was never cleared between questions.** Each one was decoded on top
+of the last, so after four remarks the two thousand token window was full,
+`llama_decode` failed, and the local engine went silent until the app was
+restarted. Every question now starts from an empty cache. Found while measuring
+this; it would have looked like the feature simply stopping.
+
+**The model was given six numbers and no idea which mattered.** So it wrote
+whatever fitted any afternoon: *"Safari ti tiene compagnia mentre il tempo scorre
+lento"*, twice, for two different programs. The app now works out the one thing
+that stands out — forty-two minutes without leaving a program, fourteen jumps in
+a quarter of an hour, half past eleven at night — and says so in the description.
+The difference, same engine: *"Quindici salti in venticinque minuti."*, *"È
+mezzanotte e tu sei ancora qui."*
+
+**It was inventing complaints about programs.** *"Safari è lento"*, *"Mail è
+lento, prova a chiudere quella scheda"* — Mail has no tabs, and nothing in the
+description says anything is slow. The instructions now forbid saying a program
+is slow, broken, busy or waiting, since none of that can be seen from here.
+
+Last, a filter. `NekoSense` throws away a line that repeats a word three times,
+comes back in the wrong language (checked with `NLLanguageRecognizer`, and only
+when it is sure), is one of the example lines handed straight back, or runs to a
+paragraph. A thrown-away line means the cat says nothing at all that round, which
+is always the better of the two.
+
+The Suggestions tab now also says plainly that the small local models are bad at
+this and that Apple Intelligence is better at it and free, rather than leaving
+that to be discovered.
+
+### It stays put while you read
+
+Asked for, and it turned out to be half missing: the cat kept its errands and its
+wandering while a bubble was on screen, so a remark could walk off mid-sentence.
+Now a visible bubble pins it — no walking, no wandering, no errands, and an
+errand in progress is dropped — while the in-place animations carry on, so it
+still sits and washes and blinks at you. When the bubble goes, it moves again;
+when another one opens, it stops again.
+
+Measured over twenty seconds in the roaming behaviour: 2 168 pt travelled with no
+bubble, **0 pt** with one open (not one step in twenty-two seconds of tracing),
+1 643 pt again once it closed, 0 pt when a second bubble opened.
+
+## Unreleased
+
 ### Show me the Colosseum
 
 Ask the cat to be shown something and it draws it, on this Mac's GPU, with

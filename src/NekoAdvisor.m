@@ -4,6 +4,7 @@
 #import "NekoCharacter.h"
 #import "NekoAnswerProvider.h"
 #import "NekoDesktop.h"
+#import "NekoSense.h"
 
 NSString * const NekoSuggestLastKey = @"NekoSuggestLast";
 
@@ -186,14 +187,18 @@ static const NSTimeInterval NekoAdvisorTyping = 3.0;
 		[lastSubject release];
 		lastSubject = [subject retain];
 
-		if([line length] > 0 && ![line isEqualToString:@"-"]) {
+		NSString *problem = [NekoSense problemWith:line];
+		if(problem != nil && ![problem isEqualToString:@"nothing to say"])
+			NSLog(@"Neko: a suggestion was thrown away — %@: %@", problem, line);
+
+		if([NekoSense isWorthSaying:line]) {
 			[[NSUserDefaults standardUserDefaults]
 				setObject:line forKey:NekoSuggestLastKey];
 			[[NekoAsk sharedAsk] sayUnprompted:line];
 		}
 
 		if(callerReport != nil) {
-			callerReport([line length] > 0 ? line : nil, error);
+			callerReport([NekoSense isWorthSaying:line] ? line : nil, error);
 			Block_release(callerReport);
 		}
 	}];

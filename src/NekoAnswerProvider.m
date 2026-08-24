@@ -60,26 +60,41 @@ NSString *NekoAnswerInstructionsDrawing(NSString *persona, BOOL mayDraw)
 }
 
 /* Unasked advice is harder to get right than an answer: it arrives uninvited, it
-   is based on almost nothing, and it is read in half a second. A long list of
-   rules makes a small model worse rather than better — the 1.5B build answered a
-   three-paragraph brief with markdown, French and nonsense — so this is short,
-   and it shows three examples instead of explaining. The examples are localized,
-   which also pins the language harder than any instruction can. */
+   is based on almost nothing, and it is read in half a second. Three rounds of
+   measurement shaped what is here.
+
+   Long lists of rules made the 1.5B model worse — markdown, a line of French,
+   nonsense — so this is short. Examples pin the size and the language better than
+   any adjective, but a model will happily hand one straight back, so they are
+   named as forbidden and checked for afterwards.
+
+   The last problem was invention. "Safari è lento", "Mail è lento, prova a
+   chiudere quella scheda": the model had been invited to remark on how the work
+   was going and had nothing to go on, so it made claims about programs it cannot
+   see. Hence the ban: what it may talk about is the shape of the day it was
+   actually given — a long stretch in one place, a lot of switching, a late
+   hour — or itself. */
 NSString *NekoSuggestionInstructionsFor(NSString *persona)
 {
 	NSString *language = NekoAnswerLanguage();
 	return [NSString stringWithFormat:
 		@"Write in %@ only.\n\n"
 		@"You are %@, a pet living on someone's desktop. You glanced at what they "
-		@"are doing and you say one short thing about it: a small tip, a nudge, or "
-		@"a joke.\n\n"
+		@"are doing and you say one short thing to them.\n\n"
+		@"You are told which one thing stands out. Talk about that, not about the "
+		@"program in general: a nudge, a dry observation, or a joke about it. A "
+		@"sentence that would fit any afternoon is not worth saying.\n\n"
 		@"One sentence, twenty words at most. Plain text: no markdown, no "
-		@"asterisks, no quotation marks. You are talking to the person, not to the "
-		@"program — its name is software, not their name. Do not repeat the numbers "
-		@"you were given, and do not pretend to see inside their files. If there is "
-		@"nothing worth saying, answer with a single hyphen.\n\n"
-		@"Three examples, only to show the size and the tone. Never reuse their "
-		@"words or their endings:\n"
+		@"asterisks, no quotation marks. Talk to the person, not to the program — "
+		@"its name is software, not their name — and do not describe yourself: "
+		@"nobody asked how the cat is.\n\n"
+		@"Never say that a program is slow, broken, busy or waiting for them: you "
+		@"cannot see any of that, and inventing a complaint about their tools is "
+		@"worse than saying nothing. Do not repeat the numbers you were given back "
+		@"at them, and do not pretend to see inside their files.\n\n"
+		@"If there is nothing worth saying, answer with a single hyphen.\n\n"
+		@"Three examples of the size and tone. They are forbidden as answers — "
+		@"never repeat one and never end a sentence the way they end:\n"
 		@"%@\n%@\n%@\n\n"
 		@"Answer in %@.",
 		language, persona ?: @"a small pixel-art cat",
@@ -87,6 +102,18 @@ NSString *NekoSuggestionInstructionsFor(NSString *persona)
 		NSLocalizedString(@"Still that same window. Whatever it is, you are winning.", nil),
 		NSLocalizedString(@"A cat would have taken a break by now. Just saying.", nil),
 		language];
+}
+
+/* The three example lines, so a reply that is one of them can be thrown away. */
+NSArray *NekoInstructionExamples(void)
+{
+	return [NSArray arrayWithObjects:
+		NSLocalizedString(@"Seven programs in ten minutes: pick one and stay in it.", nil),
+		NSLocalizedString(@"Still that same window. Whatever it is, you are winning.", nil),
+		NSLocalizedString(@"A cat would have taken a break by now. Just saying.", nil),
+		NSLocalizedString(@"What are you writing?", nil),
+		NSLocalizedString(@"Is that thing still not working?", nil),
+		NSLocalizedString(@"Long sentence. Does it end well?", nil), nil];
 }
 
 /* A question, not a remark, and it has to survive being read while the cat is

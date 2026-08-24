@@ -273,6 +273,37 @@ static NSString *tidy(NSString *text)
 	return text;
 }
 
+/* The one thing worth remarking on, worked out here rather than left to the
+   model. Handed six numbers and no hint, small models write the same soft
+   sentence about whichever program is in front — "Safari ti tiene compagnia
+   mentre il tempo scorre lento" — because nothing in the list told them what
+   was unusual. Naming the salient fact is what turns that into a remark. */
+- (NSString *)highlight
+{
+	NSTimeInterval idle = [self idleSeconds];
+	NSTimeInterval minutes = [self secondsInFront] / 60.0;
+	NSUInteger jumps = [self switchesInTheLastQuarterHour];
+	NSInteger hour = [[[NSCalendar currentCalendar]
+		components:NSCalendarUnitHour fromDate:[NSDate date]] hour];
+
+	if(jumps >= 8)
+		return [NSString stringWithFormat:
+			@"They have jumped between programs %lu times in a quarter of an hour.",
+			(unsigned long)jumps];
+	if(minutes >= 45.0)
+		return [NSString stringWithFormat:
+			@"They have not left this one program for %.0f minutes.", minutes];
+	if(hour >= 23 || hour < 6)
+		return @"It is the middle of the night and they are still at it.";
+	if(keysPerMinute >= 150)
+		return @"They are typing very fast indeed.";
+	if(idle >= 60.0)
+		return @"They have not touched anything for a minute or so.";
+	if(minutes < 2.0)
+		return @"They have only just arrived in this program.";
+	return @"Nothing stands out: an ordinary few minutes.";
+}
+
 #pragma mark All of it, for a model to read
 
 - (NSString *)summary
@@ -297,6 +328,7 @@ static NSString *tidy(NSString *text)
 	[lines appendFormat:@"Local time: %@\n", [clock stringFromDate:[NSDate date]]];
 	if(text != nil)
 		[lines appendFormat:@"The text I am working on ends like this: %@\n", text];
+	[lines appendFormat:@"\nThe one thing that stands out: %@\n", [self highlight]];
 	return lines;
 }
 

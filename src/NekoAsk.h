@@ -67,6 +67,10 @@ extern NSString * const NekoAskSpeakKey;
    interruption is worse than a missed suggestion. */
 - (BOOL)canSpeakUnprompted;
 
+/* Whether a bubble is on screen right now. The cat stays where it is while one
+   is: reading something that walks away is worse than waiting for it. */
+- (BOOL)isSpeaking;
+
 /* Says something in the bubble without any question having been asked, and
    holds the cat still while it does. */
 - (void)sayUnprompted:(NSString *)text;

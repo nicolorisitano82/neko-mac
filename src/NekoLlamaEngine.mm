@@ -199,7 +199,13 @@ static const int NekoLlamaContext = 2048;
 		tokens.resize(count);
 
 		llama_sampler *sampler = llama_sampler_chain_init(llama_sampler_chain_default_params());
+		/* Without a penalty the small models fall into a groove and stay there:
+		   asked for one line about Xcode, the 1.5B answered "Codice, codice,
+		   codice, codice." Sixty-four tokens of history, a mild 1.15, is enough
+		   to break the loop without making it write strangely. */
 		llama_sampler_chain_add(sampler, llama_sampler_init_top_k(40));
+		llama_sampler_chain_add(sampler,
+			llama_sampler_init_penalties(llama_vocab_n_tokens(vocab), 64, 1.15f, 0.0f, 0.0f));
 		llama_sampler_chain_add(sampler, llama_sampler_init_top_p(0.9f, 1));
 		llama_sampler_chain_add(sampler, llama_sampler_init_temp(0.7f));
 		/* A fresh seed per generation. With the fixed default, the same prompt
@@ -207,6 +213,12 @@ static const int NekoLlamaContext = 2048;
 		   question asked once and dismal for a cat that remarks on your work
 		   every ten minutes in an application you have not left. */
 		llama_sampler_chain_add(sampler, llama_sampler_init_dist(arc4random()));
+
+		/* Each question starts from nothing. Without this the key-value cache
+		   keeps every previous conversation, and after four questions of a few
+		   hundred tokens the two thousand token context is full: llama_decode
+		   fails, and the cat goes quiet until the app is restarted. */
+		llama_memory_clear(llama_get_memory(context), true);
 
 		std::string answer;
 		llama_batch batch = llama_batch_get_one(tokens.data(), (int32_t)tokens.size());

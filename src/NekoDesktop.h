@@ -60,6 +60,10 @@ extern NSString * const NekoReadTextKey;
    input, a password field, or simply nothing there. */
 - (NSString *)nearbyText;
 
+/* The single fact worth a remark right now — a long stretch in one program, a
+   lot of jumping about, the small hours — in one English sentence. */
+- (NSString *)highlight;
+
 /* Everything above as the plain text a model is given. */
 - (NSString *)summary;
 

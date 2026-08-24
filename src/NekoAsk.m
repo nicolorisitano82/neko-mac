@@ -186,6 +186,11 @@ enum { NekoPhaseIdle = 0, NekoPhaseListening, NekoPhaseThinking, NekoPhaseAnswer
 
 #pragma mark Speaking unasked
 
+- (BOOL)isSpeaking
+{
+	return [bubble isShowing];
+}
+
 - (BOOL)canSpeakUnprompted
 {
 	return phase == NekoPhaseIdle && ![bubble isShowing];
