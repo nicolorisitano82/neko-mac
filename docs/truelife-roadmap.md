@@ -347,6 +347,14 @@ wording. A count of banned openers across fifty generated lines.
 **Risk.** Personality drifting into shtick. The five-line limit and the spelling
 filter both help; the rest is taste.
 
+## Checking any of this
+
+The harnesses these numbers came from live in [tests/](../tests), one file each,
+run with `tests/run.sh`. They were written alongside the steps and kept
+afterwards for the obvious reason: a measurement nobody can repeat is an
+assertion. `tests/screen.m` is the one promised in the section below — it fails
+if text read from a screen ever gains a route to an action.
+
 ## What is deliberately not on this list
 
 A chat window. Modelled emotions with a face. Continuous screen reading. Memory

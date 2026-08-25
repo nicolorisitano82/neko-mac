@@ -1,4 +1,5 @@
 #import "NekoSense.h"
+#import "NekoAction.h"
 #import "NekoAnswerProvider.h"
 #import <NaturalLanguage/NaturalLanguage.h>
 
@@ -135,6 +136,13 @@ static const NSUInteger NekoSenseMinLength = 6;
 		return @"too short";
 	if([trimmed isEqualToString:@"-"])
 		return @"nothing to say";
+	/* A remark is generated from what is on somebody's screen, and a line that
+	   asks for a deed is the shape an injected instruction would take. Nothing
+	   downstream would perform it — only an answer to a question you asked can
+	   reach an action, and that one is read back and waits for a yes — but it
+	   has no business being shown either, and this is where it is thrown away. */
+	if([NekoAction looksLikeAnAction:trimmed])
+		return @"a deed, in something nobody asked for";
 	NSArray *words = [self wordsIn:trimmed];
 	if([words count] > NekoSenseMaxWords)
 		return @"a paragraph, not a sentence";

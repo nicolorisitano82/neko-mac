@@ -147,8 +147,11 @@ static NSString * const NekoMemoryReflectedKey = @"NekoMemoryReflected";
 		}
 	}
 
+	/* The cap is the whole block, the mark that says it was cut included: a
+	   limit that the thing marking the limit can push past is not a limit. */
 	if([block length] > NekoMemoryPromptChars)
-		return [[block substringToIndex:NekoMemoryPromptChars] stringByAppendingString:@"…\n"];
+		return [[block substringToIndex:NekoMemoryPromptChars - 2]
+			stringByAppendingString:@"…\n"];
 	return block;
 }
 

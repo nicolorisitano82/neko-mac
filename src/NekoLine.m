@@ -66,6 +66,7 @@ static const float NekoLineGap = 6.0f;
 
 - (void)dealloc
 {
+	[[NSNotificationCenter defaultCenter] removeObserver:self];
 	[field release];
 	[finished release];
 	[previous release];
@@ -116,7 +117,23 @@ static const float NekoLineGap = 6.0f;
 		previous = nil;
 	}
 
+	/* Activation is a request, not an instruction: it arrives when the system
+	   gets round to it, and a window ordered front before the application became
+	   active does not have the keyboard. So the window asks once now and again
+	   the moment activation actually lands. */
+	[[NSNotificationCenter defaultCenter] addObserver:self
+	                                         selector:@selector(insist:)
+	                                             name:NSApplicationDidBecomeActiveNotification
+	                                           object:nil];
 	[NSApp activateIgnoringOtherApps:YES];
+	[self makeKeyAndOrderFront:nil];
+	[self makeFirstResponder:field];
+}
+
+- (void)insist:(NSNotification *)note
+{
+	if(![self isVisible] || closing)
+		return;
 	[self makeKeyAndOrderFront:nil];
 	[self makeFirstResponder:field];
 }
@@ -145,6 +162,9 @@ static const float NekoLineGap = 6.0f;
 		return;
 	closing = YES;
 
+	[[NSNotificationCenter defaultCenter] removeObserver:self
+	                                               name:NSApplicationDidBecomeActiveNotification
+	                                             object:nil];
 	void (^block)(NSString *) = [finished retain];
 	[finished release];
 	finished = nil;
