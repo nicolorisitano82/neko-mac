@@ -70,6 +70,7 @@ extern NSString * const NekoSettingsDidChangeNotification;
 	NSTextField *drawStatusField;
 	NSPopUpButton *suggestEveryPopUp;
 	NSTextField *suggestStatusField;
+	NSTextField *memoryField;
 	NSButton *suggestNowButton;
 }
 

@@ -6,6 +6,7 @@
 #import "NekoDesktop.h"
 #import "NekoSense.h"
 #import "NekoBrains.h"
+#import "NekoMemory.h"
 
 NSString * const NekoSuggestLastKey = @"NekoSuggestLast";
 
@@ -194,7 +195,13 @@ static const NSTimeInterval NekoAdvisorTyping = 3.0;
 	NekoCharacter *character = [[NekoController sharedController] character];
 	NSString *instructions = NekoSuggestionInstructionsFor([character persona]);
 	NSString *subject = [[[[NekoDesktop sharedDesktop] frontApp] copy] autorelease];
-	NSString *context = [self context];
+
+	/* What is going on, plus what the cat remembers. The engine here is always
+	   an on-device one, so the diary is not going anywhere. */
+	NSString *memory = [[NekoMemory sharedMemory] contextForPrompt];
+	NSString *context = [memory length] > 0
+		? [NSString stringWithFormat:@"%@\n%@", memory, [self context]]
+		: [self context];
 	void (^callerReport)(NSString *, NSError *) =
 		report != NULL ? Block_copy(report) : nil;
 
@@ -225,6 +232,11 @@ static const NSTimeInterval NekoAdvisorTyping = 3.0;
 		if([NekoSense isWorthSaying:line]) {
 			[[NSUserDefaults standardUserDefaults]
 				setObject:line forKey:NekoSuggestLastKey];
+			/* Written down before it is said, so that a remark and what
+			   prompted it end up next to each other in the diary. */
+			NekoMemory *memory = [NekoMemory sharedMemory];
+			[memory noteNoticed:[[NekoDesktop sharedDesktop] highlight]];
+			[memory noteSaid:line];
 			[[NekoAsk sharedAsk] sayUnprompted:line];
 		}
 

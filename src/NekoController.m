@@ -9,6 +9,7 @@
 #import "NekoWakeWord.h"
 #import "NekoPermissions.h"
 #import "NekoBrains.h"
+#import "NekoMemory.h"
 #import "NekoHotKey.h"
 #import "NekoModelProvider.h"
 #import "NekoModelStore.h"
@@ -19,6 +20,7 @@
 #import "NekoWakeWord.h"
 #import "NekoPermissions.h"
 #import "NekoBrains.h"
+#import "NekoMemory.h"
 #import "NekoOpenAIProvider.h"
 #import "NekoModelProvider.h"
 
@@ -253,6 +255,9 @@ static const float NekoMaxStopRadius = 200.0f;
 	[[NekoAdvisor sharedAdvisor] applySettings];
 	[[NekoAntics sharedAntics] applySettings];
 	[[NekoWakeWord sharedWakeWord] applySettings];
+	/* Once a day, yesterday becomes a few durable lines. Costs nothing on the
+	   days there is nothing to reduce. */
+	[[NekoMemory sharedMemory] reflectIfDue];
 }
 
 #pragma mark Settings
@@ -1372,6 +1377,32 @@ static const float NekoMaxStopRadius = 200.0f;
 	[[suggestStatusField cell] setWraps:YES];
 	[content addSubview:suggestStatusField];
 
+	/* What it remembers, and the two things anyone should be able to do about
+	   it: look at it, and delete it. */
+	memoryField = [self labelWithString:@"" frame:NSMakeRect(20.0f, 58.0f, 556.0f, 34.0f)];
+	[memoryField setAlignment:NSTextAlignmentLeft];
+	[memoryField setFont:[NSFont systemFontOfSize:11.0f]];
+	[[memoryField cell] setWraps:YES];
+	[content addSubview:memoryField];
+
+	NSButton *reveal = [[NSButton alloc] initWithFrame:NSMakeRect(20.0f, 22.0f, 190.0f, 28.0f)];
+	[reveal setBezelStyle:NSBezelStyleRounded];
+	[reveal setControlSize:NSControlSizeSmall];
+	[reveal setTitle:NekoLocalized(@"Show what it remembers")];
+	[reveal setTarget:self];
+	[reveal setAction:@selector(revealMemoryPressed:)];
+	[content addSubview:reveal];
+	[reveal release];
+
+	NSButton *forget = [[NSButton alloc] initWithFrame:NSMakeRect(216.0f, 22.0f, 160.0f, 28.0f)];
+	[forget setBezelStyle:NSBezelStyleRounded];
+	[forget setControlSize:NSControlSizeSmall];
+	[forget setTitle:NekoLocalized(@"Forget everything")];
+	[forget setTarget:self];
+	[forget setAction:@selector(forgetMemoryPressed:)];
+	[content addSubview:forget];
+	[forget release];
+
 	[self syncSuggestControls];
 }
 
@@ -1434,6 +1465,34 @@ static const float NekoMaxStopRadius = 200.0f;
 	}];
 }
 
+/* The diary is a file about a person, so the way to see it is the Finder rather
+   than a window of the app's own devising. */
+- (void)revealMemoryPressed:(id)sender
+{
+	NekoMemory *memory = [NekoMemory sharedMemory];
+	[[NSWorkspace sharedWorkspace] openURL:[memory directory]];
+}
+
+- (void)forgetMemoryPressed:(id)sender
+{
+	NekoMemory *memory = [NekoMemory sharedMemory];
+	if([memory dayCount] == 0 && [[memory durableLines] count] == 0)
+		return;
+
+	NSAlert *alert = [[[NSAlert alloc] init] autorelease];
+	[alert setMessageText:NekoLocalized(@"Forget everything Neko remembers?")];
+	[alert setInformativeText:[NSString stringWithFormat:
+		NekoLocalized(@"%lu day(s) of notes and %lu line(s) it had kept. This cannot be undone."),
+		(unsigned long)[memory dayCount], (unsigned long)[[memory durableLines] count]]];
+	[alert addButtonWithTitle:NekoLocalized(@"Forget")];
+	[alert addButtonWithTitle:NekoLocalized(@"Cancel")];
+	[NSApp activateIgnoringOtherApps:YES];
+	if([alert runModal] != NSAlertFirstButtonReturn)
+		return;
+	[memory forgetEverything];
+	[self syncSuggestControls];
+}
+
 - (void)syncSuggestControls
 {
 	NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
@@ -1456,6 +1515,18 @@ static const float NekoMaxStopRadius = 200.0f;
 	[suggestEveryPopUp selectItemAtIndex:(index == NSNotFound) ? 2 : index];
 
 	[suggestStatusField setStringValue:[self suggestStatusLine:roaming]];
+
+	NekoMemory *memory = [NekoMemory sharedMemory];
+	NSUInteger days = [memory dayCount];
+	NSUInteger kept = [[memory durableLines] count];
+	if(days == 0 && kept == 0)
+		[memoryField setStringValue:NekoLocalized(@"It remembers nothing yet. What it notices is written a day at a time, in plain text, on this Mac — never sent anywhere — kept for thirty days, and reduced each night to a few lines worth keeping.")];
+	else
+		[memoryField setStringValue:[NSString stringWithFormat:
+			NekoLocalized(@"It remembers %lu day(s) and %lu line(s) worth keeping, %@ in plain text on this Mac. Older days are removed after thirty."),
+			(unsigned long)days, (unsigned long)kept,
+			[NSByteCountFormatter stringFromByteCount:[memory bytesOnDisk]
+			                               countStyle:NSByteCountFormatterCountStyleFile]]];
 }
 
 - (NSString *)suggestStatusLine:(BOOL)roaming

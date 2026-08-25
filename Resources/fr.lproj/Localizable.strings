@@ -272,3 +272,12 @@
 "you are typing a password" = "vous tapez un mot de passe";
 "something is filling the screen" = "quelque chose occupe tout l’écran";
 "It waits for a seam in your work before saying anything: a program you have just left after a long stretch, a burst of typing that has ended, a pause. In the middle of something it stays quiet, and it says nothing at all while a window fills the screen or you are typing a password. The interval below is a floor rather than an alarm clock — after three times it, a smaller gap will do." = "Avant de dire quelque chose il attend une couture dans votre travail : un programme que vous venez de quitter après un long moment, une salve de frappe terminée, une pause. En pleine tâche il se tait, et il ne dit rien du tout tant qu’une fenêtre occupe l’écran ou que vous tapez un mot de passe. L’intervalle ci-dessous est un plancher, pas un réveil : passé trois fois ce temps, un plus petit intervalle suffira.";
+
+/* memory */
+"Show what it remembers" = "Voir ce qu’il retient";
+"Forget everything" = "Tout oublier";
+"Forget everything Neko remembers?" = "Oublier tout ce que Neko retient ?";
+"%lu day(s) of notes and %lu line(s) it had kept. This cannot be undone." = "%lu jours de notes et %lu lignes qu’il avait gardées. C’est irréversible.";
+"Forget" = "Oublier";
+"It remembers nothing yet. What it notices is written a day at a time, in plain text, on this Mac — never sent anywhere — kept for thirty days, and reduced each night to a few lines worth keeping." = "Il ne retient encore rien. Ce qu’il remarque est écrit jour par jour, en texte brut, sur ce Mac — jamais envoyé ailleurs — conservé trente jours, et réduit chaque nuit à quelques lignes qui valent la peine.";
+"It remembers %lu day(s) and %lu line(s) worth keeping, %@ in plain text on this Mac. Older days are removed after thirty." = "Il retient %lu jours et %lu lignes qui valent la peine, %@ en texte brut sur ce Mac. Les jours plus anciens sont supprimés après trente.";

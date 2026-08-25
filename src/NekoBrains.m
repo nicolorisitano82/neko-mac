@@ -68,6 +68,14 @@ static const long long NekoBrainsCapable = 2000000000LL;
 	return [local isConfigured] ? local : nil;
 }
 
++ (BOOL)staysOnThisMac:(id<NekoAnswerProvider>)provider
+{
+	if(provider == nil)
+		return NO;
+	return [provider isKindOfClass:[NekoAppleProvider class]]
+	    || [provider isKindOfClass:[NekoLocalProvider class]];
+}
+
 + (BOOL)hasSomethingWorthHearing
 {
 	return [self bestOnDeviceProvider] != nil;

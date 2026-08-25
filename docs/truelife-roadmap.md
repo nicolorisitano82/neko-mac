@@ -135,6 +135,39 @@ the 4B model and does not crash the 1.5B.
 **Risk.** A file recording someone's day. Mitigated by being readable, bounded
 and deletable — and by never leaving the machine.
 
+**Done.** `NekoMemory`. A tab-separated file a day in
+`~/Library/Application Support/Neko/Memory`, three kinds of line — noticed, said,
+heard — trimmed to 240 characters each, newlines flattened. Measured:
+
+- The block handed to a model came to 259 characters for a day of five entries
+  and 290 with four durable lines, against a cap of 1000. It is truncated rather
+  than allowed to grow.
+- The diary is offered to Apple Intelligence and to a local model, and to none of
+  the three remote providers — checked by asking `staysOnThisMac:` for each of the
+  five settings in turn.
+- Reflection, on a staged day of ten notes, took 1.8 s and kept four lines:
+  *preparing the Neko release 2.0*, *release notes due by Friday*, *finished the
+  DMG*, *will submit the changelog tomorrow*. A second call the same day does
+  nothing.
+- Forgetting: a line mentioning "Xcode" disappears from every file that held it,
+  and the file is removed when nothing is left. Forget-everything leaves zero
+  bytes and zero days.
+
+The reflection prompt needed one round of tightening. Its first version kept
+*"Xcode remains open for over forty minutes"* and *"switched programs fourteen
+times"* — true that afternoon and meaningless by Monday. Naming those two as
+examples of what to throw away was enough; the same day then produced only
+durable lines.
+
+**Two things found while building it.** The status field in the Suggestions tab
+had moved when the window was widened, so the first attempt at the memory
+controls silently did nothing: the views were never created and the two
+`setStringValue:` calls were messages to nil. Caught by the control count in the
+layout test — 6 where 9 were expected — which is the reason that test counts
+rather than just checking for overlaps. And a stale test binary reported "zero
+overlaps" for code that had not been rebuilt; the checker now returns a non-zero
+exit status so a stale run cannot pass quietly.
+
 ## 4. Answerable: a beat of listening, barge-in, and one typed line
 
 **Why fourth.** A remark you cannot reply to is a notification. This is what
@@ -193,7 +226,7 @@ which is also getting a test that fails if it ever becomes possible.
 - [x] 0. The reading, the decisions, this roadmap
 - [x] 1. One notion of the best engine on this Mac — `NekoBrains`, measured below
 - [x] 2. Breakpoints, and a bar to clear — measured below
-- [ ] 3. The diary, and the reflection
+- [x] 3. The diary, and the reflection — measured below
 - [ ] 4. Answerable
 - [ ] 5. The rate itself
 - [ ] 6. Voice

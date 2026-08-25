@@ -32,6 +32,12 @@
 /* Whether anything at all qualifies. */
 + (BOOL)hasSomethingWorthHearing;
 
+/* Whether a given provider keeps what it is told on this Mac. The memory is
+   offered to a question only when the answer is yes: a diary that goes to a
+   remote service on the days somebody picked ChatGPT is not a diary that stays
+   on the Mac. */
++ (BOOL)staysOnThisMac:(id<NekoAnswerProvider>)provider;
+
 /* What to show in the preferences: the name of the engine that will speak, or
    why nothing will. */
 + (NSString *)describeChoice;
