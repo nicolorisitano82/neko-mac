@@ -1,5 +1,30 @@
 # Changelog
 
+## Unreleased
+
+### Words that do not exist
+
+Reported from real use: the cat said "hai togliuto il file". There is no such
+participle — a small model conjugating Italian by guesswork produces exactly
+that, and no amount of instruction fixes it, because the model does not know it
+is wrong.
+
+macOS knows, though. Anything the cat says on its own is now checked against the
+system dictionary in the language the app is running in, and a line containing a
+word that does not exist is thrown away rather than said. Tried against a page of
+real output: names and versions pass because a word with a digit or an inner
+capital is not the dictionary's business — Xcode, TextEdit, Safari, dates,
+numbers, colloquialisms all come through — while "togliuto" and "cazzuta" do not.
+
+The grammar checker was tried too and left out: it accepts "il gatto sono andato
+al mare" without complaint, so it would only cost time.
+
+Two limits worth stating. Nonsense that is spelled correctly still gets through:
+this catches an invented word, not an invented thought. And answers to questions
+asked out loud are deliberately not filtered — dropping one would leave somebody
+who asked something staring at a silent cat, which is worse than a clumsy
+sentence.
+
 ## 2.0.3 — 2026-08-25
 
 ### It kept asking why you change programs so often

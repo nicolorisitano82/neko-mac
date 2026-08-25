@@ -65,6 +65,53 @@ static const NSUInteger NekoSenseMinLength = 6;
 		[wanted substringToIndex:MIN((NSUInteger)2, [wanted length])]];
 }
 
+/* A word macOS has never heard of, in the language the app runs in.
+
+   Small models conjugate Italian by inventing the participle: "hai togliuto il
+   file" for "hai tolto". The system dictionary catches exactly that, and — tried
+   on a page of real output — leaves alone the things that would be false alarms:
+   Xcode, Safari, TextEdit, Neko, colloquialisms, dates and numbers all pass. The
+   grammar checker was tried too and is not worth having: it accepts "il gatto
+   sono andato al mare" without complaint.
+
+   Nonsense that is spelled correctly still gets through. This catches the
+   invented word, not the invented thought. */
++ (NSString *)unknownWordIn:(NSString *)line
+{
+	NSString *language = [[[NSBundle mainBundle] preferredLocalizations] firstObject];
+	if([language length] == 0)
+		return nil;
+	NSSpellChecker *checker = [NSSpellChecker sharedSpellChecker];
+	if(![[checker availableLanguages] containsObject:language])
+		return nil;                /* no dictionary, no opinion */
+
+	NSUInteger at = 0;
+	while(at < [line length]) {
+		NSRange found = [checker checkSpellingOfString:line
+		                                   startingAt:at
+		                                     language:language
+		                                         wrap:NO
+		                       inSpellDocumentWithTag:0
+		                                    wordCount:NULL];
+		if(found.location == NSNotFound || NSMaxRange(found) > [line length])
+			return nil;
+		NSString *word = [line substringWithRange:found];
+		at = NSMaxRange(found);
+
+		/* Anything with a digit or an inner capital is a name, a version or a
+		   file, and the dictionary is not the authority on those. */
+		if([word rangeOfCharacterFromSet:[NSCharacterSet decimalDigitCharacterSet]].location
+		   != NSNotFound)
+			continue;
+		if([word length] > 1
+		   && [[word substringFromIndex:1] rangeOfCharacterFromSet:
+			[NSCharacterSet uppercaseLetterCharacterSet]].location != NSNotFound)
+			continue;
+		return word;
+	}
+	return nil;
+}
+
 + (BOOL)isAnExample:(NSString *)line
 {
 	NSString *plain = [[line lowercaseString] stringByTrimmingCharactersInSet:
@@ -97,6 +144,9 @@ static const NSUInteger NekoSenseMinLength = 6;
 		return @"one of the examples, handed back";
 	if([self isInTheWrongLanguage:trimmed])
 		return @"the wrong language";
+	NSString *invented = [self unknownWordIn:trimmed];
+	if(invented != nil)
+		return [NSString stringWithFormat:@"a word that does not exist: %@", invented];
 	return nil;
 }
 
