@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 2.0 — 2026-08-25
 
 ### A crash, asking the time
 
@@ -274,8 +274,6 @@ when another one opens, it stops again.
 Measured over twenty seconds in the roaming behaviour: 2 168 pt travelled with no
 bubble, **0 pt** with one open (not one step in twenty-two seconds of tracing),
 1 643 pt again once it closed, 0 pt when a second bubble opened.
-
-## Unreleased
 
 ### Show me the Colosseum
 
