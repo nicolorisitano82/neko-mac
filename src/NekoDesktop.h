@@ -24,7 +24,8 @@ extern NSString * const NekoReadTextKey;
 {
 	NSString *frontApp;
 	NSDate *frontSince;
-	NSMutableArray *switches;      /* NSDate of each application change */
+	NSMutableArray *switches;      /* {when, app} for each application change */
+	NSString *lastHighlight;       /* so the same remark is not made twice running */
 
 	uint32_t keysBefore, movesBefore;
 	NSDate *sampledAt;
@@ -40,6 +41,9 @@ extern NSString * const NekoReadTextKey;
 - (NSString *)frontApp;
 - (NSTimeInterval)secondsInFront;
 - (NSUInteger)switchesInTheLastQuarterHour;
+
+/* How many different programs, which is the honest measure of jumping about. */
+- (NSUInteger)programsInTheLastQuarterHour;
 - (NSTimeInterval)idleSeconds;
 - (uint32_t)keysPerMinute;
 - (uint32_t)movesPerMinute;

@@ -1,5 +1,27 @@
 # Changelog
 
+## Unreleased
+
+### It kept asking why you change programs so often
+
+Because it was told to. The app works out the one thing that stands out and hands
+it to the model, and the switch counter was both first in that list and easily
+triggered: eight changes of front window in a quarter of an hour, which for most
+people is a Tuesday. Bouncing between an editor and a browser all afternoon
+counted as twenty switches.
+
+It counts different programs now, not changes — five visits between two programs
+is two, not five — and the threshold is seven of them. Every candidate that
+applies is collected and one is picked, rather than the first always winning, and
+the one used last time is skipped. When it is the only true thing, the cat is
+told nothing stands out instead: the same observation twice is where a remark
+becomes a complaint.
+
+Four more candidates were added so there is something to rotate to — all mouse
+and no keyboard, a Mac awake all day at evening, the weekend, early morning — and
+two thresholds were raised, typing "very fast" from 150 to 200 keys a minute and
+idling from one minute to two.
+
 ## 2.0.2 — 2026-08-25
 
 ### One clock for everything it says

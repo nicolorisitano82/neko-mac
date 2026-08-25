@@ -39,6 +39,7 @@ static const NSUInteger NekoTextLimit = 400;
 	[frontSince release];
 	[switches release];
 	[sampledAt release];
+	[lastHighlight release];
 	[super dealloc];
 }
 
@@ -54,8 +55,9 @@ static const NSUInteger NekoTextLimit = 400;
 	frontApp = [name retain];
 	[frontSince release];
 	frontSince = [[NSDate date] retain];
-	[switches addObject:frontSince];
-	while([switches count] > 40)
+	[switches addObject:[NSDictionary dictionaryWithObjectsAndKeys:
+		frontSince, @"when", frontApp, @"app", nil]];
+	while([switches count] > 60)
 		[switches removeObjectAtIndex:0];
 }
 
@@ -85,11 +87,30 @@ static const NSUInteger NekoTextLimit = 400;
 {
 	NSUInteger count = 0;
 	NSEnumerator *e = [switches objectEnumerator];
-	NSDate *when;
-	while((when = [e nextObject]) != nil)
-		if(-[when timeIntervalSinceNow] < 900.0)
+	NSDictionary *entry;
+	while((entry = [e nextObject]) != nil)
+		if([entry isKindOfClass:[NSDictionary class]]
+		   && -[[entry objectForKey:@"when"] timeIntervalSinceNow] < 900.0)
 			count++;
 	return count;
+}
+
+/* How many different programs, not how many times the front one changed:
+   bouncing between an editor and a browser all afternoon is two programs and a
+   normal way to work, and counting it as twenty switches made the cat ask why
+   somebody kept changing programs every time it opened its mouth. */
+- (NSUInteger)programsInTheLastQuarterHour
+{
+	NSMutableSet *names = [NSMutableSet set];
+	NSEnumerator *e = [switches objectEnumerator];
+	NSDictionary *entry;
+	while((entry = [e nextObject]) != nil) {
+		if(![entry isKindOfClass:[NSDictionary class]])
+			continue;
+		if(-[[entry objectForKey:@"when"] timeIntervalSinceNow] < 900.0)
+			[names addObject:[entry objectForKey:@"app"]];
+	}
+	return [names count];
 }
 
 #pragma mark How busy you are
@@ -278,30 +299,67 @@ static NSString *tidy(NSString *text)
    sentence about whichever program is in front — "Safari ti tiene compagnia
    mentre il tempo scorre lento" — because nothing in the list told them what
    was unusual. Naming the salient fact is what turns that into a remark. */
+/* One remark's worth of what is unusual right now.
+
+   Every candidate that applies is collected and one is chosen, rather than the
+   first winning every time: the switch counter used to be first and its
+   threshold was low, so the cat asked why somebody kept changing programs over
+   and over — which is both a nag and, for most people most of the time, not even
+   true. The last one used is skipped when there is anything else to say. */
 - (NSString *)highlight
 {
 	NSTimeInterval idle = [self idleSeconds];
 	NSTimeInterval minutes = [self secondsInFront] / 60.0;
-	NSUInteger jumps = [self switchesInTheLastQuarterHour];
-	NSInteger hour = [[[NSCalendar currentCalendar]
-		components:NSCalendarUnitHour fromDate:[NSDate date]] hour];
+	NSUInteger programs = [self programsInTheLastQuarterHour];
+	NSDateComponents *now = [[NSCalendar currentCalendar]
+		components:(NSCalendarUnitHour | NSCalendarUnitWeekday) fromDate:[NSDate date]];
+	NSInteger hour = [now hour];
+	NSTimeInterval up = [[NSProcessInfo processInfo] systemUptime];
 
-	if(jumps >= 8)
-		return [NSString stringWithFormat:
-			@"They have jumped between programs %lu times in a quarter of an hour.",
-			(unsigned long)jumps];
+	NSMutableArray *candidates = [NSMutableArray array];
 	if(minutes >= 45.0)
-		return [NSString stringWithFormat:
-			@"They have not left this one program for %.0f minutes.", minutes];
+		[candidates addObject:[NSString stringWithFormat:
+			@"They have not left this one program for %.0f minutes.", minutes]];
+	if(programs >= 7)
+		[candidates addObject:[NSString stringWithFormat:
+			@"They have had %lu different programs in front of them in a quarter of an hour.",
+			(unsigned long)programs]];
 	if(hour >= 23 || hour < 6)
-		return @"It is the middle of the night and they are still at it.";
-	if(keysPerMinute >= 150)
-		return @"They are typing very fast indeed.";
-	if(idle >= 60.0)
-		return @"They have not touched anything for a minute or so.";
-	if(minutes < 2.0)
-		return @"They have only just arrived in this program.";
-	return @"Nothing stands out: an ordinary few minutes.";
+		[candidates addObject:@"It is the middle of the night and they are still at it."];
+	if(keysPerMinute >= 200)
+		[candidates addObject:@"They are typing very fast indeed."];
+	if(keysPerMinute < 5 && movesPerMinute >= 150)
+		[candidates addObject:@"All mouse and no keyboard for a while now."];
+	if(idle >= 120.0)
+		[candidates addObject:@"They have not touched anything for a couple of minutes."];
+	if(minutes < 2.0 && programs < 7)
+		[candidates addObject:@"They have only just arrived in this program."];
+	if(up > 6.0 * 3600.0 && hour >= 18)
+		[candidates addObject:@"This Mac has been awake all day and it is evening."];
+	if([now weekday] == 1 || [now weekday] == 7)
+		[candidates addObject:@"It is the weekend and they are at the computer."];
+	if(hour >= 6 && hour < 9)
+		[candidates addObject:@"It is early morning."];
+
+	if([candidates count] == 0)
+		return @"Nothing stands out: an ordinary few minutes.";
+
+	/* Anything but the one just used. If that is all there is, the cat is told
+	   nothing stands out rather than making the same observation twice: saying
+	   "you keep changing programs" a second time is how a remark becomes a
+	   complaint. */
+	NSMutableArray *fresh = [NSMutableArray arrayWithArray:candidates];
+	if(lastHighlight != nil)
+		[fresh removeObject:lastHighlight];
+	if([fresh count] == 0) {
+		[lastHighlight release];
+		lastHighlight = nil;
+		return @"Nothing stands out: an ordinary few minutes.";
+	}
+	NSString *chosen = [fresh objectAtIndex:arc4random_uniform((unsigned)[fresh count])];
+	[lastHighlight release];
+	lastHighlight = [chosen copy];
+	return chosen;
 }
 
 #pragma mark All of it, for a model to read
@@ -320,8 +378,8 @@ static NSString *tidy(NSString *text)
 	if(title != nil)
 		[lines appendFormat:@"Its window is titled: %@\n", title];
 	[lines appendFormat:@"Minutes I have been in it: %.0f\n", [self secondsInFront] / 60.0];
-	[lines appendFormat:@"Times I switched program in the last 15 minutes: %lu\n",
-		(unsigned long)[self switchesInTheLastQuarterHour]];
+	[lines appendFormat:@"Different programs I have used in the last 15 minutes: %lu\n",
+		(unsigned long)[self programsInTheLastQuarterHour]];
 	[lines appendFormat:@"Keys a minute: %u, mouse moves a minute: %u\n",
 		keysPerMinute, movesPerMinute];
 	[lines appendFormat:@"Seconds since my last key or click: %.0f\n", [self idleSeconds]];
