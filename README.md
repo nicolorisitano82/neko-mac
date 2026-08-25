@@ -464,6 +464,9 @@ wizard cat, **Owl**, **Alien**, **Pinup**, **Gandalf**, **Frodo** and the two
 musicians **TS** and **OR** at 48, with **Merlin XL**, **Owl XL**, **Pinup XL**,
 **Gandalf XL**, **Frodo XL**, **TS XL** and **OR XL** at 64.
 
+The homepage carries the same information as a table, generated from these
+manifests: [where all of this came from](https://nicolorisitano82.github.io/neko-mac/#credits).
+
 The Sakura and Tomoyo sprites derive from Card Captor Sakura artwork, the
 oneko.js skins are fan-made sheets from collections that state no licence, and
 the generated ones have their own uncertainty, so check the situation before

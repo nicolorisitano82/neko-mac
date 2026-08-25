@@ -47,6 +47,8 @@ p { margin: 0 0 14px; }
 .card { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 18px 20px; }
 .card h3 { margin-top: 0; }
 .card p { margin: 0; font-size: 15px; color: var(--muted); }
+table.credits td:first-child { width: 38%; }
+table.credits td { font-size: 14px; }
 table { border-collapse: collapse; width: 100%; font: 15px/1.5 ui-sans-serif, -apple-system, system-ui, sans-serif; }
 td, th { text-align: left; padding: 9px 10px; border-bottom: 1px solid var(--line); vertical-align: top; }
 th { font-weight: 600; color: var(--muted); font-size: 13px; text-transform: uppercase; letter-spacing: .04em; }
@@ -254,6 +256,50 @@ code { font: 13px ui-monospace, SFMono-Regular, Menlo, monospace; background: va
   </div>
 </section>
 
+<section id="credits">
+  <h2>Where all of this came from</h2>
+
+  <p><strong>The cat itself</strong> is not mine and never was. Neko was written for the
+     Macintosh in 1989 — accounts of who wrote it differ, so this page does not pick one —
+     and ported to X11 as
+     <a href="https://en.wikipedia.org/wiki/Neko_(computer_program)">oneko</a> by Masayuki Koba,
+     and extended by Tatsuya Kato with the dog and the tiger; the sakura patch added two more.
+     oneko is public domain, and its sprites and its state machine are the ancestor of
+     everything here — the eighteen states, the way it claws a wall it cannot get past, the
+     yawn before it sleeps.</p>
+
+  <p><strong>This app</strong> began as a Cocoa port of that C program by Matthew Donoughe in
+     2007, which is the code this repository grew out of.</p>
+
+  <p><strong>The cat on this page</strong> is a port of
+     <a href="https://github.com/adryd325/oneko.js">oneko.js</a> by adryd, MIT licensed, whose
+     sprite map every version here shares.</p>
+
+  <h3>Every sprite set, and where it comes from</h3>
+  <p>Each character folder in the app carries the same information in its
+     <code>character.plist</code>, which is where this table is generated from.</p>
+  <table class="credits">
+    <tr><th>Characters</th><th>Source</th><th>Licence as recorded</th></tr>
+    <tr><td>Ace, Black, Bunny, Calico, Eevee, Esmeralda, Fox, Ghost, Gray, Jess, Kina, Lucy, Maia, Maria, Mike, Silver, Silversky, Snuupy, Spirit, Valentine</td><td><a href="https://github.com/adryd325/oneko.js">the onekocord skin collection</a><br><span class="small">onekocord skin collection</span></td><td>fan-made oneko.js skin, collection states no licence; check before redistributing</td></tr>
+    <tr><td>Alien, Frodo, Frodo XL, Gandalf, Gandalf XL, Merlin, Merlin XL, OR, OR XL, Owl, Owl XL, Pinup, Pinup XL, TS, TS XL</td><td><a href="https://github.com/nicolorisitano82/neko-mac/blob/master/tools/sprite-prompt.md">drawn for this app with an image model</a><br><span class="small">generated pixel art</span></td><td>generated pixel art, check before redistributing</td></tr>
+    <tr><td>Dog, Tora</td><td><a href="https://en.wikipedia.org/wiki/Neko_(computer_program)">oneko</a><br><span class="small">Masayuki Koba, Tatsuya Kato (oneko)</span></td><td>Public domain (oneko)</td></tr>
+    <tr><td>Sakura, Tomoyo</td><td><a href="https://en.wikipedia.org/wiki/Neko_(computer_program)">oneko</a><br><span class="small">Masayuki Koba, Tatsuya Kato (oneko)</span></td><td>oneko sprites; the artwork derives from Card Captor Sakura, check before redistributing</td></tr>
+    <tr><td>Kuro</td><td><a href="https://github.com/nicolorisitano82/neko-mac">this project</a><br><span class="small">inverted recolour of the oneko sprites</span></td><td>Public domain</td></tr>
+    <tr><td>Moka</td><td><a href="https://github.com/adryd325/oneko.js">MCHAMSTERYT2, onekocord skins</a><br><span class="small">MCHAMSTERYT2/onekocord skin collection</span></td><td>fan-made oneko.js skin, collection states no licence; check before redistributing</td></tr>
+    <tr><td>Neko</td><td><a href="https://en.wikipedia.org/wiki/Neko_(computer_program)">oneko</a><br><span class="small">Masayuki Koba (oneko)</span></td><td>Public domain</td></tr>
+    <tr><td>Vaporwave</td><td><a href="https://github.com/kyrie25/spicetify-oneko">kyrie25, spicetify-oneko</a><br><span class="small">kyrie25/spicetify-oneko</span></td><td>fan-made oneko.js skin, collection states no licence; check before redistributing</td></tr>
+  </table>
+  <p class="small">Three of these are honest question marks rather than licences. The oneko.js
+     skin collections state no licence and some of the art is fan-made from other people's
+     characters; the two Card Captor Sakura sprites come from oneko's sakura patch and derive
+     from that series; and the generated ones were made by an image model, which is its own
+     unsettled question. They ship because oneko always shipped its animals, but if you are
+     redistributing this, check them first. Sprites somebody drew themselves are the only ones
+     here with a clean answer, and
+     <a href="https://github.com/nicolorisitano82/neko-mac#graphic-artists-welcome">those are
+     the most welcome contribution of all</a>.</p>
+</section>
+
 <section>
   <h2>Getting it open the first time</h2>
   <p>The disk image is signed ad hoc rather than with a paid Developer ID, so Gatekeeper calls
@@ -264,11 +310,10 @@ code { font: 13px ui-monospace, SFMono-Regular, Menlo, monospace; background: va
 </main>
 
 <footer class="wrap">
-  <p>Neko began as a Cocoa port by Matthew Donoughe of the public domain
-     <a href="https://en.wikipedia.org/wiki/Neko_(computer_program)">oneko</a>, itself from the
-     1989 Macintosh original. The browser cat on this page is a port of
-     <a href="https://github.com/adryd325/oneko.js">oneko.js</a> by adryd, MIT.
-     Sprite sets have their own histories, recorded in each character’s manifest.</p>
+  <p>Neko is a Cocoa port by Matthew Donoughe of the public domain
+     <a href="https://en.wikipedia.org/wiki/Neko_(computer_program)">oneko</a>, itself a port of
+     the 1989 Macintosh original. Sprite sets, and what is known about each one's licence, are
+     listed under <a href="#credits">where all of this came from</a>.</p>
   <p><a href="https://github.com/nicolorisitano82/neko-mac">Source</a> ·
      <a href="https://github.com/nicolorisitano82/neko-mac/blob/master/CHANGELOG.md">Changelog</a> ·
      <a href="https://github.com/nicolorisitano82/neko-mac/releases">All releases</a></p>
