@@ -212,13 +212,98 @@ entirely, and a much better reason than convenience.
 
 ---
 
+## Decisions taken
+
+Answered, so the rest of this document has a target rather than a shrug.
+
+### Present like a colleague, not like scenery
+
+Chosen: closer to a colleague. That is the more interesting build and the riskier
+one, so the safeguards have to be the part that is engineered, not the volume.
+
+What it means in numbers, and these are the ones to argue with:
+
+| | scenery | colleague (chosen) |
+| --- | --- | --- |
+| Remarks a working day | 2–3 | 8–15 |
+| Quiet period between them | 30–60 min | 5–10 min, and only at a breakpoint |
+| Follow-up in the same minute | never | yes, if you answered the last one |
+| What it may talk about | the shape of the day | the work, once it can see it |
+
+A colleague earns that rate by being worth it, which changes what has to be true
+before it speaks: not "the interval has passed" but "there is something here".
+Three things follow.
+
+1. **Speaking has to clear a bar, not a clock.** The interval becomes a floor,
+   not a trigger. Nothing is said unless a breakpoint has arrived *and* the thing
+   noticed is more specific than "you have been in Xcode a while".
+2. **It has to be answerable.** A colleague's remark can be replied to. That is
+   what makes eight a day tolerable and eight monologues a day unbearable: the
+   listening beat and barge-in in section 4 are no longer optional polish, they
+   are what makes this rate legitimate.
+3. **Being ignored has to cost it.** Silence in reply is data: the interval
+   widens on its own, and narrows again when replies come. A colleague who
+   notices you are heads-down is the difference between company and noise.
+
+### A diary, on this Mac, in plain text
+
+Accepted. Which fixes the shape of it: a file per day under Application Support,
+plain text so it can be read by the person it is about, a nightly reflection into
+a handful of durable lines, a visible window of thirty days, and deletion that is
+a button rather than a request. Nothing about it leaves the machine — see the
+engine rule below, which exists mostly to make that promise keepable.
+
+### The engine: Apple first, a 4B local second, remote never for the diary
+
+My call, and the reasoning matters more than the choice.
+
+- **Apple Intelligence is the target.** It is free, on-device, fast enough
+  measured here (0.42 s to first word), and it holds an instruction of the length
+  this design needs — which the small local models demonstrably do not: the same
+  three blocks that Apple handles turned the 1.5B into a machine that answered
+  every question with `IMAGE:`.
+- **A 4B GGUF is the fallback** for Macs without Apple Intelligence: Gemma 3 4B
+  or Qwen3 4B Instruct, both about 2.3 GB, both good enough in Italian. The 0.5B
+  and 1.5B stay in the catalogue for asking the capital of France and are not
+  asked to have a personality.
+- **Remote engines answer questions and never see the diary.** ChatGPT, Claude
+  and a Shortcut remain first-class for a question asked out loud. They are not
+  offered the memory, the reflection or the screen text, because a promise that
+  the diary stays on the Mac cannot survive an exception.
+- Therefore the code needs one honest notion: *what is the best on-device engine
+  available right now?* Unprompted speech and everything memory-shaped uses that,
+  independently of which engine is set for questions. Where the answer is "a 1.5B
+  and nothing else", the cat keeps its written-in lines and says less — a
+  degraded mode that is stated in the Suggestions tab rather than discovered.
+
+### Voice or text: voice, with one typed way in
+
+Undecided by the user, so a recommendation with its reasons.
+
+Voice for the conversational half. The app is already voice-first, the latency is
+already in the right range, and the two things that make a colleague answerable —
+barge-in and a beat of listening after the answer — only exist with the
+microphone open. A text field, meanwhile, is the first step towards the chat
+window this document argues against: once there is a place to type, the cat
+becomes a worse client for a model than the one already in the browser.
+
+But voice has a real cost that has nothing to do with design: the microphone is
+open, the orange light is on, the battery notices, and dictation on a Mac in a
+shared office is socially awkward. So: **one typed way in**, deliberately small —
+the existing keystroke, held instead of tapped, opens a single-line field beside
+the cat, and the answer comes back in the same bubble. No history, no scrollback,
+no window. Enough to answer a remark with your hands when you cannot answer it
+with your voice.
+
 ## What I would build, in order
 
 Each step is small enough to measure, and none of them needs a new permission.
 
-1. **Breakpoints instead of a timer.** Speak only at a detected breakpoint,
-   still bounded by the quiet period. Measure: how often it speaks per hour,
-   and whether typing resumes faster than it did before.
+1. **Breakpoints instead of a timer, and a bar to clear.** Speak only at a
+   detected breakpoint, with the interval as a floor rather than a trigger, and
+   only when what was noticed is specific. Measure: remarks per working hour
+   against the 8–15 a day target, and whether typing resumes as quickly as it
+   did before.
 2. **A memory that survives the night.** Daily plain-text stream, nightly
    reflection into a few durable lines, retrieval capped for small models,
    "forget this" and a visible window. Measure: can it answer "what was I doing
@@ -234,6 +319,8 @@ Each step is small enough to measure, and none of them needs a new permission.
    anyway. Measure on a fixed set of twenty questions.
 6. **The widening interval.** Fewer remarks when they are ignored, more when they
    are answered — with the ceiling always the user's setting.
+7. **A typed way in.** Hold the keystroke for a one-line field beside the cat,
+   for answering it with your hands. No window, no history.
 
 ## What I would not build, and why
 
@@ -248,20 +335,27 @@ Each step is small enough to measure, and none of them needs a new permission.
 - **Cloud memory.** The moment the diary leaves the Mac, every promise in
   section 6 becomes someone else's to keep.
 
-## Open questions for you
+## Questions still open
 
-1. **How present should it be?** A cat that speaks two or three times a day at
-   good moments, or one that is closer to a colleague and speaks when it has
-   something? The literature favours the first; the second is more fun.
-2. **Is a diary acceptable at all?** Memory is what makes the difference, and it
-   is also a file recording what you did. Plain text and deletable, but still.
-3. **Which engine is the target?** Apple's model does all of this well today and
-   is free; the small local ones do not, and the difference will widen as the
-   prompts grow. Do we design for Apple Intelligence and let local be the
-   degraded mode, or hold everything back to what a 1.5B can do?
-4. **Voice or text for the conversational half?** Barge-in and a listening beat
-   are natural with the microphone open, which is the battery and the orange dot
-   again.
+The four that shaped this are answered above under *Decisions taken*: colleague
+rather than scenery, a diary on this Mac, Apple first with a 4B fallback and no
+remote engine anywhere near the memory, and voice with one typed way in.
+
+What is genuinely still open, and only measurement will settle it:
+
+1. **Is 8–15 remarks a day actually tolerable**, or is the honest number lower
+   once every one of them has to clear a breakpoint and a bar? The rate is a
+   hypothesis, not a target to defend.
+2. **Does the widening interval feel like tact or like sulking?** A cat that
+   speaks less because it was ignored is either considerate or passive-aggressive,
+   and there is no way to know which without living with it.
+3. **How much does reflection need to see?** A day of observations is more than a
+   small model can read. Whether a sampled day is enough, or whether the daily
+   file has to be summarised as it grows, is a question for the first week of
+   real diaries.
+4. **What replaces a remark that was refused?** Right now: silence. A cat that
+   visibly noticed something and chose not to speak — a look, an ear — may be
+   better than nothing happening at all.
 
 ## Sources
 
