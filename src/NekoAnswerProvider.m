@@ -1,4 +1,5 @@
 #import "NekoAnswerProvider.h"
+#import "NekoVoice.h"
 #import <IOKit/ps/IOPowerSources.h>
 #import <IOKit/ps/IOPSKeys.h>
 
@@ -177,9 +178,19 @@ NSString *NekoAnswerInstructionsWith(NSString *persona, BOOL mayDraw, BOOL mayAc
 		@"caveats, no explaining what else you cannot know. When it is about "
 		@"something not on the list, and you have no way to know it, say that in "
 		@"one short sentence instead.\n%@"
-		@"%@%@%@%@",
+		@"%@%@%@%@%@",
 		persona ?: @"a small pixel-art cat", language, language, NekoFactsNow(),
 		drawing, doing, looking,
+		/* How it sounds today, and the two habits that make an assistant sound
+		   like one. Both are asked for here and taken out in code afterwards
+		   when they turn up anyway, which they do. */
+		[NSString stringWithFormat:
+			@"\n\nHOW YOU SOUND. %@\n"
+			@"Never open with a compliment — not \"great question\", not "
+			@"\"ottima domanda\", not \"of course!\". Start with the answer. "
+			@"Never end by saying again what you just said in different words: "
+			@"one sentence that says it is better than two that both do.",
+			[NekoVoice moodNow]],
 		/* Last word, because the last instruction is the one a model keeps: the
 		   English block above was pulling whole refusals into English. */
 		[NSString stringWithFormat:

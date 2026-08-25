@@ -35,7 +35,7 @@ SOURCES="src/main.m src/MyView.m src/MyPanel.m src/NekoCharacter.m src/NekoContr
 	src/NekoAppleProvider.m src/NekoOpenAIProvider.m src/NekoKeychain.m
 	src/NekoModelStore.m src/NekoLocalProvider.m
 	src/NekoHotKey.m src/NekoListener.m src/NekoBubble.m src/NekoLine.m src/NekoAsk.m
-	src/NekoAdvisor.m src/NekoAntics.m src/NekoDesktop.m src/NekoPainter.m src/NekoSense.m src/NekoAction.m src/NekoFolderAccess.m src/NekoWakeWord.m src/NekoPermissions.m src/NekoBrains.m src/NekoMemory.m src/NekoRate.m src/NekoWeb.m"
+	src/NekoAdvisor.m src/NekoAntics.m src/NekoDesktop.m src/NekoPainter.m src/NekoSense.m src/NekoAction.m src/NekoFolderAccess.m src/NekoWakeWord.m src/NekoPermissions.m src/NekoBrains.m src/NekoMemory.m src/NekoRate.m src/NekoWeb.m src/NekoVoice.m"
 FRAMEWORKS="-framework Cocoa -framework ServiceManagement -framework Carbon
 	-framework Security -framework AVFoundation -framework NaturalLanguage -framework IOKit
 	-Xlinker -weak_framework -Xlinker Speech"

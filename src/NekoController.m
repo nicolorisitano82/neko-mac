@@ -11,6 +11,7 @@
 #import "NekoBrains.h"
 #import "NekoRate.h"
 #import "NekoWeb.h"
+#import "NekoVoice.h"
 #import "NekoMemory.h"
 #import "NekoHotKey.h"
 #import "NekoModelProvider.h"
@@ -260,6 +261,20 @@ static const float NekoMaxStopRadius = 200.0f;
 	/* Once a day, yesterday becomes a few durable lines. Costs nothing on the
 	   days there is nothing to reduce. */
 	[[NekoMemory sharedMemory] reflectIfDue];
+
+	/* And a hello, at most once a day, a few seconds after it turns up: a cat
+	   that greets you the instant its window appears is a dialog box. */
+	[self performSelector:@selector(sayHello) withObject:nil afterDelay:8.0];
+}
+
+- (void)sayHello
+{
+	if([self isPaused])
+		return;
+	NSString *opening = [NekoVoice openingIfDue];
+	if([opening length] == 0)
+		return;
+	[[NekoAsk sharedAsk] sayUnprompted:opening];
 }
 
 #pragma mark Settings

@@ -5,6 +5,7 @@
 #import "NekoBrains.h"
 #import "NekoRate.h"
 #import "NekoWeb.h"
+#import "NekoVoice.h"
 #import "NekoFolderAccess.h"
 #import "NekoWakeWord.h"
 #import "NekoHotKey.h"
@@ -1010,6 +1011,13 @@ static const NSTimeInterval NekoHoldToType = 0.5;
 
 - (void)answer:(NSString *)text
 {
+	/* Asked for in the instructions and taken off here, because "ottima
+	   domanda" arrives anyway and it is the difference between a cat and a
+	   helpdesk. Markers are left exactly as they are. */
+	if(![NekoAction looksLikeAnAction:text] && ![self looksLikeADrawing:text]
+	   && ![NekoWeb looksLikeALook:text])
+		text = [NekoVoice withoutFlattery:text];
+
 	if(![NekoAction looksLikeAnAction:text] && ![self looksLikeADrawing:text])
 		[[NekoMemory sharedMemory] noteSaid:text];
 

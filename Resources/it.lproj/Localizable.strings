@@ -327,3 +327,19 @@
 "%@: %@ now, %.0f°, %@ today %.0f° to %.0f°, rain %@%%. Tomorrow %.0f° to %.0f°, rain %@%%. (open-meteo)" = "%@: adesso %@, %.0f°, oggi %@ da %.0f° a %.0f°, pioggia %@%%. Domani da %.0f° a %.0f°, pioggia %@%%. (open-meteo)";
 "Asked about today's news or the weather, it can fetch one of a fixed list of feeds: ANSA (the wire, world, technology), la Repubblica, Il Sole 24 Ore (Italy and business), MeteoAlarm's warnings for Italy, Hacker News, BBC News, The Guardian, The New York Times and NPR. The plain forecast comes from open-meteo, because neither 3B Meteo nor meteo.it publishes a feed any more." = "Se gli chiedi le notizie di oggi o il tempo, può scaricare uno di un elenco fisso di feed: ANSA (ultima ora, mondo, tecnologia), la Repubblica, Il Sole 24 Ore (Italia ed economia), le allerte MeteoAlarm per l'Italia, Hacker News, BBC News, The Guardian, The New York Times e NPR. Le previsioni semplici vengono da open-meteo, perché né 3B Meteo né meteo.it pubblicano più un feed.";
 "It cannot name an address of its own — only one of those words — so nothing it reads can send it somewhere else. What comes back is quoted to it as somebody else's words, and an answer built on them is not allowed to open, copy or move anything: a headline is written by a stranger. The request carries no question, no account and no cookies; the site sees that a public feed was fetched. With Apple Intelligence or a model on this Mac the headlines stay here; with ChatGPT, Claude or a Shortcut they are sent on like any other question." = "Non può indicare un indirizzo suo — solo una di quelle parole — quindi niente di quello che legge può mandarlo altrove. Quello che torna gli viene citato come parole di altri, e una risposta costruita su quelle non può aprire, copiare o spostare niente: un titolo lo scrive uno sconosciuto. La richiesta non porta la domanda, né account né cookie; il sito vede che è stato scaricato un feed pubblico. Con Apple Intelligence o un modello su questo Mac i titoli restano qui; con ChatGPT, Claude o un comando rapido vengono spediti come qualunque altra domanda.";
+
+/* turning up */
+"So this is where you work." = "Ah, quindi lavori qui.";
+"Right. I live here now." = "Bene. Adesso abito qui.";
+"You have been gone a week. I sat on the desk the whole time." = "Sei stato via una settimana. Io sono rimasto sulla scrivania.";
+"A week. I had almost got used to the quiet." = "Una settimana. Mi stavo quasi abituando al silenzio.";
+"You were away a couple of days. Nothing moved." = "Via un paio di giorni. Non si è mosso niente.";
+"Back, then." = "Tornato, allora.";
+"Working at this hour. All right." = "Al lavoro a quest'ora. Va bene.";
+"It is late. I will keep it down." = "È tardi. Faccio piano.";
+"Morning." = "Buongiorno.";
+"Early. Good." = "Presto. Bene.";
+"Evening." = "Buonasera.";
+"Still here, I see." = "Ancora qui, vedo.";
+"There you are." = "Eccoti.";
+"Back at it." = "Di nuovo sotto.";

@@ -1,5 +1,6 @@
 #import "NekoSense.h"
 #import "NekoAction.h"
+#import "NekoVoice.h"
 #import "NekoAnswerProvider.h"
 #import <NaturalLanguage/NaturalLanguage.h>
 
@@ -152,6 +153,10 @@ static const NSUInteger NekoSenseMinLength = 6;
 		return @"one of the examples, handed back";
 	if([self isInTheWrongLanguage:trimmed])
 		return @"the wrong language";
+	if([NekoVoice isNothingButFlattery:trimmed])
+		return @"a compliment with nothing behind it";
+	if([NekoVoice saysItTwice:trimmed])
+		return @"the same thing twice";
 	NSString *invented = [self unknownWordIn:trimmed];
 	if(invented != nil)
 		return [NSString stringWithFormat:@"a word that does not exist: %@", invented];

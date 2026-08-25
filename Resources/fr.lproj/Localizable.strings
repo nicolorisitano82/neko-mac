@@ -327,3 +327,19 @@
 "%@: %@ now, %.0f°, %@ today %.0f° to %.0f°, rain %@%%. Tomorrow %.0f° to %.0f°, rain %@%%. (open-meteo)" = "%@ : %@ maintenant, %.0f°, aujourd’hui %@ de %.0f° à %.0f°, pluie %@%%. Demain de %.0f° à %.0f°, pluie %@%%. (open-meteo)";
 "Asked about today's news or the weather, it can fetch one of a fixed list of feeds: ANSA (the wire, world, technology), la Repubblica, Il Sole 24 Ore (Italy and business), MeteoAlarm's warnings for Italy, Hacker News, BBC News, The Guardian, The New York Times and NPR. The plain forecast comes from open-meteo, because neither 3B Meteo nor meteo.it publishes a feed any more." = "Interrogé sur les nouvelles du jour ou la météo, il peut aller chercher l’un des flux d’une liste fixe : ANSA (dépêches, monde, technologie), la Repubblica, Il Sole 24 Ore (Italie et économie), les alertes MeteoAlarm pour l’Italie, Hacker News, BBC News, The Guardian, The New York Times et NPR. Les prévisions simples viennent d’open-meteo, car ni 3B Meteo ni meteo.it ne publient plus de flux.";
 "It cannot name an address of its own — only one of those words — so nothing it reads can send it somewhere else. What comes back is quoted to it as somebody else's words, and an answer built on them is not allowed to open, copy or move anything: a headline is written by a stranger. The request carries no question, no account and no cookies; the site sees that a public feed was fetched. With Apple Intelligence or a model on this Mac the headlines stay here; with ChatGPT, Claude or a Shortcut they are sent on like any other question." = "Il ne peut pas indiquer une adresse à lui — seulement l’un de ces mots — donc rien de ce qu’il lit ne peut l’envoyer ailleurs. Ce qui revient lui est cité comme les mots de quelqu’un d’autre, et une réponse fondée là-dessus n’a pas le droit d’ouvrir, de copier ni de déplacer quoi que ce soit : un titre est écrit par un inconnu. La requête ne transporte ni question, ni compte, ni cookies ; le site voit qu’un flux public a été récupéré. Avec Apple Intelligence ou un modèle sur ce Mac, les titres restent ici ; avec ChatGPT, Claude ou un raccourci, ils sont envoyés comme n’importe quelle question.";
+
+/* turning up */
+"So this is where you work." = "C’est donc ici que vous travaillez.";
+"Right. I live here now." = "Bon. J’habite ici maintenant.";
+"You have been gone a week. I sat on the desk the whole time." = "Vous êtes parti une semaine. Je suis resté sur le bureau.";
+"A week. I had almost got used to the quiet." = "Une semaine. Je m’habituais presque au silence.";
+"You were away a couple of days. Nothing moved." = "Absent deux jours. Rien n’a bougé.";
+"Back, then." = "De retour, donc.";
+"Working at this hour. All right." = "Au travail à cette heure-ci. Soit.";
+"It is late. I will keep it down." = "Il est tard. Je ferai doucement.";
+"Morning." = "Bonjour.";
+"Early. Good." = "Tôt. Bien.";
+"Evening." = "Bonsoir.";
+"Still here, I see." = "Toujours là, je vois.";
+"There you are." = "Vous voilà.";
+"Back at it." = "On s’y remet.";

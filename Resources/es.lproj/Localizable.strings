@@ -327,3 +327,19 @@
 "%@: %@ now, %.0f°, %@ today %.0f° to %.0f°, rain %@%%. Tomorrow %.0f° to %.0f°, rain %@%%. (open-meteo)" = "%@: ahora %@, %.0f°, hoy %@ de %.0f° a %.0f°, lluvia %@%%. Mañana de %.0f° a %.0f°, lluvia %@%%. (open-meteo)";
 "Asked about today's news or the weather, it can fetch one of a fixed list of feeds: ANSA (the wire, world, technology), la Repubblica, Il Sole 24 Ore (Italy and business), MeteoAlarm's warnings for Italy, Hacker News, BBC News, The Guardian, The New York Times and NPR. The plain forecast comes from open-meteo, because neither 3B Meteo nor meteo.it publishes a feed any more." = "Si le preguntas por las noticias de hoy o el tiempo, puede descargar uno de una lista fija de fuentes: ANSA (última hora, mundo, tecnología), la Repubblica, Il Sole 24 Ore (Italia y economía), los avisos de MeteoAlarm para Italia, Hacker News, BBC News, The Guardian, The New York Times y NPR. La previsión simple viene de open-meteo, porque ni 3B Meteo ni meteo.it publican ya un feed.";
 "It cannot name an address of its own — only one of those words — so nothing it reads can send it somewhere else. What comes back is quoted to it as somebody else's words, and an answer built on them is not allowed to open, copy or move anything: a headline is written by a stranger. The request carries no question, no account and no cookies; the site sees that a public feed was fetched. With Apple Intelligence or a model on this Mac the headlines stay here; with ChatGPT, Claude or a Shortcut they are sent on like any other question." = "No puede indicar una dirección propia —solo una de esas palabras—, así que nada de lo que lee puede mandarlo a otro sitio. Lo que vuelve se le cita como palabras de otros, y una respuesta construida sobre ellas no puede abrir, copiar ni mover nada: un titular lo escribe un desconocido. La petición no lleva la pregunta, ni cuenta ni cookies; el sitio ve que se descargó un feed público. Con Apple Intelligence o un modelo en este Mac los titulares se quedan aquí; con ChatGPT, Claude o un atajo se envían como cualquier otra pregunta.";
+
+/* turning up */
+"So this is where you work." = "Así que aquí es donde trabajas.";
+"Right. I live here now." = "Bien. Ahora vivo aquí.";
+"You have been gone a week. I sat on the desk the whole time." = "Has estado fuera una semana. Yo me quedé en el escritorio.";
+"A week. I had almost got used to the quiet." = "Una semana. Casi me acostumbraba al silencio.";
+"You were away a couple of days. Nothing moved." = "Fuera un par de días. No se movió nada.";
+"Back, then." = "De vuelta, entonces.";
+"Working at this hour. All right." = "Trabajando a estas horas. Vale.";
+"It is late. I will keep it down." = "Es tarde. Haré poco ruido.";
+"Morning." = "Buenos días.";
+"Early. Good." = "Temprano. Bien.";
+"Evening." = "Buenas tardes.";
+"Still here, I see." = "Sigues aquí, ya veo.";
+"There you are." = "Ahí estás.";
+"Back at it." = "Otra vez al lío.";
