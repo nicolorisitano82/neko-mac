@@ -186,6 +186,68 @@ follow-up that says "and the other one?" resolves against the previous turn.
 **Risk.** An open microphone for longer than people expect. It has to be visible
 while it lasts and short by default.
 
+**Done.** Three separate things, and the one that matters is the first.
+
+*A moment to reply.* After the cat says anything, the microphone stays open for
+six seconds and the bubble says so — `● listening — just answer`. Measured: the
+sign is up for 7.1 s against a beat of 6, and a bubble that was already staying
+longer is not cut short for it (a 400-character answer kept 22.6 s of its 22.8 s
+reading time). Watched for twelve seconds across a whole turn, the microphone was
+never open without the sign, which is the one rule that has to hold. Silence
+closes it and says nothing at all: the words stay up exactly as they were.
+
+The beat is off unless speech has *already* been allowed for a question — a
+remark nobody asked for is not an occasion to ask for a microphone — and there is
+a switch for it beside the voice in the Ask tab.
+
+*Barge-in.* Words arriving while the cat is being read stop the bubble counting
+down (6.9 s left before, 0.0 after) and cut the spoken voice off mid-word in
+**5 ms**. Finishing the sentence turns the remark into a question — checked
+through the diary, which is where a question is written down before anything else
+happens to it.
+
+*One typed line.* The same keystroke held for half a second opens a field beside
+the cat instead: measured at 0.2 s it is still the microphone, at 0.7 s the line
+is there, and letting go in time leaves no line at all. Return sends what was
+typed, trimmed; Escape and an empty line send nothing. It has to take the
+keyboard — there is no typing into a window that cannot become key — so it gives
+it back: measured in a real bundle, the line became the key window and the
+application that had the keyboard before had it again afterwards.
+
+The line is also what an unavailable or refused microphone falls back to, so the
+keystroke always does something.
+
+*The turn just before.* One turn, three minutes, 300 characters a side (a
+1806-character pair came out at 627). The point of it, with Apple Intelligence
+answering **“And when?”**:
+
+| | the answer |
+| --- | --- |
+| with the previous turn | *“Tolkien ha scritto Lo Hobbit nel 1937.”* |
+| without it | *“L'orario attuale è le 20:12 del martedì 25 agosto 2026.”* |
+
+Three minutes later the turn is gone, so a sentence said after lunch is not
+answered as a reply to one from before it. The turn goes to whichever engine
+answers, memory or no memory: it is what this person said out loud a minute ago
+in this conversation, not the diary.
+
+**What could not be done honestly.** The microphone itself. A test binary cannot
+be granted it — TCC kills an auxiliary executable inside a bundle the moment it
+asks for anything privacy-sensitive — so the listener is replaced at one seam and
+everything above it is the real code. And with the voice switched on the beat
+waits for the utterance to finish rather than listening through it: a machine
+that hears itself talk is not a conversation, and echo cancellation is a bigger
+piece of work than this step.
+
+**Three things found while building it.** A test that reported the typed line as
+never taking the keyboard, which was the test: without AppKit's own event loop
+running, activation never arrives and nothing is ever key. A layout check that
+passed against the previous build's `Localizable.strings`, because the harness
+reads the bundle's resources and only `build.sh` copies them. And, once that
+check learned to compare a paragraph against the space it was given, five Italian
+labels that had been quietly cut off for releases — the permissions summary, the
+drawing tab's explanation, the interval label and two others.
+
 ## 5. The rate itself, and an interval that moves
 
 **Why fifth.** Only now is it safe. The rate rises to the colleague band, and the
@@ -227,6 +289,6 @@ which is also getting a test that fails if it ever becomes possible.
 - [x] 1. One notion of the best engine on this Mac — `NekoBrains`, measured below
 - [x] 2. Breakpoints, and a bar to clear — measured below
 - [x] 3. The diary, and the reflection — measured below
-- [ ] 4. Answerable
+- [x] 4. Answerable — measured below
 - [ ] 5. The rate itself
 - [ ] 6. Voice

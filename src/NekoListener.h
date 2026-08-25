@@ -38,6 +38,13 @@
 - (BOOL)startListeningWithLocale:(NSLocale *)locale
                           report:(void (^)(NSString *text, BOOL final, NSError *error))block;
 
+/* The same, saying how long to hold the microphone open before giving up on a
+   sentence that never started. A question deserves fifteen seconds; the moment
+   after the cat has spoken deserves a few, and no more. */
+- (BOOL)startListeningWithLocale:(NSLocale *)locale
+                        patience:(NSTimeInterval)seconds
+                          report:(void (^)(NSString *text, BOOL final, NSError *error))block;
+
 /* Stops the microphone and waits for the last words to be transcribed. */
 - (void)stop;
 

@@ -65,6 +65,15 @@ static const NSTimeInterval NekoListeningLimit = 15.0;
 - (BOOL)startListeningWithLocale:(NSLocale *)locale
                           report:(void (^)(NSString *text, BOOL final, NSError *error))block
 {
+	return [self startListeningWithLocale:locale
+	                            patience:NekoListeningLimit
+	                              report:block];
+}
+
+- (BOOL)startListeningWithLocale:(NSLocale *)locale
+                        patience:(NSTimeInterval)seconds
+                          report:(void (^)(NSString *text, BOOL final, NSError *error))block
+{
 	if(![NekoListener isAvailable] || [self isListening])
 		return NO;
 
@@ -122,7 +131,7 @@ static const NSTimeInterval NekoListeningLimit = 15.0;
 			[self handleResult:result error:taskError];
 		}] retain];
 
-		[self restartSilenceTimer:NekoListeningLimit];
+		[self restartSilenceTimer:seconds];
 		return YES;
 	}
 	return NO;

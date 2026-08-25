@@ -256,7 +256,7 @@
 "getting the shape right" = "je corrige la forme";
 "Restart Neko" = "Redémarrer Neko";
 "macOS applies a change to screen recording only after Neko is restarted. And because this build is signed ad hoc, every rebuild of the app is a different app as far as the system is concerned: permissions granted to the previous one have to be granted again." = "macOS n’applique un changement d’enregistrement de l’écran qu’après un redémarrage de Neko. Et comme cette version est signée ad hoc, chaque recompilation est une autre app pour le système : les autorisations données à la précédente doivent être redonnées.";
-"Speaks at most every:" = "Parle au plus toutes les :";
+"Speaks at most every:" = "Au plus toutes les :";
 "Curiosity comes with roaming whatever this switch says: every few minutes the cat comes over to the pointer, or goes to claw the edge of the screen. That part needs no engine and sends nothing anywhere. The interval above governs everything it says on its own, curious questions included — inside it the cat still comes over, but says nothing." = "La curiosité vient avec le vagabondage, quoi que dise cet interrupteur : toutes les quelques minutes le chat s’approche du curseur, ou va griffer le bord de l’écran. Cette partie n’utilise aucun moteur et n’envoie rien. L’intervalle ci-dessus vaut pour tout ce qu’il dit de lui-même, questions curieuses comprises : à l’intérieur, le chat s’approche quand même, mais ne dit rien.";
 
 /* which engine speaks */
@@ -281,3 +281,12 @@
 "Forget" = "Oublier";
 "It remembers nothing yet. What it notices is written a day at a time, in plain text, on this Mac — never sent anywhere — kept for thirty days, and reduced each night to a few lines worth keeping." = "Il ne retient encore rien. Ce qu’il remarque est écrit jour par jour, en texte brut, sur ce Mac — jamais envoyé ailleurs — conservé trente jours, et réduit chaque nuit à quelques lignes qui valent la peine.";
 "It remembers %lu day(s) and %lu line(s) worth keeping, %@ in plain text on this Mac. Older days are removed after thirty." = "Il retient %lu jours et %lu lignes qui valent la peine, %@ en texte brut sur ce Mac. Les jours plus anciens sont supprimés après trente.";
+
+/* answering without a keystroke */
+"● listening — just answer" = "● à l’écoute — répondez";
+"● listening" = "● à l’écoute";
+"Ask me something…" = "Demandez-moi quelque chose…";
+"Listen for a reply after" = "Écouter la réponse ensuite";
+"For a few seconds after it speaks, so an answer needs no keystroke. The bubble says so while the microphone is open." = "Quelques secondes après avoir parlé, pour répondre sans toucher au clavier. La bulle le dit tant que le micro est ouvert.";
+"Press %@ and ask. Neko listens until you stop talking. Hold the same keys instead and a line to type in opens beside it." = "Appuyez sur %@ et demandez. Neko écoute jusqu’à ce que vous vous taisiez. Maintenez les mêmes touches et une ligne à écrire s’ouvre à côté.";
+" After it speaks it keeps listening for a few seconds — the bubble says so while it does, and talking over it stops it mid-sentence." = " Après avoir parlé, il écoute encore quelques secondes — la bulle le dit pendant ce temps, et lui parler dessus l’arrête en pleine phrase.";

@@ -764,13 +764,24 @@ static const float NekoMaxStopRadius = 200.0f;
 	[content addSubview:askKeyField];
 	[askKeyField release];
 
-	askSpeakCheck = [[NSButton alloc] initWithFrame:NSMakeRect(152.0f, 162.0f, 300.0f, 18.0f)];
+	askSpeakCheck = [[NSButton alloc] initWithFrame:NSMakeRect(152.0f, 162.0f, 196.0f, 18.0f)];
 	[askSpeakCheck setButtonType:NSButtonTypeSwitch];
 	[askSpeakCheck setTitle:NekoLocalized(@"Read the answer aloud")];
 	[askSpeakCheck setTarget:self];
 	[askSpeakCheck setAction:@selector(takeAskSpeakFrom:)];
 	[content addSubview:askSpeakCheck];
 	[askSpeakCheck release];
+
+	/* On the same row as the voice because they are the same subject: how a turn
+	   ends, and whether the next one needs a keystroke. */
+	followUpCheck = [[NSButton alloc] initWithFrame:NSMakeRect(356.0f, 162.0f, 224.0f, 18.0f)];
+	[followUpCheck setButtonType:NSButtonTypeSwitch];
+	[followUpCheck setTitle:NekoLocalized(@"Listen for a reply after")];
+	[followUpCheck setToolTip:NekoLocalized(@"For a few seconds after it speaks, so an answer needs no keystroke. The bubble says so while the microphone is open.")];
+	[followUpCheck setTarget:self];
+	[followUpCheck setAction:@selector(takeFollowUpFrom:)];
+	[content addSubview:followUpCheck];
+	[followUpCheck release];
 
 	wakeCheck = [[NSButton alloc] initWithFrame:NSMakeRect(152.0f, 186.0f, 300.0f, 18.0f)];
 	[wakeCheck setButtonType:NSButtonTypeSwitch];
@@ -840,6 +851,13 @@ static const float NekoMaxStopRadius = 200.0f;
 	[[NSUserDefaults standardUserDefaults]
 		setBool:([sender state] == NSControlStateValueOn) forKey:NekoWakeWordKey];
 	[[NekoWakeWord sharedWakeWord] applySettings];
+	[self syncAskControls];
+}
+
+- (void)takeFollowUpFrom:(id)sender
+{
+	[[NSUserDefaults standardUserDefaults]
+		setBool:([sender state] == NSControlStateValueOn) forKey:NekoAskFollowUpKey];
 	[self syncAskControls];
 }
 
@@ -925,6 +943,9 @@ static const float NekoMaxStopRadius = 200.0f;
 		? NSControlStateValueOn : NSControlStateValueOff];
 	[askSpeakCheck setState:[defaults boolForKey:NekoAskSpeakKey]
 		? NSControlStateValueOn : NSControlStateValueOff];
+	[followUpCheck setEnabled:on];
+	[followUpCheck setState:[defaults boolForKey:NekoAskFollowUpKey]
+		? NSControlStateValueOn : NSControlStateValueOff];
 
 	/* Which combination is selected, if it is one of the offered ones. */
 	unsigned short code = (unsigned short)[defaults integerForKey:NekoAskHotKeyCodeKey];
@@ -961,12 +982,15 @@ static const float NekoMaxStopRadius = 200.0f;
 	while((view = [old nextObject]) != nil)
 		[view removeFromSuperview];
 
+	/* Two lines' worth: this line names whichever permissions are missing, and
+	   in Italian two names already do not fit on one. It cannot be any wider —
+	   the two buttons start at 316. */
 	permissionsSummary = [self labelWithString:@""
-	                                     frame:NSMakeRect(20.0f, 384.0f, 280.0f, 20.0f)];
+	                                     frame:NSMakeRect(20.0f, 372.0f, 288.0f, 32.0f)];
 	[permissionsSummary setAlignment:NSTextAlignmentLeft];
 	[permissionsContent addSubview:permissionsSummary];
 
-	float y = 324.0f;
+	float y = 320.0f;
 	NSEnumerator *e = [[NekoPermissions all] objectEnumerator];
 	NekoPermission *permission;
 	while((permission = [e nextObject]) != nil) {
@@ -1001,7 +1025,7 @@ static const float NekoMaxStopRadius = 200.0f;
 		[permissionsContent addSubview:status];
 
 		NSTextField *why = [self labelWithString:[permission explanation]
-		                                   frame:NSMakeRect(42.0f, y - 14.0f, 430.0f, 26.0f)];
+		                                   frame:NSMakeRect(42.0f, y - 14.0f, 430.0f, 28.0f)];
 		[why setAlignment:NSTextAlignmentLeft];
 		[why setFont:[NSFont systemFontOfSize:11.0f]];
 		[[why cell] setWraps:YES];
@@ -1177,8 +1201,10 @@ static const float NekoMaxStopRadius = 200.0f;
 	[content addSubview:drawNowButton];
 	[drawNowButton release];
 
+	/* Tall enough for the longest translation of it, not the shortest: in
+	   Italian this paragraph runs three lines further than in English. */
 	drawStatusField = [self labelWithString:@""
-	                                  frame:NSMakeRect(20.0f, 96.0f, 556.0f, 112.0f)];
+	                                  frame:NSMakeRect(20.0f, 58.0f, 556.0f, 150.0f)];
 	[drawStatusField setAlignment:NSTextAlignmentLeft];
 	[[drawStatusField cell] setWraps:YES];
 	[content addSubview:drawStatusField];
@@ -1798,8 +1824,10 @@ static const float NekoMaxStopRadius = 200.0f;
 		return hint;
 
 	NSMutableString *line = [NSMutableString stringWithFormat:
-		NekoLocalized(@"Press %@ and ask. Neko listens until you stop talking."),
+		NekoLocalized(@"Press %@ and ask. Neko listens until you stop talking. Hold the same keys instead and a line to type in opens beside it."),
 		[ask hotKeyDisplayName]];
+	if([[NSUserDefaults standardUserDefaults] boolForKey:NekoAskFollowUpKey])
+		[line appendString:NekoLocalized(@" After it speaks it keeps listening for a few seconds — the bubble says so while it does, and talking over it stops it mid-sentence.")];
 	if([[NSUserDefaults standardUserDefaults] boolForKey:NekoWakeWordKey]) {
 		NekoWakeWord *wake = [NekoWakeWord sharedWakeWord];
 		[line appendString:@"\n\n"];

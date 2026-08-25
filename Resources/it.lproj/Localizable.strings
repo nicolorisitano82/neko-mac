@@ -255,8 +255,8 @@
 "filling in the background" = "riempio lo sfondo";
 "getting the shape right" = "aggiusto la forma";
 "Restart Neko" = "Riavvia Neko";
-"macOS applies a change to screen recording only after Neko is restarted. And because this build is signed ad hoc, every rebuild of the app is a different app as far as the system is concerned: permissions granted to the previous one have to be granted again." = "macOS applica un cambio alla registrazione schermo solo dopo il riavvio di Neko. E siccome questa build è firmata ad hoc, ogni ricostruzione dell'app per il sistema è un'app diversa: i permessi dati alla precedente vanno concessi di nuovo.";
-"Speaks at most every:" = "Parla al massimo ogni:";
+"macOS applies a change to screen recording only after Neko is restarted. And because this build is signed ad hoc, every rebuild of the app is a different app as far as the system is concerned: permissions granted to the previous one have to be granted again." = "macOS applica un cambio alla registrazione schermo solo dopo il riavvio di Neko. E siccome questa build è firmata ad hoc, ogni ricompilazione è per il sistema un'altra app: i permessi dati alla precedente vanno ridati.";
+"Speaks at most every:" = "Al massimo ogni:";
 "Curiosity comes with roaming whatever this switch says: every few minutes the cat comes over to the pointer, or goes to claw the edge of the screen. That part needs no engine and sends nothing anywhere. The interval above governs everything it says on its own, curious questions included — inside it the cat still comes over, but says nothing." = "La curiosità arriva con il gironzolare qualunque cosa dica questo interruttore: ogni pochi minuti il gatto si avvicina al puntatore, o va a graffiare il bordo dello schermo. Quella parte non usa nessun motore e non invia niente. L'intervallo qui sopra vale per tutto quello che dice di sua iniziativa, domande curiose comprese: dentro l'intervallo il gatto si avvicina lo stesso, ma non dice niente.";
 
 /* which engine speaks */
@@ -281,3 +281,12 @@
 "Forget" = "Dimentica";
 "It remembers nothing yet. What it notices is written a day at a time, in plain text, on this Mac — never sent anywhere — kept for thirty days, and reduced each night to a few lines worth keeping." = "Non ricorda ancora niente. Quello che nota viene scritto un giorno alla volta, in testo semplice, su questo Mac — non viene mandato da nessuna parte — tenuto trenta giorni, e ogni notte ridotto a poche righe che valga la pena tenere.";
 "It remembers %lu day(s) and %lu line(s) worth keeping, %@ in plain text on this Mac. Older days are removed after thirty." = "Ricorda %lu giorni e %lu righe che vale la pena tenere, %@ in testo semplice su questo Mac. I giorni più vecchi vengono rimossi dopo trenta.";
+
+/* answering without a keystroke */
+"● listening — just answer" = "● in ascolto — rispondi pure";
+"● listening" = "● in ascolto";
+"Ask me something…" = "Chiedimi qualcosa…";
+"Listen for a reply after" = "Ascolta la risposta dopo";
+"For a few seconds after it speaks, so an answer needs no keystroke. The bubble says so while the microphone is open." = "Per qualche secondo dopo che ha parlato, così rispondere non richiede tasti. Il fumetto lo dice finché il microfono è aperto.";
+"Press %@ and ask. Neko listens until you stop talking. Hold the same keys instead and a line to type in opens beside it." = "Premi %@ e chiedi. Neko ascolta finché smetti di parlare. Tieni premuti gli stessi tasti e accanto si apre una riga da scrivere.";
+" After it speaks it keeps listening for a few seconds — the bubble says so while it does, and talking over it stops it mid-sentence." = " Dopo che ha parlato resta in ascolto per qualche secondo — il fumetto lo dice mentre lo fa, e se gli parli sopra si interrompe a metà frase.";
