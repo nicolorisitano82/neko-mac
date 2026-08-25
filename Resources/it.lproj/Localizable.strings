@@ -263,3 +263,12 @@
 "Apple Intelligence, on this Mac, is what speaks when Neko speaks on its own." = "Quando Neko parla di sua iniziativa parla Apple Intelligence, su questo Mac.";
 "%@, on this Mac, is what speaks when Neko speaks on its own." = "Quando Neko parla di sua iniziativa parla %@, su questo Mac.";
 "Nothing on this Mac is up to writing remarks: Apple Intelligence is unavailable and no model of about two gigabytes or more is downloaded. The cat falls back to its own few written-in lines, and says less. Whatever engine is set for questions is untouched by this — it is only that a remark nobody asked for is not sent to a remote service." = "Su questo Mac non c'è niente in grado di scrivere commenti: Apple Intelligence non è disponibile e non è scaricato nessun modello da circa due gigabyte o più. Il gatto torna alle sue poche frasi già scritte, e parla meno. Il motore scelto per le domande non c'entra e non viene toccato: è solo che un commento che nessuno ha chiesto non viene mandato a un servizio remoto.";
+
+/* breakpoints */
+"a clear break in what you were doing" = "una pausa netta in quello che stavi facendo";
+"a pause between two things" = "una pausa fra due cose";
+"a small gap" = "un piccolo spazio";
+"nothing: you are in the middle of something" = "niente: sei in mezzo a qualcosa";
+"you are typing a password" = "stai scrivendo una password";
+"something is filling the screen" = "qualcosa occupa tutto lo schermo";
+"It waits for a seam in your work before saying anything: a program you have just left after a long stretch, a burst of typing that has ended, a pause. In the middle of something it stays quiet, and it says nothing at all while a window fills the screen or you are typing a password. The interval below is a floor rather than an alarm clock — after three times it, a smaller gap will do." = "Prima di dire qualcosa aspetta una cucitura nel tuo lavoro: un programma che hai appena lasciato dopo una lunga permanenza, una raffica di battitura finita, una pausa. In mezzo a qualcosa sta zitto, e non dice niente del tutto mentre una finestra occupa lo schermo o stai scrivendo una password. L'intervallo qui sotto è un minimo, non una sveglia: passate tre volte quel tempo, gli basta uno spazio più piccolo.";

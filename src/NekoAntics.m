@@ -101,6 +101,8 @@ static const NSTimeInterval NekoAnticsAway = 150.0;
 		return NO;
 	if([self idleSeconds] > NekoAnticsAway)
 		return NO;
+	if([[NekoDesktop sharedDesktop] isBusyElsewhere])
+		return NO;                 /* a film, a presentation, a password field */
 	return lastAntic == nil || -[lastAntic timeIntervalSinceNow] > cooldown;
 }
 

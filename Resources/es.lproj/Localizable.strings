@@ -263,3 +263,12 @@
 "Apple Intelligence, on this Mac, is what speaks when Neko speaks on its own." = "Cuando Neko habla por su cuenta habla Apple Intelligence, en este Mac.";
 "%@, on this Mac, is what speaks when Neko speaks on its own." = "Cuando Neko habla por su cuenta habla %@, en este Mac.";
 "Nothing on this Mac is up to writing remarks: Apple Intelligence is unavailable and no model of about two gigabytes or more is downloaded. The cat falls back to its own few written-in lines, and says less. Whatever engine is set for questions is untouched by this — it is only that a remark nobody asked for is not sent to a remote service." = "En este Mac no hay nada capaz de escribir comentarios: Apple Intelligence no está disponible y no hay descargado ningún modelo de unos dos gigabytes o más. El gato vuelve a sus pocas frases ya escritas, y habla menos. El motor elegido para las preguntas no se toca: es solo que un comentario que nadie pidió no se manda a un servicio remoto.";
+
+/* breakpoints */
+"a clear break in what you were doing" = "una pausa clara en lo que estabas haciendo";
+"a pause between two things" = "una pausa entre dos cosas";
+"a small gap" = "un hueco pequeño";
+"nothing: you are in the middle of something" = "nada: estás en medio de algo";
+"you are typing a password" = "estás escribiendo una contraseña";
+"something is filling the screen" = "algo ocupa toda la pantalla";
+"It waits for a seam in your work before saying anything: a program you have just left after a long stretch, a burst of typing that has ended, a pause. In the middle of something it stays quiet, and it says nothing at all while a window fills the screen or you are typing a password. The interval below is a floor rather than an alarm clock — after three times it, a smaller gap will do." = "Antes de decir algo espera una costura en tu trabajo: un programa que acabas de dejar tras un rato largo, una ráfaga de escritura que ha terminado, una pausa. En medio de algo se calla, y no dice nada mientras una ventana ocupa la pantalla o estás escribiendo una contraseña. El intervalo de abajo es un mínimo, no un despertador: pasadas tres veces ese tiempo, le basta un hueco más pequeño.";

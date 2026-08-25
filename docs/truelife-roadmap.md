@@ -84,6 +84,37 @@ And that the never-interrupt states are honoured, tested by faking each one.
 answer is the floor-not-trigger rule: if nothing has been said for much longer
 than the interval, a coarser breakpoint will do.
 
+**Done.** Four seams, recognised from what was already being watched, each tested
+on its own with the signals staged:
+
+| what happened | seam |
+| --- | --- |
+| ten minutes in Pages, then a switch | coarse |
+| twenty seconds in the Finder, then a switch | medium |
+| back after seven minutes away | coarse |
+| a burst of typing that stopped | medium |
+| still typing, 199 keys a minute | none |
+
+A seam lasts twelve seconds and then it is gone, which the test checks at three
+seconds and at thirty. The interval became a floor rather than a trigger, and how
+wide a seam is needed relaxes as the silence grows:
+
+| since the last remark | seam needed |
+| --- | --- |
+| inside the interval | nothing passes |
+| just past it | coarse only |
+| past 1.5× | medium will do |
+| past 3× | a small gap will do |
+
+And two doors that stay shut whatever the clock says: nothing specific to say, or
+a window filling the screen or a password being typed. Both tested.
+
+**What could not be done honestly.** Focus and Do Not Disturb: macOS keeps that
+state in `~/Library/DoNotDisturb`, which is unreadable even outside the sandbox
+("Operation not permitted"), and there is no public API. The full-screen check is
+the proxy, and it catches presentations, films and games — but a call in a window
+is not a call it can see. Said plainly in the tab rather than implied.
+
 ## 3. The diary, and the reflection
 
 **Why third.** It is the largest piece and the one that changes what the cat can
@@ -161,7 +192,7 @@ which is also getting a test that fails if it ever becomes possible.
 
 - [x] 0. The reading, the decisions, this roadmap
 - [x] 1. One notion of the best engine on this Mac — `NekoBrains`, measured below
-- [ ] 2. Breakpoints, and a bar to clear
+- [x] 2. Breakpoints, and a bar to clear — measured below
 - [ ] 3. The diary, and the reflection
 - [ ] 4. Answerable
 - [ ] 5. The rate itself

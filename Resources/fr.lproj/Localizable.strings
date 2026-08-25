@@ -263,3 +263,12 @@
 "Apple Intelligence, on this Mac, is what speaks when Neko speaks on its own." = "Quand Neko parle de lui-même, c’est Apple Intelligence, sur ce Mac, qui parle.";
 "%@, on this Mac, is what speaks when Neko speaks on its own." = "Quand Neko parle de lui-même, c’est %@, sur ce Mac, qui parle.";
 "Nothing on this Mac is up to writing remarks: Apple Intelligence is unavailable and no model of about two gigabytes or more is downloaded. The cat falls back to its own few written-in lines, and says less. Whatever engine is set for questions is untouched by this — it is only that a remark nobody asked for is not sent to a remote service." = "Rien sur ce Mac n’est à la hauteur pour écrire des remarques : Apple Intelligence est indisponible et aucun modèle d’environ deux gigaoctets ou plus n’est téléchargé. Le chat revient à ses quelques phrases écrites d’avance, et parle moins. Le moteur choisi pour les questions n’est pas concerné : c’est seulement qu’une remarque que personne n’a demandée n’est pas envoyée à un service distant.";
+
+/* breakpoints */
+"a clear break in what you were doing" = "une vraie pause dans ce que vous faisiez";
+"a pause between two things" = "une pause entre deux choses";
+"a small gap" = "un petit intervalle";
+"nothing: you are in the middle of something" = "rien : vous êtes en pleine tâche";
+"you are typing a password" = "vous tapez un mot de passe";
+"something is filling the screen" = "quelque chose occupe tout l’écran";
+"It waits for a seam in your work before saying anything: a program you have just left after a long stretch, a burst of typing that has ended, a pause. In the middle of something it stays quiet, and it says nothing at all while a window fills the screen or you are typing a password. The interval below is a floor rather than an alarm clock — after three times it, a smaller gap will do." = "Avant de dire quelque chose il attend une couture dans votre travail : un programme que vous venez de quitter après un long moment, une salve de frappe terminée, une pause. En pleine tâche il se tait, et il ne dit rien du tout tant qu’une fenêtre occupe l’écran ou que vous tapez un mot de passe. L’intervalle ci-dessous est un plancher, pas un réveil : passé trois fois ce temps, un plus petit intervalle suffira.";

@@ -123,6 +123,9 @@ static const NSUInteger NekoTextLimit = 400;
 		kCGEventSourceStateCombinedSessionState, type);
 }
 
+/* A breakpoint lasts about as long as it takes to notice one. */
+static const NSTimeInterval NekoBreakpointWindow = 12.0;
+
 - (void)sample
 {
 	uint32_t keys = [self counterFor:kCGEventKeyDown];
@@ -135,8 +138,140 @@ static const NSUInteger NekoTextLimit = 400;
 	}
 	keysBefore = keys;
 	movesBefore = moves;
+
+	if(since > 1.0)
+		[self noticeBreakpoint];
+
+	previousKeys = keysPerMinute;
+	previousIdle = [self idleSeconds];
 	[sampledAt release];
 	sampledAt = [[NSDate date] retain];
+}
+
+/* Four things worth calling a breakpoint, from the coarsest down. Each is
+   something a person would recognise as a seam in their own afternoon. */
+- (void)noticeBreakpoint
+{
+	NSString *app = [self frontApp];
+	NSTimeInterval idle = [self idleSeconds];
+	NekoBreakpoint found = NekoBreakpointNone;
+
+	/* Left one program for another. How coarse depends on how long they had
+	   been in the one they left. */
+	if(previousApp != nil && ![previousApp isEqualToString:app]) {
+		NSTimeInterval stretch = previousAppSince != nil
+			? -[previousAppSince timeIntervalSinceNow] : 0.0;
+		found = stretch >= 180.0 ? NekoBreakpointCoarse : NekoBreakpointMedium;
+	}
+
+	/* Back from a real break — a coffee, a meeting — which is the widest seam
+	   there is. */
+	if(previousIdle >= 120.0 && idle < 5.0)
+		found = NekoBreakpointCoarse;
+
+	/* A burst of typing that has just stopped: the end of a thought. */
+	if(found == NekoBreakpointNone && previousKeys >= 40 && keysPerMinute < 10)
+		found = NekoBreakpointMedium;
+
+	/* Simply paused, with work either side of it. */
+	if(found == NekoBreakpointNone && idle >= 3.0 && idle < 25.0
+	   && (previousKeys > 0 || movesPerMinute > 0))
+		found = NekoBreakpointFine;
+
+	if(![previousApp isEqualToString:app]) {
+		[previousApp release];
+		previousApp = [app copy];
+		[previousAppSince release];
+		previousAppSince = [[NSDate date] retain];
+	}
+
+	if(found == NekoBreakpointNone)
+		return;
+	/* A coarser one replaces a finer one inside the same window; otherwise the
+	   newest wins. */
+	if([self breakpointNow] != NekoBreakpointNone && found < breakpoint)
+		return;
+	breakpoint = found;
+	[breakpointAt release];
+	breakpointAt = [[NSDate date] retain];
+}
+
+- (NekoBreakpoint)breakpointNow
+{
+	if(breakpointAt == nil)
+		return NekoBreakpointNone;
+	return -[breakpointAt timeIntervalSinceNow] <= NekoBreakpointWindow
+		? breakpoint : NekoBreakpointNone;
+}
+
+- (NSTimeInterval)secondsSinceBreakpoint
+{
+	return breakpointAt != nil ? -[breakpointAt timeIntervalSinceNow] : 1.0e9;
+}
+
+- (NSString *)describeBreakpoint
+{
+	switch([self breakpointNow]) {
+		case NekoBreakpointCoarse: return NSLocalizedString(@"a clear break in what you were doing", nil);
+		case NekoBreakpointMedium: return NSLocalizedString(@"a pause between two things", nil);
+		case NekoBreakpointFine:   return NSLocalizedString(@"a small gap", nil);
+		default:                   return NSLocalizedString(@"nothing: you are in the middle of something", nil);
+	}
+}
+
+#pragma mark Times to say nothing at all
+
+/* A window that covers a whole screen is a presentation, a film or a game, and
+   none of them want a cat with an opinion. */
+- (BOOL)frontWindowFillsAScreen
+{
+	CFArrayRef windows = CGWindowListCopyWindowInfo(
+		kCGWindowListOptionOnScreenOnly | kCGWindowListExcludeDesktopElements,
+		kCGNullWindowID);
+	if(windows == NULL)
+		return NO;
+	NSString *wanted = [self frontApp];
+	BOOL fills = NO;
+	NSEnumerator *e = [(NSArray *)windows objectEnumerator];
+	NSDictionary *window;
+	while((window = [e nextObject]) != nil && !fills) {
+		if(![[window objectForKey:(NSString *)kCGWindowOwnerName] isEqualToString:wanted])
+			continue;
+		CGRect bounds = CGRectZero;
+		CGRectMakeWithDictionaryRepresentation(
+			(CFDictionaryRef)[window objectForKey:(NSString *)kCGWindowBounds], &bounds);
+		NSEnumerator *s = [[NSScreen screens] objectEnumerator];
+		NSScreen *screen;
+		while((screen = [s nextObject]) != nil) {
+			NSRect frame = [screen frame];
+			if(bounds.size.width >= frame.size.width - 1.0
+			   && bounds.size.height >= frame.size.height - 1.0) {
+				fills = YES;
+				break;
+			}
+		}
+	}
+	CFRelease(windows);
+	return fills;
+}
+
+- (NSString *)whyBusyElsewhere
+{
+	if(IsSecureEventInputEnabled())
+		return NSLocalizedString(@"you are typing a password", nil);
+	if([self frontWindowFillsAScreen])
+		return NSLocalizedString(@"something is filling the screen", nil);
+	return nil;
+}
+
+- (BOOL)isBusyElsewhere
+{
+	return [self whyBusyElsewhere] != nil;
+}
+
+- (BOOL)somethingStandsOut
+{
+	return ![[self highlight] hasPrefix:@"Nothing stands out"];
 }
 
 - (uint32_t)keysPerMinute { return keysPerMinute; }

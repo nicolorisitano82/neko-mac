@@ -1466,6 +1466,8 @@ static const float NekoMaxStopRadius = 200.0f;
 	NSMutableString *line = [NSMutableString string];
 	[line appendString:NekoLocalized(@"Curiosity comes with roaming whatever this switch says: every minute or two the cat comes over to the pointer, asks what you are writing, or goes to claw the edge of the screen. That part needs no engine and sends nothing anywhere.")];
 	[line appendString:@"\n\n"];
+	[line appendString:NekoLocalized(@"It waits for a seam in your work before saying anything: a program you have just left after a long stretch, a burst of typing that has ended, a pause. In the middle of something it stays quiet, and it says nothing at all while a window fills the screen or you are typing a password. The interval below is a floor rather than an alarm clock — after three times it, a smaller gap will do.")];
+	[line appendString:@"\n\n"];
 	[line appendString:NekoLocalized(@"While roaming, Neko glances at what you are doing and now and then says something about it — a tip, a nudge, or a joke. It waits until you have been in one application for a while, keeps quiet when you are away from the keyboard, and says nothing at all when it has nothing worth saying.")];
 	[line appendString:@"\n\n"];
 	[line appendString:NekoLocalized(@"All it can see, and all that is sent, is this:")];

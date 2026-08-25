@@ -127,6 +127,10 @@ static const NSTimeInterval NekoAdvisorTyping = 3.0;
 	NSTimeInterval idle = [desktop idleSeconds];
 	if(idle > NekoAdvisorAway || idle < NekoAdvisorTyping)
 		return NO;
+
+	/* Never, whatever the clock says. */
+	if([desktop isBusyElsewhere])
+		return NO;
 	if(lastSpoke != nil
 	   && -[lastSpoke timeIntervalSinceNow] < [controller suggestionInterval])
 		return NO;
@@ -135,6 +139,22 @@ static const NSTimeInterval NekoAdvisorTyping = 3.0;
 
 	NSString *app = [desktop frontApp];
 	if([app length] == 0 || [desktop secondsInFront] < NekoAdvisorSettled)
+		return NO;
+
+	/* The interval is a floor, not a trigger. Past it, a remark also needs a
+	   seam in the work to land in and something specific to say — the two
+	   things that separate a colleague from a notification. How wide a seam it
+	   needs relaxes as the silence grows: after three times the interval a small
+	   gap will do, because by then saying nothing has its own cost. */
+	NSTimeInterval waited = lastSpoke != nil ? -[lastSpoke timeIntervalSinceNow]
+	                                         : [controller suggestionInterval] * 4.0;
+	NekoBreakpoint needed = waited > [controller suggestionInterval] * 3.0
+		? NekoBreakpointFine
+		: (waited > [controller suggestionInterval] * 1.5 ? NekoBreakpointMedium
+		                                                 : NekoBreakpointCoarse);
+	if([desktop breakpointNow] < needed)
+		return NO;
+	if(![desktop somethingStandsOut])
 		return NO;
 
 	/* Twice the interval before saying anything else about the same
