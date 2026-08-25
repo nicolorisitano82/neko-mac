@@ -994,7 +994,7 @@ static const float NekoMaxStopRadius = 200.0f;
 		[permissionsContent addSubview:status];
 
 		NSTextField *why = [self labelWithString:[permission explanation]
-		                                   frame:NSMakeRect(42.0f, y - 14.0f, 538.0f, 26.0f)];
+		                                   frame:NSMakeRect(42.0f, y - 14.0f, 430.0f, 26.0f)];
 		[why setAlignment:NSTextAlignmentLeft];
 		[why setFont:[NSFont systemFontOfSize:11.0f]];
 		[[why cell] setWraps:YES];
