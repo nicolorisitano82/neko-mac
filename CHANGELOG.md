@@ -1,5 +1,20 @@
 # Changelog
 
+## 2.0.1 — 2026-08-25
+
+### The permissions tab, laid out properly
+
+The Screen recording row came down on top of the note about restarting and about
+ad hoc signing — the note had been added after the tab was last measured, so
+nothing had caught it. The two buttons moved up beside the summary, the rows are
+spaced 63 points, and the explanations stop short of the button column: widening
+them to the full width had put each one a single point under the Ask button of
+the row below, which is the sort of thing only a machine notices and every
+machine notices.
+
+All six tabs measured again by intersecting every pair of frames: nothing
+overlaps.
+
 ## 2.0 — 2026-08-25
 
 ### A crash, asking the time
