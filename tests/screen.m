@@ -29,6 +29,7 @@
 @interface NekoAsk (Testing)
 - (void)cancelEverything;
 - (void)propose:(NekoAction *)action;
+- (void)answer:(NSString *)text;
 @end
 
 static NSString *sourceOf(NSString *file)
@@ -119,6 +120,36 @@ int main(void)
 		[[NSUserDefaults standardUserDefaults] removeObjectForKey:NekoActionsEnabledKey];
 	}
 	[ask cancelEverything];
+
+	printf("\n--- nor from a headline somebody else wrote ---\n");
+
+	/* The same rule, one step further out: an answer built on text fetched from
+	   the web may not perform anything either, whatever it says. */
+	[[NSUserDefaults standardUserDefaults] setBool:YES forKey:NekoActionsEnabledKey];
+	[ask cancelEverything];
+	spin(0.2);
+	Ivar web = class_getInstanceVariable([NekoAsk class], "fromTheWeb");
+	ok(web != NULL, @"there is a flag saying where the answer came from", nil);
+	if(web != NULL) {
+		((BOOL *)(void *)((char *)ask + ivar_getOffset(web)))[0] = YES;
+		[ask answer:@"ACTION: open-app Terminal"];
+		spin(0.4);
+		BOOL asked = NO;
+		NSEnumerator *after = [[[bubble contentView] subviews] objectEnumerator];
+		NSView *one;
+		NSString *saidInstead = @"";
+		while((one = [after nextObject]) != nil) {
+			if([one isKindOfClass:[NSButton class]] && ![one isHidden])
+				asked = YES;
+			if([one isKindOfClass:[NSTextField class]]
+			   && [[(NSTextField *)one stringValue] length] > 0)
+				saidInstead = [(NSTextField *)one stringValue];
+		}
+		ok(!asked, @"a deed read off the web is never even offered", saidInstead);
+	}
+	[[NSUserDefaults standardUserDefaults] removeObjectForKey:NekoActionsEnabledKey];
+	[ask cancelEverything];
+	spin(0.2);
 
 	printf("\n--- the route does not exist in the source either ---\n");
 

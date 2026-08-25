@@ -4,6 +4,7 @@
 #import "NekoMemory.h"
 #import "NekoBrains.h"
 #import "NekoRate.h"
+#import "NekoWeb.h"
 #import "NekoFolderAccess.h"
 #import "NekoWakeWord.h"
 #import "NekoHotKey.h"
@@ -751,7 +752,8 @@ static const NSTimeInterval NekoHoldToType = 0.5;
 	   somebody who asked a question and gets nothing back. */
 	NSString *instructions = NekoAnswerInstructionsWith(
 		[character persona], [[NekoPainter sharedPainter] isReady],
-		[[NSUserDefaults standardUserDefaults] boolForKey:NekoActionsEnabledKey]);
+		[[NSUserDefaults standardUserDefaults] boolForKey:NekoActionsEnabledKey],
+		[[NekoWeb sharedWeb] isEnabled] ? [NekoWeb namesForInstructions] : nil);
 
 	/* The diary is offered to an engine that keeps it here, and to no other. A
 	   question answered by ChatGPT is answered without it: better a cat that
@@ -793,6 +795,7 @@ static const NSTimeInterval NekoHoldToType = 0.5;
 	if(saidUnasked && [NekoAsk secondsSinceSpokeUnprompted] < 60.0)
 		[self judgeUnasked:NekoVerdictAnswered];
 
+	fromTheWeb = NO;
 	[[NekoMemory sharedMemory] noteHeard:question];
 	[askingAbout release];
 	askingAbout = [question copy];
@@ -842,6 +845,84 @@ static const NSTimeInterval NekoHoldToType = 0.5;
 	}
 
 	[provider askQuestion:question instructions:instructions completion:finished];
+}
+
+#pragma mark Looking something up
+
+/* Somebody asked something that needs today rather than what a model remembers.
+   Two passes: the model names one of the sources, the app fetches it, and the
+   model answers with the lines in front of it. The app does the naming of
+   addresses, always — see NekoWeb for why that is the whole of the safety. */
+- (void)lookUp:(NSString *)wanted
+{
+	NekoWeb *web = [NekoWeb sharedWeb];
+	NSString *asked = [[askingAbout copy] autorelease];
+
+	/* The weather is numbers from an API, not somebody's prose: it is shown as
+	   it comes, with the source named, and no model is asked to retell it. */
+	NSString *lowered = [wanted lowercaseString];
+	if([lowered hasPrefix:@"weather"] || [lowered hasPrefix:@"meteo"]) {
+		NSString *place = [[wanted substringFromIndex:
+			[lowered hasPrefix:@"weather"] ? 7 : 5]
+			stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]];
+		phase = NekoPhaseAnswering;
+		[[self panel] holdWithState:NekoStateKaki];
+		[self startDrawingAbout:NekoAskLocalized(@"One moment, I will look.")];
+		[web weatherFor:place completion:^(NSString *summary, NSError *error) {
+			[self stopThinking];
+			if([summary length] == 0) {
+				[self sayInCharacter:NekoAskLocalized(@"I could not reach it.")];
+				return;
+			}
+			fromTheWeb = YES;
+			[self answer:summary];
+		}];
+		return;
+	}
+
+	NekoWebSource *source = [NekoWeb sourceNamed:wanted];
+	if(source == nil) {
+		/* It named something that is not on the list. Nothing is fetched, and
+		   the question is answered without it rather than not at all. */
+		[self sayInCharacter:NekoAskLocalized(@"I do not have that one to look at.")];
+		return;
+	}
+
+	phase = NekoPhaseAnswering;
+	[[self panel] holdWithState:NekoStateKaki];
+	[self startDrawingAbout:NekoAskLocalized(@"One moment, I will look.")];
+
+	[web headlinesFrom:source completion:^(NSArray *headlines, NSError *error) {
+		[self stopThinking];
+		if([headlines count] == 0) {
+			[self sayInCharacter:NekoAskLocalized(@"I could not reach it.")];
+			return;
+		}
+
+		id<NekoAnswerProvider> provider = [self provider];
+		if(![provider isConfigured]) {
+			/* No model to hand them to: the headlines are the answer, which is
+			   what was asked for anyway. */
+			fromTheWeb = YES;
+			[self answer:[NekoWeb plainList:headlines from:source]];
+			return;
+		}
+
+		fromTheWeb = YES;
+		phase = NekoPhaseThinking;
+		[self startThinkingAbout:asked ?: [source name]];
+		NSString *instructions = [[self instructionsForAsking]
+			stringByAppendingString:[NekoWeb blockFrom:[source name] lines:headlines]];
+		[provider askQuestion:(asked ?: [source name])
+		         instructions:instructions
+		           completion:^(NSString *answer, NSError *whyNot) {
+			[self stopThinking];
+			if([answer length] > 0)
+				[self answer:answer];
+			else
+				[self answer:[NekoWeb plainList:headlines from:source]];
+		}];
+	}];
 }
 
 /* A model that wants a picture answers with the marker and nothing else. */
@@ -931,6 +1012,19 @@ static const NSTimeInterval NekoHoldToType = 0.5;
 {
 	if(![NekoAction looksLikeAnAction:text] && ![self looksLikeADrawing:text])
 		[[NekoMemory sharedMemory] noteSaid:text];
+
+	if([NekoWeb looksLikeALook:text] && [[NekoWeb sharedWeb] isEnabled]) {
+		[self lookUp:[NekoWeb wantedIn:text]];
+		return;
+	}
+
+	/* An answer written with somebody else's words in front of it does not get
+	   to move the machine. A headline is written by a stranger, and a stranger
+	   who wants a cat to open something only has to write it in one. */
+	if(fromTheWeb && ([NekoAction looksLikeAnAction:text] || [self looksLikeADrawing:text])) {
+		[self sayInCharacter:NekoAskLocalized(@"Not from something I read. Ask me again yourself.")];
+		return;
+	}
 
 	if([NekoAction looksLikeAnAction:text]
 	   && [[NSUserDefaults standardUserDefaults] boolForKey:NekoActionsEnabledKey]) {

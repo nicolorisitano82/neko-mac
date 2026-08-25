@@ -102,19 +102,20 @@ NSString *NekoFactsNow(void)
    one model narrate it back, answering inside a <small sprite 32px: …> tag. */
 NSString *NekoAnswerInstructionsFor(NSString *persona)
 {
-	return NekoAnswerInstructionsWith(persona, NO, NO);
+	return NekoAnswerInstructionsWith(persona, NO, NO, nil);
 }
 
 NSString *NekoAnswerInstructionsDrawing(NSString *persona, BOOL mayDraw)
 {
-	return NekoAnswerInstructionsWith(persona, mayDraw, NO);
+	return NekoAnswerInstructionsWith(persona, mayDraw, NO, nil);
 }
 
 /* With drawing switched on, one more thing the answer may be: a request for a
    picture. The marker is answered instead of the sentence, and the app turns it
    into a drawing — which means the model decides what "show me the Colosseum"
    means in any language, and the app only has to recognise five characters. */
-NSString *NekoAnswerInstructionsWith(NSString *persona, BOOL mayDraw, BOOL mayAct)
+NSString *NekoAnswerInstructionsWith(NSString *persona, BOOL mayDraw, BOOL mayAct,
+                                    NSString *mayLookAt)
 {
 	NSString *drawing = mayDraw ? (NSString *)
 		@"\n\nPICTURES. Only when they ask to be *shown* something — a picture of "
@@ -141,6 +142,24 @@ NSString *NekoAnswerInstructionsWith(NSString *persona, BOOL mayDraw, BOOL mayAc
 		@"is a question, and gets a sentence."
 		: @"";
 
+	/* The list of names is handed over rather than described, because a model
+	   that invents a source gets refused before anything is fetched. What it
+	   cannot do is name an address: that is the whole safety of the feature. */
+	NSString *looking = [mayLookAt length] > 0 ? [NSString stringWithFormat:
+		@"\n\nLOOKING SOMETHING UP. You do not know what has happened today and "
+		@"you do not know the weather. The list above has the date and the "
+		@"battery; it has no news and no forecast in it. Never answer either from "
+		@"memory, and never say the weather is \"changeable\" or the news "
+		@"\"uncertain\" — that is guessing.\n"
+		@"When they ask about the news, what has happened, what is going on, or "
+		@"the weather anywhere, reply with one line and nothing else:\n"
+		@"LOOK: <one of: %@>\n"
+		@"\"cosa è successo oggi nel mondo\" is LOOK: ansa. \"che tempo fa a "
+		@"Roma\" is LOOK: weather Roma. \"what are programmers reading\" is "
+		@"LOOK: hn. \"ci sono allerte meteo\" is LOOK: allerta.\n"
+		@"You may not name a web address, only one of those words. What is there "
+		@"comes back to you, and then you answer in words.", mayLookAt] : @"";
+
 	return [NSString stringWithFormat:
 		@"You are %@, living on someone's computer desktop, and you have just been "
 		@"asked a question out loud.\n\n"
@@ -158,9 +177,9 @@ NSString *NekoAnswerInstructionsWith(NSString *persona, BOOL mayDraw, BOOL mayAc
 		@"caveats, no explaining what else you cannot know. When it is about "
 		@"something not on the list, and you have no way to know it, say that in "
 		@"one short sentence instead.\n%@"
-		@"%@%@%@",
+		@"%@%@%@%@",
 		persona ?: @"a small pixel-art cat", language, language, NekoFactsNow(),
-		drawing, doing,
+		drawing, doing, looking,
 		/* Last word, because the last instruction is the one a model keeps: the
 		   English block above was pulling whole refusals into English. */
 		[NSString stringWithFormat:

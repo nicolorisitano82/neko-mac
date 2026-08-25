@@ -10,6 +10,7 @@
 #import "NekoPermissions.h"
 #import "NekoBrains.h"
 #import "NekoRate.h"
+#import "NekoWeb.h"
 #import "NekoMemory.h"
 #import "NekoHotKey.h"
 #import "NekoModelProvider.h"
@@ -792,7 +793,18 @@ static const float NekoMaxStopRadius = 200.0f;
 	[content addSubview:wakeCheck];
 	[wakeCheck release];
 
-	actionsCheck = [[NSButton alloc] initWithFrame:NSMakeRect(152.0f, 138.0f, 300.0f, 18.0f)];
+	/* Beside the other switch that lets something outside this Mac into the
+	   conversation: one lets it do things here, the other lets it read things
+	   from elsewhere. */
+	webCheck = [[NSButton alloc] initWithFrame:NSMakeRect(356.0f, 138.0f, 224.0f, 18.0f)];
+	[webCheck setButtonType:NSButtonTypeSwitch];
+	[webCheck setTitle:NekoLocalized(@"Let it look up the news")];
+	[webCheck setTarget:self];
+	[webCheck setAction:@selector(takeWebFrom:)];
+	[content addSubview:webCheck];
+	[webCheck release];
+
+	actionsCheck = [[NSButton alloc] initWithFrame:NSMakeRect(152.0f, 138.0f, 196.0f, 18.0f)];
 	[actionsCheck setButtonType:NSButtonTypeSwitch];
 	[actionsCheck setTitle:NekoLocalized(@"Let it open things when I ask")];
 	[actionsCheck setTarget:self];
@@ -818,12 +830,23 @@ static const float NekoMaxStopRadius = 200.0f;
 	[content addSubview:forgetFoldersButton];
 	[forgetFoldersButton release];
 
-	askStatusField = [self labelWithString:@"" frame:NSMakeRect(20.0f, 8.0f, 556.0f, 86.0f)];
+	/* Same treatment as the suggestions tab, and for the same reason: with
+	   everything switched on this paragraph says more than eighty-six points
+	   will hold, and the part that got cut off was the part about what leaves
+	   the Mac. */
+	NSScrollView *askScroll = [[NSScrollView alloc]
+		initWithFrame:NSMakeRect(20.0f, 8.0f, 556.0f, 86.0f)];
+	[askScroll setHasVerticalScroller:YES];
+	[askScroll setDrawsBackground:NO];
+	[askScroll setBorderType:NSNoBorder];
+	askStatusField = [self labelWithString:@"" frame:NSMakeRect(0.0f, 0.0f, 538.0f, 86.0f)];
 	[askStatusField setAlignment:NSTextAlignmentLeft];
 	[[askStatusField cell] setWraps:YES];
 	[askStatusField setFont:[NSFont systemFontOfSize:11.0f]];
 	[askStatusField setTextColor:[NSColor secondaryLabelColor]];
-	[content addSubview:askStatusField];
+	[askScroll setDocumentView:askStatusField];
+	[content addSubview:askScroll];
+	[askScroll release];
 
 	[self syncAskControls];
 }
@@ -859,6 +882,13 @@ static const float NekoMaxStopRadius = 200.0f;
 {
 	[[NSUserDefaults standardUserDefaults]
 		setBool:([sender state] == NSControlStateValueOn) forKey:NekoAskFollowUpKey];
+	[self syncAskControls];
+}
+
+- (void)takeWebFrom:(id)sender
+{
+	[[NSUserDefaults standardUserDefaults]
+		setBool:([sender state] == NSControlStateValueOn) forKey:NekoWebEnabledKey];
 	[self syncAskControls];
 }
 
@@ -906,6 +936,18 @@ static const float NekoMaxStopRadius = 200.0f;
 	[self syncAskControls];
 }
 
+- (void)setAskStatus:(NSString *)text
+{
+	[askStatusField setStringValue:(text ?: @"")];
+	NSSize needed = [[askStatusField cell] cellSizeForBounds:
+		NSMakeRect(0.0f, 0.0f, 538.0f, 100000.0f)];
+	float height = ceilf(needed.height);
+	if(height < 86.0f)
+		height = 86.0f;
+	[askStatusField setFrame:NSMakeRect(0.0f, 0.0f, 538.0f, height)];
+	[askStatusField scrollRectToVisible:NSMakeRect(0.0f, height - 1.0f, 538.0f, 1.0f)];
+}
+
 - (void)syncAskControls
 {
 	NekoAsk *ask = [NekoAsk sharedAsk];
@@ -936,6 +978,9 @@ static const float NekoMaxStopRadius = 200.0f;
 		? NSControlStateValueOn : NSControlStateValueOff];
 	[wakeCheck setToolTip:[NekoWakeWord unavailableReason]];
 	[actionsCheck setEnabled:on];
+	[webCheck setEnabled:on];
+	[webCheck setState:[defaults boolForKey:NekoWebEnabledKey]
+		? NSControlStateValueOn : NSControlStateValueOff];
 	BOOL acting = on && [defaults boolForKey:NekoActionsEnabledKey];
 	[foldersButton setEnabled:acting];
 	[forgetFoldersButton setEnabled:acting
@@ -962,7 +1007,7 @@ static const float NekoMaxStopRadius = 200.0f;
 		}
 	}
 
-	[askStatusField setStringValue:[self askStatusLine]];
+	[self setAskStatus:[self askStatusLine]];
 }
 
 #pragma mark The local model
@@ -1418,7 +1463,7 @@ static const float NekoMaxStopRadius = 200.0f;
 
 	/* What it remembers, and the two things anyone should be able to do about
 	   it: look at it, and delete it. */
-	memoryField = [self labelWithString:@"" frame:NSMakeRect(20.0f, 58.0f, 556.0f, 34.0f)];
+	memoryField = [self labelWithString:@"" frame:NSMakeRect(20.0f, 52.0f, 556.0f, 42.0f)];
 	[memoryField setAlignment:NSTextAlignmentLeft];
 	[memoryField setFont:[NSFont systemFontOfSize:11.0f]];
 	[[memoryField cell] setWraps:YES];
@@ -1883,6 +1928,13 @@ static const float NekoMaxStopRadius = 200.0f;
 		[line appendString:@" "];
 		[line appendString:NekoLocalized(@"Saying its name works too — which means the microphone stays open, the orange recording light stays on, and the battery notices. The listening is done on this Mac and the audio goes nowhere; it hears one word and forgets the rest.")];
 	}
+	if([[NSUserDefaults standardUserDefaults] boolForKey:NekoWebEnabledKey]) {
+		[line appendString:@"\n\n"];
+		[line appendString:NekoLocalized(@"Asked about today's news or the weather, it can fetch one of a fixed list of feeds: ANSA (the wire, world, technology), la Repubblica, Il Sole 24 Ore (Italy and business), MeteoAlarm's warnings for Italy, Hacker News, BBC News, The Guardian, The New York Times and NPR. The plain forecast comes from open-meteo, because neither 3B Meteo nor meteo.it publishes a feed any more.")];
+		[line appendString:@"\n\n"];
+		[line appendString:NekoLocalized(@"It cannot name an address of its own — only one of those words — so nothing it reads can send it somewhere else. What comes back is quoted to it as somebody else's words, and an answer built on them is not allowed to open, copy or move anything: a headline is written by a stranger. The request carries no question, no account and no cookies; the site sees that a public feed was fetched. With Apple Intelligence or a model on this Mac the headlines stay here; with ChatGPT, Claude or a Shortcut they are sent on like any other question.")];
+	}
+
 	if([[NSUserDefaults standardUserDefaults] boolForKey:NekoActionsEnabledKey]) {
 		[line appendString:@"\n\n"];
 		[line appendString:NekoLocalized(@"It can open an application, an address in a browser, one of your folders in the Finder, run one of your own Shortcuts, and copy or move a single file between your folders. That list is all of it. It always shows what it is about to do and waits for a yes; dismissing the bubble is a no. It never overwrites, never deletes, and never acts on text it read from the screen — only on what you said out loud.")];

@@ -295,3 +295,35 @@
 "It waits for a seam in your work before saying anything: a program you have just left after a long stretch, a burst of typing that has ended, a pause. In the middle of something it stays quiet, and it says nothing at all while a window fills the screen or you are typing a password. The interval below is a floor rather than an alarm clock: how good a moment it holds out for depends on how the day has gone so far." = "Prima di dire qualcosa aspetta una cucitura nel tuo lavoro: un programma che hai appena lasciato dopo una lunga permanenza, una raffica di battitura finita, una pausa. In mezzo a qualcosa sta zitto, e non dice niente del tutto mentre una finestra occupa lo schermo o stai scrivendo una password. L'intervallo qui sotto è un minimo, non una sveglia: quanto buono deve essere il momento dipende da come è andata la giornata.";
 "Today: %lu remark(s), %lu answered, over %ldh %02ldm at the Mac." = "Oggi: %lu osservazioni, %lu con risposta, su %ldh %02ldm passate al Mac.";
 " It is aiming at about %ld a day and will not speak more often than every %ld minutes." = " Punta a circa %ld al giorno e non parlerà più spesso di una volta ogni %ld minuti.";
+
+/* looking something up */
+"Let it look up the news" = "Fagli leggere le notizie";
+"One moment, I will look." = "Un attimo, vado a vedere.";
+"I could not reach it." = "Non ci sono arrivato.";
+"I do not have that one to look at." = "Quella non ce l'ho da guardare.";
+"Not from something I read. Ask me again yourself." = "Non da una cosa che ho letto. Dimmelo tu.";
+"the wire, in Italian" = "l'ultima ora, in italiano";
+"world news, in Italian" = "il mondo, in italiano";
+"technology, in Italian" = "tecnologia, in italiano";
+"an Italian daily" = "un quotidiano italiano";
+"Italy, from the financial daily" = "Italia, dal quotidiano economico";
+"business and markets" = "economia e mercati";
+"official weather warnings for Italy" = "allerte meteo ufficiali per l'Italia";
+"what programmers are reading" = "cosa leggono i programmatori";
+"British, in English" = "britannico, in inglese";
+"world news, in English" = "il mondo, in inglese";
+"American, in English" = "americano, in inglese";
+"American radio news" = "la radio pubblica americana";
+"clear" = "sereno";
+"some cloud" = "qualche nuvola";
+"overcast" = "coperto";
+"fog" = "nebbia";
+"drizzle" = "pioviggine";
+"rain" = "pioggia";
+"snow" = "neve";
+"showers" = "rovesci";
+"thunderstorms" = "temporali";
+"changeable" = "variabile";
+"%@: %@ now, %.0f°, %@ today %.0f° to %.0f°, rain %@%%. Tomorrow %.0f° to %.0f°, rain %@%%. (open-meteo)" = "%@: adesso %@, %.0f°, oggi %@ da %.0f° a %.0f°, pioggia %@%%. Domani da %.0f° a %.0f°, pioggia %@%%. (open-meteo)";
+"Asked about today's news or the weather, it can fetch one of a fixed list of feeds: ANSA (the wire, world, technology), la Repubblica, Il Sole 24 Ore (Italy and business), MeteoAlarm's warnings for Italy, Hacker News, BBC News, The Guardian, The New York Times and NPR. The plain forecast comes from open-meteo, because neither 3B Meteo nor meteo.it publishes a feed any more." = "Se gli chiedi le notizie di oggi o il tempo, può scaricare uno di un elenco fisso di feed: ANSA (ultima ora, mondo, tecnologia), la Repubblica, Il Sole 24 Ore (Italia ed economia), le allerte MeteoAlarm per l'Italia, Hacker News, BBC News, The Guardian, The New York Times e NPR. Le previsioni semplici vengono da open-meteo, perché né 3B Meteo né meteo.it pubblicano più un feed.";
+"It cannot name an address of its own — only one of those words — so nothing it reads can send it somewhere else. What comes back is quoted to it as somebody else's words, and an answer built on them is not allowed to open, copy or move anything: a headline is written by a stranger. The request carries no question, no account and no cookies; the site sees that a public feed was fetched. With Apple Intelligence or a model on this Mac the headlines stay here; with ChatGPT, Claude or a Shortcut they are sent on like any other question." = "Non può indicare un indirizzo suo — solo una di quelle parole — quindi niente di quello che legge può mandarlo altrove. Quello che torna gli viene citato come parole di altri, e una risposta costruita su quelle non può aprire, copiare o spostare niente: un titolo lo scrive uno sconosciuto. La richiesta non porta la domanda, né account né cookie; il sito vede che è stato scaricato un feed pubblico. Con Apple Intelligence o un modello su questo Mac i titoli restano qui; con ChatGPT, Claude o un comando rapido vengono spediti come qualunque altra domanda.";

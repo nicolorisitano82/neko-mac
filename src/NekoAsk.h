@@ -38,6 +38,7 @@ extern NSString * const NekoLastUnpromptedKey;
 	id voice;                    /* AVSpeechSynthesizer, kept so it can be cut off */
 	BOOL beatPending;            /* a reply to wait for, once the voice is done */
 	BOOL saidUnasked;            /* what is on screen, nobody asked for */
+	BOOL fromTheWeb;             /* this answer was built on somebody else's words */
 	BOOL beatRan;                /* and something was listening for a reply */
 	NSString *askingAbout;       /* the question now in flight */
 	NSString *lastQuestion;      /* the turn before this one, so "it" resolves */

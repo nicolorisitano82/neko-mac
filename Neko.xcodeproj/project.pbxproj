@@ -44,6 +44,7 @@
 		D1C0117A1B000000000000D5 /* NekoAction.m in Sources */ = {isa = PBXBuildFile; fileRef = D1C0117A1B000000000000D4 /* NekoAction.m */; };
 		D1C0117A1B000000000000E1 /* NekoFolderAccess.m in Sources */ = {isa = PBXBuildFile; fileRef = D1C0117A1B000000000000E0 /* NekoFolderAccess.m */; };
 		D1C0117A1B000000000000F1 /* NekoWakeWord.m in Sources */ = {isa = PBXBuildFile; fileRef = D1C0117A1B000000000000F0 /* NekoWakeWord.m */; };
+		D1C0117A1B00000000000C0B0 /* NekoWeb.m in Sources */ = {isa = PBXBuildFile; fileRef = D1C0117A1B00000000000C0M0 /* NekoWeb.m */; };
 		D1C0117A1B00000000000B0B0 /* NekoRate.m in Sources */ = {isa = PBXBuildFile; fileRef = D1C0117A1B00000000000B0M0 /* NekoRate.m */; };
 		D1C0117A1B00000000000A8B0 /* NekoMemory.m in Sources */ = {isa = PBXBuildFile; fileRef = D1C0117A1B00000000000A8M0 /* NekoMemory.m */; };
 		D1C0117A1B00000000000A4B0 /* NekoBrains.m in Sources */ = {isa = PBXBuildFile; fileRef = D1C0117A1B00000000000A4M0 /* NekoBrains.m */; };
@@ -106,6 +107,7 @@
 		D1C0117A1B000000000000D4 /* NekoAction.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = NekoAction.m; sourceTree = "<group>"; };
 		D1C0117A1B000000000000E0 /* NekoFolderAccess.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = NekoFolderAccess.m; sourceTree = "<group>"; };
 		D1C0117A1B000000000000F0 /* NekoWakeWord.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = NekoWakeWord.m; sourceTree = "<group>"; };
+		D1C0117A1B00000000000C0M0 /* NekoWeb.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = NekoWeb.m; sourceTree = "<group>"; };
 		D1C0117A1B00000000000B0M0 /* NekoRate.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = NekoRate.m; sourceTree = "<group>"; };
 		D1C0117A1B00000000000A8M0 /* NekoMemory.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = NekoMemory.m; sourceTree = "<group>"; };
 		D1C0117A1B00000000000A4M0 /* NekoBrains.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = NekoBrains.m; sourceTree = "<group>"; };
@@ -113,6 +115,7 @@
 		D1C0117A1B00000000000100 /* NekoPermissions.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = NekoPermissions.m; sourceTree = "<group>"; };
 		D1C0117A1B00000000000102 /* NekoPermissions.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = NekoPermissions.h; sourceTree = "<group>"; };
 		D1C0117A1B000000000000F2 /* NekoWakeWord.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = NekoWakeWord.h; sourceTree = "<group>"; };
+		D1C0117A1B00000000000C0H0 /* NekoWeb.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = NekoWeb.h; sourceTree = "<group>"; };
 		D1C0117A1B00000000000B0H0 /* NekoRate.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = NekoRate.h; sourceTree = "<group>"; };
 		D1C0117A1B00000000000A8H0 /* NekoMemory.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = NekoMemory.h; sourceTree = "<group>"; };
 		D1C0117A1B00000000000A4H0 /* NekoBrains.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = NekoBrains.h; sourceTree = "<group>"; };
@@ -197,6 +200,7 @@
 				D1C0117A1B000000000000D4 /* NekoAction.m */,
 				D1C0117A1B000000000000E0 /* NekoFolderAccess.m */,
 				D1C0117A1B000000000000F0 /* NekoWakeWord.m */,
+				D1C0117A1B00000000000C0M0 /* NekoWeb.m */,
 				D1C0117A1B00000000000B0M0 /* NekoRate.m */,
 				D1C0117A1B00000000000A8M0 /* NekoMemory.m */,
 				D1C0117A1B00000000000A4M0 /* NekoBrains.m */,
@@ -204,6 +208,7 @@
 				D1C0117A1B00000000000100 /* NekoPermissions.m */,
 				D1C0117A1B00000000000102 /* NekoPermissions.h */,
 				D1C0117A1B000000000000F2 /* NekoWakeWord.h */,
+				D1C0117A1B00000000000C0H0 /* NekoWeb.h */,
 				D1C0117A1B00000000000B0H0 /* NekoRate.h */,
 				D1C0117A1B00000000000A8H0 /* NekoMemory.h */,
 				D1C0117A1B00000000000A4H0 /* NekoBrains.h */,
@@ -408,6 +413,7 @@
 				D1C0117A1B000000000000D5 /* NekoAction.m in Sources */,
 				D1C0117A1B000000000000E1 /* NekoFolderAccess.m in Sources */,
 				D1C0117A1B000000000000F1 /* NekoWakeWord.m in Sources */,
+				D1C0117A1B00000000000C0B0 /* NekoWeb.m in Sources */,
 				D1C0117A1B00000000000B0B0 /* NekoRate.m in Sources */,
 				D1C0117A1B00000000000A8B0 /* NekoMemory.m in Sources */,
 				D1C0117A1B00000000000A4B0 /* NekoBrains.m in Sources */,
