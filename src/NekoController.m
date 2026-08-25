@@ -955,11 +955,11 @@ static const float NekoMaxStopRadius = 200.0f;
 		[view removeFromSuperview];
 
 	permissionsSummary = [self labelWithString:@""
-	                                     frame:NSMakeRect(20.0f, 384.0f, 556.0f, 20.0f)];
+	                                     frame:NSMakeRect(20.0f, 384.0f, 280.0f, 20.0f)];
 	[permissionsSummary setAlignment:NSTextAlignmentLeft];
 	[permissionsContent addSubview:permissionsSummary];
 
-	float y = 330.0f;
+	float y = 324.0f;
 	NSEnumerator *e = [[NekoPermissions all] objectEnumerator];
 	NekoPermission *permission;
 	while((permission = [e nextObject]) != nil) {
@@ -994,7 +994,7 @@ static const float NekoMaxStopRadius = 200.0f;
 		[permissionsContent addSubview:status];
 
 		NSTextField *why = [self labelWithString:[permission explanation]
-		                                   frame:NSMakeRect(42.0f, y - 14.0f, 420.0f, 26.0f)];
+		                                   frame:NSMakeRect(42.0f, y - 14.0f, 538.0f, 26.0f)];
 		[why setAlignment:NSTextAlignmentLeft];
 		[why setFont:[NSFont systemFontOfSize:11.0f]];
 		[[why cell] setWraps:YES];
@@ -1014,19 +1014,19 @@ static const float NekoMaxStopRadius = 200.0f;
 			[permissionsContent addSubview:button];
 			[button release];
 		}
-		y -= 66.0f;
+		y -= 63.0f;
 	}
 
 	NSTextField *note = [self labelWithString:
 		NekoLocalized(@"macOS applies a change to screen recording only after Neko is restarted. And because this build is signed ad hoc, every rebuild of the app is a different app as far as the system is concerned: permissions granted to the previous one have to be granted again.")
-	                                    frame:NSMakeRect(20.0f, 48.0f, 556.0f, 44.0f)];
+	                                    frame:NSMakeRect(20.0f, 10.0f, 556.0f, 44.0f)];
 	[note setAlignment:NSTextAlignmentLeft];
 	[note setFont:[NSFont systemFontOfSize:11.0f]];
 	[[note cell] setWraps:YES];
 	[note setTextColor:[NSColor secondaryLabelColor]];
 	[permissionsContent addSubview:note];
 
-	NSButton *relaunch = [[NSButton alloc] initWithFrame:NSMakeRect(170.0f, 12.0f, 140.0f, 28.0f)];
+	NSButton *relaunch = [[NSButton alloc] initWithFrame:NSMakeRect(452.0f, 378.0f, 130.0f, 28.0f)];
 	[relaunch setBezelStyle:NSBezelStyleRounded];
 	[relaunch setTitle:NekoLocalized(@"Restart Neko")];
 	[relaunch setTarget:self];
@@ -1034,7 +1034,7 @@ static const float NekoMaxStopRadius = 200.0f;
 	[permissionsContent addSubview:relaunch];
 	[relaunch release];
 
-	NSButton *refresh = [[NSButton alloc] initWithFrame:NSMakeRect(20.0f, 12.0f, 140.0f, 28.0f)];
+	NSButton *refresh = [[NSButton alloc] initWithFrame:NSMakeRect(316.0f, 378.0f, 130.0f, 28.0f)];
 	[refresh setBezelStyle:NSBezelStyleRounded];
 	[refresh setTitle:NekoLocalized(@"Check again")];
 	[refresh setTarget:self];
