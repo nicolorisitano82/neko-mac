@@ -1,0 +1,375 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Neko — a cat that lives on your Mac</title>
+<meta name="description" content="A desktop pet for macOS: it chases the pointer, answers questions out loud, draws what you ask to see, and opens things for you. Free, and everything can run on your own Mac.">
+<link rel="icon" href="assets/oneko/neko.png">
+<style>
+:root {
+  color-scheme: light dark;
+  --ink: #1c1b19;
+  --paper: #fbf7f0;
+  --muted: #6b675f;
+  --line: #e2dcd1;
+  --accent: #b4531f;
+  --card: #fffdfa;
+}
+@media (prefers-color-scheme: dark) {
+  :root { --ink:#f2ede4; --paper:#16151a; --muted:#a49e93; --line:#2c2a31; --accent:#ff9b62; --card:#1e1d23; }
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0; background: var(--paper); color: var(--ink);
+  font: 17px/1.6 ui-serif, "Iowan Old Style", Georgia, serif;
+  -webkit-font-smoothing: antialiased;
+}
+.wrap { max-width: 860px; margin: 0 auto; padding: 0 24px; }
+header { padding: 88px 0 56px; text-align: center; }
+h1 { font-size: 64px; margin: 0 0 8px; letter-spacing: -1px; }
+.tag { font-size: 21px; color: var(--muted); margin: 0 0 32px; }
+.cta { display: inline-flex; gap: 12px; flex-wrap: wrap; justify-content: center; }
+a.button {
+  display: inline-block; padding: 13px 26px; border-radius: 10px;
+  background: var(--accent); color: #fff; text-decoration: none;
+  font: 600 16px/1 ui-sans-serif, -apple-system, system-ui, sans-serif;
+}
+a.button.quiet { background: transparent; color: var(--ink); border: 1px solid var(--line); }
+a.button:hover { filter: brightness(1.08); }
+.small { font: 13px/1.5 ui-sans-serif, -apple-system, system-ui, sans-serif; color: var(--muted); }
+header .small { margin-top: 14px; }
+section { padding: 40px 0; border-top: 1px solid var(--line); }
+h2 { font-size: 28px; margin: 0 0 12px; }
+h3 { font-size: 19px; margin: 28px 0 6px; }
+p { margin: 0 0 14px; }
+.grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 22px; margin-top: 20px; }
+.card { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 18px 20px; }
+.card h3 { margin-top: 0; }
+.card p { margin: 0; font-size: 15px; color: var(--muted); }
+table { border-collapse: collapse; width: 100%; font: 15px/1.5 ui-sans-serif, -apple-system, system-ui, sans-serif; }
+td, th { text-align: left; padding: 9px 10px; border-bottom: 1px solid var(--line); vertical-align: top; }
+th { font-weight: 600; color: var(--muted); font-size: 13px; text-transform: uppercase; letter-spacing: .04em; }
+.faces { display: grid; grid-template-columns: repeat(auto-fill, minmax(78px, 1fr)); gap: 14px; margin-top: 22px; }
+.face { margin: 0; text-align: center; }
+.face span {
+  display: block; width: 64px; height: 64px; margin: 0 auto 6px;
+  background-repeat: no-repeat; background-size: 512px 256px;
+  background-position: -192px -192px;  /* the sitting pose, doubled */
+  image-rendering: pixelated;
+}
+.face figcaption { font: 12px/1.3 ui-sans-serif, -apple-system, system-ui, sans-serif; color: var(--muted); }
+.player { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; margin-top: 18px;
+  font: 15px/1 ui-sans-serif, -apple-system, system-ui, sans-serif; }
+select, .player button {
+  font: inherit; padding: 8px 12px; border-radius: 8px;
+  border: 1px solid var(--line); background: var(--card); color: var(--ink);
+}
+footer { padding: 44px 0 72px; color: var(--muted); font: 14px/1.6 ui-sans-serif, -apple-system, system-ui, sans-serif; }
+footer a, main a { color: var(--accent); }
+code { font: 13px ui-monospace, SFMono-Regular, Menlo, monospace; background: var(--card);
+  border: 1px solid var(--line); border-radius: 5px; padding: 2px 6px; }
+#neko { position: fixed; width: 32px; height: 32px; image-rendering: pixelated;
+  pointer-events: none; z-index: 9999; background-repeat: no-repeat; }
+@media (prefers-reduced-motion: reduce) { #neko { display: none; } }
+</style>
+</head>
+<body>
+<header class="wrap">
+  <h1>Neko</h1>
+  <p class="tag">A cat that lives on your Mac. It chases the pointer, answers questions out loud,
+     draws what you ask to see, and opens things for you.</p>
+  <p class="cta">
+    <a class="button" href="https://github.com/nicolorisitano82/neko-mac/releases/latest/download/Neko-2.0.1.dmg">Download for macOS</a>
+    <a class="button quiet" href="https://github.com/nicolorisitano82/neko-mac">Source on GitHub</a>
+  </p>
+  <p class="small">macOS 11 or newer, universal. Free, no account, nothing to sign up for.<br>
+     The picture, the voice and the model can all stay on your Mac.</p>
+</header>
+
+<main class="wrap">
+
+<section>
+  <h2>It is already here</h2>
+  <p>The cat on this page is the same engine as the app, ported to the browser.
+     Move the pointer and it follows; leave it alone and it falls asleep.</p>
+  <p class="player">
+    <label for="who">Character</label>
+    <select id="who">
+        <option value="ace">Ace</option>
+        <option value="alien">Alien</option>
+        <option value="black">Black</option>
+        <option value="bunny">Bunny</option>
+        <option value="calico">Calico</option>
+        <option value="dog">Dog</option>
+        <option value="eevee">Eevee</option>
+        <option value="esmeralda">Esmeralda</option>
+        <option value="fox">Fox</option>
+        <option value="frodo-xl">Frodo XL</option>
+        <option value="frodo">Frodo</option>
+        <option value="gandalf-xl">Gandalf XL</option>
+        <option value="gandalf">Gandalf</option>
+        <option value="ghost">Ghost</option>
+        <option value="gray">Gray</option>
+        <option value="jess">Jess</option>
+        <option value="kina">Kina</option>
+        <option value="kuro">Kuro</option>
+        <option value="lucy">Lucy</option>
+        <option value="maia">Maia</option>
+        <option value="maria">Maria</option>
+        <option value="merlin-xl">Merlin XL</option>
+        <option value="merlin">Merlin</option>
+        <option value="mike">Mike</option>
+        <option value="moka">Moka</option>
+        <option value="neko" selected>Neko</option>
+        <option value="or-xl">OR XL</option>
+        <option value="or">OR</option>
+        <option value="owl-xl">Owl XL</option>
+        <option value="owl">Owl</option>
+        <option value="pinup-xl">Pinup XL</option>
+        <option value="pinup">Pinup</option>
+        <option value="sakura">Sakura</option>
+        <option value="silver">Silver</option>
+        <option value="silversky">Silversky</option>
+        <option value="snuupy">Snuupy</option>
+        <option value="spirit">Spirit</option>
+        <option value="tomoyo">Tomoyo</option>
+        <option value="tora">Tora</option>
+        <option value="ts-xl">TS XL</option>
+        <option value="ts">TS</option>
+        <option value="valentine">Valentine</option>
+        <option value="vaporwave">Vaporwave</option>
+    </select>
+    <button id="pause" type="button">Pause</button>
+  </p>
+</section>
+
+<section>
+  <h2>What it does</h2>
+  <div class="grid">
+    <div class="card">
+      <h3>Ask it things</h3>
+      <p>A keystroke, or its name out loud, and you can ask a question. The answer comes back
+         in a speech bubble, in character, in your language.</p>
+    </div>
+    <div class="card">
+      <h3>Answers that are true</h3>
+      <p>The time, the date, the battery, how long the Mac has been awake — looked up rather
+         than invented. Anything it cannot know, it says so.</p>
+    </div>
+    <div class="card">
+      <h3>Draws what you ask for</h3>
+      <p>“Show me the Colosseum” and it paints one, on your own GPU with Stable Diffusion.
+         Nothing is uploaded. Hover the picture to save it.</p>
+    </div>
+    <div class="card">
+      <h3>Opens things for you</h3>
+      <p>Applications, addresses, folders, your own Shortcuts, and moving a file between your
+         folders. It shows you what it is about to do and waits for a yes.</p>
+    </div>
+    <div class="card">
+      <h3>Wanders and comments</h3>
+      <p>A third behaviour where it roams the desk on its own, gets curious about what you are
+         typing, and remarks on how the day is going.</p>
+    </div>
+    <div class="card">
+      <h3>Your Mac, your choice of engine</h3>
+      <p>Apple Intelligence, a GGUF model you download, ChatGPT, Claude or one of your
+         Shortcuts. Two of those never leave the machine.</p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2>Measured, not promised</h2>
+  <p>Every number here was taken on the Mac the app was built on, an M3 Max.</p>
+  <table>
+    <tr><th>Thing</th><th>Number</th></tr>
+    <tr><td>First words of an answer, Apple’s on-device model</td><td>0.42 s</td></tr>
+    <tr><td>First words, a 1.5B model on this Mac</td><td>0.40 s including opening the file</td></tr>
+    <tr><td>A 512 pixel drawing, 14 steps</td><td>14.5 s</td></tr>
+    <tr><td>Question to picture in the bubble</td><td>15.8 s</td></tr>
+    <tr><td>Roaming, in a minute</td><td>about 5 000 points of desk</td></tr>
+    <tr><td>Characters that ship with it</td><td>43</td></tr>
+  </table>
+</section>
+
+<section>
+  <h2>Everything it can ask your Mac for</h2>
+  <p>Five permissions, one tab, each with what it is for and a button that asks for it.
+     None of them are requested at launch, and none unless the feature that needs them is
+     switched on: microphone and speech recognition to hear a question, accessibility only to
+     read the text you are working on, one folder at a time for moving a file, and screen
+     recording never — it is used if you already granted it, and left out if not.</p>
+</section>
+
+<section>
+  <h2>Forty-three characters</h2>
+  <p>The original cat from oneko, its dog and tiger, twenty-two skins written for the
+     JavaScript port, and a handful drawn for this app. Adding one is a folder of PNGs.</p>
+  <div class="faces">
+      <figure class="face"><span style="background-image:url(assets/oneko/ace.png)"></span><figcaption>Ace</figcaption></figure>
+      <figure class="face"><span style="background-image:url(assets/oneko/alien.png)"></span><figcaption>Alien</figcaption></figure>
+      <figure class="face"><span style="background-image:url(assets/oneko/black.png)"></span><figcaption>Black</figcaption></figure>
+      <figure class="face"><span style="background-image:url(assets/oneko/bunny.png)"></span><figcaption>Bunny</figcaption></figure>
+      <figure class="face"><span style="background-image:url(assets/oneko/calico.png)"></span><figcaption>Calico</figcaption></figure>
+      <figure class="face"><span style="background-image:url(assets/oneko/dog.png)"></span><figcaption>Dog</figcaption></figure>
+      <figure class="face"><span style="background-image:url(assets/oneko/eevee.png)"></span><figcaption>Eevee</figcaption></figure>
+      <figure class="face"><span style="background-image:url(assets/oneko/esmeralda.png)"></span><figcaption>Esmeralda</figcaption></figure>
+      <figure class="face"><span style="background-image:url(assets/oneko/fox.png)"></span><figcaption>Fox</figcaption></figure>
+      <figure class="face"><span style="background-image:url(assets/oneko/frodo-xl.png)"></span><figcaption>Frodo XL</figcaption></figure>
+      <figure class="face"><span style="background-image:url(assets/oneko/frodo.png)"></span><figcaption>Frodo</figcaption></figure>
+      <figure class="face"><span style="background-image:url(assets/oneko/gandalf-xl.png)"></span><figcaption>Gandalf XL</figcaption></figure>
+      <figure class="face"><span style="background-image:url(assets/oneko/gandalf.png)"></span><figcaption>Gandalf</figcaption></figure>
+      <figure class="face"><span style="background-image:url(assets/oneko/ghost.png)"></span><figcaption>Ghost</figcaption></figure>
+      <figure class="face"><span style="background-image:url(assets/oneko/gray.png)"></span><figcaption>Gray</figcaption></figure>
+      <figure class="face"><span style="background-image:url(assets/oneko/jess.png)"></span><figcaption>Jess</figcaption></figure>
+      <figure class="face"><span style="background-image:url(assets/oneko/kina.png)"></span><figcaption>Kina</figcaption></figure>
+      <figure class="face"><span style="background-image:url(assets/oneko/kuro.png)"></span><figcaption>Kuro</figcaption></figure>
+      <figure class="face"><span style="background-image:url(assets/oneko/lucy.png)"></span><figcaption>Lucy</figcaption></figure>
+      <figure class="face"><span style="background-image:url(assets/oneko/maia.png)"></span><figcaption>Maia</figcaption></figure>
+      <figure class="face"><span style="background-image:url(assets/oneko/maria.png)"></span><figcaption>Maria</figcaption></figure>
+      <figure class="face"><span style="background-image:url(assets/oneko/merlin-xl.png)"></span><figcaption>Merlin XL</figcaption></figure>
+      <figure class="face"><span style="background-image:url(assets/oneko/merlin.png)"></span><figcaption>Merlin</figcaption></figure>
+      <figure class="face"><span style="background-image:url(assets/oneko/mike.png)"></span><figcaption>Mike</figcaption></figure>
+      <figure class="face"><span style="background-image:url(assets/oneko/moka.png)"></span><figcaption>Moka</figcaption></figure>
+      <figure class="face"><span style="background-image:url(assets/oneko/neko.png)"></span><figcaption>Neko</figcaption></figure>
+      <figure class="face"><span style="background-image:url(assets/oneko/or-xl.png)"></span><figcaption>OR XL</figcaption></figure>
+      <figure class="face"><span style="background-image:url(assets/oneko/or.png)"></span><figcaption>OR</figcaption></figure>
+      <figure class="face"><span style="background-image:url(assets/oneko/owl-xl.png)"></span><figcaption>Owl XL</figcaption></figure>
+      <figure class="face"><span style="background-image:url(assets/oneko/owl.png)"></span><figcaption>Owl</figcaption></figure>
+      <figure class="face"><span style="background-image:url(assets/oneko/pinup-xl.png)"></span><figcaption>Pinup XL</figcaption></figure>
+      <figure class="face"><span style="background-image:url(assets/oneko/pinup.png)"></span><figcaption>Pinup</figcaption></figure>
+      <figure class="face"><span style="background-image:url(assets/oneko/sakura.png)"></span><figcaption>Sakura</figcaption></figure>
+      <figure class="face"><span style="background-image:url(assets/oneko/silver.png)"></span><figcaption>Silver</figcaption></figure>
+      <figure class="face"><span style="background-image:url(assets/oneko/silversky.png)"></span><figcaption>Silversky</figcaption></figure>
+      <figure class="face"><span style="background-image:url(assets/oneko/snuupy.png)"></span><figcaption>Snuupy</figcaption></figure>
+      <figure class="face"><span style="background-image:url(assets/oneko/spirit.png)"></span><figcaption>Spirit</figcaption></figure>
+      <figure class="face"><span style="background-image:url(assets/oneko/tomoyo.png)"></span><figcaption>Tomoyo</figcaption></figure>
+      <figure class="face"><span style="background-image:url(assets/oneko/tora.png)"></span><figcaption>Tora</figcaption></figure>
+      <figure class="face"><span style="background-image:url(assets/oneko/ts-xl.png)"></span><figcaption>TS XL</figcaption></figure>
+      <figure class="face"><span style="background-image:url(assets/oneko/ts.png)"></span><figcaption>TS</figcaption></figure>
+      <figure class="face"><span style="background-image:url(assets/oneko/valentine.png)"></span><figcaption>Valentine</figcaption></figure>
+      <figure class="face"><span style="background-image:url(assets/oneko/vaporwave.png)"></span><figcaption>Vaporwave</figcaption></figure>
+  </div>
+</section>
+
+<section>
+  <h2>Getting it open the first time</h2>
+  <p>The disk image is signed ad hoc rather than with a paid Developer ID, so Gatekeeper calls
+     it damaged on a Mac that did not build it. Right-click the app and choose Open, or run:</p>
+  <p><code>xattr -dr com.apple.quarantine /Applications/Neko.app</code></p>
+</section>
+
+</main>
+
+<footer class="wrap">
+  <p>Neko began as a Cocoa port by Matthew Donoughe of the public domain
+     <a href="https://en.wikipedia.org/wiki/Neko_(computer_program)">oneko</a>, itself from the
+     1989 Macintosh original. The browser cat on this page is a port of
+     <a href="https://github.com/adryd325/oneko.js">oneko.js</a> by adryd, MIT.
+     Sprite sets have their own histories, recorded in each character’s manifest.</p>
+  <p><a href="https://github.com/nicolorisitano82/neko-mac">Source</a> ·
+     <a href="https://github.com/nicolorisitano82/neko-mac/blob/master/CHANGELOG.md">Changelog</a> ·
+     <a href="https://github.com/nicolorisitano82/neko-mac/releases">All releases</a></p>
+</footer>
+
+<div id="neko" aria-hidden="true"></div>
+<script>
+(function () {
+  /* The same sprite map the app and the TypeScript port use: an 8x4 sheet,
+     offsets in cells. */
+  var SETS = {
+    idle: [[-3,-3]], alert: [[-7,-3]],
+    scratchSelf: [[-5,0],[-6,0],[-7,0]],
+    scratchWallN: [[0,0],[0,-1]], scratchWallS: [[-7,-1],[-6,-2]],
+    scratchWallE: [[-2,-2],[-2,-3]], scratchWallW: [[-4,0],[-4,-1]],
+    tired: [[-3,-2]], sleeping: [[-2,0],[-2,-1]],
+    N: [[-1,-2],[-1,-3]], NE: [[0,-2],[0,-3]], E: [[-3,0],[-3,-1]],
+    SE: [[-5,-1],[-5,-2]], S: [[-6,-3],[-7,-2]], SW: [[-5,-3],[-6,-1]],
+    W: [[-4,-2],[-4,-3]], NW: [[-1,0],[-1,-1]]
+  };
+  var CELL = 32, SPEED = 10, cat = document.getElementById('neko');
+  if (!cat || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+
+  var x = 40, y = 120, mouseX = x, mouseY = y, frame = 0, idleTime = 0,
+      idleAnimation = null, idleFrame = 0, paused = false, last = 0;
+
+  function wear(id) { cat.style.backgroundImage = 'url(assets/oneko/' + id + '.png)'; }
+  wear('neko');
+  cat.style.left = x + 'px';
+  cat.style.top = y + 'px';
+
+  document.addEventListener('mousemove', function (event) {
+    mouseX = event.clientX; mouseY = event.clientY;
+  });
+
+  function draw(name, n) {
+    var sprite = SETS[name][n % SETS[name].length];
+    cat.style.backgroundPosition = (sprite[0] * CELL) + 'px ' + (sprite[1] * CELL) + 'px';
+  }
+
+  function idle() {
+    idleTime += 1;
+    if (idleTime > 10 && Math.floor(Math.random() * 200) === 0 && idleAnimation === null) {
+      var could = ['sleeping', 'scratchSelf'];
+      if (x < 32) could.push('scratchWallW');
+      if (y < 32) could.push('scratchWallN');
+      if (x > window.innerWidth - 32) could.push('scratchWallE');
+      if (y > window.innerHeight - 32) could.push('scratchWallS');
+      idleAnimation = could[Math.floor(Math.random() * could.length)];
+    }
+    switch (idleAnimation) {
+      case 'sleeping':
+        if (idleFrame < 8) { draw('tired', 0); break; }
+        draw('sleeping', Math.floor(idleFrame / 4));
+        if (idleFrame > 192) { idleAnimation = null; idleFrame = 0; }
+        break;
+      case null: draw('idle', 0); break;
+      default:
+        draw(idleAnimation, Math.floor(idleFrame / 4));
+        if (idleFrame > 9) { idleAnimation = null; idleFrame = 0; }
+    }
+    idleFrame += 1;
+  }
+
+  function step() {
+    frame += 1;
+    var dx = x - mouseX, dy = y - mouseY, distance = Math.sqrt(dx * dx + dy * dy);
+    if (distance < SPEED || distance < 48) { idle(); return; }
+    idleAnimation = null; idleFrame = 0;
+    if (idleTime > 1) { draw('alert', 0); idleTime = Math.min(idleTime, 7); idleTime -= 1; return; }
+
+    var direction = (dy / distance > 0.5 ? 'N' : '') + (dy / distance < -0.5 ? 'S' : '')
+                  + (dx / distance > 0.5 ? 'W' : '') + (dx / distance < -0.5 ? 'E' : '');
+    draw(direction || 'idle', frame);
+    x -= (dx / distance) * SPEED;
+    y -= (dy / distance) * SPEED;
+    x = Math.min(Math.max(16, x), window.innerWidth - 16);
+    y = Math.min(Math.max(16, y), window.innerHeight - 16);
+    cat.style.left = (x - 16) + 'px';
+    cat.style.top = (y - 16) + 'px';
+    idleTime = 0;
+  }
+
+  function loop(now) {
+    window.requestAnimationFrame(loop);
+    if (paused) return;
+    if (now - last < 100) return;   /* ten frames a second, like oneko */
+    last = now;
+    step();
+  }
+  window.requestAnimationFrame(loop);
+
+  document.getElementById('who').addEventListener('change', function (event) {
+    wear(event.target.value);
+  });
+  document.getElementById('pause').addEventListener('click', function (event) {
+    paused = !paused;
+    cat.style.display = paused ? 'none' : 'block';
+    event.target.textContent = paused ? 'Resume' : 'Pause';
+  });
+})();
+</script>
+</body>
+</html>
