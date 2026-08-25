@@ -99,6 +99,12 @@ extern NSString * const NekoLastUnpromptedKey;
    the only way to check what a follow-up actually asks. */
 - (NSString *)instructionsForAsking;
 
+/* Goes and looks something up: a name from NekoWeb's list, or "weather <place>".
+   Verbatim when the app itself decided to look, because then the headlines are
+   what was asked for; through the model when the model asked, because then they
+   are context for a question. */
+- (void)lookUp:(NSString *)wanted verbatim:(BOOL)asItIs;
+
 /* Two seams, so that the moment after the cat speaks can be tested on a machine
    with no microphone and no permission to use one: whether speech has already
    been allowed, and starting the listener. The tests override these; nothing

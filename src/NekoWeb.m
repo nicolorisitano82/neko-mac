@@ -129,6 +129,14 @@ static const NSTimeInterval NekoWebPatience = 8.0;
 {
 	NSString *wanted = [[identifier stringByTrimmingCharactersInSet:
 		[NSCharacterSet whitespaceAndNewlineCharacterSet]] lowercaseString];
+	/* "ansa.it" and "www.ansa.it" are what a person says out loud, and what a
+	   model repeats back. They name the same entry; they do not fetch an
+	   address, because there is no address here to fetch. */
+	if([wanted hasPrefix:@"www."])
+		wanted = [wanted substringFromIndex:4];
+	NSRange dot = [wanted rangeOfString:@"."];
+	if(dot.location != NSNotFound && dot.location > 0)
+		wanted = [wanted substringToIndex:dot.location];
 	NSEnumerator *e = [[self sources] objectEnumerator];
 	NekoWebSource *source;
 	while((source = [e nextObject]) != nil)
@@ -209,6 +217,115 @@ static const NSTimeInterval NekoWebPatience = 8.0;
 		return nil;
 	return [NSString stringWithFormat:@"weather %@",
 		[place componentsJoinedByString:@" "]];
+}
+
+#pragma mark What the question asks for
+
+/* Words that name one of the sources, whatever way somebody writes them. */
++ (NSString *)sourceMentionedIn:(NSString *)lowered
+{
+	NSDictionary *saidAs = [NSDictionary dictionaryWithObjectsAndKeys:
+		@"ansa", @"ansa",
+		@"repubblica", @"repubblica",
+		@"sole24", @"sole 24", @"sole24", @"sole24", @"sole24", @"ilsole24ore",
+		@"economia", @"il sole economia",
+		@"allerta", @"meteoalarm", @"allerta", @"allerte", @"allerta", @"allerta meteo",
+		@"hn", @"hacker news", @"hn", @"hackernews",
+		@"bbc", @"bbc",
+		@"guardian", @"guardian",
+		@"nyt", @"new york times", @"nyt", @"nytimes",
+		@"npr", @"npr",
+		@"tecnologia", @"tecnologia", @"tecnologia", @"tech news", nil];
+	NSEnumerator *e = [saidAs keyEnumerator];
+	NSString *said;
+	NSString *best = nil;
+	NSUInteger longest = 0;
+	while((said = [e nextObject]) != nil) {
+		if([lowered rangeOfString:said].location == NSNotFound)
+			continue;
+		/* "il sole economia" beats "sole 24" when both are in there. */
+		if([said length] > longest) {
+			longest = [said length];
+			best = [saidAs objectForKey:said];
+		}
+	}
+	return best;
+}
+
++ (BOOL)phrase:(NSString *)lowered hasAnyOf:(NSArray *)words
+{
+	NSEnumerator *e = [words objectEnumerator];
+	NSString *word;
+	while((word = [e nextObject]) != nil)
+		if([lowered rangeOfString:word].location != NSNotFound)
+			return YES;
+	return NO;
+}
+
+/* Where, when somebody asked about the weather: whatever follows "a", "in",
+   "di" or "at", which is how people say it in all four languages this speaks. */
++ (NSString *)placeIn:(NSString *)question
+{
+	NSArray *words = [question componentsSeparatedByCharactersInSet:
+		[NSCharacterSet whitespaceAndNewlineCharacterSet]];
+	NSArray *pointers = [NSArray arrayWithObjects:@"a", @"ad", @"in", @"di", @"at", @"à", @"en", nil];
+	NSUInteger i;
+	for(i = 0; i + 1 < [words count]; i++) {
+		NSString *word = [[words objectAtIndex:i] lowercaseString];
+		if(![pointers containsObject:word])
+			continue;
+		NSString *place = [[words objectAtIndex:i + 1]
+			stringByTrimmingCharactersInSet:[NSCharacterSet punctuationCharacterSet]];
+		/* "in questo momento" is not a town. */
+		NSArray *notPlaces = [NSArray arrayWithObjects:@"questo", @"questa", @"quel",
+			@"giro", @"tempo", @"the", @"this", @"real", nil];
+		if([place length] > 1 && ![notPlaces containsObject:[place lowercaseString]])
+			return place;
+	}
+	return nil;
+}
+
++ (NSString *)wantedFor:(NSString *)question
+{
+	NSString *lowered = [question lowercaseString];
+
+	/* An order to open something is somebody else's business. */
+	if([self phrase:lowered hasAnyOf:[NSArray arrayWithObjects:
+			@"apri ", @"open ", @"ouvre ", @"abre ", nil]])
+		return nil;
+
+	/* A source named out loud settles it before anything else does: "allerte
+	   meteo" is a feed, not a forecast, and asking for the BBC is asking for the
+	   BBC whatever else is in the sentence. */
+	NSString *named = [self sourceMentionedIn:lowered];
+	if(named != nil)
+		return named;
+
+	BOOL aboutWeather = [self phrase:lowered hasAnyOf:[NSArray arrayWithObjects:
+		@"che tempo fa", @"che tempo c", @"previsioni", @"meteo", @"weather",
+		@"forecast", @"quanti gradi", @"pioverà", @"piove", @"il tempo a",
+		@"la météo", @"quel temps", @"el tiempo", @"va a piovere", nil]];
+	if(aboutWeather) {
+		NSString *place = [self placeIn:question];
+		if([place length] > 0)
+			return [NSString stringWithFormat:@"weather %@", place];
+		/* No town named, and no way to know where somebody is: let the model
+		   ask, or answer, rather than guessing a city. */
+		return nil;
+	}
+
+	BOOL aboutNews = [self phrase:lowered hasAnyOf:[NSArray arrayWithObjects:
+		@"notizie", @"notizia", @"titoli", @"headline", @"news", @"giornale",
+		@"cosa è successo", @"cosa e successo", @"che succede", @"che è successo",
+		@"what happened", @"what is going on", @"ultime", @"attualità",
+		@"actualité", @"noticias", @"qué ha pasado", nil]];
+	if(!aboutNews)
+		return nil;
+
+	/* Asked for the news without naming anywhere: the wire, in the language the
+	   application is running in. */
+	NSString *language = [[[NSBundle mainBundle] preferredLocalizations] firstObject] ?: @"en";
+	return [language hasPrefix:@"it"] ? @"ansa" : @"bbc";
 }
 
 #pragma mark Fetching

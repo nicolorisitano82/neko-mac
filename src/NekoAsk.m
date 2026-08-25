@@ -784,13 +784,6 @@ static const NSTimeInterval NekoHoldToType = 0.5;
 
 - (void)ask:(NSString *)question
 {
-	id<NekoAnswerProvider> provider = [self provider];
-	if(![provider isConfigured]) {
-		phase = NekoPhaseIdle;
-		[self sayInCharacter:[self cannedReply]];
-		return;
-	}
-
 	/* Asking something within a minute of an unasked remark is answering it,
 	   whether or not the microphone happened to be open. */
 	if(saidUnasked && [NekoAsk secondsSinceSpokeUnprompted] < 60.0)
@@ -800,6 +793,26 @@ static const NSTimeInterval NekoHoldToType = 0.5;
 	[[NekoMemory sharedMemory] noteHeard:question];
 	[askingAbout release];
 	askingAbout = [question copy];
+
+	/* Decided here rather than by the model, and before the engine is even
+	   consulted. Measured on this Mac: asked to read ansa.it, a 4B answered with
+	   an invented headline about Milan and a 1.5B repeated the question back. A
+	   question that plainly asks for today's news goes and gets today's news —
+	   and with no engine at all, the headlines themselves are the answer, which
+	   is what was asked for anyway. */
+	NSString *straightThere = [[NekoWeb sharedWeb] isEnabled]
+		? [NekoWeb wantedFor:question] : nil;
+	if([straightThere length] > 0) {
+		[self lookUp:straightThere verbatim:YES];
+		return;
+	}
+
+	id<NekoAnswerProvider> provider = [self provider];
+	if(![provider isConfigured]) {
+		phase = NekoPhaseIdle;
+		[self sayInCharacter:[self cannedReply]];
+		return;
+	}
 
 	phase = NekoPhaseThinking;
 	[[self panel] holdWithState:NekoStateKaki];
@@ -856,6 +869,16 @@ static const NSTimeInterval NekoHoldToType = 0.5;
    addresses, always — see NekoWeb for why that is the whole of the safety. */
 - (void)lookUp:(NSString *)wanted
 {
+	[self lookUp:wanted verbatim:NO];
+}
+
+/* Verbatim when the app decided to go and look, because then what was asked for
+   is the headlines themselves. Measured on this Mac with the 4B: handed eight
+   ANSA lines and asked to retell them, it turned "la ceca Ce Industries" into
+   "la Cecoslovacchia". Somebody else's sentences are not improved by a small
+   model, and the cat has no business paraphrasing a news wire. */
+- (void)lookUp:(NSString *)wanted verbatim:(BOOL)asItIs
+{
 	NekoWeb *web = [NekoWeb sharedWeb];
 	NSString *asked = [[askingAbout copy] autorelease];
 
@@ -901,9 +924,8 @@ static const NSTimeInterval NekoHoldToType = 0.5;
 		}
 
 		id<NekoAnswerProvider> provider = [self provider];
-		if(![provider isConfigured]) {
-			/* No model to hand them to: the headlines are the answer, which is
-			   what was asked for anyway. */
+		if(asItIs || ![provider isConfigured]) {
+			/* The headlines are the answer, which is what was asked for. */
 			fromTheWeb = YES;
 			[self answer:[NekoWeb plainList:headlines from:source]];
 			return;

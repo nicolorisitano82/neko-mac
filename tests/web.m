@@ -75,6 +75,39 @@ int main(void)
 	ok(![NekoWeb looksLikeALook:@"I looked at the news for you"],
 		@"a sentence about looking is not the marker", nil);
 
+	printf("\n--- what the question itself asks for ---\n");
+
+	/* The model is not asked. These are decided in the app, because a small
+	   model asked to read the news writes the news instead. */
+	NSArray *asked = [NSArray arrayWithObjects:
+		@"leggi le ultime notizie su ansa.it",       @"ansa",
+		@"cosa è successo oggi nel mondo?",          @"ansa",
+		@"dammi i titoli principali di oggi",        @"ansa",
+		@"che dice il sole 24 ore?",                 @"sole24",
+		@"cosa leggono i programmatori su hacker news?", @"hn",
+		@"ci sono allerte meteo?",                   @"allerta",
+		@"che notizie ci sono sulla bbc?",           @"bbc",
+		@"che tempo fa a Roma?",                     @"weather Roma",
+		@"che tempo fa a Milano domani?",            @"weather Milano",
+		/* And the ones that must not go anywhere near a feed. */
+		@"quanto tempo fa è successo?",              @"",
+		@"che ore sono?",                            @"",
+		@"apri il meteo",                            @"",
+		@"quanto fa sette per otto?",                @"", nil];
+	NSUInteger i;
+	for(i = 0; i + 1 < [asked count]; i += 2) {
+		NSString *question = [asked objectAtIndex:i];
+		NSString *wanted = [asked objectAtIndex:i + 1];
+		NSString *got = [NekoWeb wantedFor:question] ?: @"";
+		ok([got isEqualToString:wanted],
+			[NSString stringWithFormat:@"“%@”", question],
+			[wanted length] > 0 ? got : ([got length] > 0 ? got : @"nothing, rightly")); 
+	}
+
+	ok([[NekoWeb sourceNamed:@"ansa.it"] identifier] != nil
+	   && [[[NekoWeb sourceNamed:@"www.repubblica.it"] identifier] isEqualToString:@"repubblica"],
+		@"an address said out loud names the same entry", nil);
+
 	printf("\n--- reading a feed ---\n");
 
 	NSArray *lines = [web headlinesInFeed:stagedFeed()];

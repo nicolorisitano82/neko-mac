@@ -56,6 +56,16 @@ extern NSString * const NekoWebEnabledKey;
 + (BOOL)looksLikeALook:(NSString *)line;
 + (NSString *)wantedIn:(NSString *)line;      /* what came after the marker */
 
+/* What the question itself asks for, before any model is consulted: an entry
+   from the list, "weather <place>", or nil when it is not that kind of question.
+
+   Measured, and the reason this exists: asked "leggi le ultime notizie su
+   ansa.it", a 4B model on this Mac answered "Oggi a Milano è stato annunciato il
+   nuovo piano per la mobilità sostenibile" — an invented headline, delivered
+   with confidence. A small model cannot be relied on to admit it does not know,
+   so the app decides this one and the model never gets the chance. */
++ (NSString *)wantedFor:(NSString *)question;
+
 /* Up to eight headlines, each a short line of its own. */
 - (void)headlinesFrom:(NekoWebSource *)source
            completion:(void (^)(NSArray *headlines, NSError *error))done;
