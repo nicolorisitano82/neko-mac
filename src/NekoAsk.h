@@ -15,6 +15,10 @@ extern NSString * const NekoAskProviderKey;      /* apple, openai, model, shortc
 extern NSString * const NekoAskShortcutNameKey;
 extern NSString * const NekoAskSpeakKey;
 
+/* When the cat last said something nobody asked for. Kept in the defaults so a
+   restart does not hand it a fresh tongue. */
+extern NSString * const NekoLastUnpromptedKey;
+
 /* Ask the cat a question.
 
    The keystroke starts listening, what you said becomes text, the text goes to
@@ -67,6 +71,13 @@ extern NSString * const NekoAskSpeakKey;
    thinking, answering or already saying something: an interruption of an
    interruption is worse than a missed suggestion. */
 - (BOOL)canSpeakUnprompted;
+
+/* Seconds since the last unasked remark of any kind, and whether the quiet
+   period from the Suggestions tab has passed. Both count suggestions and
+   curious questions together: they are all interruptions to whoever is
+   working. */
++ (NSTimeInterval)secondsSinceSpokeUnprompted;
++ (BOOL)mayInterruptNow;
 
 /* Whether a bubble is on screen right now. The cat stays where it is while one
    is: reading something that walks away is worse than waiting for it. */

@@ -20,6 +20,7 @@ NSString * const NekoAskHotKeyCodeKey     = @"NekoAskHotKeyCode";
 NSString * const NekoAskHotKeyModifiersKey = @"NekoAskHotKeyModifiers";
 NSString * const NekoAskProviderKey       = @"NekoAskProvider";
 NSString * const NekoAskShortcutNameKey   = @"NekoAskShortcutName";
+NSString * const NekoLastUnpromptedKey = @"NekoLastUnprompted";
 NSString * const NekoAskSpeakKey          = @"NekoAskSpeak";
 static NSString * const NekoAskExplainedKey = @"NekoAskExplained";
 
@@ -189,6 +190,25 @@ enum { NekoPhaseIdle = 0, NekoPhaseListening, NekoPhaseThinking, NekoPhaseAnswer
 
 #pragma mark Speaking unasked
 
++ (NSTimeInterval)secondsSinceSpokeUnprompted
+{
+	NSDate *last = [[NSUserDefaults standardUserDefaults]
+		objectForKey:NekoLastUnpromptedKey];
+	if(![last isKindOfClass:[NSDate class]])
+		return 1.0e9;
+	NSTimeInterval since = -[last timeIntervalSinceNow];
+	return since < 0.0 ? 1.0e9 : since;   /* a clock moved backwards is no clock */
+}
+
+/* The whole app's answer to "may the cat say something unasked right now?": the
+   interval on the Suggestions tab governs everything, not just suggestions. Two
+   systems each keeping their own timer is how five minutes became one. */
++ (BOOL)mayInterruptNow
+{
+	NSTimeInterval interval = [[NekoController sharedController] suggestionInterval];
+	return [self secondsSinceSpokeUnprompted] >= interval;
+}
+
 - (BOOL)isSpeaking
 {
 	return [bubble isShowing];
@@ -203,6 +223,11 @@ enum { NekoPhaseIdle = 0, NekoPhaseListening, NekoPhaseThinking, NekoPhaseAnswer
 {
 	if(![self canSpeakUnprompted] || [text length] == 0)
 		return;
+	/* One clock for everything the cat says without being asked — a suggestion,
+	   a curious question, anything else that comes later. Kept in the defaults
+	   so that quitting the app is not a way of resetting the quiet period. */
+	[[NSUserDefaults standardUserDefaults] setObject:[NSDate date]
+	                                          forKey:NekoLastUnpromptedKey];
 	NSTimeInterval showing = [NekoBubble readingTimeFor:text];
 	phase = NekoPhaseAnswering;
 	[[self panel] holdWithState:NekoStateStop];

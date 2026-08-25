@@ -129,6 +129,8 @@ static const NSTimeInterval NekoAdvisorTyping = 3.0;
 	if(lastSpoke != nil
 	   && -[lastSpoke timeIntervalSinceNow] < [controller suggestionInterval])
 		return NO;
+	if(![NekoAsk mayInterruptNow])
+		return NO;                 /* something else spoke recently */
 
 	NSString *app = [desktop frontApp];
 	if([app length] == 0 || [desktop secondsInFront] < NekoAdvisorSettled)

@@ -13,8 +13,8 @@
    Often enough to feel alive, rare enough not to be a colleague who taps you on
    the shoulder every minute. */
 static const NSTimeInterval NekoAnticsHeartbeat = 5.0;
-static const NSTimeInterval NekoAnticsMinWait = 45.0;
-static const NSTimeInterval NekoAnticsWaitSpread = 75.0;
+static const NSTimeInterval NekoAnticsMinWait = 90.0;
+static const NSTimeInterval NekoAnticsWaitSpread = 150.0;
 
 /* Nobody there. */
 static const NSTimeInterval NekoAnticsAway = 150.0;
@@ -193,6 +193,13 @@ static const NSTimeInterval NekoAnticsAway = 150.0;
              pose:(NekoState)pose
         forTicks:(unsigned)ticks
 {
+	/* The walk is not an interruption; the sentence is. Inside the quiet period
+	   the cat still comes over, sits down and looks at you, and then goes away
+	   again without saying anything — which is most of the charm and none of the
+	   nagging. */
+	if(![NekoAsk mayInterruptNow])
+		line = nil;
+
 	MyPanel *panel = [[NekoController sharedController] panel];
 	[lastAntic release];
 	lastAntic = [[NSDate date] retain];

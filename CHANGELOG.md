@@ -1,5 +1,30 @@
 # Changelog
 
+## Unreleased
+
+### One clock for everything it says
+
+Reported: suggestions arriving far more often than the five minutes set for them.
+They were not — two things were talking. The suggestions kept to their interval,
+and the curious antics kept to their own, which was forty-five to a hundred and
+twenty seconds, and from the outside that is one cat interrupting every minute or
+two.
+
+There is one clock now, kept in the defaults so quitting the app does not reset
+it, and the interval on the Suggestions tab governs everything the cat says
+unasked: a suggestion, a curious question, whatever comes later. The label says
+"Speaks at most every" rather than "At most every", because that is what it now
+means.
+
+The antics themselves are rarer — ninety seconds to four minutes rather than
+forty-five to two — and, inside the quiet period, silent: the cat still walks
+over, sits down and looks at you, then goes away without saying anything. The
+walk was never the interruption.
+
+Measured: with the interval at five minutes, a first remark passes, a second is
+refused, the advisor refuses too, four hundred seconds later it passes again, and
+a clock that has moved backwards does not lock the cat out for ever.
+
 ## 2.0.1 — 2026-08-25
 
 ### The permissions tab, laid out properly

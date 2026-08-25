@@ -1341,7 +1341,7 @@ static const float NekoMaxStopRadius = 200.0f;
 	[content addSubview:readTextCheck];
 	[readTextCheck release];
 
-	[content addSubview:[self labelWithString:NekoLocalized(@"At most every:")
+	[content addSubview:[self labelWithString:NekoLocalized(@"Speaks at most every:")
 	                                    frame:NSMakeRect(20.0f, 320.0f, 125.0f, 17.0f)]];
 
 	suggestEveryPopUp = [[NSPopUpButton alloc]
