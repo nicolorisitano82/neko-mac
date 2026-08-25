@@ -9,6 +9,7 @@
 #import "NekoWakeWord.h"
 #import "NekoPermissions.h"
 #import "NekoBrains.h"
+#import "NekoRate.h"
 #import "NekoMemory.h"
 #import "NekoHotKey.h"
 #import "NekoModelProvider.h"
@@ -1397,11 +1398,23 @@ static const float NekoMaxStopRadius = 200.0f;
 	[content addSubview:suggestNowButton];
 	[suggestNowButton release];
 
+	/* This paragraph is where everything the feature can see, everything it
+	   sends, and how it is going today are written down, and it runs to more
+	   than the tab is tall — four hundred points more in Italian, all of which
+	   used to be cut off at the bottom edge. So it scrolls, and nothing has to
+	   be left out of it to fit. */
+	NSScrollView *scroll = [[NSScrollView alloc]
+		initWithFrame:NSMakeRect(20.0f, 96.0f, 556.0f, 168.0f)];
+	[scroll setHasVerticalScroller:YES];
+	[scroll setDrawsBackground:NO];
+	[scroll setBorderType:NSNoBorder];
 	suggestStatusField = [self labelWithString:@""
-	                                     frame:NSMakeRect(20.0f, 96.0f, 556.0f, 168.0f)];
+	                                     frame:NSMakeRect(0.0f, 0.0f, 538.0f, 168.0f)];
 	[suggestStatusField setAlignment:NSTextAlignmentLeft];
 	[[suggestStatusField cell] setWraps:YES];
-	[content addSubview:suggestStatusField];
+	[scroll setDocumentView:suggestStatusField];
+	[content addSubview:scroll];
+	[scroll release];
 
 	/* What it remembers, and the two things anyone should be able to do about
 	   it: look at it, and delete it. */
@@ -1476,17 +1489,17 @@ static const float NekoMaxStopRadius = 200.0f;
 - (void)suggestNowPressed:(id)sender
 {
 	[suggestNowButton setEnabled:NO];
-	[suggestStatusField setStringValue:NekoLocalized(@"Having a look…")];
+	[self setSuggestStatus:NekoLocalized(@"Having a look…")];
 	[[NekoAdvisor sharedAdvisor] suggestNow:^(NSString *line, NSError *error) {
 		[suggestNowButton setEnabled:YES];
 		if([line length] > 0 && ![line isEqualToString:@"-"])
-			[suggestStatusField setStringValue:[NSString stringWithFormat:
+			[self setSuggestStatus:[NSString stringWithFormat:
 				NekoLocalized(@"It said: %@"), line]];
 		else if(error != nil)
-			[suggestStatusField setStringValue:[error localizedDescription]
+			[self setSuggestStatus:[error localizedDescription]
 				?: NekoLocalized(@"No engine answered.")];
 		else
-			[suggestStatusField setStringValue:
+			[self setSuggestStatus:
 				NekoLocalized(@"It had nothing worth saying about this.")];
 	}];
 }
@@ -1516,7 +1529,26 @@ static const float NekoMaxStopRadius = 200.0f;
 	if([alert runModal] != NSAlertFirstButtonReturn)
 		return;
 	[memory forgetEverything];
+	/* How you reacted to what it said is something it learned about you too. */
+	[[NekoRate sharedRate] forgetPace];
 	[self syncSuggestControls];
+}
+
+/* Set through here rather than directly: the field is inside a scroll view now,
+   and a document view that is not as tall as its text is the same as no scroll
+   view at all. */
+- (void)setSuggestStatus:(NSString *)text
+{
+	[suggestStatusField setStringValue:(text ?: @"")];
+	NSSize needed = [[suggestStatusField cell] cellSizeForBounds:
+		NSMakeRect(0.0f, 0.0f, 538.0f, 100000.0f)];
+	float height = ceilf(needed.height);
+	if(height < 168.0f)
+		height = 168.0f;
+	[suggestStatusField setFrame:NSMakeRect(0.0f, 0.0f, 538.0f, height)];
+	/* Showing the end of a paragraph nobody has read yet is a strange way to
+	   start: the top of it, always. */
+	[suggestStatusField scrollRectToVisible:NSMakeRect(0.0f, height - 1.0f, 538.0f, 1.0f)];
 }
 
 - (void)syncSuggestControls
@@ -1540,7 +1572,7 @@ static const float NekoMaxStopRadius = 200.0f;
 		[NSNumber numberWithInteger:[defaults integerForKey:NekoSuggestEveryKey]]];
 	[suggestEveryPopUp selectItemAtIndex:(index == NSNotFound) ? 2 : index];
 
-	[suggestStatusField setStringValue:[self suggestStatusLine:roaming]];
+	[self setSuggestStatus:[self suggestStatusLine:roaming]];
 
 	NekoMemory *memory = [NekoMemory sharedMemory];
 	NSUInteger days = [memory dayCount];
@@ -1563,7 +1595,7 @@ static const float NekoMaxStopRadius = 200.0f;
 	NSMutableString *line = [NSMutableString string];
 	[line appendString:NekoLocalized(@"Curiosity comes with roaming whatever this switch says: every minute or two the cat comes over to the pointer, asks what you are writing, or goes to claw the edge of the screen. That part needs no engine and sends nothing anywhere.")];
 	[line appendString:@"\n\n"];
-	[line appendString:NekoLocalized(@"It waits for a seam in your work before saying anything: a program you have just left after a long stretch, a burst of typing that has ended, a pause. In the middle of something it stays quiet, and it says nothing at all while a window fills the screen or you are typing a password. The interval below is a floor rather than an alarm clock — after three times it, a smaller gap will do.")];
+	[line appendString:NekoLocalized(@"It waits for a seam in your work before saying anything: a program you have just left after a long stretch, a burst of typing that has ended, a pause. In the middle of something it stays quiet, and it says nothing at all while a window fills the screen or you are typing a password. The interval below is a floor rather than an alarm clock: how good a moment it holds out for depends on how the day has gone so far.")];
 	[line appendString:@"\n\n"];
 	[line appendString:NekoLocalized(@"While roaming, Neko glances at what you are doing and now and then says something about it — a tip, a nudge, or a joke. It waits until you have been in one application for a while, keeps quiet when you are away from the keyboard, and says nothing at all when it has nothing worth saying.")];
 	[line appendString:@"\n\n"];
@@ -1575,6 +1607,12 @@ static const float NekoMaxStopRadius = 200.0f;
 	   Neko tab: that setting governs questions, this one governs remarks. */
 	[line appendString:@"\n\n"];
 	[line appendString:[NekoBrains describeChoice]];
+
+	/* How many today, how they landed, and what it has made of that. The pace is
+	   the one thing here that moves by itself, so it is the one thing that has
+	   to be visible. */
+	[line appendString:@"\n\n"];
+	[line appendString:[[NekoRate sharedRate] describeToday]];
 
 	[line appendString:@"\n\n"];
 	[line appendString:NekoLocalized(@"Window titles are included only if this Mac has already granted Neko screen recording; that permission is never asked for. With Apple Intelligence or a model on this Mac, none of it leaves the Mac; with ChatGPT, Claude or a Shortcut, it is sent to that service like any other question.")];

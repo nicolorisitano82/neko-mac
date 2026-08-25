@@ -260,6 +260,76 @@ whether the interval settles somewhere sensible on its own.
 **Risk.** Feeling passive-aggressive rather than tactful. Open question, and the
 only honest test is living with it.
 
+**Done.** `NekoRate`, and the thing it changed is not a number but what the rate
+is made of. Before this step the rate came from the interval slider and nothing
+else. Replayed over one staged day of seams:
+
+| the rule this replaced | remarks that day |
+| --- | --- |
+| interval of 10 minutes (the default) | **19** |
+| interval of 30 minutes | 9 |
+
+Nineteen or nine, and identical whether every remark was answered or every one
+was waved away. That is a notification, and it is what the complaint about
+suggestions arriving too often was really about.
+
+Now it is a budget for a day rather than a timer. Three things are kept: how many
+remarks today, how they landed, and how much of the day was actually spent at the
+Mac — accrued when somebody asks whether it may speak, so there is no timer of
+its own and nothing accrues while nothing is asking. From those come the two
+answers: whether it may speak at all, and how good a moment it has to hold out
+for. On pace it waits for the end of a long stretch in one program; behind pace a
+small gap will do. That is what lets a quiet day catch up without dropping the
+rule that a remark has to land somewhere.
+
+The pace moves by itself. Answered is worth one more a day, let go one fewer,
+clicked away two fewer — a hand saying no is not the same as somebody being busy.
+Five working days, the same seams and the same seed, written as said/answered:
+
+| how they were received | Mon–Fri | ends up aiming at |
+| --- | --- | --- |
+| answered every time | 14/14 · 14/14 · 14/14 · 15/15 · 14/14 | 15 a day |
+| answered half the time | 12/7 · 10/4 · 8/3 · 8/5 · 8/3 | 8 a day |
+| never answered | 6/0 · 4/0 · 4/0 · 4/0 · 4/0 | 4 a day |
+| clicked away | 4/0 · 4/0 · 4/0 · 4/0 · 4/0 | 4 a day |
+
+Eight to fifteen is the band the reading calls a colleague; four is below it on
+purpose, because somebody who ignores everything is telling you something and the
+answer to it is not eight a day.
+
+Three more things it gets right, each measured:
+
+- **The interval in the preferences is still the ceiling on frequency.** Set to
+  once an hour, an eight-hour day produced 8 remarks and the closest two were 60
+  minutes apart. Nothing in here ever speaks sooner than that setting allows.
+- **The day is hours at the Mac, not hours on the clock.** Three hours a day
+  produced 4 to 6 remarks where eight hours produced 14.
+- **The counts belong to a day and the pace does not.** Two remarks today, none
+  tomorrow, and what it learned about the person is still there in the morning.
+
+The verdicts are wired to what step 4 built: a reply during the moment after it
+speaks, a question asked within a minute of it, a bubble clicked away. And where
+nothing was listening for a reply — the follow-up switch off, or speech never
+allowed — there is **no verdict at all**: measured, the pace does not move.
+Guessing from silence would teach it the wrong thing about somebody who simply
+had no microphone.
+
+What the budget does not stop is the visit. When the day's remarks are spent the
+cat still walks over, sits down and looks at you, and goes away again without
+saying anything — which was most of the charm and none of the nagging.
+
+**What could not be done honestly.** A week of real use. These are staged days:
+seams every fifteen minutes, half of them small, a third medium, the rest the end
+of a long stretch. The governor is the real code and the clock is the only thing
+faked, but the seam distribution is an assumption, and how it behaves on a real
+Tuesday is still to be found out.
+
+**Found on the way.** With today's line added to it, the Suggestions paragraph
+turned out to be cut off by **424 points** in Italian — most of the page that
+explains what this feature can see and where it goes had never been readable. It
+scrolls now, which is the answer for a paragraph that has to say everything
+rather than as much as fits.
+
 ## 6. Voice: register, openings, moods, and no flattery
 
 **Why last.** It is the polish that makes the rest sound like someone, and it can
@@ -290,5 +360,5 @@ which is also getting a test that fails if it ever becomes possible.
 - [x] 2. Breakpoints, and a bar to clear — measured below
 - [x] 3. The diary, and the reflection — measured below
 - [x] 4. Answerable — measured below
-- [ ] 5. The rate itself
+- [x] 5. The rate itself — measured below
 - [ ] 6. Voice

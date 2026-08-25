@@ -3,6 +3,7 @@
 #import "NekoAction.h"
 #import "NekoMemory.h"
 #import "NekoBrains.h"
+#import "NekoRate.h"
 #import "NekoFolderAccess.h"
 #import "NekoWakeWord.h"
 #import "NekoHotKey.h"
@@ -38,6 +39,12 @@ static const NSTimeInterval NekoBeatPatience = 6.0;
 /* How long the previous turn is worth pointing back at. Say something ten
    minutes later and it is a new conversation, not a follow-up. */
 static const NSTimeInterval NekoThreadLife = 180.0;
+
+/* A remark nobody asked for is worth something only if it is possible to tell
+   how it landed. Answered moves the pace up, let go moves it down, clicked away
+   moves it down twice as far — and when nothing was listening for a reply, no
+   verdict at all: guessing from silence would teach the wrong thing. */
+enum { NekoVerdictAnswered = 1, NekoVerdictIgnored, NekoVerdictDismissed };
 
 /* Held for this long, the keystroke means "let me type it". Below it, a tap. */
 static const NSTimeInterval NekoHoldToType = 0.5;
@@ -285,10 +292,12 @@ static const NSTimeInterval NekoHoldToType = 0.5;
 /* The whole app's answer to "may the cat say something unasked right now?": the
    interval on the Suggestions tab governs everything, not just suggestions. Two
    systems each keeping their own timer is how five minutes became one. */
+/* The interval is only the first of the questions now. How many have been said
+   today, how the day is going and how they landed are the rest, and they all
+   live in one place. */
 + (BOOL)mayInterruptNow
 {
-	NSTimeInterval interval = [[NekoController sharedController] suggestionInterval];
-	return [self secondsSinceSpokeUnprompted] >= interval;
+	return [[NekoRate sharedRate] mayInterruptNow];
 }
 
 - (BOOL)isSpeaking
@@ -312,6 +321,9 @@ static const NSTimeInterval NekoHoldToType = 0.5;
 	   so that quitting the app is not a way of resetting the quiet period. */
 	[[NSUserDefaults standardUserDefaults] setObject:[NSDate date]
 	                                          forKey:NekoLastUnpromptedKey];
+	[[NekoRate sharedRate] noteSaid];
+	saidUnasked = YES;
+	beatRan = NO;
 	NSTimeInterval showing = [NekoBubble readingTimeFor:text];
 	phase = NekoPhaseAnswering;
 	[[self panel] holdWithState:NekoStateStop];
@@ -351,6 +363,7 @@ static const NSTimeInterval NekoHoldToType = 0.5;
 /* Back to being a cat. */
 - (void)finish
 {
+	[self judgeUnasked:NekoVerdictIgnored];   /* nothing came of it */
 	beatPending = NO;
 	[listener cancel];           /* the reply we were waiting for is not coming */
 	[bubble setHint:nil];
@@ -361,6 +374,7 @@ static const NSTimeInterval NekoHoldToType = 0.5;
 
 - (void)bubbleDismissed:(id)sender
 {
+	[self judgeUnasked:NekoVerdictDismissed];
 	if(phase == NekoPhaseAnswering)
 		[self finish];
 	else
@@ -457,6 +471,23 @@ static const NSTimeInterval NekoHoldToType = 0.5;
 	[self ask:text];
 }
 
+#pragma mark What became of a remark
+
+- (void)judgeUnasked:(int)verdict
+{
+	if(!saidUnasked)
+		return;
+	saidUnasked = NO;
+	NekoRate *rate = [NekoRate sharedRate];
+	if(verdict == NekoVerdictAnswered)
+		[rate noteAnswered];
+	else if(verdict == NekoVerdictDismissed)
+		[rate noteDismissed];
+	else if(beatRan)
+		[rate noteIgnored];  /* only when something was listening to be ignored */
+	beatRan = NO;
+}
+
 #pragma mark A moment to reply
 
 /* Whether the cat may hold the microphone open after it has spoken. Three
@@ -521,7 +552,9 @@ static const NSTimeInterval NekoHoldToType = 0.5;
 		[self performSelector:@selector(finish) withObject:nil afterDelay:window];
 	}
 
-	if(![self startListeningForReplyWithPatience:NekoBeatPatience])
+	if([self startListeningForReplyWithPatience:NekoBeatPatience])
+		beatRan = YES;
+	else
 		[self endBeatQuietly];
 }
 
@@ -531,6 +564,7 @@ static const NSTimeInterval NekoHoldToType = 0.5;
 {
 	if(phase != NekoPhaseWaiting)
 		return;
+	[self judgeUnasked:NekoVerdictIgnored];
 	[listener cancel];
 	[bubble setHint:nil];
 	if([bubble isShowing])
@@ -575,6 +609,7 @@ static const NSTimeInterval NekoHoldToType = 0.5;
 		return;
 	}
 	[bubble setHint:nil];
+	[self judgeUnasked:NekoVerdictAnswered];
 	[self ask:text];
 }
 
@@ -752,6 +787,11 @@ static const NSTimeInterval NekoHoldToType = 0.5;
 		[self sayInCharacter:[self cannedReply]];
 		return;
 	}
+
+	/* Asking something within a minute of an unasked remark is answering it,
+	   whether or not the microphone happened to be open. */
+	if(saidUnasked && [NekoAsk secondsSinceSpokeUnprompted] < 60.0)
+		[self judgeUnasked:NekoVerdictAnswered];
 
 	[[NekoMemory sharedMemory] noteHeard:question];
 	[askingAbout release];

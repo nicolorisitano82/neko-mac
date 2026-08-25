@@ -6,6 +6,7 @@
 #import "NekoDesktop.h"
 #import "NekoSense.h"
 #import "NekoBrains.h"
+#import "NekoRate.h"
 #import "NekoMemory.h"
 
 NSString * const NekoSuggestLastKey = @"NekoSuggestLast";
@@ -145,15 +146,11 @@ static const NSTimeInterval NekoAdvisorTyping = 3.0;
 	/* The interval is a floor, not a trigger. Past it, a remark also needs a
 	   seam in the work to land in and something specific to say — the two
 	   things that separate a colleague from a notification. How wide a seam it
-	   needs relaxes as the silence grows: after three times the interval a small
-	   gap will do, because by then saying nothing has its own cost. */
-	NSTimeInterval waited = lastSpoke != nil ? -[lastSpoke timeIntervalSinceNow]
-	                                         : [controller suggestionInterval] * 4.0;
-	NekoBreakpoint needed = waited > [controller suggestionInterval] * 3.0
-		? NekoBreakpointFine
-		: (waited > [controller suggestionInterval] * 1.5 ? NekoBreakpointMedium
-		                                                 : NekoBreakpointCoarse);
-	if([desktop breakpointNow] < needed)
+	   needs comes from how the day is going rather than from the silence alone:
+	   on pace it waits for the end of a long stretch in one application, behind
+	   pace a small gap will do, because by then saying nothing has its own
+	   cost. */
+	if([desktop breakpointNow] < [[NekoRate sharedRate] seamNeeded])
 		return NO;
 	if(![desktop somethingStandsOut])
 		return NO;
