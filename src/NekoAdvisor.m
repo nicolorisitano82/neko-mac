@@ -5,6 +5,7 @@
 #import "NekoAnswerProvider.h"
 #import "NekoDesktop.h"
 #import "NekoSense.h"
+#import "NekoBrains.h"
 
 NSString * const NekoSuggestLastKey = @"NekoSuggestLast";
 
@@ -158,8 +159,11 @@ static const NSTimeInterval NekoAdvisorTyping = 3.0;
 
 - (void)suggestNow:(void (^)(NSString *line, NSError *error))report
 {
-	id<NekoAnswerProvider> provider = [[NekoAsk sharedAsk] provider];
-	if(![provider isConfigured]) {
+	/* Not the engine set for questions: the best one on this Mac. A remark
+	   nobody asked for does not go to a remote service, and a remark written by
+	   a model too small to hold the instructions is not worth the interruption. */
+	id<NekoAnswerProvider> provider = [NekoBrains bestOnDeviceProvider];
+	if(provider == nil || ![provider isConfigured]) {
 		if(report != NULL)
 			report(nil, [NSError errorWithDomain:NekoAskErrorDomain
 			                                code:NekoAskErrorNotConfigured
