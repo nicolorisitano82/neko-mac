@@ -244,3 +244,15 @@
 "Download again" = "Télécharger à nouveau";
 "That download did not finish: the file is there but too small to be read. Downloading it again picks up where it stopped." = "Ce téléchargement ne s’est pas terminé : le fichier est là mais trop petit pour être lu. Le relancer reprend où il s’est arrêté.";
 "That was too much to think about at once." = "C’était trop à penser d’un coup.";
+"Answer when I say “Neko” (beta)" = "Répondre quand je dis « Neko » (bêta)";
+"Speech recognition is refused for Neko. The Permissions tab has the way back." = "La reconnaissance vocale est refusée à Neko. L’onglet Autorisations indique le chemin du retour.";
+"Listening for its name right now." = "À l’écoute de son nom en ce moment.";
+"The microphone is open but the recogniser has not said anything yet." = "Le micro est ouvert mais le moteur de reconnaissance n’a encore rien dit.";
+"Not listening: speech recognition has not been allowed. The Permissions tab can ask for it." = "Pas à l’écoute : la reconnaissance vocale n’a pas été autorisée. L’onglet Autorisations peut la demander.";
+"mixing the colours" = "je mélange les couleurs";
+"sharpening the pencil" = "j’taille le crayon";
+"deciding where the light comes from" = "je décide d’où vient la lumière";
+"filling in the background" = "je remplis le fond";
+"getting the shape right" = "je corrige la forme";
+"Restart Neko" = "Redémarrer Neko";
+"macOS applies a change to screen recording only after Neko is restarted. And because this build is signed ad hoc, every rebuild of the app is a different app as far as the system is concerned: permissions granted to the previous one have to be granted again." = "macOS n’applique un changement d’enregistrement de l’écran qu’après un redémarrage de Neko. Et comme cette version est signée ad hoc, chaque recompilation est une autre app pour le système : les autorisations données à la précédente doivent être redonnées.";

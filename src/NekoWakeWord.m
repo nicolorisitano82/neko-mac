@@ -49,6 +49,8 @@ static NSString * const NekoWakeSpellings[] = {
 {
 	if(![NekoListener isAvailable])
 		return NSLocalizedString(@"This Mac has no speech recognition.", nil);
+	if([NekoListener authorizationStatus] == 1 || [NekoListener authorizationStatus] == 2)
+		return NSLocalizedString(@"Speech recognition is refused for Neko. The Permissions tab has the way back.", nil);
 	if(![self isAvailable])
 		return NSLocalizedString(@"This Mac cannot recognise your language without sending the audio to a server, and an always-open microphone is not something to send anywhere.", nil);
 	return nil;
@@ -96,6 +98,13 @@ static NSString * const NekoWakeSpellings[] = {
 	return running;
 }
 
+/* Whether the recogniser has said anything at all lately: listening and hearing
+   are not the same thing, and only one of them can be seen from outside. */
+- (BOOL)isHearing
+{
+	return running && lastResult != nil && -[lastResult timeIntervalSinceNow] < 30.0;
+}
+
 - (BOOL)shouldRun
 {
 	NekoController *controller = [NekoController sharedController];
@@ -107,10 +116,32 @@ static NSString * const NekoWakeSpellings[] = {
 
 - (void)applySettings
 {
-	if([self shouldRun])
-		[self start];
-	else
+	if(![self shouldRun]) {
 		[self stop];
+		return;
+	}
+
+	/* Speech has to be allowed before any of this does anything at all. Without
+	   asking, the recogniser accepts a task, returns no results, and the cat
+	   simply never hears its name — which is what happened: the permission had
+	   never been requested because the keystroke, which is where it used to be
+	   asked for, had never been used. */
+	NSInteger status = [NekoListener authorizationStatus];
+	if(status == 3) {
+		[self start];
+		return;
+	}
+	if(status != 0)
+		return;                    /* refused: the permissions tab says so */
+
+	if(asking)
+		return;
+	asking = YES;
+	[NekoListener requestAuthorization:^(BOOL granted) {
+		asking = NO;
+		if(granted)
+			[self start];
+	}];
 }
 
 - (void)start

@@ -33,6 +33,7 @@ extern NSString * const NekoWakeWordKey;
 	NSDate *lastHeard;
 	NSDate *lastResult;          /* when the recogniser last said anything */
 	BOOL running;
+	BOOL asking;                 /* a permission request is in flight */
 }
 
 + (NekoWakeWord *)sharedWakeWord;
@@ -50,6 +51,9 @@ extern NSString * const NekoWakeWordKey;
 - (void)stop;
 
 - (BOOL)isListening;
+
+/* YES while the recogniser is actually producing results. */
+- (BOOL)isHearing;
 
 /* The matcher, which is worth testing on its own: speech recognisers spell the
    cat's name several ways, and none of them is the one in the dictionary. */

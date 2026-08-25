@@ -36,7 +36,8 @@ extern NSString * const NekoAskSpeakKey;
 	NekoLocalProvider *localProvider;
 	int phase;
 	NSDate *lastDrawn;           /* throttles the streaming redraw */
-	NSTimer *thinking;           /* the animation while it waits */
+	NSTimer *thinking;
+	BOOL drawing;                /* the spinner is an hourglass, not a paw */           /* the animation while it waits */
 	NSString *thinkingQuestion;
 	unsigned thinkingTick;
 	BOOL hotKeyFailed;

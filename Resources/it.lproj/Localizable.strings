@@ -244,3 +244,15 @@
 "Download again" = "Scarica di nuovo";
 "That download did not finish: the file is there but too small to be read. Downloading it again picks up where it stopped." = "Quello scaricamento non è finito: il file c'è ma è troppo piccolo per essere letto. Scaricarlo di nuovo riprende da dove si era fermato.";
 "That was too much to think about at once." = "Era troppo da pensare tutto insieme.";
+"Answer when I say “Neko” (beta)" = "Rispondi quando dico “Neko” (beta)";
+"Speech recognition is refused for Neko. The Permissions tab has the way back." = "Il riconoscimento vocale è negato a Neko. La scheda Autorizzazioni ha la via di ritorno.";
+"Listening for its name right now." = "In ascolto del suo nome adesso.";
+"The microphone is open but the recogniser has not said anything yet." = "Il microfono è aperto ma il riconoscitore non ha ancora detto niente.";
+"Not listening: speech recognition has not been allowed. The Permissions tab can ask for it." = "Non in ascolto: il riconoscimento vocale non è stato autorizzato. La scheda Autorizzazioni può chiederlo.";
+"mixing the colours" = "mescolo i colori";
+"sharpening the pencil" = "tempero la matita";
+"deciding where the light comes from" = "decido da dove viene la luce";
+"filling in the background" = "riempio lo sfondo";
+"getting the shape right" = "aggiusto la forma";
+"Restart Neko" = "Riavvia Neko";
+"macOS applies a change to screen recording only after Neko is restarted. And because this build is signed ad hoc, every rebuild of the app is a different app as far as the system is concerned: permissions granted to the previous one have to be granted again." = "macOS applica un cambio alla registrazione schermo solo dopo il riavvio di Neko. E siccome questa build è firmata ad hoc, ogni ricostruzione dell'app per il sistema è un'app diversa: i permessi dati alla precedente vanno concessi di nuovo.";

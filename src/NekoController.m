@@ -767,7 +767,7 @@ static const float NekoMaxStopRadius = 200.0f;
 
 	wakeCheck = [[NSButton alloc] initWithFrame:NSMakeRect(152.0f, 186.0f, 300.0f, 18.0f)];
 	[wakeCheck setButtonType:NSButtonTypeSwitch];
-	[wakeCheck setTitle:NekoLocalized(@"Answer when I say “Neko”")];
+	[wakeCheck setTitle:NekoLocalized(@"Answer when I say “Neko” (beta)")];
 	[wakeCheck setTarget:self];
 	[wakeCheck setAction:@selector(takeWakeWordFrom:)];
 	[content addSubview:wakeCheck];
@@ -1017,6 +1017,23 @@ static const float NekoMaxStopRadius = 200.0f;
 		y -= 66.0f;
 	}
 
+	NSTextField *note = [self labelWithString:
+		NekoLocalized(@"macOS applies a change to screen recording only after Neko is restarted. And because this build is signed ad hoc, every rebuild of the app is a different app as far as the system is concerned: permissions granted to the previous one have to be granted again.")
+	                                    frame:NSMakeRect(20.0f, 48.0f, 556.0f, 44.0f)];
+	[note setAlignment:NSTextAlignmentLeft];
+	[note setFont:[NSFont systemFontOfSize:11.0f]];
+	[[note cell] setWraps:YES];
+	[note setTextColor:[NSColor secondaryLabelColor]];
+	[permissionsContent addSubview:note];
+
+	NSButton *relaunch = [[NSButton alloc] initWithFrame:NSMakeRect(170.0f, 12.0f, 140.0f, 28.0f)];
+	[relaunch setBezelStyle:NSBezelStyleRounded];
+	[relaunch setTitle:NekoLocalized(@"Restart Neko")];
+	[relaunch setTarget:self];
+	[relaunch setAction:@selector(relaunchPressed:)];
+	[permissionsContent addSubview:relaunch];
+	[relaunch release];
+
 	NSButton *refresh = [[NSButton alloc] initWithFrame:NSMakeRect(20.0f, 12.0f, 140.0f, 28.0f)];
 	[refresh setBezelStyle:NSBezelStyleRounded];
 	[refresh setTitle:NekoLocalized(@"Check again")];
@@ -1026,6 +1043,22 @@ static const float NekoMaxStopRadius = 200.0f;
 	[refresh release];
 
 	[self syncPermissionsSummary];
+}
+
+/* Screen recording, and one or two of the others, only take effect on a fresh
+   launch: rather than explaining that, the app can do it. */
+- (void)relaunchPressed:(id)sender
+{
+	NSURL *me = [[NSBundle mainBundle] bundleURL];
+	NSTask *task = [[[NSTask alloc] init] autorelease];
+	[task setLaunchPath:@"/usr/bin/open"];
+	[task setArguments:[NSArray arrayWithObjects:@"-n", [me path], nil]];
+	NS_DURING
+		[task launch];
+	NS_HANDLER
+		return;
+	NS_ENDHANDLER
+	[NSApp terminate:nil];
 }
 
 - (void)syncPermissionsSummary
@@ -1704,6 +1737,18 @@ static const float NekoMaxStopRadius = 200.0f;
 	NSMutableString *line = [NSMutableString stringWithFormat:
 		NekoLocalized(@"Press %@ and ask. Neko listens until you stop talking."),
 		[ask hotKeyDisplayName]];
+	if([[NSUserDefaults standardUserDefaults] boolForKey:NekoWakeWordKey]) {
+		NekoWakeWord *wake = [NekoWakeWord sharedWakeWord];
+		[line appendString:@"\n\n"];
+		if(![NekoWakeWord isAvailable])
+			[line appendString:[NekoWakeWord unavailableReason] ?: @""];
+		else if([wake isHearing])
+			[line appendString:NekoLocalized(@"Listening for its name right now.")];
+		else if([wake isListening])
+			[line appendString:NekoLocalized(@"The microphone is open but the recogniser has not said anything yet.")];
+		else
+			[line appendString:NekoLocalized(@"Not listening: speech recognition has not been allowed. The Permissions tab can ask for it.")];
+	}
 	if([[NSUserDefaults standardUserDefaults] boolForKey:NekoWakeWordKey]
 	   && [NekoWakeWord isAvailable]) {
 		[line appendString:@" "];

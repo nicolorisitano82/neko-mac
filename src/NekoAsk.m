@@ -366,10 +366,45 @@ enum { NekoPhaseIdle = 0, NekoPhaseListening, NekoPhaseThinking, NekoPhaseAnswer
 	[self thinkingTick:nil];
 }
 
+/* The drawing takes fifteen seconds or so, which is a long time to look at one
+   unchanging sentence. Same machinery as the thinking spinner, a different set
+   of occupations, and an hourglass that turns over instead of a walking paw. */
+- (NSArray *)drawingLines
+{
+	return [NSArray arrayWithObjects:
+		NekoAskLocalized(@"mixing the colours"),
+		NekoAskLocalized(@"sharpening the pencil"),
+		NekoAskLocalized(@"deciding where the light comes from"),
+		NekoAskLocalized(@"filling in the background"),
+		NekoAskLocalized(@"getting the shape right"), nil];
+}
+
+- (void)startDrawingAbout:(NSString *)what
+{
+	drawing = YES;
+	[self startThinkingAbout:what];
+}
+
 - (void)thinkingTick:(NSTimer *)timer
 {
-	if(phase != NekoPhaseThinking) {
+	if(!drawing && phase != NekoPhaseThinking) {
 		[self stopThinking];
+		return;
+	}
+	if(drawing && phase != NekoPhaseAnswering) {
+		[self stopThinking];
+		return;
+	}
+
+	if(drawing) {
+		NSArray *lines = [self drawingLines];
+		NSString *line = [lines objectAtIndex:(thinkingTick / 8) % [lines count]];
+		/* Two glyphs, turned over: the hourglass is the whole point of it. */
+		NSString *glass = (thinkingTick % 2) == 0 ? @"\u231b" : @"\u23f3";
+		NSString *dots = [@"..." substringToIndex:1 + (thinkingTick % 3)];
+		[self showBubble:[NSString stringWithFormat:@"%@\n\n%@ %@%@",
+			thinkingQuestion, glass, line, dots] dismissAfter:0.0];
+		thinkingTick++;
 		return;
 	}
 
@@ -387,6 +422,7 @@ enum { NekoPhaseIdle = 0, NekoPhaseListening, NekoPhaseThinking, NekoPhaseAnswer
 
 - (void)stopThinking
 {
+	drawing = NO;
 	[thinking invalidate];
 	thinking = nil;
 	[thinkingQuestion release];
@@ -484,11 +520,12 @@ enum { NekoPhaseIdle = 0, NekoPhaseListening, NekoPhaseThinking, NekoPhaseAnswer
 {
 	phase = NekoPhaseAnswering;
 	[[self panel] holdWithState:NekoStateKaki];
-	[self showBubble:NekoAskLocalized(@"Hold on, I will draw it.") dismissAfter:0.0];
+	[self startDrawingAbout:NekoAskLocalized(@"Hold on, I will draw it.")];
 
 	[[NekoPainter sharedPainter] draw:prompt completion:^(NSImage *picture, NSError *error) {
 		if(phase != NekoPhaseAnswering)
 			return;                   /* dismissed while it drew */
+		[self stopThinking];
 		if(picture == nil) {
 			[self failed:error];
 			return;

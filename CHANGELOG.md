@@ -29,6 +29,36 @@ with "that model file could not be read". A model shorter than nine tenths of it
 published size is now treated as absent, and the tab says the download did not
 finish and offers to resume it rather than pretending there is nothing there.
 
+### The wake word never asked to be allowed to hear
+
+Reported: saying "Neko" does nothing. Speech recognition had never been
+authorised — the permission used to be asked for by the keystroke, the first time
+anyone pressed it, and someone who only ever turned on the wake word was never
+asked at all. A recogniser without that permission accepts a task, returns no
+results, and says nothing about it.
+
+The switch now asks when it is turned on, and the tab says which of the three
+states it is in: listening and hearing, microphone open but nothing coming back,
+or not listening because the permission is missing. The feature is labelled beta,
+since how well it hears a name is not something the app can promise.
+
+### Screen recording that would not stick
+
+Granted in System Settings, still refused in the app. Two reasons, both real, and
+now both written in the tab. macOS applies a change to screen recording only when
+the app is restarted — there is a Restart Neko button for that — and this build
+is signed ad hoc, so every rebuild is a different app to the system. Measured: a
+one-character change to a source file moves the code hash from 700ae442… to
+48c17472…, and everything granted to the previous hash stops applying.
+
+### An hourglass while it draws
+
+Fifteen seconds of one unchanging sentence looked like nothing was happening.
+The drawing now turns an hourglass over twice a second and works through five
+occupations — mixing the colours, sharpening the pencil, deciding where the light
+comes from — until the picture arrives. Measured on a 384 pixel drawing: 30
+distinct frames over 11 seconds, then the picture.
+
 ### The Ask buttons that did nothing
 
 Two of them. **Accessibility**: macOS shows that alert exactly once in an app's
