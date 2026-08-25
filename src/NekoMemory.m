@@ -1,6 +1,7 @@
 #import "NekoMemory.h"
 #import "NekoBrains.h"
 #import "NekoAnswerProvider.h"
+#import <NaturalLanguage/NaturalLanguage.h>
 
 #define NekoMemoryLocalized(text) NSLocalizedString(text, nil)
 
@@ -10,7 +11,7 @@
 static const NSUInteger NekoMemoryDays = 30;
 static const NSUInteger NekoMemoryDurableLines = 40;
 static const NSUInteger NekoMemoryPromptChars = 1000;
-static const NSUInteger NekoMemoryLineChars = 240;
+static const NSUInteger NekoMemoryLineChars = 160;
 
 static NSString * const NekoMemoryReflectedKey = @"NekoMemoryReflected";
 
@@ -58,6 +59,111 @@ static NSString * const NekoMemoryReflectedKey = @"NekoMemoryReflected";
 
 #pragma mark Writing it down
 
+/* Words worth nothing in a note. Articles, the copula, the polite scaffolding of
+   a sentence — the things a person writing in a notebook leaves out anyway.
+   Every one of these is a token that will be read back to a model tomorrow, and
+   the small ones have very little room.
+
+   Nothing here carries meaning on its own, and the list is short on purpose.
+   "again", "still", "over", "under" were in it for an afternoon and came out:
+   "under 3 GB" and "3 GB" are not the same note, and "slow again" is the whole
+   point of writing it down.
+
+   What is never dropped, and the reason the list is written by hand rather than
+   taken from a stemmer: negations. "not", "non", "pas", "no", "never", "mai",
+   "senza" — a note that loses one of those says the opposite of what happened.
+   Numbers, names and anything with a capital or a digit in it survive too. */
+static NSSet *NekoMemoryFillerWords(NSString *language)
+{
+	static NSDictionary *byLanguage = nil;
+	if(byLanguage == nil)
+		byLanguage = [[NSDictionary alloc] initWithObjectsAndKeys:
+			@"the a an of to in on at for and or is are was were be been being that this these those it its with from by as has have had i you we they there here just really very quite some any my your our their",
+				@"en",
+			@"il lo la i gli le un uno una di del dello della dei degli delle a al allo alla ai agli alle in nel nello nella nei negli nelle su sul sullo sulla sui per con e ed è sono era erano essere stato che chi cui questo questa questi queste quello quella quelli quelle ci si vi ho hai ha abbiamo avete hanno aveva avevano sto stai sta stiamo state stanno mi ti ne molto proprio davvero abbastanza",
+				@"it",
+			@"le la les un une des de du au aux à en dans sur pour avec et est sont était étaient être été que qui ce cette ces cela il elle je tu nous vous ils elles ai as a avons avez ont avait très vraiment assez",
+				@"fr",
+			@"el la los las un una unos unas de del al a en para con y e es son era eran ser sido que quien este esta estos estas eso él ella yo tú nosotros ustedes he has ha hemos han había estoy está están muy realmente bastante",
+				@"es", nil];
+
+	NSString *words = [byLanguage objectForKey:[language lowercaseString]]
+		?: [byLanguage objectForKey:@"en"];
+	return [NSSet setWithArray:[words componentsSeparatedByString:@" "]];
+}
+
+/* Which list to use, decided per line rather than once for the application. A
+   cat set to Italian still says things in English, and "so" is filler in one
+   language and "I know" in the other: the wrong list does not just save less, it
+   takes out words that mattered. */
+static NSString *NekoMemoryLanguageOf(NSString *text)
+{
+	NSString *fallback = [[[NSBundle mainBundle] preferredLocalizations] firstObject] ?: @"en";
+	if([fallback length] > 2)
+		fallback = [fallback substringToIndex:2];
+	if([text length] < 12)
+		return fallback;         /* too little to tell, and too little to save */
+	if(@available(macOS 10.14, *)) {
+		NLLanguageRecognizer *guess = [[[NLLanguageRecognizer alloc] init] autorelease];
+		[guess processString:text];
+		NSDictionary *odds = [guess languageHypothesesWithMaximum:1];
+		NSString *language = [[odds keyEnumerator] nextObject];
+		if(language != nil
+		   && [[odds objectForKey:language] doubleValue] >= 0.75)
+			return [language length] > 2 ? [language substringToIndex:2] : language;
+	}
+	return fallback;
+}
+
+/* A word nobody would leave out of a note: a digit anywhere, or a capital
+   somewhere other than the front, means a version, a time, a file or a name —
+   2.1, 14:30, iPhone, NekoAsk. A capital at the front means only that the
+   sentence started there, which is not a reason to keep "The". */
+static BOOL NekoMemoryWorthKeeping(NSString *word)
+{
+	if([word rangeOfCharacterFromSet:[NSCharacterSet decimalDigitCharacterSet]].location
+	   != NSNotFound)
+		return YES;
+	if([word length] < 2)
+		return NO;
+	return [[word substringFromIndex:1] rangeOfCharacterFromSet:
+		[NSCharacterSet uppercaseLetterCharacterSet]].location != NSNotFound;
+}
+
+/* The diary is notes, not a transcript. Written the way somebody writes in the
+   margin of their own notebook: "build slow again, third time today" rather than
+   "I have noticed that the build has been slow again, for the third time today".
+   The information is the same and there is about a third less of it to read back
+   tomorrow — which matters because a small model reads the whole thing before it
+   answers anything. */
+- (NSString *)squeeze:(NSString *)text
+{
+	NSSet *filler = NekoMemoryFillerWords(NekoMemoryLanguageOf(text));
+	NSMutableArray *kept = [NSMutableArray array];
+	NSEnumerator *e = [[text componentsSeparatedByString:@" "] objectEnumerator];
+	NSString *word;
+	while((word = [e nextObject]) != nil) {
+		if([word length] == 0)
+			continue;
+		/* Punctuation is part of the word for the purpose of dropping it, so
+		   "the," goes with "the". */
+		NSString *bare = [[word stringByTrimmingCharactersInSet:
+			[NSCharacterSet punctuationCharacterSet]] lowercaseString];
+		if([filler containsObject:bare] && !NekoMemoryWorthKeeping(word))
+			continue;
+		[kept addObject:word];
+	}
+	if([kept count] == 0)
+		return text;             /* all filler: keep it rather than lose the line */
+
+	NSString *squeezed = [kept componentsJoinedByString:@" "];
+	/* A full stop at the end of a note is a token spent on nothing. A question
+	   mark is not: it says the line was a question. */
+	while([squeezed hasSuffix:@"."] || [squeezed hasSuffix:@","])
+		squeezed = [squeezed substringToIndex:[squeezed length] - 1];
+	return squeezed;
+}
+
 /* One line, trimmed to something a diary would hold rather than a log. */
 - (NSString *)tidy:(NSString *)text
 {
@@ -65,6 +171,10 @@ static NSString * const NekoMemoryReflectedKey = @"NekoMemoryReflected";
 		[NSCharacterSet newlineCharacterSet]] componentsJoinedByString:@" "];
 	flat = [flat stringByTrimmingCharactersInSet:
 		[NSCharacterSet whitespaceAndNewlineCharacterSet]];
+	/* Repeated spaces cost as much as words. */
+	while([flat rangeOfString:@"  "].location != NSNotFound)
+		flat = [flat stringByReplacingOccurrencesOfString:@"  " withString:@" "];
+	flat = [self squeeze:flat];
 	if([flat length] > NekoMemoryLineChars)
 		flat = [[flat substringToIndex:NekoMemoryLineChars] stringByAppendingString:@"…"];
 	return flat;
@@ -80,9 +190,21 @@ static NSString * const NekoMemoryReflectedKey = @"NekoMemoryReflected";
 	[clock setLocale:[NSLocale localeWithLocaleIdentifier:@"en_US_POSIX"]];
 	[clock setDateFormat:@"HH:mm"];
 
+	NSURL *file = [self fileForDay:[NSDate date]];
+
+	/* The same note twice running is one note. A cat watching somebody stay in
+	   Xcode writes "Xcode, forty minutes" every time it looks, and three of those
+	   in a row tell a model nothing the first one did not. */
+	NSString *ending = [NSString stringWithFormat:@"\t%@\t%@", kind, line];
+	NSArray *already = [self linesOfFile:file];
+	NSUInteger back = [already count] > 3 ? [already count] - 3 : 0;
+	NSUInteger i;
+	for(i = back; i < [already count]; i++)
+		if([[already objectAtIndex:i] hasSuffix:ending])
+			return;
+
 	NSString *entry = [NSString stringWithFormat:@"%@\t%@\t%@\n",
 		[clock stringFromDate:[NSDate date]], kind, line];
-	NSURL *file = [self fileForDay:[NSDate date]];
 	NSFileManager *files = [NSFileManager defaultManager];
 	if(![files fileExistsAtPath:[file path]]) {
 		[entry writeToURL:file atomically:YES encoding:NSUTF8StringEncoding error:NULL];
@@ -94,9 +216,12 @@ static NSString * const NekoMemoryReflectedKey = @"NekoMemoryReflected";
 	[handle closeFile];
 }
 
-- (void)noteNoticed:(NSString *)observation { [self append:@"noticed" text:observation]; }
-- (void)noteSaid:(NSString *)line           { [self append:@"said" text:line]; }
-- (void)noteHeard:(NSString *)line          { [self append:@"heard" text:line]; }
+/* Three letters rather than seven: the label is on every line of every day, and
+   it is read back to a model with the rest of them. "saw" is what the cat
+   noticed, "sed" is what the cat said, "you" is what the person said. */
+- (void)noteNoticed:(NSString *)observation { [self append:@"saw" text:observation]; }
+- (void)noteSaid:(NSString *)line           { [self append:@"sed" text:line]; }
+- (void)noteHeard:(NSString *)line          { [self append:@"you" text:line]; }
 
 #pragma mark Reading it back
 
@@ -198,7 +323,8 @@ static NSString * const NekoMemoryReflectedKey = @"NekoMemoryReflected";
 
 	NSString *instructions =
 		@"You keep a short diary about one person's working life. Below is a day of "
-		@"raw notes: what was noticed, what you said, what they said.\n\n"
+		@"raw notes, three kinds: saw is what you noticed, sed is what you said, "
+		@"you is what they said. They are written short, without articles.\n\n"
 		@"Write at most four lines that will still be true next week, and prefer "
 		@"fewer. The test is whether the line would still mean something on "
 		@"Monday.\n\n"

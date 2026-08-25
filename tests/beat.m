@@ -142,7 +142,10 @@ int main(int argc, const char *argv[])
 	/* Finishing the sentence turns the remark into a conversation. The proof
 	   that it reached the question is in the diary, which is where a question
 	   goes before anything else happens to it. */
-	NSString *phrase = @"zzq test barge in phrase";
+	/* No filler words in it: the diary is written short now, and a phrase this
+	   test looks for again afterwards must survive being written the way a note
+	   is written. */
+	NSString *phrase = @"zzqmark barge test";
 	[ask replyHeard:phrase final:YES error:nil];
 	spin(0.4);
 	/* A question is written down before anything is done with it, so the diary
@@ -155,7 +158,7 @@ int main(int argc, const char *argv[])
 			@"a finished sentence becomes the next question", nil);
 	else
 		notMeasured(@"the engine is not configured, so the question stopped there");
-	[[NekoMemory sharedMemory] forgetLinesContaining:@"zzq test"];
+	[[NekoMemory sharedMemory] forgetLinesContaining:@"zzqmark"];
 	ok([[[NekoMemory sharedMemory] contextForPrompt] rangeOfString:phrase].location == NSNotFound,
 		@"and the test's own line is removed again", nil);
 

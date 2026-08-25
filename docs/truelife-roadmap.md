@@ -153,6 +153,28 @@ heard — trimmed to 240 characters each, newlines flattened. Measured:
   and the file is removed when nothing is left. Forget-everything leaves zero
   bytes and zero days.
 
+**Written short.** The notes are kept the way somebody writes in the margin of
+their own notebook rather than the way a log writes: articles, the copula and the
+polite scaffolding of a sentence come out, because every one of them is a token
+read back to a model tomorrow and the small models have very little room.
+*"Ho notato che la build di Xcode è di nuovo lenta, per la terza volta oggi"*
+becomes *"notato build Xcode nuovo lenta, terza volta oggi"* — 34% fewer
+characters across a sample of four real notes, the same information in all of
+them. Which list of filler words is used is decided per line by the language the
+line is actually in: a cat set to Italian still says things in English, and "so"
+is filler in one language and "I know" in the other.
+
+What never comes out: negations, numbers, versions, times and names. "again",
+"still", "over" and "under" were on the list for an afternoon and came off it —
+*under 3 GB* and *3 GB* are not the same note. The same note twice running is
+written once, since a cat that looks every twenty seconds writes "Xcode, forty
+minutes" three times and the second two say nothing the first did not.
+
+Measured after the change: the reflection still works on notes written this way,
+2.0 s for a staged day, three durable lines — *rilascio Neko 2.1 progress*,
+*note rilascio venerdì*, *changelog da inviare domani* — and it now answers in
+the language the notes were in.
+
 The reflection prompt needed one round of tightening. Its first version kept
 *"Xcode remains open for over forty minutes"* and *"switched programs fourteen
 times"* — true that afternoon and meaningless by Monday. Naming those two as
