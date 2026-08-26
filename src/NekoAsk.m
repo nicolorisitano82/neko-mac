@@ -29,6 +29,7 @@ NSString * const NekoAskShortcutNameKey   = @"NekoAskShortcutName";
 NSString * const NekoLastUnpromptedKey = @"NekoLastUnprompted";
 NSString * const NekoAskSpeakKey          = @"NekoAskSpeak";
 NSString * const NekoAskFollowUpKey       = @"NekoAskFollowUp";
+NSString * const NekoAskTempoKey          = @"NekoAskTempo";
 static NSString * const NekoAskExplainedKey = @"NekoAskExplained";
 
 enum { NekoPhaseIdle = 0, NekoPhaseListening, NekoPhaseThinking,
@@ -74,7 +75,8 @@ static const NSTimeInterval NekoHoldToType = 0.5;
 			@"apple", NekoAskProviderKey,   /* free, private, and already there */
 			@"Ask Neko", NekoAskShortcutNameKey,
 			[NSNumber numberWithBool:NO], NekoAskSpeakKey,
-			[NSNumber numberWithBool:YES], NekoAskFollowUpKey, nil]];
+			[NSNumber numberWithBool:YES], NekoAskFollowUpKey,
+			[NSNumber numberWithBool:YES], NekoAskTempoKey, nil]];
 }
 
 + (NekoAsk *)sharedAsk
@@ -380,6 +382,10 @@ static const NSTimeInterval NekoHoldToType = 0.5;
 
 - (void)cancelEverything
 {
+	[NSObject cancelPreviousPerformRequestsWithTarget:self
+	                                        selector:@selector(revealAnswer) object:nil];
+	[pendingAnswer release];
+	pendingAnswer = nil;
 	[self stopThinking];
 	[self stopVoice];
 	[[NekoPainter sharedPainter] cancel];
@@ -1139,6 +1145,36 @@ static const NSTimeInterval NekoHoldToType = 0.5;
 			return;
 		}
 	}
+	/* A beat before it speaks, if the answer is short enough that it appeared
+	   all at once. The spinner keeps walking meanwhile, which is what the
+	   studies used to make a wait read as thinking rather than as lag. */
+	NSTimeInterval tempo = [self tempoFor:text];
+	if(tempo > 0.0) {
+		[self startThinkingAbout:(askingAbout ?: @"")];
+		[pendingAnswer release];
+		pendingAnswer = [text copy];
+		[NSObject cancelPreviousPerformRequestsWithTarget:self
+		                                        selector:@selector(revealAnswer)
+		                                          object:nil];
+		[self performSelector:@selector(revealAnswer) withObject:nil afterDelay:tempo];
+		return;
+	}
+
+	[self reallyAnswer:text];
+}
+
+- (void)revealAnswer
+{
+	NSString *text = [[pendingAnswer retain] autorelease];
+	[pendingAnswer release];
+	pendingAnswer = nil;
+	[self stopThinking];
+	if([text length] > 0)
+		[self reallyAnswer:text];
+}
+
+- (void)reallyAnswer:(NSString *)text
+{
 	phase = NekoPhaseAnswering;
 	[[self panel] holdWithState:NekoStateStop];
 	[self showBubble:text dismissAfter:[NekoBubble readingTimeFor:text]];
@@ -1174,6 +1210,27 @@ static const NSTimeInterval NekoHoldToType = 0.5;
 	}
 	phase = NekoPhaseIdle;
 	[self sayInCharacter:line];
+}
+
+/* Twelve milliseconds a character, capped just under a second, and only for a
+   short answer that nothing has shown yet. A long one has been streaming for a
+   while already and a factual one is wanted now. */
+static const NSTimeInterval NekoTempoPerCharacter = 0.012;
+static const NSTimeInterval NekoTempoMost = 0.9;
+static const NSUInteger NekoTempoLongEnough = 160;
+
+- (NSTimeInterval)tempoFor:(NSString *)text
+{
+	if(![[NSUserDefaults standardUserDefaults] boolForKey:NekoAskTempoKey])
+		return 0.0;
+	if([text length] == 0 || [text length] > NekoTempoLongEnough)
+		return 0.0;              /* a long answer arrived a piece at a time */
+	if(lastDrawn != nil)
+		return 0.0;              /* some of it is already on screen */
+	if(NekoQuestionWantsFacts(askingAbout))
+		return 0.0;              /* the time, the date, the battery: now, please */
+	NSTimeInterval tempo = (NSTimeInterval)[text length] * NekoTempoPerCharacter;
+	return MIN(tempo, NekoTempoMost);
 }
 
 /* Something in character, for when there is nothing to ask. */

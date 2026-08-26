@@ -43,6 +43,59 @@ flat draw's. Each idle pose keeps its old average and loses its old count —
 sitting 2 to 6 ticks against a fixed 4, playing 6 to 13 against 10 — and
 scratching now comes in bursts about one time in six, because blinking does.
 
+### A short answer takes a moment
+
+Response delays scaled to the weight of a reply raise perceived humanness and
+satisfaction in chat, and the walking paw this app has always shown while it
+thinks is the typing indicator those studies used to make waiting tolerable. So a
+short answer now waits twelve milliseconds a character — 0.24 s for twenty
+characters, capped at 0.9 s — before it appears.
+
+Nothing else waits. A long answer streamed in a piece at a time and is already
+there. Anything factual is exempt, because asked the time, fast *is* the answer.
+And the whole thing is one switch: `defaults write NekoAskTempo -bool false`.
+
+It is left switchable because it might be wrong: the finding comes from chat,
+where waiting is normal, and a cat on a desktop may be the case where speed is the
+point. The honest test is two builds and one person who does not know which is
+which.
+
+### The mood follows the day, and it claims no feelings
+
+The mood already moved with the hour and the day; it now carries a slower layer
+under that, taken from the verdicts the rate has kept since 2.1. Answered most of
+them and the cat is a shade more forward; waved away twice and it is shorter, with
+no complaining about it. Nothing new is watched to get this: the counters were
+already there.
+
+And it will not claim a feeling. Machines are unnerving in proportion to the
+experience people ascribe to them, and a pet that reports being neglected is a
+manipulation besides — so "mi sento solo quando chiudi il portatile" is refused in
+anything the cat says unasked, while "sono un gatto di pixel su una scrivania"
+goes through: identity is not a feeling. Thirty-odd phrases in four languages, 8
+of 8 claims caught and 0 of 6 ordinary lines caught wrongly.
+
+### Four things a long prompt did to the character
+
+Printing answers beside the prompts that produced them found four defects no test
+could see. Asked "mi conviene fare una pausa?" with everything switched on,
+Apple's model answered "ACTION: cannot" — a question read as an order — and then,
+once that was fixed, "LOOK: ansa.", answering a question about a break with a news
+feed. Asked why a build was slow it opened with the time and the date. And with
+the facts withheld it invented a date: "Oggi è il 12 aprile", in August.
+
+So: the character is named again in the last hundred characters, where a model
+looks; the clock, the date, the battery and the uptime are handed over only when
+the question is about one of them, which drops the prompt from 2089 characters to
+1441 for everything else; a question never gets a deed; and the model can no
+longer ask for a feed at all — the app has decided that in code since the feature
+shipped, and a marker arriving anyway is honoured only when the app agrees.
+
+Four ways of handing the facts over were run against six questions each before
+choosing. The two that keep the list trail the clock into unrelated answers; the
+one that withholds it and says so in a single sentence has none of the three
+failure modes.
+
 ### It stops an arm's length short
 
 The curious antics used to walk to the pointer and sit on it. People keep their

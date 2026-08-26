@@ -403,6 +403,30 @@ where speed is expected. Abandonable in one revert, which is why it is last.
 
 **Effort.** Half a day to build, a week of living with it to judge.
 
+**Done, with a switch, because this is the one that might be wrong.** Twelve
+milliseconds a character, capped just under a second, and only where a delay is
+what the studies were about:
+
+| | waits |
+| --- | --- |
+| a 20-character answer | 0.24 s |
+| 60 characters | 0.72 s |
+| 150 characters | 0.90 s — the cap |
+| 400 characters | nothing: it streamed in a piece at a time |
+| *"che ore sono?"*, *"quanto è acceso il Mac?"* | nothing: fast is the answer |
+| `NekoAskTempo` set to false | nothing at all |
+
+Measured from outside as well as inside: the words for *"Il build è lento perché
+il progetto è grande"* were not on screen when the answer was ready, and appeared
+0.56 s later against a computed 0.54 s. The walking paw keeps walking through it,
+which is the typing indicator those studies used to make a wait read as thinking
+rather than as lag — this app has had it since the first version of the feature.
+
+**And it is left switchable on purpose.** The finding comes from chat, where
+waiting is normal. A desktop pet may be exactly the context where it is wrong, and
+the honest test is two builds, twenty questions and one person who does not know
+which is which. `defaults write NekoAskTempo -bool false` is the whole revert.
+
 ## What is deliberately not on this list
 
 Eyes, a face, or any change to the sprite art — the whole point is that the
@@ -430,4 +454,4 @@ one afternoon and a day are the whole cost.
 - [x] 4. Stop short, and come in from the side — measured below
 - [x] 5. A persona that survives thirty turns — became *the prompt*; measured below
 - [x] 6. Mood from what happened, and no feeling claims — measured below
-- [ ] 7. The tempo of an answer
+- [x] 7. The tempo of an answer — built with a switch, and the judgement left open

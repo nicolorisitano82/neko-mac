@@ -15,6 +15,7 @@ extern NSString * const NekoAskProviderKey;      /* apple, openai, model, shortc
 extern NSString * const NekoAskShortcutNameKey;
 extern NSString * const NekoAskSpeakKey;
 extern NSString * const NekoAskFollowUpKey;      /* keep listening after speaking */
+extern NSString * const NekoAskTempoKey;         /* let a short answer take a moment */
 
 /* When the cat last said something nobody asked for. Kept in the defaults so a
    restart does not hand it a fresh tongue. */
@@ -41,6 +42,7 @@ extern NSString * const NekoLastUnpromptedKey;
 	BOOL fromTheWeb;             /* this answer was built on somebody else's words */
 	BOOL heardSomething;         /* it has visibly noticed this sentence starting */
 	NSString *pendingRemark;     /* said once the cat has turned to say it */
+	NSString *pendingAnswer;     /* held for a beat, so it does not arrive instantly */
 	BOOL turnedForRemark;        /* one turn per remark, however far it moved */
 	BOOL beatRan;                /* and something was listening for a reply */
 	NSString *askingAbout;       /* the question now in flight */
@@ -92,6 +94,17 @@ extern NSString * const NekoLastUnpromptedKey;
    been allowed — the cat does not ask for the microphone on its own account. */
 - (void)keepListening;
 - (BOOL)isWaitingForReply;
+
+/* How long a finished answer waits before it is shown.
+
+   Response delays scaled to the weight of a reply raise perceived humanness,
+   social presence and satisfaction in chat — and the spinner this app already
+   has is the typing indicator that made waiting tolerable in those studies. It
+   cuts the other way for anything factual: asked the time, fast *is* the answer.
+   Nothing is delayed that was already on screen, and nothing longer than a
+   sentence or two, because those streamed in as they arrived. Zero when the
+   switch is off. */
+- (NSTimeInterval)tempoFor:(NSString *)text;
 
 /* The turn just before this one, as it goes into the next prompt, and how it
    gets there. Empty once a few minutes have passed. */

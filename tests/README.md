@@ -33,6 +33,7 @@ again afterwards.
 | `beside.m` | that it stops an arm's length short, and off the line it walked in on |
 | `persona.m` | that the character survives the longest prompt the app can build |
 | `mood.m` | the slow layer under the mood, and the feelings it may not claim |
+| `tempo.m` | how long a short answer waits, and everything exempt from waiting |
 
 ## Two things about writing more of these
 
