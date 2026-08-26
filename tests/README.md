@@ -30,6 +30,7 @@ again afterwards.
 | `hear.m` | that the cat reacts to a sentence starting, not to it ending |
 | `noise.m` | that its timing drifts rather than scattering — spectrum, memory, spread |
 | `turn.m` | that it steps toward what it is attending to, and only a step |
+| `beside.m` | that it stops an arm's length short, and off the line it walked in on |
 
 ## Two things about writing more of these
 
@@ -56,6 +57,19 @@ will print at the end — has to be retained rather than autoreleased. A harness
 that got this wrong iterated a deallocated array for twenty-four rounds and
 crashed on the twenty-fifth, which is exactly as confusing as it sounds. Run a
 suspect harness with `NSZombieEnabled=YES` and it says so in one line.
+
+## If every compiler call refuses
+
+`You have not agreed to the Xcode license agreements` means `xcode-select` is
+pointing at a full Xcode install whose licence nobody has accepted, and it stops
+`clang`, `swiftc` and `xcrun` alike — the build fails and every harness fails with
+it. Either accept it once with `sudo xcodebuild -license accept`, or build against
+the Command Line Tools, which need no licence and are what this project has always
+used:
+
+```sh
+export DEVELOPER_DIR=/Library/Developer/CommandLineTools
+```
 
 ## What they cannot do
 

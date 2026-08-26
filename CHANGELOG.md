@@ -43,6 +43,24 @@ flat draw's. Each idle pose keeps its old average and loses its old count —
 sitting 2 to 6 ticks against a fixed 4, playing 6 to 13 against 10 — and
 scratching now comes in bursts about one time in six, because blinking does.
 
+### It stops an arm's length short
+
+The curious antics used to walk to the pointer and sit on it. People keep their
+distance from something that attends to them, and the closer and more head-on the
+attention, the more they compensate — so the cat now stops 60 to 90 points short
+of whatever it came to look at, and 40 to 70 degrees off the line it walked in on,
+either side. Measured over 500 staged approaches: every one inside both bands,
+both sides used, and something in the corner of the screen does not push the cat
+off the edge.
+
+Pouncing on the cursor was left exactly as it was, because pouncing beside the
+cursor is not pouncing.
+
+And it can change its mind when it gets there. Typing hard is what sends it over,
+so it may still be happening on arrival — if it is, the cat says nothing and
+leaves. Nothing was said, so nothing counts against the day's remarks either:
+that was a visit rather than an interruption.
+
 ### It turns toward you before it says anything
 
 Attention, in a character, is mostly orientation — and this one had none: the

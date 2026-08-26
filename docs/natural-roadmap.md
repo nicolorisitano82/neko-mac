@@ -222,6 +222,25 @@ the answered rate.
 
 **Effort.** Half a day.
 
+**Done.** The curious antics stop 60 to 90 points short of whatever they came to
+look at, and 40 to 70 degrees off the line they walked in on — either side,
+varied through the same pink-noise stream as everything else. Measured over 500
+staged approaches: distance 60–90 every time, angle 40–70 every time, both sides
+used, and a thing in the corner of the screen does not push the cat off the edge.
+
+One antic was left alone on purpose: pouncing on the cursor still lands on the
+cursor, because pouncing *beside* it is not pouncing.
+
+**And it can change its mind on arrival.** Typing hard is what sends the cat over
+in the first place, so it may well still be happening when it gets there. If it
+is, the cat says nothing and leaves — and because nothing was said, nothing counts
+against the day's remarks either. That was a visit, not an interruption.
+
+**What needs a person.** The withdrawal itself: it wants somebody typing hard at
+the moment the cat arrives, which is a desk and not a harness. And the question
+the whole step exists for — whether stopping short reads as tact or as a cat that
+never quite arrives — is the answered rate over a week.
+
 ## 5. A persona that survives thirty turns
 
 **Why fifth.** First step that touches the prompt. Persona drift is measurable and
@@ -316,7 +335,7 @@ one afternoon and a day are the whole cost.
 - [x] 1. Acknowledge before answering — measured below
 - [x] 2. Pink noise instead of a flat draw — measured below
 - [x] 3. Face what it is attending to — became *turn* toward it; measured below
-- [ ] 4. Stop short, and come in from the side
+- [x] 4. Stop short, and come in from the side — measured below
 - [ ] 5. A persona that survives thirty turns
 - [ ] 6. Mood from what happened, and no feeling claims
 - [ ] 7. The tempo of an answer

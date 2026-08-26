@@ -7,6 +7,7 @@
 #import "NekoBrains.h"
 #import "NekoAnswerProvider.h"
 #import "NekoCharacter.h"
+#import "NekoNoise.h"
 
 #define NekoAnticsLocalized(text) NSLocalizedString(text, nil)
 
@@ -136,11 +137,64 @@ static const NSTimeInterval NekoAnticsAway = 150.0;
 	return [lines objectAtIndex:arc4random_uniform((unsigned)[lines count])];
 }
 
+/* An arm's length for a cat: near enough to be nosy, far enough not to be on the
+   caret. Varied through the pink-noise stream so it is not the same spot twice. */
+static const float NekoAnticsNear = 60.0f;
+static const float NekoAnticsFar = 90.0f;
+
+/* And off the line it walked in on, by this much: 40 to 70 degrees puts it
+   beside the thing rather than in front of it. */
+static const float NekoAnticsSideMin = 40.0f;
+static const float NekoAnticsSideMax = 70.0f;
+
+- (NSPoint)spotBeside:(NSPoint)what from:(NSPoint)cat within:(NSRect)bounds
+{
+	NekoNoise *noise = [NekoNoise sharedNoise];
+	float radius = NekoAnticsNear + [noise next] * (NekoAnticsFar - NekoAnticsNear);
+	float side = NekoAnticsSideMin + [noise next] * (NekoAnticsSideMax - NekoAnticsSideMin);
+	if([noise next] < 0.5f)
+		side = -side;            /* either side of the approach */
+
+	/* The direction it came from, turned by that much. */
+	float dx = what.x - cat.x, dy = what.y - cat.y;
+	float length = sqrtf(dx * dx + dy * dy);
+	if(length < 1.0f) {
+		dx = 1.0f;
+		dy = 0.0f;
+		length = 1.0f;
+	}
+	float angle = atan2f(dy, dx) + side * (float)M_PI / 180.0f;
+	/* Measured back from the thing toward where the cat is coming from, so the
+	   spot ends up beside it on the near side rather than beyond it. */
+	NSPoint spot = NSMakePoint(what.x - cosf(angle) * radius,
+	                           what.y - sinf(angle) * radius);
+
+	/* On screen, and not so clamped that it lands on the thing anyway. */
+	spot.x = MIN(MAX(spot.x, NSMinX(bounds) + 16.0f), NSMaxX(bounds) - 16.0f);
+	spot.y = MIN(MAX(spot.y, NSMinY(bounds) + 16.0f), NSMaxY(bounds) - 16.0f);
+	return spot;
+}
+
 /* Where the cat should stand to be nosy: beside the pointer, which is where the
    caret usually is and, more to the point, where you are looking. */
 - (NSPoint)pointerSpot
 {
-	return [NSEvent mouseLocation];
+	MyPanel *panel = [[NekoController sharedController] panel];
+	NSPoint pointer = [NSEvent mouseLocation];
+	if(panel == nil)
+		return pointer;
+	NSRect frame = [panel frame];
+	return [self spotBeside:pointer
+	                   from:NSMakePoint(NSMidX(frame), NSMinY(frame))
+	                 within:[[panel screen] visibleFrame]];
+}
+
+/* It came over because somebody was typing hard, and somebody typing hard when
+   it arrives has not stopped for it. Then the polite thing is the thing a
+   colleague does: notice, and not say it. */
+- (BOOL)shouldWithdrawInstead
+{
+	return [[NekoDesktop sharedDesktop] keysPerMinute] > 40;
 }
 
 /* The walk covers the latency: the cat sets off at once and the model is asked
@@ -242,6 +296,17 @@ static const NSTimeInterval NekoAnticsAway = 150.0;
 
 	[arrival invalidate];
 	arrival = nil;
+
+	if([pendingLine length] > 0 && [self shouldWithdrawInstead]) {
+		/* It came over, saw the typing had not stopped, and went away without
+		   saying anything. Nothing is spoken, so nothing counts against the
+		   day's remarks either — this was a visit, not an interruption. */
+		[pendingLine release];
+		pendingLine = nil;
+		[self withdrawFrom:[NSEvent mouseLocation]];
+		return;
+	}
+
 	if([pendingLine length] > 0)
 		[[NekoAsk sharedAsk] sayUnprompted:pendingLine];
 	[pendingLine release];
@@ -250,6 +315,29 @@ static const NSTimeInterval NekoAnticsAway = 150.0;
 
 /* Which antic suits the moment. Typing hard is the interesting one — that is
    somebody at work, and a cat that came over to read it is the joke. */
+/* Away from whatever it came to look at, far enough that it reads as leaving. */
+- (void)withdrawFrom:(NSPoint)what
+{
+	MyPanel *panel = [[NekoController sharedController] panel];
+	if(panel == nil)
+		return;
+	NSRect frame = [panel frame];
+	NSPoint here = NSMakePoint(NSMidX(frame), NSMinY(frame));
+	float dx = here.x - what.x, dy = here.y - what.y;
+	float length = sqrtf(dx * dx + dy * dy);
+	if(length < 1.0f) {
+		dx = -1.0f;
+		dy = 0.0f;
+		length = 1.0f;
+	}
+	NSRect bounds = [[panel screen] visibleFrame];
+	NSPoint away = NSMakePoint(here.x + dx / length * 140.0f,
+	                           here.y + dy / length * 140.0f);
+	away.x = MIN(MAX(away.x, NSMinX(bounds) + 16.0f), NSMaxX(bounds) - 16.0f);
+	away.y = MIN(MAX(away.y, NSMinY(bounds) + 16.0f), NSMaxY(bounds) - 16.0f);
+	[panel errandTo:away thenState:NekoStateStop forTicks:8];
+}
+
 - (NSString *)anticNow
 {
 	[[NekoDesktop sharedDesktop] sample];
@@ -269,8 +357,10 @@ static const NSTimeInterval NekoAnticsAway = 150.0;
 		return NekoAnticsLocalized(@"It came over to ask what you are writing.");
 	}
 	if([desktop movesPerMinute] > 120) {
+		/* The one antic that is supposed to land on the pointer: pouncing beside
+		   the cursor is not pouncing. */
 		[self beginAntic:(arc4random_uniform(2) == 0) ? [self lineAboutThePointer] : nil
-		         goingTo:[self pointerSpot]
+		         goingTo:[NSEvent mouseLocation]
 		            pose:NekoStateKaki
 		        forTicks:16];
 		return NekoAnticsLocalized(@"It pounced on the cursor.");

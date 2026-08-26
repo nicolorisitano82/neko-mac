@@ -36,4 +36,19 @@
    do, for the status line. */
 - (NSString *)anticNow;
 
+/* Where to stand when it comes over to be nosy: beside whatever it is looking
+   at rather than on top of it, and off the line it walked in on.
+
+   People keep a distance from an agent that attends to them, and the closer and
+   more head-on the attention, the more they compensate — measured with robots,
+   and the same instinct applies to a cat that lands on the caret. So the spot is
+   an arm's length away and to one side. Public because the geometry is worth
+   testing without a screen.
+
+   Typing fast is what sends it over in the first place, so it may well still be
+   happening when it arrives: this is the number that decides whether it says
+   anything or thinks better of it and leaves. */
+- (NSPoint)spotBeside:(NSPoint)what from:(NSPoint)cat within:(NSRect)bounds;
+- (BOOL)shouldWithdrawInstead;
+
 @end
