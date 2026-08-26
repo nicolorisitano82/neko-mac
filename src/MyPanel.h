@@ -55,6 +55,10 @@
 - (BOOL)isRoaming;
 
 - (void)holdWithState:(NekoState)state;
+
+/* Which pose it is in. Read by the tests, and by anything that needs to know
+   whether the cat has visibly reacted yet. */
+- (NekoState)state;
 - (void)releaseHold;
 - (BOOL)isHeld;
 

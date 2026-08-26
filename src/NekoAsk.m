@@ -365,6 +365,7 @@ static const NSTimeInterval NekoHoldToType = 0.5;
 /* Back to being a cat. */
 - (void)finish
 {
+	heardSomething = NO;
 	[self judgeUnasked:NekoVerdictIgnored];   /* nothing came of it */
 	beatPending = NO;
 	[listener cancel];           /* the reply we were waiting for is not coming */
@@ -441,7 +442,11 @@ static const NSTimeInterval NekoHoldToType = 0.5;
 		listener = [[NekoListener alloc] init];
 
 	phase = NekoPhaseListening;
-	[[self panel] holdWithState:NekoStateAwake];
+	heardSomething = NO;
+	/* Sitting, waiting. Ears go up when somebody actually starts talking, which
+	   is a different thing from the microphone being open and now looks like
+	   one. */
+	[[self panel] holdWithState:NekoStateStop];
 	[self showBubble:NekoAskLocalized(@"Listening…") dismissAfter:0.0];
 
 	BOOL started = [listener startListeningWithLocale:[NSLocale currentLocale]
@@ -466,6 +471,7 @@ static const NSTimeInterval NekoHoldToType = 0.5;
 	}
 
 	if(!final) {
+		[self acknowledgeHearing:text];
 		[self showBubble:text dismissAfter:0.0];   /* the question as it forms */
 		return;
 	}
@@ -540,6 +546,7 @@ static const NSTimeInterval NekoHoldToType = 0.5;
 	[[NekoWakeWord sharedWakeWord] stop];
 
 	phase = NekoPhaseWaiting;
+	heardSomething = NO;
 	[bubble setHint:NekoAskLocalized(@"● listening — just answer")];
 
 	/* The microphone never outlives the sign that says it is open, so a bubble
@@ -606,6 +613,7 @@ static const NSTimeInterval NekoHoldToType = 0.5;
 	[bubble keepUpFor:0.0];
 
 	if(!final) {
+		[self acknowledgeHearing:text];
 		[bubble setHint:NekoAskLocalized(@"● listening")];
 		[self showBubble:text dismissAfter:0.0];
 		return;
@@ -613,6 +621,22 @@ static const NSTimeInterval NekoHoldToType = 0.5;
 	[bubble setHint:nil];
 	[self judgeUnasked:NekoVerdictAnswered];
 	[self ask:text];
+}
+
+/* Ears up. Once per sentence — a cat that re-reacted to every partial result
+   would twitch its way through a question — and only for a partial with
+   something in it, since the recogniser reports empty ones. */
+- (void)acknowledgeHearing:(NSString *)heard
+{
+	if(heardSomething)
+		return;
+	/* The recogniser reports empty partials, and an empty one is the microphone
+	   working rather than somebody talking. */
+	if([[heard stringByTrimmingCharactersInSet:
+			[NSCharacterSet whitespaceAndNewlineCharacterSet]] length] == 0)
+		return;
+	heardSomething = YES;
+	[[self panel] holdWithState:NekoStateAwake];
 }
 
 #pragma mark The turn before this one

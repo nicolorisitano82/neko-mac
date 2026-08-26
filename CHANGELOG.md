@@ -2,6 +2,24 @@
 
 ## Unreleased
 
+### It notices you starting to talk
+
+A sentence used to reach the cat only when it was finished. In conversation the
+gap between turns runs about a tenth of a second, while the reply behind it takes
+six times that to plan — what fills the gap is the listener visibly reacting, and
+that reaction is most of what makes somebody feel heard.
+
+So there are two poses now where there was one. Opening the microphone sits the
+cat down, since the bubble already says *Listening…* and the pose had no business
+claiming more. The first words put its ears up — in both places the app listens:
+a question, and the few seconds it keeps the microphone open after speaking.
+
+Measured at 0.7 ms and 1.0 ms of the app's own time, against the 110–130 ms a
+person leaves. It ignores the empty partials the recogniser reports before anybody
+speaks, and reacts once per sentence rather than once per word. What could not be
+measured here is the recogniser's share of that wait: a test binary cannot be
+granted a microphone.
+
 ### The location button did nothing
 
 Reported from real use: the row said “not asked yet” however often it was

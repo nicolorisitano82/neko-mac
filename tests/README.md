@@ -27,6 +27,7 @@ again afterwards.
 | `layout.m` | every pair of controls in every tab, and every paragraph against the space it was given |
 | `line.m` | that the typed line takes the keyboard and gives it back — its own bundle |
 | `place.m` | the order the two location questions have to be asked in |
+| `hear.m` | that the cat reacts to a sentence starting, not to it ending |
 
 ## Two things about writing more of these
 

@@ -39,6 +39,7 @@ extern NSString * const NekoLastUnpromptedKey;
 	BOOL beatPending;            /* a reply to wait for, once the voice is done */
 	BOOL saidUnasked;            /* what is on screen, nobody asked for */
 	BOOL fromTheWeb;             /* this answer was built on somebody else's words */
+	BOOL heardSomething;         /* it has visibly noticed this sentence starting */
 	BOOL beatRan;                /* and something was listening for a reply */
 	NSString *askingAbout;       /* the question now in flight */
 	NSString *lastQuestion;      /* the turn before this one, so "it" resolves */
@@ -111,6 +112,13 @@ extern NSString * const NekoLastUnpromptedKey;
    else does. */
 - (BOOL)speechAlreadyAllowed;
 - (BOOL)startListeningForReplyWithPatience:(NSTimeInterval)seconds;
+
+/* The cat notices a sentence starting rather than waiting for it to end. Called
+   from the listener as soon as there are words, and once per sentence: in human
+   conversation the gap between turns runs about a tenth of a second while the
+   reply takes six times that to plan, and what fills it is the listener
+   reacting. */
+- (void)acknowledgeHearing:(NSString *)heard;
 
 /* What the microphone reports during those few seconds. Called by the listener,
    and by the tests, which have no microphone. */

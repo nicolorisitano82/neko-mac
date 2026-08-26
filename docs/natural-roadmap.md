@@ -50,6 +50,31 @@ with actual words in it.
 
 **Effort.** An afternoon.
 
+**Done.** Two poses where there was one. Opening the microphone now sits the cat
+down — the bubble already says *Listening…*, and the pose no longer says anything
+more than that — and the **first partial result with words in it** puts its ears
+up, in both places the app listens: a question, and the moment it holds the
+microphone open after speaking.
+
+| | measured |
+| --- | --- |
+| app's share of the reaction, question | **0.7 ms** |
+| app's share of the reaction, the beat after it speaks | **1.0 ms** |
+| the gap a person leaves between turns | 110–130 ms |
+
+Three things it does not do, each tested: it does not react to the empty partials
+the recogniser reports before anybody speaks; it does not react again for the rest
+of the sentence, which would be a twitch per word; and it does not lose the sign
+that says the microphone is open.
+
+**What could not be measured.** The recogniser's own latency, from somebody
+starting to speak to the first partial arriving. A test binary cannot be granted
+a microphone — measured in this project before: TCC kills an auxiliary executable
+inside a bundle the moment it asks for anything private — so the numbers above are
+the app's share of the wait and not the whole of it. The literature's target is
+the whole of it, and whether SFSpeechRecognizer leaves room inside 200 ms is a
+question for the app on a real desk.
+
 ## 2. Pink noise instead of a flat draw
 
 **Why second.** Same reason: no model, no words, and the literature is unusually
@@ -209,7 +234,7 @@ one afternoon and a day are the whole cost.
 ## Progress
 
 - [x] 0. The reading — [natural.md](natural.md), and this roadmap
-- [ ] 1. Acknowledge before answering
+- [x] 1. Acknowledge before answering — measured below
 - [ ] 2. Pink noise instead of a flat draw
 - [ ] 3. Face what it is attending to
 - [ ] 4. Stop short, and come in from the side

@@ -159,6 +159,11 @@
 	[self startTimer];           /* the frames keep moving even while it waits */
 }
 
+- (NekoState)state
+{
+	return nekoState;
+}
+
 - (void)releaseHold
 {
 	held = NO;
