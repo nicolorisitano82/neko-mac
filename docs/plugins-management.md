@@ -32,7 +32,12 @@ container and holds nothing else.
 
 ## 2. Adding one
 
-A **Plugins** tab, seventh in the preferences window, and an **Add…** button.
+A window of its own — **Plugins…** in the menu, not a tab in the preferences.
+Plugins are not settings: the preferences are things about how the cat behaves,
+and a plugin is a thing somebody installed. The window also has to say more than a
+tab has room for, and the paragraph about what none of them can reach belongs
+where somebody is deciding whether to trust a folder they downloaded.
+
 What happens between choosing a folder and having a plugin:
 
 1. **It is read, not run.** The manifest is parsed; anything unreadable stops here
@@ -141,13 +146,13 @@ sentence, where the person can see it.
 | a fragment that turns out to break answers | the row's switch, and the whole thing is gone |
 
 A plugin never fails silently and never fails loudly. It fails in one line in the
-tab and one sentence in the bubble.
+window and one sentence in the bubble.
 
-## 7. The tab
+## 7. The window
 
-Seventh tab, and it should look like the Permissions tab rather than a marketplace:
-a scrolling list of rows, one row per plugin, each with the name, the author, what
-it extends, a state word, and two controls.
+It should look like the Permissions tab rather than a marketplace: a scrolling
+list of rows, one row per plugin, each with the name, the author, what it extends,
+a state word, and two controls.
 
 ```
 ● ANSA Sport            Somebody · 1.2                    [switch]
@@ -158,9 +163,11 @@ it extends, a state word, and two controls.
   1 route, ships a program                                Reveal · Remove
   disabled: the program changed since you enabled it
 
-  [ Add… ]        Plugins live in Application Support. Nothing here can see your
-                  diary, your screen or your files, and nothing here can make the
-                  cat speak on its own.
+  [ Add… ]  [ Show the folder ]
+
+  Plugins live in Neko's own folder in Application Support. Nothing here runs
+  inside Neko, and nothing here can see your diary, your screen, your files or
+  where you are — or make the cat speak on its own.
 ```
 
 The paragraph at the bottom is not decoration. It is the sentence somebody needs
