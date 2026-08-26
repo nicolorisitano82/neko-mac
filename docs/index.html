@@ -71,16 +71,48 @@ footer { padding: 44px 0 72px; color: var(--muted); font: 14px/1.6 ui-sans-serif
 footer a, main a { color: var(--accent); }
 code { font: 13px ui-monospace, SFMono-Regular, Menlo, monospace; background: var(--card);
   border: 1px solid var(--line); border-radius: 5px; padding: 2px 6px; }
+.thought { font: italic 17px/1.5 Iowan Old Style, Palatino, Georgia, serif;
+  color: var(--muted); margin: -20px 0 26px; min-height: 26px;
+  transition: opacity .5s; }
+.thought.away { opacity: 0; }
+
+/* What the cat on this page says when it is clicked. Follows it around, which
+   is the whole joke. */
+#says { position: fixed; z-index: 10000; max-width: 260px; padding: 8px 12px;
+  border-radius: 10px; border: 1px solid var(--line); background: var(--card);
+  color: var(--ink); box-shadow: 0 6px 20px rgba(0,0,0,.14);
+  font: 15px/1.35 ui-sans-serif, -apple-system, system-ui, sans-serif;
+  pointer-events: none; opacity: 0; transition: opacity .18s; }
+#says.up { opacity: 1; }
+
+/* Hover a face and it walks on the spot: two frames of the sprite sheet, which
+   is all a walk cycle ever was. */
+@keyframes trot {
+  0%, 49%   { background-position: -192px 0; }
+  50%, 100% { background-position: -192px -64px; }
+}
+.face:hover span { animation: trot .34s steps(1) infinite; }
+.face:hover figcaption { color: var(--accent); }
+
+.sprinter { position: fixed; width: 32px; height: 32px; image-rendering: pixelated;
+  pointer-events: none; z-index: 9998; background-repeat: no-repeat; }
+
 #neko { position: fixed; width: 32px; height: 32px; image-rendering: pixelated;
   pointer-events: none; z-index: 9999; background-repeat: no-repeat; }
-@media (prefers-reduced-motion: reduce) { #neko { display: none; } }
+@media (prefers-reduced-motion: reduce) {
+  #neko { display: none; }
+  .face:hover span { animation: none; }   /* the walk is motion too */
+  .thought { transition: none; }
+}
 </style>
 </head>
 <body>
 <header class="wrap">
   <h1>Neko</h1>
   <p class="tag">A cat that lives on your Mac. It chases the pointer, answers questions out loud,
-     draws what you ask to see, and opens things for you.</p>
+     draws what you ask to see, and opens things for you. Since 2.1 it also remembers the day,
+     waits for a good moment before speaking, and can read you today’s headlines.</p>
+  <p class="thought" id="thought">It has opinions about Monday mornings.</p>
   <p class="cta">
     <a class="button" href="https://github.com/nicolorisitano82/neko-mac/releases/latest/download/Neko-2.1.dmg">Download for macOS</a>
     <a class="button quiet" href="https://github.com/nicolorisitano82/neko-mac">Source on GitHub</a>
@@ -142,8 +174,12 @@ code { font: 13px ui-monospace, SFMono-Regular, Menlo, monospace; background: va
         <option value="valentine">Valentine</option>
         <option value="vaporwave">Vaporwave</option>
     </select>
+    <button id="surprise" type="button">Surprise me</button>
+    <button id="poke" type="button">Poke it</button>
     <button id="pause" type="button">Pause</button>
   </p>
+  <p class="small">Click the cat. It has eleven things to say and a limited tolerance for
+     being clicked. Somewhere on this page, typing its name does something else.</p>
 </section>
 
 <section>
@@ -218,6 +254,9 @@ code { font: 13px ui-monospace, SFMono-Regular, Menlo, monospace; background: va
     <tr><td>Remarks a day, when they are answered / ignored</td><td>15 / 4</td></tr>
     <tr><td>Characters that ship with it</td><td>43</td></tr>
   </table>
+  <p class="small">All of them taken on the machine that was also building this page, which is
+     why the drawing figures are the pessimistic ones. Nothing here is a benchmark; they are
+     the numbers a claim was allowed to rest on.</p>
 </section>
 
 <section>
@@ -232,7 +271,8 @@ code { font: 13px ui-monospace, SFMono-Regular, Menlo, monospace; background: va
 <section>
   <h2>Forty-three characters</h2>
   <p>The original cat from oneko, its dog and tiger, twenty-two skins written for the
-     JavaScript port, and a handful drawn for this app. Adding one is a folder of PNGs.</p>
+     JavaScript port, and a handful drawn for this app. Adding one is a folder of PNGs.
+     Hover any of them and it goes for a walk without going anywhere.</p>
   <div class="faces">
       <figure class="face"><span style="background-image:url(assets/oneko/ace.png)"></span><figcaption>Ace</figcaption></figure>
       <figure class="face"><span style="background-image:url(assets/oneko/alien.png)"></span><figcaption>Alien</figcaption></figure>
@@ -430,7 +470,8 @@ code { font: 13px ui-monospace, SFMono-Regular, Menlo, monospace; background: va
   }
   window.requestAnimationFrame(loop);
 
-  document.getElementById('who').addEventListener('change', function (event) {
+  var who = document.getElementById('who');
+  who.addEventListener('change', function (event) {
     wear(event.target.value);
   });
   document.getElementById('pause').addEventListener('click', function (event) {
@@ -438,6 +479,151 @@ code { font: 13px ui-monospace, SFMono-Regular, Menlo, monospace; background: va
     cat.style.display = paused ? 'none' : 'block';
     event.target.textContent = paused ? 'Resume' : 'Pause';
   });
+
+  /* Somebody else's cat, chosen for you. */
+  document.getElementById('surprise').addEventListener('click', function () {
+    var pick = Math.floor(Math.random() * who.options.length);
+    who.selectedIndex = pick;
+    wear(who.options[pick].value);
+    say('This is ' + who.options[pick].text + '. It does the same eighteen poses.');
+  });
+
+  /* The sprite set has eighteen states and a page that only ever shows walking
+     is hiding most of what somebody would be downloading. */
+  document.getElementById('poke').addEventListener('click', function () {
+    var tricks = ['scratchSelf', 'scratchWallW', 'sleeping', 'tired', 'alert'];
+    idleAnimation = tricks[Math.floor(Math.random() * tricks.length)];
+    idleFrame = 0;
+    idleTime = 11;
+    say('Fine.');
+  });
+
+  /* What it says when clicked. Written in, in its own voice, and none of it
+     pretends to be a model answering. */
+  var LINES = [
+    'I chase this pointer for a living.',
+    'The one in the app remembers the day. I forget everything when you leave.',
+    'Eighteen poses. You have seen four.',
+    'I am thirty-two pixels across. Be reasonable.',
+    'The app version waits for a gap in your work. I have no such manners.',
+    'No, I cannot see your screen. Neither can the one in the app, unless you say so.',
+    'Downloads are that way. I will wait.',
+    'I sleep after a while. It is not personal.',
+    'Somebody drew forty-three of us. I am the original.',
+    'There is a diary in the app. Plain text. You can delete it.',
+    'You could be working.'
+  ];
+  var bubble = null, pets = 0, hideBubble = null, spare = LINES.slice();
+
+  function say(text) {
+    if (bubble === null) {
+      bubble = document.createElement('div');
+      bubble.id = 'says';
+      document.body.appendChild(bubble);
+    }
+    bubble.textContent = text;
+    place();
+    bubble.classList.add('up');
+    window.clearTimeout(hideBubble);
+    hideBubble = window.setTimeout(function () {
+      bubble.classList.remove('up');
+    }, 2600 + text.length * 28);
+  }
+
+  function place() {
+    if (bubble === null || !bubble.classList.contains('up')) return;
+    var left = Math.min(x + 24, window.innerWidth - bubble.offsetWidth - 12);
+    var top = Math.max(8, y - 12 - bubble.offsetHeight);
+    bubble.style.left = left + 'px';
+    bubble.style.top = top + 'px';
+  }
+
+  /* The cat keeps pointer-events: none — a sprite that sits next to the pointer
+     and swallows clicks would be a cat in the way of the download button. So a
+     click near it counts as a pat, and goes on to whatever was underneath. */
+  document.addEventListener('click', function (event) {
+    var near = Math.abs(event.clientX - x) < 26 && Math.abs(event.clientY - y) < 26;
+    var onSomething = event.target.closest('a, button, select, label, input');
+    if (!near || onSomething !== null) return;
+    pets += 1;
+    if (pets === 5) { say('That is five. I am not a button.'); return; }
+    if (pets === 12) { say('Twelve. All right, you win, this is a button.'); return; }
+    if (spare.length === 0) spare = LINES.slice();
+    say(spare.splice(Math.floor(Math.random() * spare.length), 1)[0]);
+    idleAnimation = null;
+    idleFrame = 0;
+    draw('alert', 0);
+  });
+
+  /* The bubble follows the cat, since the cat is following the pointer. */
+  window.setInterval(place, 60);
+
+  /* Type its name. A few of the others run past and are gone — which is the
+     cheapest possible way to show that the sprite sheets all work the same. */
+  var typed = '';
+  document.addEventListener('keydown', function (event) {
+    if (event.metaKey || event.ctrlKey || event.altKey) return;
+    if (/^[a-z]$/i.test(event.key)) typed = (typed + event.key.toLowerCase()).slice(-4);
+    if (typed !== 'neko') return;
+    typed = '';
+    stampede();
+  });
+
+  function stampede() {
+    var names = [];
+    var i;
+    for (i = 0; i < who.options.length; i++) names.push(who.options[i].value);
+    for (i = 0; i < 7; i++) runOne(names[Math.floor(Math.random() * names.length)], i);
+    say('Everybody out.');
+  }
+
+  function runOne(name, index) {
+    var runner = document.createElement('div');
+    runner.className = 'sprinter';
+    runner.style.backgroundImage = 'url(assets/oneko/' + name + '.png)';
+    var top = 80 + Math.random() * (window.innerHeight - 200);
+    runner.style.top = top + 'px';
+    runner.style.left = '-40px';
+    document.body.appendChild(runner);
+
+    var at = -40, tick = 0;
+    var speed = 6 + Math.random() * 6;
+    var timer = window.setInterval(function () {
+      tick += 1;
+      at += speed;
+      runner.style.left = at + 'px';
+      /* The east-facing walk, two frames, exactly as the app draws it. */
+      var sprite = SETS.E[tick % 2];
+      runner.style.backgroundPosition = (sprite[0] * CELL) + 'px ' + (sprite[1] * CELL) + 'px';
+      if (at > window.innerWidth + 40) {
+        window.clearInterval(timer);
+        runner.parentNode.removeChild(runner);
+      }
+    }, 90 - index * 4);
+  }
+
+  /* And the line under the title, which changes its mind every few seconds. */
+  var THOUGHTS = [
+    'It has opinions about Monday mornings.',
+    'It speaks eight to fifteen times a day, and less if you ignore it.',
+    'The diary is a text file. Thirty days, then it forgets.',
+    'It cannot open anything without asking you first.',
+    'Talk over it and it stops mid-word. Five milliseconds.',
+    'It knows twenty-four news feeds and cannot add a twenty-fifth.',
+    'Everything it says out loud can stay on your Mac.',
+    'Forty-three characters. One of them is a tiger.'
+  ];
+  var thought = document.getElementById('thought'), thinking = 0;
+  if (thought !== null) {
+    window.setInterval(function () {
+      thinking = (thinking + 1) % THOUGHTS.length;
+      thought.classList.add('away');
+      window.setTimeout(function () {
+        thought.textContent = THOUGHTS[thinking];
+        thought.classList.remove('away');
+      }, 500);
+    }, 5200);
+  }
 })();
 </script>
 </body>
