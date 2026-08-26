@@ -343,3 +343,18 @@
 "Still here, I see." = "Ancora qui, vedo.";
 "There you are." = "Eccoti.";
 "Back at it." = "Di nuovo sotto.";
+
+/* more sources, and where the Mac is */
+"where this Mac is" = "dove si trova questo Mac";
+"an Italian wire service" = "un'agenzia di stampa italiana";
+"the Italian public broadcaster" = "il servizio pubblico italiano";
+"Italian television news" = "telegiornale italiano";
+"Italian politics" = "politica italiana";
+"culture, in Italian" = "cultura, in italiano";
+"sport, in Italian" = "sport, in italiano";
+"the Italian sports daily" = "il quotidiano sportivo";
+"technology and culture, in Italian" = "tecnologia e cultura, in italiano";
+"consumer technology, in Italian" = "tecnologia di consumo, in italiano";
+"science, in Italian" = "scienza, in italiano";
+"Where you are" = "Dove ti trovi";
+"So that “what is the weather” and “what is happening here” need no city named. It keeps the name of the town and of the region, never the coordinates, and asks macOS for a position no oftener than once a day." = "Così “che tempo fa” e “che notizie ci sono qui” non richiedono di dire la città. Tiene il nome del comune e della regione, mai le coordinate, e chiede a macOS una posizione non più di una volta al giorno.";

@@ -1,4 +1,5 @@
 #import "NekoPermissions.h"
+#import "NekoPlace.h"
 #import "NekoListener.h"
 #import "NekoDesktop.h"
 #import "NekoWakeWord.h"
@@ -39,6 +40,8 @@
 		return NekoPermissionLocalized(@"Screen recording");
 	if([identifier isEqualToString:@"folders"])
 		return NekoPermissionLocalized(@"Your folders");
+	if([identifier isEqualToString:@"location"])
+		return NekoPermissionLocalized(@"Where you are");
 	return identifier;
 }
 
@@ -54,6 +57,8 @@
 		return NekoPermissionLocalized(@"Window titles, and nothing else. Neko never asks for this one: it is used if you granted it for some other reason, and simply left out if not.");
 	if([identifier isEqualToString:@"folders"])
 		return NekoPermissionLocalized(@"Handed over one folder at a time, in a panel, so the cat can copy or move a file. Nothing is read until you do.");
+	if([identifier isEqualToString:@"location"])
+		return NekoPermissionLocalized(@"So that “what is the weather” and “what is happening here” need no city named. It keeps the name of the town and of the region, never the coordinates, and asks macOS for a position no oftener than once a day.");
 	return @"";
 }
 
@@ -91,6 +96,16 @@
 	if([identifier isEqualToString:@"folders"])
 		return [[[NekoFolderAccess sharedAccess] allowedKeys] count] > 0
 			? NekoPermissionGranted : NekoPermissionUnknown;
+	if([identifier isEqualToString:@"location"]) {
+		if(![NekoPlace isAvailable])
+			return NekoPermissionUnavailable;
+		switch([NekoPlace authorizationStatus]) {
+			case 3:  return NekoPermissionGranted;
+			case 1:
+			case 2:  return NekoPermissionDenied;
+			default: return NekoPermissionUnknown;
+		}
+	}
 	return NekoPermissionUnknown;
 }
 
@@ -104,6 +119,10 @@
 		return [defaults boolForKey:NekoReadTextKey];
 	if([identifier isEqualToString:@"folders"])
 		return asking && [defaults boolForKey:@"NekoActionsEnabled"];
+	/* Wanted only by looking things up, and not even needed for that: without it
+	   the cat asks which town instead of knowing. */
+	if([identifier isEqualToString:@"location"])
+		return NO;
 	return NO;                    /* screen recording is never needed, only used */
 }
 
@@ -149,6 +168,11 @@
 		CGRequestScreenCaptureAccess();
 		return;
 	}
+	if([identifier isEqualToString:@"location"]) {
+		/* One position, turned into two words and then forgotten. */
+		[[NekoPlace sharedPlace] findOut:^(NSString *town, NSString *region) { }];
+		return;
+	}
 	if([identifier isEqualToString:@"folders"]) {
 		/* Which folder is a question, and the preferences ask it with a menu:
 		   see -permissionPressed: in the controller. Reaching here means nobody
@@ -178,6 +202,8 @@
 		pane = @"Privacy_ScreenCapture";
 	else if([identifier isEqualToString:@"folders"])
 		pane = @"Privacy_AllFiles";
+	else if([identifier isEqualToString:@"location"])
+		pane = @"Privacy_LocationServices";
 	if(pane == nil)
 		return;
 	[[NSWorkspace sharedWorkspace] openURL:[NSURL URLWithString:
@@ -193,7 +219,7 @@
 {
 	NSMutableArray *all = [NSMutableArray array];
 	NSEnumerator *e = [[NSArray arrayWithObjects:@"microphone", @"speech",
-		@"accessibility", @"folders", @"screen", nil] objectEnumerator];
+		@"accessibility", @"location", @"folders", @"screen", nil] objectEnumerator];
 	NSString *key;
 	while((key = [e nextObject]) != nil)
 		[all addObject:[[[NekoPermission alloc] initWithIdentifier:key] autorelease]];

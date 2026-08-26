@@ -11,6 +11,7 @@
 #import "NekoWeb.h"
 #import "NekoAction.h"
 #import "NekoAppleProvider.h"
+#import "NekoPlace.h"
 #import "NekoAnswerProvider.h"
 
 @interface NekoWeb (Testing)
@@ -53,6 +54,72 @@ int main(void)
 	ok([NekoWeb sourceNamed:@"le-monde"] == nil,
 		@"and neither is a source nobody put on it", nil);
 	printf("      %s\n", [[NekoWeb namesForInstructions] UTF8String]);
+
+	printf("\n--- twenty-three sources, and the handful a model is shown ---\n");
+
+	printf("      %lu on the list, shown to a model: %s\n",
+		(unsigned long)[[NekoWeb sources] count], [[NekoWeb namesForInstructions] UTF8String]);
+	ok([[NekoWeb sources] count] >= 20, @"the list grew",
+		[NSString stringWithFormat:@"%lu", (unsigned long)[[NekoWeb sources] count]]);
+	NSUInteger shown = [[[NekoWeb namesForInstructions]
+		componentsSeparatedByString:@","] count];
+	ok(shown <= 10, @"and the instructions did not",
+		[NSString stringWithFormat:@"%lu names", (unsigned long)shown]);
+	NSArray *added = [NSArray arrayWithObjects:@"corriere", @"gazzetta", @"fatto",
+		@"rai", @"tgcom", @"agi", @"wired", @"dday", @"focus", @"sport",
+		@"cultura", @"politica", nil];
+	NSEnumerator *a = [added objectEnumerator];
+	NSString *one;
+	BOOL allThere = YES;
+	while((one = [a nextObject]) != nil)
+		if([NekoWeb sourceNamed:one] == nil)
+			allThere = NO;
+	ok(allThere, @"and the twelve new ones all resolve", nil);
+
+	printf("\n--- where this Mac is ---\n");
+
+	NekoPlace *place = [NekoPlace sharedPlace];
+	printf("      country from the time zone: %s, town: %s, region: %s\n",
+		[([place country] ?: @"(unknown)") UTF8String],
+		[([place town] ?: @"(not looked up)") UTF8String],
+		[([place region] ?: @"(not looked up)") UTF8String]);
+	ok([[place country] length] == 2, @"the country costs no permission at all",
+		[place country]);
+	printf("      location services: %s, permission: %ld\n",
+		[NekoPlace isAvailable] ? "on" : "off", (long)[NekoPlace authorizationStatus]);
+
+	/* The local feed exists only when somebody has said where this is. Staged
+	   here rather than waiting for a real fix, which needs a person to click. */
+	NSString *before = [[[place region] copy] autorelease];
+	[[NSUserDefaults standardUserDefaults] setObject:@"Lombardia" forKey:NekoPlaceRegionKey];
+	NekoWebSource *local = [NekoWeb localSource];
+	ok(local != nil && [[[local url] absoluteString]
+			isEqualToString:@"https://www.ansa.it/lombardia/notizie/lombardia_rss.xml"],
+		@"a region names its own feed", [[local url] absoluteString]);
+	ok([[NekoWeb wantedFor:@"che notizie ci sono qui?"] isEqualToString:@"locali"],
+		@"and “qui” means it", [NekoWeb wantedFor:@"che notizie ci sono qui?"]);
+
+	[[NSUserDefaults standardUserDefaults] setObject:@"Trentino-Alto Adige" forKey:NekoPlaceRegionKey];
+	ok([[[[NekoWeb localSource] url] absoluteString] rangeOfString:@"trentino"].location
+		!= NSNotFound, @"however macOS spells the region",
+		[[[NekoWeb localSource] url] absoluteString]);
+
+	[[NSUserDefaults standardUserDefaults] setObject:@"Bavaria" forKey:NekoPlaceRegionKey];
+	ok([NekoWeb localSource] == nil,
+		@"and outside Italy there is nothing local to offer", nil);
+
+	[[NSUserDefaults standardUserDefaults] setObject:@"Lazio" forKey:NekoPlaceRegionKey];
+	[[NSUserDefaults standardUserDefaults] setObject:@"Roma" forKey:NekoPlaceTownKey];
+	ok([[NekoWeb wantedFor:@"che tempo fa?"] isEqualToString:@"weather Roma"],
+		@"the weather needs no town named once the town is known",
+		[NekoWeb wantedFor:@"che tempo fa?"]);
+	[[NSUserDefaults standardUserDefaults] removeObjectForKey:NekoPlaceTownKey];
+	ok([NekoWeb wantedFor:@"che tempo fa?"] == nil,
+		@"and asks rather than guessing when it is not", nil);
+	if([before length] > 0)
+		[[NSUserDefaults standardUserDefaults] setObject:before forKey:NekoPlaceRegionKey];
+	else
+		[[NSUserDefaults standardUserDefaults] removeObjectForKey:NekoPlaceRegionKey];
 
 	printf("\n--- the marker ---\n");
 
@@ -136,7 +203,12 @@ int main(void)
 
 	[[NSUserDefaults standardUserDefaults] setBool:YES forKey:NekoWebEnabledKey];
 	__block NSUInteger reached = 0, tried = 0;
-	NSEnumerator *e = [[NekoWeb sources] objectEnumerator];
+	/* Retained, not autoreleased: AppKit drains the pool while the run loop
+	   turns, and spin() turns it. An array held across a spin has to be held
+	   properly — the first version of this loop iterated a zombie and crashed on
+	   the last line rather than the first, which is how these things go. */
+	NSArray *everything = [[NekoWeb sources] retain];
+	NSEnumerator *e = [everything objectEnumerator];
 	NekoWebSource *source;
 	while((source = [e nextObject]) != nil) {
 		__block NSArray *got = nil;

@@ -12,15 +12,18 @@ extern NSString * const NekoWebEnabledKey;
 	NSString *name;              /* "ANSA" */
 	NSString *detail;            /* "ultima ora, in italiano" */
 	NSString *address;
+	BOOL prominent;              /* named in the instructions, not only known */
 }
 - (id)initWithIdentifier:(NSString *)anIdentifier
                     name:(NSString *)aName
                   detail:(NSString *)aDetail
-                 address:(NSString *)anAddress;
+                 address:(NSString *)anAddress
+               prominent:(BOOL)isProminent;
 - (NSString *)identifier;
 - (NSString *)name;
 - (NSString *)detail;
 - (NSURL *)url;
+- (BOOL)isProminent;
 @end
 
 /* Headlines, from a list somebody else cannot add to.
@@ -51,7 +54,9 @@ extern NSString * const NekoWebEnabledKey;
 + (NSArray *)sources;
 + (NekoWebSource *)sourceNamed:(NSString *)identifier;
 
-/* The line of names a model is shown, and the marker it answers with. */
+/* The line of names a model is shown — the handful worth naming, not all of
+   them: an instruction that lists two dozen words costs a small model more than
+   the choice is worth, and the app recognises the rest by itself. */
 + (NSString *)namesForInstructions;
 + (BOOL)looksLikeALook:(NSString *)line;
 + (NSString *)wantedIn:(NSString *)line;      /* what came after the marker */
@@ -65,6 +70,12 @@ extern NSString * const NekoWebEnabledKey;
    with confidence. A small model cannot be relied on to admit it does not know,
    so the app decides this one and the model never gets the chance. */
 + (NSString *)wantedFor:(NSString *)question;
+
+/* The feed for wherever this Mac is, or nil when nobody has said where that is.
+   ANSA publishes one per Italian region and all twenty were fetched before this
+   went in; outside Italy there is nothing local to offer yet, and the cat says
+   so rather than guessing. */
++ (NekoWebSource *)localSource;
 
 /* Up to eight headlines, each a short line of its own. */
 - (void)headlinesFrom:(NekoWebSource *)source

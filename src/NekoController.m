@@ -1051,26 +1051,49 @@ static const float NekoMaxStopRadius = 200.0f;
 	[permissionsSummary setAlignment:NSTextAlignmentLeft];
 	[permissionsContent addSubview:permissionsSummary];
 
-	float y = 320.0f;
-	NSEnumerator *e = [[NekoPermissions all] objectEnumerator];
+	/* Six rows now, and a seventh would not fit either: the list scrolls rather
+	   than being squeezed until the explanations are cut off. Which is what
+	   happened when the location row was added — the last row's paragraph ended
+	   up nine points below the bottom of the tab. */
+	float rowHeight = 88.0f;
+	NSArray *permissions = [NekoPermissions all];
+	float documentHeight = MAX((float)[permissions count] * rowHeight, 300.0f);
+	NSScrollView *scroll = [[NSScrollView alloc]
+		initWithFrame:NSMakeRect(16.0f, 60.0f, 568.0f, 300.0f)];
+	[scroll setHasVerticalScroller:YES];
+	[scroll setDrawsBackground:NO];
+	[scroll setBorderType:NSNoBorder];
+	NSView *rows = [[[NSView alloc]
+		initWithFrame:NSMakeRect(0.0f, 0.0f, 548.0f, documentHeight)] autorelease];
+	[scroll setDocumentView:rows];
+	[permissionsContent addSubview:scroll];
+	[scroll release];
+
+	NSUInteger index = 0;
+	NSEnumerator *e = [permissions objectEnumerator];
 	NekoPermission *permission;
 	while((permission = [e nextObject]) != nil) {
+		/* Measured down from the top of the list, which is where somebody reads
+		   from. */
+		float top = documentHeight - (float)index * rowHeight;
+		index++;
+
 		NekoPermissionState state = [permission permissionState];
 		NSString *mark = state == NekoPermissionGranted ? @"●"
 			: (state == NekoPermissionDenied ? @"✕"
 			: (state == NekoPermissionUnavailable ? @"–" : @"○"));
 		NSTextField *dot = [self labelWithString:mark
-		                                   frame:NSMakeRect(20.0f, y + 32.0f, 16.0f, 17.0f)];
+		                                   frame:NSMakeRect(4.0f, top - 17.0f, 16.0f, 17.0f)];
 		[dot setTextColor:state == NekoPermissionGranted ? [NSColor systemGreenColor]
 			: (state == NekoPermissionDenied ? [NSColor systemRedColor]
 			                                 : [NSColor secondaryLabelColor])];
-		[permissionsContent addSubview:dot];
+		[rows addSubview:dot];
 
 		NSTextField *title = [self labelWithString:[permission name]
-		                                     frame:NSMakeRect(42.0f, y + 32.0f, 320.0f, 17.0f)];
+		                                     frame:NSMakeRect(26.0f, top - 17.0f, 320.0f, 17.0f)];
 		[title setAlignment:NSTextAlignmentLeft];
 		[title setFont:[NSFont boldSystemFontOfSize:[NSFont systemFontSize]]];
-		[permissionsContent addSubview:title];
+		[rows addSubview:title];
 
 		NSString *word = state == NekoPermissionGranted ? NekoLocalized(@"allowed")
 			: (state == NekoPermissionDenied ? NekoLocalized(@"refused")
@@ -1079,35 +1102,36 @@ static const float NekoMaxStopRadius = 200.0f;
 		if([permission isNeeded] && state != NekoPermissionGranted)
 			word = [word stringByAppendingString:NekoLocalized(@" — needed for what is switched on")];
 		NSTextField *status = [self labelWithString:word
-		                                      frame:NSMakeRect(42.0f, y + 14.0f, 420.0f, 15.0f)];
+		                                      frame:NSMakeRect(26.0f, top - 34.0f, 420.0f, 15.0f)];
 		[status setAlignment:NSTextAlignmentLeft];
 		[status setFont:[NSFont systemFontOfSize:11.0f]];
 		[status setTextColor:[NSColor secondaryLabelColor]];
-		[permissionsContent addSubview:status];
+		[rows addSubview:status];
 
 		NSTextField *why = [self labelWithString:[permission explanation]
-		                                   frame:NSMakeRect(42.0f, y - 14.0f, 430.0f, 28.0f)];
+		                                   frame:NSMakeRect(26.0f, top - 82.0f, 420.0f, 46.0f)];
 		[why setAlignment:NSTextAlignmentLeft];
 		[why setFont:[NSFont systemFontOfSize:11.0f]];
 		[[why cell] setWraps:YES];
-		[permissionsContent addSubview:why];
+		[rows addSubview:why];
 
 		if(state != NekoPermissionGranted && state != NekoPermissionUnavailable) {
 			NSButton *button = [[NSButton alloc]
-				initWithFrame:NSMakeRect(480.0f, y + 22.0f, 100.0f, 28.0f)];
+				initWithFrame:NSMakeRect(452.0f, top - 28.0f, 92.0f, 28.0f)];
 			[button setBezelStyle:NSBezelStyleRounded];
 			[button setControlSize:NSControlSizeSmall];
 			[button setTitle:[permission canRequest] ? NekoLocalized(@"Ask")
 			                                         : NekoLocalized(@"Settings…")];
 			[button setTarget:self];
 			[button setAction:@selector(permissionPressed:)];
-			[button setTag:[[NekoPermissions all] indexOfObject:permission]];
+			[button setTag:(NSInteger)[permissions indexOfObject:permission]];
 			[button setIdentifier:[permission identifier]];
-			[permissionsContent addSubview:button];
+			[rows addSubview:button];
 			[button release];
 		}
-		y -= 63.0f;
 	}
+	/* The top of the list, not the bottom of it. */
+	[rows scrollRectToVisible:NSMakeRect(0.0f, documentHeight - 1.0f, 548.0f, 1.0f)];
 
 	NSTextField *note = [self labelWithString:
 		NekoLocalized(@"macOS applies a change to screen recording only after Neko is restarted. And because this build is signed ad hoc, every rebuild of the app is a different app as far as the system is concerned: permissions granted to the previous one have to be granted again.")
@@ -1945,9 +1969,9 @@ static const float NekoMaxStopRadius = 200.0f;
 	}
 	if([[NSUserDefaults standardUserDefaults] boolForKey:NekoWebEnabledKey]) {
 		[line appendString:@"\n\n"];
-		[line appendString:NekoLocalized(@"Asked about today's news or the weather, it can fetch one of a fixed list of feeds: ANSA (the wire, world, technology), la Repubblica, Il Sole 24 Ore (Italy and business), MeteoAlarm's warnings for Italy, Hacker News, BBC News, The Guardian, The New York Times and NPR. The plain forecast comes from open-meteo, because neither 3B Meteo nor meteo.it publishes a feed any more.")];
+		[line appendString:NekoLocalized(@"Asked about today's news or the weather, it can fetch one of a fixed list of two dozen feeds: ANSA (the wire, world, technology, politics, culture, sport, and your own region), la Repubblica, Corriere della Sera, Il Fatto Quotidiano, Il Sole 24 Ore, RaiNews, Tgcom24, AGI, La Gazzetta dello Sport, Wired, DDay, Focus, MeteoAlarm's warnings for Italy, Hacker News, BBC News, The Guardian, The New York Times and NPR. Every one of them was fetched with this application's own name on the request before it went on the list. The plain forecast comes from open-meteo, because neither 3B Meteo nor meteo.it publishes a feed any more.")];
 		[line appendString:@"\n\n"];
-		[line appendString:NekoLocalized(@"It cannot name an address of its own — only one of those words — so nothing it reads can send it somewhere else. What comes back is quoted to it as somebody else's words, and an answer built on them is not allowed to open, copy or move anything: a headline is written by a stranger. The request carries no question, no account and no cookies; the site sees that a public feed was fetched. With Apple Intelligence or a model on this Mac the headlines stay here; with ChatGPT, Claude or a Shortcut they are sent on like any other question.")];
+		[line appendString:NekoLocalized(@"Told where this Mac is — the Permissions tab asks macOS, and keeps the name of the town and of the region rather than any coordinates — it also knows which regional feed is the local one, and needs no city named to answer about the weather. It cannot name an address of its own — only one of those words — so nothing it reads can send it somewhere else. What comes back is quoted to it as somebody else's words, and an answer built on them is not allowed to open, copy or move anything: a headline is written by a stranger. The request carries no question, no account and no cookies; the site sees that a public feed was fetched. With Apple Intelligence or a model on this Mac the headlines stay here; with ChatGPT, Claude or a Shortcut they are sent on like any other question.")];
 	}
 
 	if([[NSUserDefaults standardUserDefaults] boolForKey:NekoActionsEnabledKey]) {
