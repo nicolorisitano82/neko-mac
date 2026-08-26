@@ -1,6 +1,7 @@
 #import "NekoWeb.h"
 #import "NekoAnswerProvider.h"
 #import "NekoAction.h"   /* NekoWithoutMarkdown: the same markers, the same stripping */
+#import "NekoPlace.h"
 
 NSString * const NekoWebEnabledKey = @"NekoWebEnabled";
 
@@ -16,12 +17,14 @@ static const NSTimeInterval NekoWebPatience = 8.0;
                     name:(NSString *)aName
                   detail:(NSString *)aDetail
                  address:(NSString *)anAddress
+               prominent:(BOOL)isProminent
 {
 	if((self = [super init]) != nil) {
 		identifier = [anIdentifier copy];
 		name = [aName copy];
 		detail = [aDetail copy];
 		address = [anAddress copy];
+		prominent = isProminent;
 	}
 	return self;
 }
@@ -39,6 +42,7 @@ static const NSTimeInterval NekoWebPatience = 8.0;
 - (NSString *)name       { return name; }
 - (NSString *)detail     { return detail; }
 - (NSURL *)url           { return [NSURL URLWithString:address]; }
+- (BOOL)isProminent      { return prominent; }
 
 @end
 
@@ -86,43 +90,165 @@ static const NSTimeInterval NekoWebPatience = 8.0;
 	list = [[NSArray alloc] initWithObjects:
 		[[[NekoWebSource alloc] initWithIdentifier:@"ansa" name:@"ANSA"
 			detail:L(@"the wire, in Italian")
-			address:@"https://www.ansa.it/sito/notizie/topnews/topnews_rss.xml"] autorelease],
+			address:@"https://www.ansa.it/sito/notizie/topnews/topnews_rss.xml"
+			prominent:YES] autorelease],
 		[[[NekoWebSource alloc] initWithIdentifier:@"mondo" name:@"ANSA"
 			detail:L(@"world news, in Italian")
-			address:@"https://www.ansa.it/sito/notizie/mondo/mondo_rss.xml"] autorelease],
+			address:@"https://www.ansa.it/sito/notizie/mondo/mondo_rss.xml"
+			prominent:YES] autorelease],
 		[[[NekoWebSource alloc] initWithIdentifier:@"tecnologia" name:@"ANSA"
 			detail:L(@"technology, in Italian")
-			address:@"https://www.ansa.it/sito/notizie/tecnologia/tecnologia_rss.xml"] autorelease],
+			address:@"https://www.ansa.it/sito/notizie/tecnologia/tecnologia_rss.xml"
+			prominent:YES] autorelease],
 		[[[NekoWebSource alloc] initWithIdentifier:@"repubblica" name:@"la Repubblica"
 			detail:L(@"an Italian daily")
-			address:@"https://www.repubblica.it/rss/homepage/rss2.0.xml"] autorelease],
+			address:@"https://www.repubblica.it/rss/homepage/rss2.0.xml"
+			prominent:NO] autorelease],
 		[[[NekoWebSource alloc] initWithIdentifier:@"sole24" name:@"Il Sole 24 Ore"
 			detail:L(@"Italy, from the financial daily")
-			address:@"https://www.ilsole24ore.com/rss/italia.xml"] autorelease],
+			address:@"https://www.ilsole24ore.com/rss/italia.xml"
+			prominent:NO] autorelease],
 		[[[NekoWebSource alloc] initWithIdentifier:@"economia" name:@"Il Sole 24 Ore"
 			detail:L(@"business and markets")
-			address:@"https://www.ilsole24ore.com/rss/economia.xml"] autorelease],
+			address:@"https://www.ilsole24ore.com/rss/economia.xml"
+			prominent:NO] autorelease],
 		/* Atom rather than RSS, and no summary under the title: the warning is
 		   the title. Attributed by name because their licence asks for it. */
 		[[[NekoWebSource alloc] initWithIdentifier:@"allerta" name:@"MeteoAlarm"
 			detail:L(@"official weather warnings for Italy")
-			address:@"https://feeds.meteoalarm.org/feeds/meteoalarm-legacy-atom-italy"] autorelease],
+			address:@"https://feeds.meteoalarm.org/feeds/meteoalarm-legacy-atom-italy"
+			prominent:YES] autorelease],
 		[[[NekoWebSource alloc] initWithIdentifier:@"hn" name:@"Hacker News"
 			detail:L(@"what programmers are reading")
-			address:@"https://news.ycombinator.com/rss"] autorelease],
+			address:@"https://news.ycombinator.com/rss"
+			prominent:YES] autorelease],
 		[[[NekoWebSource alloc] initWithIdentifier:@"bbc" name:@"BBC News"
 			detail:L(@"British, in English")
-			address:@"https://feeds.bbci.co.uk/news/rss.xml"] autorelease],
+			address:@"https://feeds.bbci.co.uk/news/rss.xml"
+			prominent:YES] autorelease],
 		[[[NekoWebSource alloc] initWithIdentifier:@"guardian" name:@"The Guardian"
 			detail:L(@"world news, in English")
-			address:@"https://www.theguardian.com/world/rss"] autorelease],
+			address:@"https://www.theguardian.com/world/rss"
+			prominent:NO] autorelease],
 		[[[NekoWebSource alloc] initWithIdentifier:@"nyt" name:@"The New York Times"
 			detail:L(@"American, in English")
-			address:@"https://rss.nytimes.com/services/xml/rss/nyt/HomePage.xml"] autorelease],
+			address:@"https://rss.nytimes.com/services/xml/rss/nyt/HomePage.xml"
+			prominent:YES] autorelease],
 		[[[NekoWebSource alloc] initWithIdentifier:@"npr" name:@"NPR"
 			detail:L(@"American radio news")
-			address:@"https://feeds.npr.org/1001/rss.xml"] autorelease], nil];
+			address:@"https://feeds.npr.org/1001/rss.xml"
+			prominent:NO] autorelease],
+
+		/* Italian dailies, wires and topics, taken from a published list of
+		   Italian feeds and each one fetched with this application's own user
+		   agent before it went in — a feed that answers a browser and refuses
+		   Neko is no use here. Il Post is the one that got away: 403 whatever
+		   it is asked with. */
+		[[[NekoWebSource alloc] initWithIdentifier:@"corriere" name:@"Corriere della Sera"
+			detail:L(@"an Italian daily")
+			address:@"https://xml2.corriereobjects.it/rss/homepage.xml"
+			prominent:NO] autorelease],
+		[[[NekoWebSource alloc] initWithIdentifier:@"fatto" name:@"Il Fatto Quotidiano"
+			detail:L(@"an Italian daily")
+			address:@"https://www.ilfattoquotidiano.it/feed/"
+			prominent:NO] autorelease],
+		[[[NekoWebSource alloc] initWithIdentifier:@"rai" name:@"RaiNews"
+			detail:L(@"the Italian public broadcaster")
+			address:@"https://www.rainews.it/rss/tutti"
+			prominent:NO] autorelease],
+		[[[NekoWebSource alloc] initWithIdentifier:@"tgcom" name:@"Tgcom24"
+			detail:L(@"Italian television news")
+			address:@"https://www.tgcom24.mediaset.it/rss/homepage.xml"
+			prominent:NO] autorelease],
+		[[[NekoWebSource alloc] initWithIdentifier:@"agi" name:@"AGI"
+			detail:L(@"an Italian wire service")
+			address:@"https://www.agi.it/cronaca/rss"
+			prominent:NO] autorelease],
+		[[[NekoWebSource alloc] initWithIdentifier:@"politica" name:@"ANSA"
+			detail:L(@"Italian politics")
+			address:@"https://www.ansa.it/sito/notizie/politica/politica_rss.xml"
+			prominent:NO] autorelease],
+		[[[NekoWebSource alloc] initWithIdentifier:@"cultura" name:@"ANSA"
+			detail:L(@"culture, in Italian")
+			address:@"https://www.ansa.it/sito/notizie/cultura/cultura_rss.xml"
+			prominent:NO] autorelease],
+		[[[NekoWebSource alloc] initWithIdentifier:@"sport" name:@"ANSA"
+			detail:L(@"sport, in Italian")
+			address:@"https://www.ansa.it/sito/notizie/sport/sport_rss.xml"
+			prominent:NO] autorelease],
+		[[[NekoWebSource alloc] initWithIdentifier:@"gazzetta" name:@"La Gazzetta dello Sport"
+			detail:L(@"the Italian sports daily")
+			address:@"https://www.gazzetta.it/rss/home.xml"
+			prominent:NO] autorelease],
+		[[[NekoWebSource alloc] initWithIdentifier:@"wired" name:@"Wired Italia"
+			detail:L(@"technology and culture, in Italian")
+			address:@"https://www.wired.it/feed/rss"
+			prominent:NO] autorelease],
+		[[[NekoWebSource alloc] initWithIdentifier:@"dday" name:@"DDay.it"
+			detail:L(@"consumer technology, in Italian")
+			address:@"https://www.dday.it/rss"
+			prominent:NO] autorelease],
+		[[[NekoWebSource alloc] initWithIdentifier:@"focus" name:@"Focus"
+			detail:L(@"science, in Italian")
+			address:@"https://www.focus.it/rss"
+			prominent:NO] autorelease], nil];
 	return list;
+}
+
+/* One publisher, twenty regions, one shape of address — and every one of them
+   fetched before it was written down here. The keys are what CoreLocation calls
+   the region, flattened: no spaces, no hyphens, no apostrophes, lower case. */
++ (NSDictionary *)regions
+{
+	return [NSDictionary dictionaryWithObjectsAndKeys:
+		@"abruzzo", @"abruzzo",
+		@"basilicata", @"basilicata",
+		@"calabria", @"calabria",
+		@"campania", @"campania",
+		@"emiliaromagna", @"emiliaromagna",
+		@"friuliveneziagiulia", @"friuliveneziagiulia",
+		@"lazio", @"lazio",
+		@"liguria", @"liguria",
+		@"lombardia", @"lombardia",
+		@"marche", @"marche",
+		@"molise", @"molise",
+		@"piemonte", @"piemonte",
+		@"puglia", @"puglia",
+		@"sardegna", @"sardegna",
+		@"sicilia", @"sicilia",
+		@"toscana", @"toscana",
+		@"trentino", @"trentinoaltoadige",
+		@"trentino", @"trentino",
+		@"trentino", @"provinciaautonomaditrento",
+		@"umbria", @"umbria",
+		@"valledaosta", @"valledaosta",
+		@"valledaosta", @"valledaostavalleedaoste",
+		@"veneto", @"veneto", nil];
+}
+
++ (NekoWebSource *)localSource
+{
+	NSString *region = [[NekoPlace sharedPlace] region];
+	if([region length] == 0)
+		return nil;
+
+	NSMutableString *flat = [NSMutableString string];
+	NSUInteger i;
+	for(i = 0; i < [region length]; i++) {
+		unichar c = [[region lowercaseString] characterAtIndex:i];
+		if((c >= 'a' && c <= 'z') || c > 127)
+			[flat appendFormat:@"%C", c];
+	}
+	NSString *slug = [[self regions] objectForKey:flat];
+	if(slug == nil)
+		return nil;
+
+	return [[[NekoWebSource alloc] initWithIdentifier:@"locali"
+		name:[NSString stringWithFormat:@"ANSA %@", region]
+		detail:NSLocalizedString(@"where this Mac is", nil)
+		address:[NSString stringWithFormat:
+			@"https://www.ansa.it/%@/notizie/%@_rss.xml", slug, slug]
+		prominent:NO] autorelease];
 }
 
 + (NekoWebSource *)sourceNamed:(NSString *)identifier
@@ -137,6 +263,9 @@ static const NSTimeInterval NekoWebPatience = 8.0;
 	NSRange dot = [wanted rangeOfString:@"."];
 	if(dot.location != NSNotFound && dot.location > 0)
 		wanted = [wanted substringToIndex:dot.location];
+	if([wanted isEqualToString:@"locali"] || [wanted isEqualToString:@"local"])
+		return [self localSource];
+
 	NSEnumerator *e = [[self sources] objectEnumerator];
 	NekoWebSource *source;
 	while((source = [e nextObject]) != nil)
@@ -151,7 +280,8 @@ static const NSTimeInterval NekoWebPatience = 8.0;
 	NSEnumerator *e = [[self sources] objectEnumerator];
 	NekoWebSource *source;
 	while((source = [e nextObject]) != nil)
-		[names addObject:[source identifier]];
+		if([source isProminent])
+			[names addObject:[source identifier]];
 	[names addObject:@"weather <place>"];
 	return [names componentsJoinedByString:@", "];
 }
@@ -221,10 +351,14 @@ static const NSTimeInterval NekoWebPatience = 8.0;
 
 #pragma mark What the question asks for
 
-/* Words that name one of the sources, whatever way somebody writes them. */
-+ (NSString *)sourceMentionedIn:(NSString *)lowered
+/* A source somebody names out loud. Two tables on purpose: a masthead settles
+   the question on its own — asking for the Gazzetta is asking for the Gazzetta —
+   while a bare topic like "cultura" or "sport" only means a feed when the
+   sentence is about the news. "Parlami della cultura giapponese" is a question,
+   not a request for the culture wire. */
++ (NSDictionary *)mastheads
 {
-	NSDictionary *saidAs = [NSDictionary dictionaryWithObjectsAndKeys:
+	return [NSDictionary dictionaryWithObjectsAndKeys:
 		@"ansa", @"ansa",
 		@"repubblica", @"repubblica",
 		@"sole24", @"sole 24", @"sole24", @"sole24", @"sole24", @"ilsole24ore",
@@ -235,10 +369,33 @@ static const NSTimeInterval NekoWebPatience = 8.0;
 		@"guardian", @"guardian",
 		@"nyt", @"new york times", @"nyt", @"nytimes",
 		@"npr", @"npr",
-		@"tecnologia", @"tecnologia", @"tecnologia", @"tech news", nil];
-	NSEnumerator *e = [saidAs keyEnumerator];
-	NSString *said;
-	NSString *best = nil;
+		@"corriere", @"corriere",
+		@"fatto", @"fatto quotidiano", @"fatto", @"ilfattoquotidiano",
+		@"rai", @"rainews", @"rai", @"rai news",
+		@"tgcom", @"tgcom",
+		@"agi", @"agi.it",
+		@"gazzetta", @"gazzetta",
+		@"wired", @"wired",
+		@"dday", @"dday", @"dday", @"d-day",
+		@"focus", @"focus.it", nil];
+}
+
++ (NSDictionary *)topics
+{
+	return [NSDictionary dictionaryWithObjectsAndKeys:
+		@"politica", @"politica", @"politica", @"politics",
+		@"cultura", @"cultura", @"cultura", @"culture",
+		@"sport", @"sport", @"sport", @"sports", @"sport", @"calcio",
+		@"economia", @"economia", @"economia", @"borsa", @"economia", @"mercati",
+		@"tecnologia", @"tecnologia", @"tecnologia", @"technology", @"tecnologia", @"tech",
+		@"mondo", @"estero", @"mondo", @"internazionali",
+		@"focus", @"scienza", @"focus", @"science", nil];
+}
+
++ (NSString *)longestMatchIn:(NSString *)lowered from:(NSDictionary *)table
+{
+	NSEnumerator *e = [table keyEnumerator];
+	NSString *said, *best = nil;
 	NSUInteger longest = 0;
 	while((said = [e nextObject]) != nil) {
 		if([lowered rangeOfString:said].location == NSNotFound)
@@ -246,10 +403,15 @@ static const NSTimeInterval NekoWebPatience = 8.0;
 		/* "il sole economia" beats "sole 24" when both are in there. */
 		if([said length] > longest) {
 			longest = [said length];
-			best = [saidAs objectForKey:said];
+			best = [table objectForKey:said];
 		}
 	}
 	return best;
+}
+
++ (NSString *)sourceMentionedIn:(NSString *)lowered
+{
+	return [self longestMatchIn:lowered from:[self mastheads]];
 }
 
 + (BOOL)phrase:(NSString *)lowered hasAnyOf:(NSArray *)words
@@ -309,8 +471,11 @@ static const NSTimeInterval NekoWebPatience = 8.0;
 		NSString *place = [self placeIn:question];
 		if([place length] > 0)
 			return [NSString stringWithFormat:@"weather %@", place];
-		/* No town named, and no way to know where somebody is: let the model
-		   ask, or answer, rather than guessing a city. */
+		/* No town in the question: the one this Mac is in, if somebody has let
+		   it know. Otherwise nothing — guessing a city is worse than asking. */
+		NSString *here = [[NekoPlace sharedPlace] town];
+		if([here length] > 0)
+			return [NSString stringWithFormat:@"weather %@", here];
 		return nil;
 	}
 
@@ -321,6 +486,20 @@ static const NSTimeInterval NekoWebPatience = 8.0;
 		@"actualité", @"noticias", @"qué ha pasado", nil]];
 	if(!aboutNews)
 		return nil;
+
+	/* "che notizie ci sono qui" — the region this Mac is in, when somebody has
+	   let it know where that is. */
+	if([self phrase:lowered hasAnyOf:[NSArray arrayWithObjects:
+			@" qui", @"locali", @"local", @"in zona", @"in città", @"in citta",
+			@"dalle mie parti", @"vicino a me", @"around here", nil]]
+	   && [self localSource] != nil)
+		return @"locali";
+
+	/* "che notizie di sport ci sono" — a topic, now that the sentence has said
+	   it is after the news. */
+	NSString *topic = [self longestMatchIn:lowered from:[self topics]];
+	if(topic != nil && [self sourceNamed:topic] != nil)
+		return topic;
 
 	/* Asked for the news without naming anywhere: the wire, in the language the
 	   application is running in. */

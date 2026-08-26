@@ -63,7 +63,7 @@ for HARNESS in tests/*.m; do
 		-framework Metal -framework MetalKit -framework Accelerate \
 		-framework Cocoa -framework ServiceManagement -framework Carbon \
 		-framework Security -framework AVFoundation -framework NaturalLanguage \
-		-framework IOKit -framework FoundationModels \
+		-framework IOKit -framework CoreLocation -framework FoundationModels \
 		-Xlinker -weak_framework -Xlinker Speech \
 		-o "$APP/Contents/MacOS/neko-test" 2>/dev/null
 	codesign --sign - --force "$APP/Contents/MacOS/neko-test" 2>/dev/null

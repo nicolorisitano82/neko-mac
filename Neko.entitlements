@@ -11,5 +11,7 @@
 	<!-- The Save button under a drawing writes there and nowhere else. -->
 	<key>com.apple.security.files.downloads.read-write</key>
 	<true/>
+	<key>com.apple.security.personal-information.location</key>
+	<true/>
 </dict>
 </plist>

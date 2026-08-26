@@ -48,11 +48,31 @@ int main(void)
 		return 1;
 	}
 
+	/* Tabs, and then whatever scrolls inside them: putting a list in a scroll
+	   view is how the permissions rows stopped overflowing, and a check that
+	   stops at the scroll view would call that fixed without looking. */
+	NSMutableArray *places = [NSMutableArray array];
+	NSMutableArray *names = [NSMutableArray array];
 	NSEnumerator *items = [[tabs tabViewItems] objectEnumerator];
 	NSTabViewItem *item;
 	while((item = [items nextObject]) != nil) {
-		NSArray *views = [[item view] subviews];
-		NSRect room = [[item view] bounds];
+		[places addObject:[item view]];
+		[names addObject:[item label]];
+		NSEnumerator *inside = [[[item view] subviews] objectEnumerator];
+		NSView *maybe;
+		while((maybe = [inside nextObject]) != nil)
+			if([maybe isKindOfClass:[NSScrollView class]]
+			   && [(NSScrollView *)maybe documentView] != nil) {
+				[places addObject:[(NSScrollView *)maybe documentView]];
+				[names addObject:[NSString stringWithFormat:@"%@ ↓", [item label]]];
+			}
+	}
+
+	NSUInteger place;
+	for(place = 0; place < [places count]; place++) {
+		NSView *container = [places objectAtIndex:place];
+		NSArray *views = [container subviews];
+		NSRect room = [container bounds];
 		int overlaps = 0, outside = 0;
 		NSUInteger i, j;
 		for(i = 0; i < [views count]; i++) {
@@ -88,7 +108,8 @@ int main(void)
 			}
 		}
 		printf("%-24s %2lu controls, %d overlaps, %d outside\n",
-			[[item label] UTF8String], (unsigned long)[views count], overlaps, outside);
+			[[names objectAtIndex:place] UTF8String],
+			(unsigned long)[views count], overlaps, outside);
 		complaints += overlaps + outside;
 	}
 

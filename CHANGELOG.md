@@ -104,12 +104,31 @@ incerto” — a confident sentence about a day it knows nothing about. Worse, t
 model this Mac is set to invented a headline: “Oggi a Milano è stato annunciato il
 nuovo piano per la mobilità sostenibile.”
 
-So the cat can now fetch one of twelve feeds, every one of them tried and counted
-first: ANSA (ultima ora, mondo, tecnologia), la Repubblica, Il Sole 24 Ore
-(Italia and economia), MeteoAlarm’s warnings for Italy, Hacker News, BBC News,
-The Guardian, The New York Times, NPR. The plain forecast comes from open-meteo,
-because neither 3B Meteo nor meteo.it publishes a feed any more, and the cat
-names the source in the answer.
+So the cat can now fetch one of two dozen feeds, every one of them tried and
+counted first — and tried with this application’s own name on the request, since
+a feed that answers a browser and refuses Neko is no use here. ANSA (ultima ora,
+mondo, tecnologia, politica, cultura, sport), la Repubblica, Corriere della Sera,
+Il Fatto Quotidiano, Il Sole 24 Ore (Italia and economia), RaiNews, Tgcom24, AGI,
+La Gazzetta dello Sport, Wired Italia, DDay, Focus, MeteoAlarm’s warnings for
+Italy, Hacker News, BBC News, The Guardian, The New York Times, NPR. Il Post is
+the one that got away: 403 whatever it is asked with. The plain forecast comes
+from open-meteo, because neither 3B Meteo nor meteo.it publishes a feed any more,
+and the cat names the source in the answer.
+
+**And it can know roughly where it is.** Two tiers: the time zone, which costs no
+permission and is enough to know that “the news” means an Italian wire; and, if
+you press the button for it on the Permissions tab, the town — one position from
+macOS at the accuracy it calls reduced, turned into the name of a town and of a
+region, which is all that is kept. There is nowhere in this app where a latitude
+would be useful, and a file with somebody’s latitude in it is a different kind of
+file. With that, “che tempo fa” needs no city named and “che notizie ci sono qui”
+fetches the ANSA feed for your own region; all twenty of those were fetched
+before they went in. Outside Italy there is nothing local to offer yet, and it
+says so rather than guessing.
+
+A model is shown eight names rather than twenty-four: an instruction that lists
+two dozen words costs a small model more than the choice is worth, and the app
+recognises the rest by itself.
 
 Two rules make this safe enough to ship. **The model never names an address** —
 only one of twelve words, decided in the app before any engine is consulted,
@@ -150,7 +169,9 @@ sentence.
 ### Smaller things, most of them found by a test
 
 The preferences learned to check themselves: every pair of controls in every tab,
-and every paragraph against the space it was given. It found five Italian labels
+every paragraph against the space it was given, and — after a sixth permission
+row pushed the last explanation nine points below the bottom edge — inside
+whatever scrolls, too. The permissions list scrolls now. It found five Italian labels
 that had been cut off for releases — the permissions summary, the drawing
 explanation, the interval label — and one paragraph in the Suggestions tab short
 of **424 points**, which is to say most of the page explaining what that feature

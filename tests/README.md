@@ -44,6 +44,15 @@ auxiliary binary inside a bundle the moment it asks for anything private), and
 the nightly reflection (it needs yesterday's file and a model; measured in the
 roadmap instead).
 
+## One trap worth knowing
+
+AppKit drains the autorelease pool while the run loop turns, and `spin()` turns
+it. Anything a test holds *across* a spin — an array it is iterating, a string it
+will print at the end — has to be retained rather than autoreleased. A harness
+that got this wrong iterated a deallocated array for twenty-four rounds and
+crashed on the twenty-fifth, which is exactly as confusing as it sounds. Run a
+suspect harness with `NSZombieEnabled=YES` and it says so in one line.
+
 ## What they cannot do
 
 Nothing here proves a route does not exist — only that it was not taken this
