@@ -26,6 +26,7 @@ again afterwards.
 | `screen.m` | that nothing read from a screen can become something the Mac does |
 | `layout.m` | every pair of controls in every tab, and every paragraph against the space it was given |
 | `line.m` | that the typed line takes the keyboard and gives it back — its own bundle |
+| `place.m` | the order the two location questions have to be asked in |
 
 ## Two things about writing more of these
 

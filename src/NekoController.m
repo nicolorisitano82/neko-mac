@@ -11,6 +11,7 @@
 #import "NekoBrains.h"
 #import "NekoRate.h"
 #import "NekoWeb.h"
+#import "NekoPlace.h"
 #import "NekoVoice.h"
 #import "NekoMemory.h"
 #import "NekoHotKey.h"
@@ -1038,6 +1039,17 @@ static const float NekoMaxStopRadius = 200.0f;
    shown, since all five can change behind the app's back. */
 - (void)buildPermissionsTab
 {
+	/* Told rather than polled: the answer to a location dialog arrives whole
+	   seconds after the button was pressed, and a tab rebuilt on a timer shows
+	   the state from before the person answered. */
+	[[NSNotificationCenter defaultCenter] removeObserver:self
+	                                               name:NekoPlaceDidChangeNotification
+	                                             object:nil];
+	[[NSNotificationCenter defaultCenter] addObserver:self
+	                                        selector:@selector(buildPermissionsTab)
+	                                            name:NekoPlaceDidChangeNotification
+	                                          object:nil];
+
 	NSEnumerator *old = [[[[permissionsContent subviews] copy] autorelease] objectEnumerator];
 	NSView *view;
 	while((view = [old nextObject]) != nil)

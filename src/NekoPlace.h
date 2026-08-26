@@ -7,6 +7,12 @@ extern NSString * const NekoPlaceTownKey;
 extern NSString * const NekoPlaceRegionKey;
 extern NSString * const NekoPlaceAskedKey;   /* the day it last looked */
 
+/* Posted when the town, the region or the permission changes. macOS answers a
+   location request when somebody answers a dialog, which is long after the
+   button was pressed, so whatever is on screen has to be told rather than
+   guessing. */
+extern NSString * const NekoPlaceDidChangeNotification;
+
 /* Roughly where this Mac is, and nothing finer than that.
 
    Two tiers, and the first needs no permission at all: the time zone says which
@@ -27,9 +33,10 @@ extern NSString * const NekoPlaceAskedKey;   /* the day it last looked */
    name, which is what a person would have typed. */
 @interface NekoPlace : NSObject
 {
-	id manager;                  /* CLLocationManager */
+	id manager;                  /* CLLocationManager, kept for its lifetime */
 	void (^report)(NSString *town, NSString *region);
-	BOOL looking;
+	BOOL looking;                /* a request is in flight */
+	BOOL waitingForPermission;   /* the dialog is up, or ought to be */
 }
 
 + (NekoPlace *)sharedPlace;
@@ -61,5 +68,12 @@ extern NSString * const NekoPlaceAskedKey;   /* the day it last looked */
 
 /* Forgets the town and the region. */
 - (void)forget;
+
+/* Two seams, so that the order these things happen in can be tested without a
+   dialog appearing on somebody's screen — asking for permission for real is not
+   something a test may do, since a refusal can only be undone in System
+   Settings. The tests override these; nothing else does. */
+- (NSInteger)permission;     /* defaults to +authorizationStatus */
+- (id)manager;               /* the CLLocationManager, kept for its lifetime */
 
 @end

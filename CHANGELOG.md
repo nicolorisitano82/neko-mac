@@ -1,5 +1,29 @@
 # Changelog
 
+## Unreleased
+
+### The location button did nothing
+
+Reported from real use: the row said “not asked yet” however often it was
+pressed. It was asking macOS for a position and for permission in the same
+breath, and CoreLocation answers a position request from an app nobody has
+authorised by refusing it immediately — the request unwinds and the dialog never
+gets its chance. Permission is asked for on its own now, and the position only
+once there is an answer to act on.
+
+Two smaller halves of the same bug. The location manager was being created for
+one question and released afterwards, so it was never around to hear an answer
+that arrives seconds later; it is kept for the app's life now. And the
+Permissions tab was rebuilt on a timer a second and a half after the click, which
+is well before anybody has finished reading a dialog — it is told now, by a
+notification, and redraws when the answer actually arrives.
+
+The order is what broke, so the order is what is tested: `tests/place.m` stands a
+recorder in for CoreLocation and checks that nothing is asked of the system
+before permission, that the position is asked for the moment permission arrives,
+and that a refusal asks for nothing at all. A test may not ask for a real
+permission — a refusal can only be undone in System Settings.
+
 ## 2.1 “truelife” — 2026-08-26
 
 The codename is the branch this was written on, and the question it was written
