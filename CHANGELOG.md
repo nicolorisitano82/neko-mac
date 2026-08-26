@@ -1,6 +1,53 @@
 # Changelog
 
-## Unreleased
+## 2.2.1 — 2026-08-26
+
+### The location button really did nothing, and here is why
+
+Reported twice, and the fix in 2.2 was aimed at the wrong thing. Watching what the
+app actually said to the system settled it: **the request works, and always did**
+— three seconds from the button to "Bovalino, Calabria". Everything around it was
+broken.
+
+The button asked and returned in six milliseconds having done nothing, because a
+town found earlier that day was already in hand and the once-a-day rule applied to
+a button press as well as to the app's own curiosity. That rule is there to stop
+the app pestering the system, not to stop a person asking: a press now always asks
+again.
+
+The row said "not asked yet" while the app knew perfectly well where it was,
+because a freshly made `CLLocationManager` answers "not determined" until the
+system gets round to telling it otherwise — which is after the Permissions tab has
+been drawn. So the manager is made at launch rather than on first use, the answer
+the system gives is written down when it arrives, and a town in hand outranks a
+status that has not.
+
+And the row names the place now — *"It knows it is in Bovalino, Calabria"* —
+because a button that changes nothing on screen cannot be told apart from a button
+that does nothing, which is exactly what was reported.
+
+### The 2.2 section had no name
+
+An edit that was supposed to title it ran without checking that it had matched
+anything, and silently did nothing, so 2.2 shipped with its section still called
+Unreleased. Fixed here, and the reason it is worth a line: every other edit to
+these files asserts before it writes, and this is what the one that did not looks
+like afterwards.
+
+## 2.2 “natural” — 2026-08-26
+
+The codename is the second reading behind it: [docs/natural.md](docs/natural.md)
+asks what makes the thing on screen read as *someone* rather than as a program
+with a good schedule, and [docs/natural-roadmap.md](docs/natural-roadmap.md) is
+the seven steps that came out of it. All seven are in this release.
+
+The finding that shaped it, from five separate literatures at once: **naturalness
+lives in timing and reaction, not in vocabulary.** Conversation runs on gaps of
+about a tenth of a second while the sentences that fill them take six times that
+to plan; idle motion is believable in proportion to how its variability is
+distributed; a reply that arrives instantly reads as less human than one whose
+delay matches its weight. So most of what is here costs no model, no permission
+and not one word of what the cat says.
 
 ### It notices you starting to talk
 
