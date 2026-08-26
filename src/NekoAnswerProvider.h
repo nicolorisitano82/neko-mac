@@ -51,6 +51,22 @@ extern NSString *NekoAnswerInstructionsDrawing(NSString *persona, BOOL mayDraw);
 extern NSString *NekoAnswerInstructionsWith(NSString *persona, BOOL mayDraw, BOOL mayAct,
                                             NSString *mayLookAt);
 
+/* The same, told what was asked. The facts the app can look up — the time, the
+   date, the battery, how long the Mac has been awake — are handed over only when
+   the question plausibly wants one of them.
+
+   Measured, and the reason this exists: given the list unconditionally, Apple's
+   model opens with it. "Perché il build è lento?" came back as "L'ora attuale è
+   le 16:44 e il giorno è mercoledì… non posso sapere perché il build sia lento."
+   A model cannot read out a list it was not given, and every other question gets
+   a shorter prompt for it. */
+extern NSString *NekoAnswerInstructionsAsked(NSString *question, NSString *persona,
+                                           BOOL mayDraw, BOOL mayAct,
+                                           NSString *mayLookAt);
+
+/* Whether a question is asking for one of those facts. */
+extern BOOL NekoQuestionWantsFacts(NSString *question);
+
 /* The handful of things the cat can truthfully know at this moment — the time,
    the date, the battery, how long the Mac has been awake — as plain lines for a
    model to read. */

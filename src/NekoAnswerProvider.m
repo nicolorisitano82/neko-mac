@@ -115,8 +115,48 @@ NSString *NekoAnswerInstructionsDrawing(NSString *persona, BOOL mayDraw)
    picture. The marker is answered instead of the sentence, and the app turns it
    into a drawing — which means the model decides what "show me the Colosseum"
    means in any language, and the app only has to recognise five characters. */
+/* The words that mean somebody is asking about the clock, the calendar, the
+   battery or how long the Mac has been up — in the four languages this speaks,
+   and deliberately short: a false yes costs a slightly longer prompt, a false no
+   costs an answer. */
+static NSString *NekoAnswerInstructionsBuild(NSString *persona, BOOL mayDraw, BOOL mayAct,
+                                             NSString *mayLookAt, BOOL withFacts);
+
+BOOL NekoQuestionWantsFacts(NSString *question)
+{
+	if([question length] == 0)
+		return YES;              /* nothing to go on: hand over everything */
+	NSString *lowered = [question lowercaseString];
+	NSArray *words = [NSArray arrayWithObjects:
+		@"ora", @"ore", @"orario", @"giorno", @"data", @"oggi", @"domani", @"ieri",
+		@"batteria", @"acceso", @"accesa", @"quanto manca", @"che mese", @"anno",
+		@"time", @"clock", @"date", @"day", @"today", @"tomorrow", @"battery",
+		@"awake", @"uptime", @"month", @"year",
+		@"heure", @"jour", @"date", @"batterie", @"aujourd", @"allumé",
+		@"hora", @"día", @"dia", @"fecha", @"batería", @"bateria", @"encendido", nil];
+	NSEnumerator *e = [words objectEnumerator];
+	NSString *word;
+	while((word = [e nextObject]) != nil)
+		if([lowered rangeOfString:word].location != NSNotFound)
+			return YES;
+	return NO;
+}
+
+NSString *NekoAnswerInstructionsAsked(NSString *question, NSString *persona,
+                                    BOOL mayDraw, BOOL mayAct, NSString *mayLookAt)
+{
+	return NekoAnswerInstructionsBuild(persona, mayDraw, mayAct, mayLookAt,
+	                                   NekoQuestionWantsFacts(question));
+}
+
 NSString *NekoAnswerInstructionsWith(NSString *persona, BOOL mayDraw, BOOL mayAct,
                                     NSString *mayLookAt)
+{
+	return NekoAnswerInstructionsBuild(persona, mayDraw, mayAct, mayLookAt, YES);
+}
+
+static NSString *NekoAnswerInstructionsBuild(NSString *persona, BOOL mayDraw, BOOL mayAct,
+                                             NSString *mayLookAt, BOOL withFacts)
 {
 	NSString *drawing = mayDraw ? (NSString *)
 		@"\n\nPICTURES. Only when they ask to be *shown* something — a picture of "
@@ -143,23 +183,34 @@ NSString *NekoAnswerInstructionsWith(NSString *persona, BOOL mayDraw, BOOL mayAc
 		@"is a question, and gets a sentence."
 		: @"";
 
-	/* The list of names is handed over rather than described, because a model
-	   that invents a source gets refused before anything is fetched. What it
-	   cannot do is name an address: that is the whole safety of the feature. */
-	NSString *looking = [mayLookAt length] > 0 ? [NSString stringWithFormat:
-		@"\n\nLOOKING SOMETHING UP. You do not know what has happened today and "
-		@"you do not know the weather. The list above has the date and the "
-		@"battery; it has no news and no forecast in it. Never answer either from "
-		@"memory, and never say the weather is \"changeable\" or the news "
-		@"\"uncertain\" — that is guessing.\n"
-		@"When they ask about the news, what has happened, what is going on, or "
-		@"the weather anywhere, reply with one line and nothing else:\n"
-		@"LOOK: <one of: %@>\n"
-		@"\"cosa è successo oggi nel mondo\" is LOOK: ansa. \"che tempo fa a "
-		@"Roma\" is LOOK: weather Roma. \"what are programmers reading\" is "
-		@"LOOK: hn. \"ci sono allerte meteo\" is LOOK: allerta.\n"
-		@"You may not name a web address, only one of those words. What is there "
-		@"comes back to you, and then you answer in words.", mayLookAt] : @"";
+	/* No marker, and this is measured rather than tidied away. Told it could
+	   answer with LOOK: <source>, Apple's model produced "LOOK: ansa." for
+	   "mi conviene fare una pausa?" — a question about a break, answered with a
+	   news feed. The app already decides this one from the question itself, in
+	   code, before any engine is consulted, so the instruction is not carrying
+	   its own weight. What is left is one line, so that a model with today's
+	   headlines in front of it does not also announce that it cannot know them. */
+	NSString *looking = [mayLookAt length] > 0
+		? (NSString *)@"\n\nTODAY. You cannot look anything up yourself. When "
+		              @"today's news or the weather is needed it is already in "
+		              @"front of you, quoted; when it is not there, it was not "
+		              @"needed. Never say that you have no way to know it."
+		: @"";
+
+	NSString *facts = withFacts ? [NSString stringWithFormat:
+		@"THINGS YOU CAN SEE RIGHT NOW. These are true. When the question is about "
+		@"one of them, answer it straight from the list and stop there — no "
+		@"caveats, no explaining what else you cannot know. When it is about "
+		@"something not on the list, and you have no way to know it, say that in "
+		@"one short sentence instead. Never open with the time or the date unless "
+		@"the time or the date is what was asked: reading the clock out before an "
+		@"answer about something else is the one thing that makes this list worse "
+		@"than not having it.\n%@", NekoFactsNow()]
+		/* One sentence, not three. Withholding the list stops the clock being
+		   read out and starts it being invented — "Oggi è il 12 aprile", offered
+		   unprompted in August — and a longer warning than this one had the model
+		   explaining what it had not been told instead of answering. */
+		: @"You have not been told the time or the date. Never state one.";
 
 	return [NSString stringWithFormat:
 		@"You are %@, living on someone's computer desktop, and you have just been "
@@ -173,13 +224,9 @@ NSString *NekoAnswerInstructionsWith(NSString *persona, BOOL mayDraw, BOOL mayAc
 		@"Reply in %@. Reply in %@ even if the question sounded like another "
 		@"language, and never switch part way through. Keep it to one or two short "
 		@"sentences. No lists, no headings, no preamble, and no stage directions.\n\n"
-		@"THINGS YOU CAN SEE RIGHT NOW. These are true. When the question is about "
-		@"one of them, answer it straight from the list and stop there — no "
-		@"caveats, no explaining what else you cannot know. When it is about "
-		@"something not on the list, and you have no way to know it, say that in "
-		@"one short sentence instead.\n%@"
+		@"%@"
 		@"%@%@%@%@%@",
-		persona ?: @"a small pixel-art cat", language, language, NekoFactsNow(),
+		persona ?: @"a small pixel-art cat", language, language, facts,
 		drawing, doing, looking,
 		/* How it sounds today, and the two habits that make an assistant sound
 		   like one. Both are asked for here and taken out in code afterwards
@@ -196,9 +243,17 @@ NSString *NekoAnswerInstructionsWith(NSString *persona, BOOL mayDraw, BOOL mayAc
 		[NSString stringWithFormat:
 			@"\n\nLast and above all, because everything above is written in "
 			@"English and your answer is not: you write to them in %@. Dates and "
-			@"times you were given are turned into %@ as you say them.%@",
+			@"times you were given are turned into %@ as you say them.%@ And you "
+			@"are still %@ — that is who is answering, however much was said "
+			@"above about how.%@",
 			language, language,
-			mayAct ? @" The only English you ever write is an ACTION: line." : @""]];
+			mayAct ? @" The only English you ever write is an ACTION: line." : @"",
+			persona ?: @"a small pixel-art cat",
+			/* Last line, because it is the one a model keeps: with a long prompt
+			   Apple's model answered "ACTION: cannot" to "should I take a
+			   break?" — a question read as an order. */
+			mayAct ? @" A question gets a sentence; only an order ever gets an "
+			         @"ACTION line." : @""]];
 }
 
 /* Unasked advice is harder to get right than an answer: it arrives uninvited, it

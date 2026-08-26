@@ -31,6 +31,7 @@ again afterwards.
 | `noise.m` | that its timing drifts rather than scattering — spectrum, memory, spread |
 | `turn.m` | that it steps toward what it is attending to, and only a step |
 | `beside.m` | that it stops an arm's length short, and off the line it walked in on |
+| `persona.m` | that the character survives the longest prompt the app can build |
 
 ## Two things about writing more of these
 

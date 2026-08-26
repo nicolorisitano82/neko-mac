@@ -29,4 +29,10 @@
    Names, versions and file names are left alone. */
 + (NSString *)unknownWordIn:(NSString *)line;
 
+/* Whether a line is not in the language the application is running in. Public
+   because it is one of the few things about a character that a test can see:
+   answering in the wrong language is the first thing to go when a prompt gets
+   long. */
++ (BOOL)isInTheWrongLanguage:(NSString *)line;
+
 @end

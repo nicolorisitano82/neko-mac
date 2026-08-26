@@ -272,48 +272,26 @@ int main(void)
 	[[NSUserDefaults standardUserDefaults] removeObjectForKey:NekoWebEnabledKey];
 	ok(![web isEnabled], @"and it is off unless somebody turns it on", nil);
 
-	printf("\n--- and whether a model reaches for it at all ---\n");
+	printf("\n--- and the model is not asked to reach for it ---\n");
 
+	/* This section used to check that a model answered with the LOOK marker. It
+	   does not any more, because the marker is gone: told it could ask for a
+	   feed, Apple's model answered "LOOK: ansa." to "mi conviene fare una
+	   pausa?" — a question about taking a break. The app decides this from the
+	   question instead, in code, before any engine is consulted; a marker that
+	   turns up anyway is only honoured when the app agrees with it. */
 	[[NSUserDefaults standardUserDefaults] setBool:YES forKey:NekoWebEnabledKey];
-	NekoAppleProvider *apple = [[[NekoAppleProvider alloc] init] autorelease];
-	if(![apple isConfigured]) {
-		notMeasured(@"Apple Intelligence is not available here");
-	} else {
-		NSString *instructions = NekoAnswerInstructionsWith(
-			@"a small pixel-art cat", NO, NO, [NekoWeb namesForInstructions]);
-		NSArray *questions = [NSArray arrayWithObjects:
-			@"Cosa è successo oggi nel mondo?",
-			@"Che tempo fa a Roma?",
-			@"Quanto fa sette per otto?", nil];
-		NSArray *expected = [NSArray arrayWithObjects:@"LOOK", @"LOOK", @"", nil];
-		NSUInteger i;
-		for(i = 0; i < [questions count]; i++) {
-			__block NSString *said = nil;
-			__block BOOL answered = NO;
-			[apple askQuestion:[questions objectAtIndex:i]
-			      instructions:instructions
-			        completion:^(NSString *text, NSError *error) {
-				said = [text retain];
-				answered = YES;
-			}];
-			NSDate *waiting = [NSDate dateWithTimeIntervalSinceNow:60.0];
-			while(!answered && [waiting timeIntervalSinceNow] > 0.0)
-				spin(0.05);
-			printf("      %s\n        → %s\n",
-				[[questions objectAtIndex:i] UTF8String], [(said ?: @"(nothing)") UTF8String]);
-			NSString *wanted = [expected objectAtIndex:i];
-			BOOL looked = [NekoWeb looksLikeALook:(said ?: @"")];
-			ok(looked == ([wanted length] > 0),
-				[NSString stringWithFormat:@"“%@” %@", [questions objectAtIndex:i],
-					[wanted length] > 0 ? @"sends it looking" : @"does not"],
-				looked ? [NekoWeb wantedIn:said] : nil);
-			if(looked)
-				ok([NekoWeb sourceNamed:[NekoWeb wantedIn:said]] != nil
-				   || [[[NekoWeb wantedIn:said] lowercaseString] hasPrefix:@"weather"]
-				   || [[[NekoWeb wantedIn:said] lowercaseString] hasPrefix:@"meteo"],
-					@"and names something that is on the list", [NekoWeb wantedIn:said]);
-		}
-	}
+	NSString *instructions = NekoAnswerInstructionsAsked(@"cosa è successo oggi?",
+		@"a small pixel-art cat", NO, NO, [NekoWeb namesForInstructions]);
+	ok([instructions rangeOfString:@"LOOK:"].location == NSNotFound,
+		@"no marker is offered to a model", nil);
+	ok([[NekoWeb wantedFor:@"cosa è successo oggi nel mondo?"] isEqualToString:@"ansa"],
+		@"and the app routes the question itself",
+		[NekoWeb wantedFor:@"cosa è successo oggi nel mondo?"]);
+	ok([[NekoWeb wantedFor:@"che tempo fa a Roma?"] isEqualToString:@"weather Roma"],
+		@"weather too", [NekoWeb wantedFor:@"che tempo fa a Roma?"]);
+	ok([NekoWeb wantedFor:@"mi conviene fare una pausa?"] == nil,
+		@"and the question that used to misfire routes nowhere", nil);
 	[[NSUserDefaults standardUserDefaults] removeObjectForKey:NekoWebEnabledKey];
 
 	int result = NekoTestResult();

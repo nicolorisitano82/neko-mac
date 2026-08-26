@@ -807,7 +807,7 @@ static const NSTimeInterval NekoHoldToType = 0.5;
 	/* Only offer the model the drawing route when there is something to draw
 	   with: told it may draw when it cannot, it answers "IMAGE: a cat" to
 	   somebody who asked a question and gets nothing back. */
-	NSString *instructions = NekoAnswerInstructionsWith(
+	NSString *instructions = NekoAnswerInstructionsAsked(askingAbout,
 		[character persona], [[NekoPainter sharedPainter] isReady],
 		[[NSUserDefaults standardUserDefaults] boolForKey:NekoActionsEnabledKey],
 		[[NekoWeb sharedWeb] isEnabled] ? [NekoWeb namesForInstructions] : nil);
@@ -1099,7 +1099,14 @@ static const NSTimeInterval NekoHoldToType = 0.5;
 	if(![NekoAction looksLikeAnAction:text] && ![self looksLikeADrawing:text])
 		[[NekoMemory sharedMemory] noteSaid:text];
 
-	if([NekoWeb looksLikeALook:text] && [[NekoWeb sharedWeb] isEnabled]) {
+	/* A model may agree that something needs looking up; it may not decide it.
+	   The instructions no longer offer the marker at all — measured, Apple's
+	   model answered "LOOK: ansa." to "mi conviene fare una pausa?" — so one
+	   arriving now is only honoured when the question itself asks for the same
+	   thing. Otherwise it is a malfunction, and a malfunction that fetches a
+	   news feed is worse than one that shows a line of text. */
+	if([NekoWeb looksLikeALook:text] && [[NekoWeb sharedWeb] isEnabled]
+	   && [NekoWeb wantedFor:(askingAbout ?: @"")] != nil) {
 		[self lookUp:[NekoWeb wantedIn:text]];
 		return;
 	}

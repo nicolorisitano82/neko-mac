@@ -264,6 +264,65 @@ says is exactly how a small model gets worse. Watch the 4B, not Apple's model.
 
 **Effort.** A day, plus the drift test.
 
+**Done, and the paper's failure mode turned out not to be ours.** Persona drift is
+measured over a conversation whose context keeps growing, and attention decaying
+across it is the mechanism. This app never grows a context: every question is a
+fresh prompt with at most one previous turn and a memory block capped near a
+thousand characters. Thirty rounds of drift cannot happen here.
+
+What *can* happen is the other half of the same mechanism — one prompt long enough
+that the instructions at the top stop being obeyed by the time the answer is
+written — and that turned out to be real, and worse than expected. Printing the
+answers next to the prompts that produced them found four separate defects, none
+of which any existing test could see:
+
+| what it did | asked |
+| --- | --- |
+| `ACTION: cannot` | *"Mi conviene fare una pausa?"* — a question read as an order |
+| `LOOK: ansa.` | the same question, answered with a news feed |
+| *"L'ora attuale è le 16:44 e il giorno è… non posso sapere perché il build sia lento"* | *"Perché il build è lento?"* |
+| *"Oggi è il 12 aprile"* | in August, with the facts withheld |
+
+So this step became four fixes to the prompt rather than a persona reminder.
+
+**Who is answering, said twice.** The character is named at the top and again in
+the last hundred characters, because the last instruction is the one a model
+keeps. That is the same trick this project already used for the language rule, and
+it is what the persona-drift paper reaches for too.
+
+**The facts are handed over only when they are wanted.** A short word list decides
+whether a question is about the clock, the date, the battery or the uptime; when
+it is not, the list is left out and the prompt drops from 2089 characters to 1441.
+Withholding it stopped the clock being recited and started it being invented, so
+one sentence — *"You have not been told the time or the date. Never state one."* —
+closes that. It was three sentences first, and three had the model explaining what
+it had not been told instead of answering.
+
+**A question never gets a deed.** One clause on the last line, where it is kept.
+
+**And the model can no longer start a search.** The `LOOK:` marker is gone from
+the instructions entirely. The app has decided that question in code since the
+web feature shipped, so the marker was carrying no weight it had not already
+lost — and a marker that arrives anyway is now honoured only when the app agrees
+with it, because a malfunction that fetches a news feed is worse than one that
+shows a line of text.
+
+Measured after all four, three questions through the shortest prompt and the
+longest (4114 characters, 2.8 times the short one): the language holds, the length
+holds, no compliments, no deeds, no clock, no invented dates.
+
+**Four ways of handing the facts over, six questions each.** Because the choice
+was not obvious, all four were run: facts always, facts with the never-open-with-
+the-clock rule, no facts, and no facts with the one-line warning. The first two
+trail the clock into unrelated answers — *"Non lo so, ma il tempo è 16:53"* — and
+the last is the only one with none of the three failure modes. That is what
+shipped. The counter that found it also had a bug worth recording: it only
+inspected the opening of an answer, and the clock trails as often as it leads.
+
+**What a harness still cannot settle.** Whether the character is any good, or
+recognisable as itself across a week. Language, length and flattery are visible to
+a test; voice is a person's judgement.
+
 ## 6. Mood from what happened, and no claims about feelings
 
 **Why sixth.** The two halves belong together: appraisal gives the mood something
@@ -336,6 +395,6 @@ one afternoon and a day are the whole cost.
 - [x] 2. Pink noise instead of a flat draw — measured below
 - [x] 3. Face what it is attending to — became *turn* toward it; measured below
 - [x] 4. Stop short, and come in from the side — measured below
-- [ ] 5. A persona that survives thirty turns
+- [x] 5. A persona that survives thirty turns — became *the prompt*; measured below
 - [ ] 6. Mood from what happened, and no feeling claims
 - [ ] 7. The tempo of an answer
