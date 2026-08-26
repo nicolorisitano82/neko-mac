@@ -54,6 +54,10 @@ extern NSString * const NekoWebEnabledKey;
 + (NSArray *)sources;
 + (NekoWebSource *)sourceNamed:(NSString *)identifier;
 
+/* The feeds enabled plugins add. Always consulted after the built-in list, so a
+   plugin cannot shadow a source the app already has. */
++ (NSArray *)pluginSources;
+
 /* The line of names a model is shown — the handful worth naming, not all of
    them: an instruction that lists two dozen words costs a small model more than
    the choice is worth, and the app recognises the rest by itself. */

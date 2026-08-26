@@ -12,6 +12,7 @@
 #import "NekoRate.h"
 #import "NekoWeb.h"
 #import "NekoPlace.h"
+#import "NekoPluginsPanel.h"
 #import "NekoVoice.h"
 #import "NekoMemory.h"
 #import "NekoHotKey.h"
@@ -145,6 +146,14 @@ static const float NekoMaxStopRadius = 200.0f;
 	item = [menu addItemWithTitle:NekoLocalized(@"Preferences…")
 	                       action:@selector(showPreferences:)
 	                keyEquivalent:@","];
+	[item setTarget:self];
+
+	/* Its own item, because plugins are not settings: they are things somebody
+	   installed, and the window that manages them says more than a tab has room
+	   for. */
+	item = [menu addItemWithTitle:NekoLocalized(@"Plugins…")
+	                       action:@selector(showPlugins:)
+	                keyEquivalent:@""];
 	[item setTarget:self];
 
 	[menu addItem:[NSMenuItem separatorItem]];
@@ -2114,6 +2123,11 @@ static const float NekoMaxStopRadius = 200.0f;
 	/* The system owns this one, so it is read back rather than remembered. */
 	[loginCheck setState:[self opensAtLogin] ? NSControlStateValueOn : NSControlStateValueOff];
 	[self updateValueFields];
+}
+
+- (void)showPlugins:(id)sender
+{
+	[[NekoPluginsPanel sharedPanel] show:sender];
 }
 
 - (void)showPreferences:(id)sender

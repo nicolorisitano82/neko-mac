@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>Author</key>
+	<string>an example, shipped with Neko</string>
+	<key>Extends</key>
+	<dict>
+		<key>Feeds</key>
+		<array>
+			<dict>
+				<key>Address</key>
+				<string>https://www.valigiablu.it/feed/</string>
+				<key>Detail</key>
+				<string>slow news, in Italian</string>
+				<key>Identifier</key>
+				<string>valigia</string>
+				<key>Name</key>
+				<string>Valigia Blu</string>
+			</dict>
+			<dict>
+				<key>Address</key>
+				<string>https://www.wired.it/feed/rss</string>
+				<key>Detail</key>
+				<string>this one is already built in, so it will never be reached</string>
+				<key>Identifier</key>
+				<string>wired</string>
+				<key>Name</key>
+				<string>Wired Italia (shadowed)</string>
+			</dict>
+		</array>
+	</dict>
+	<key>Identifier</key>
+	<string>com.example.ilpost</string>
+	<key>Interface</key>
+	<integer>1</integer>
+	<key>License</key>
+	<string>public domain</string>
+	<key>MinimumApp</key>
+	<string>2.5</string>
+	<key>Name</key>
+	<string>Il Post</string>
+	<key>Summary</key>
+	<string>Adds two Italian feeds this app does not ship.</string>
+	<key>Version</key>
+	<string>1.0</string>
+	<key>Wants</key>
+	<array>
+		<string>network</string>
+	</array>
+</dict>
+</plist>

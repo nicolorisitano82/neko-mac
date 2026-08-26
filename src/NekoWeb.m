@@ -2,6 +2,7 @@
 #import "NekoAnswerProvider.h"
 #import "NekoAction.h"   /* NekoWithoutMarkdown: the same markers, the same stripping */
 #import "NekoPlace.h"
+#import "NekoPlugins.h"
 
 NSString * const NekoWebEnabledKey = @"NekoWebEnabled";
 
@@ -251,6 +252,29 @@ static const NSTimeInterval NekoWebPatience = 8.0;
 		prominent:NO] autorelease];
 }
 
+/* What plugins add, on the same footing as the built-in list except in one
+   respect: a plugin can never shadow a source the app already has. The built-in
+   word wins and the plugin's is simply not reachable — said in the plugins panel
+   rather than discovered by a question going somewhere unexpected. */
++ (NSArray *)pluginSources
+{
+	NSMutableArray *sources = [NSMutableArray array];
+	NSEnumerator *e = [[[NekoPlugins sharedPlugins] feeds] objectEnumerator];
+	NSDictionary *feed;
+	while((feed = [e nextObject]) != nil) {
+		NSString *word = [[feed objectForKey:@"Identifier"] lowercaseString];
+		if([word length] == 0)
+			continue;
+		[sources addObject:[[[NekoWebSource alloc]
+			initWithIdentifier:word
+			              name:[feed objectForKey:@"Name"]
+			            detail:[feed objectForKey:@"Detail"] ?: @""
+			           address:[feed objectForKey:@"Address"]
+			         prominent:NO] autorelease]];
+	}
+	return sources;
+}
+
 + (NekoWebSource *)sourceNamed:(NSString *)identifier
 {
 	NSString *wanted = [[identifier stringByTrimmingCharactersInSet:
@@ -268,6 +292,12 @@ static const NSTimeInterval NekoWebPatience = 8.0;
 
 	NSEnumerator *e = [[self sources] objectEnumerator];
 	NekoWebSource *source;
+	while((source = [e nextObject]) != nil)
+		if([[source identifier] isEqualToString:wanted])
+			return source;
+
+	/* Only after every built-in one has been tried. */
+	e = [[self pluginSources] objectEnumerator];
 	while((source = [e nextObject]) != nil)
 		if([[source identifier] isEqualToString:wanted])
 			return source;
@@ -411,7 +441,17 @@ static const NSTimeInterval NekoWebPatience = 8.0;
 
 + (NSString *)sourceMentionedIn:(NSString *)lowered
 {
-	return [self longestMatchIn:lowered from:[self mastheads]];
+	NSString *built = [self longestMatchIn:lowered from:[self mastheads]];
+	if(built != nil)
+		return built;
+
+	/* A plugin's own word, matched the same way and always after. */
+	NSEnumerator *e = [[self pluginSources] objectEnumerator];
+	NekoWebSource *source;
+	while((source = [e nextObject]) != nil)
+		if([lowered rangeOfString:[source identifier]].location != NSNotFound)
+			return [source identifier];
+	return nil;
 }
 
 + (BOOL)phrase:(NSString *)lowered hasAnyOf:(NSArray *)words

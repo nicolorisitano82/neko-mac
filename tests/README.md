@@ -53,7 +53,13 @@ auxiliary binary inside a bundle the moment it asks for anything private), and
 the nightly reflection (it needs yesterday's file and a model; measured in the
 roadmap instead).
 
-## One trap worth knowing
+## Two traps worth knowing
+
+A helper called `read` collides with `unistd.h`'s, and the compiler's complaint
+points at the call site rather than the definition. Twice now. Anything shared
+with a system function wants a longer name in these files.
+
+## The other trap
 
 AppKit drains the autorelease pool while the run loop turns, and `spin()` turns
 it. Anything a test holds *across* a spin — an array it is iterating, a string it
