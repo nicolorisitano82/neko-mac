@@ -2,8 +2,31 @@
 #import "NekoController.h"
 #import "NekoAsk.h"
 #import "NekoAdvisor.h"
+#import "NekoNoise.h"
 
 @implementation MyPanel
+
+/* The original chain held each idle pose for a fixed number of ticks — four,
+   ten, four, six — which is a metronome however carefully the poses are drawn.
+   The same averages now, scaled by a stream that drifts: some minutes the cat
+   settles quickly, some it dawdles, and the two are not independent. */
+static unsigned NekoIdleTicksFor(NekoState state)
+{
+	switch(state) {
+		case NekoStateStop:  return 4;
+		case NekoStateJare:  return 10;
+		case NekoStateKaki:  return 4;
+		case NekoStateAkubi: return 6;
+		/* Scratching a wall was on ten ticks too, and has as little business
+		   being on a fixed count as the rest of them. */
+		case NekoStateUTogi:
+		case NekoStateDTogi:
+		case NekoStateLTogi:
+		case NekoStateRTogi: return 10;
+		default:             return 0;
+	}
+}
+
 - (void)setStateTo:(NekoState)theState
 {
 	if(stateFrames != nil && nekoState == theState)
@@ -12,6 +35,14 @@
 	tickCount = 0;
 	stateCount = 0;
 	nekoState = theState;
+
+	unsigned base = NekoIdleTicksFor(theState);
+	if(base > 0) {
+		double scaled = (double)base * [[NekoNoise sharedNoise] nextScale];
+		idleDwell = (unsigned)(scaled + 0.5);
+		if(idleDwell < 1)
+			idleDwell = 1;       /* a pose nobody sees is not a pose */
+	}
 	[stateFrames release];
 	stateFrames = [[character framesForState:theState] retain];
 	stateTicksPerFrame = [character ticksPerFrameForState:theState];
@@ -305,7 +336,7 @@ static const unsigned NekoRoamNap = 240;         /* half a minute asleep */
 	if(roamMode) {
 		/* A different pause each time, so it does not tick round like a
 		   metronome. */
-		roamRest = NekoRoamMinRest + arc4random_uniform(NekoRoamRestSpread);
+		roamRest = NekoRoamMinRest + [[NekoNoise sharedNoise] nextBelow:NekoRoamRestSpread];
 		if(nekoState == NekoStateSleep)
 			roamTicks = 0;             /* the nap paid for the next five minutes */
 		[self startWanderingAnywhere];
@@ -700,7 +731,7 @@ static const unsigned NekoRoamNap = 240;         /* half a minute asleep */
 			[self setStateTo:NekoStateAwake];
 			goto breakout;
 		}
-		if (stateCount < 4) {
+		if (stateCount < idleDwell) {
 			goto breakout;
 		}
 		[self setStateTo:NekoStateJare];
@@ -714,7 +745,7 @@ static const unsigned NekoRoamNap = 240;         /* half a minute asleep */
 			[self setStateTo:NekoStateAwake];
 			goto breakout;
 		}
-		if (stateCount < 10) {
+		if (stateCount < idleDwell) {
 			goto breakout;
 		}
 		[self setStateTo:NekoStateKaki];
@@ -723,16 +754,25 @@ static const unsigned NekoRoamNap = 240;         /* half a minute asleep */
 			[self setStateTo:NekoStateAwake];
 			goto breakout;
 		}
-		if (stateCount < 4) {
+		if (stateCount < idleDwell) {
 			goto breakout;
 		}
+		/* Twice in a row now and then: scratching comes in bursts, the way
+		   blinking does, and one scratch every time is the tell. */
+		if(scratchAgain == 0 && [[NekoNoise sharedNoise] next] > 0.82) {
+			scratchAgain = 1;
+			stateCount = 0;
+			idleDwell = NekoIdleTicksFor(NekoStateKaki);
+			goto breakout;
+		}
+		scratchAgain = 0;
 		[self setStateTo:NekoStateAkubi];
 	} else if(nekoState == NekoStateAkubi) {
 		if (isNekoMoveStart) {
 			[self setStateTo:NekoStateAwake];
 			goto breakout;
 		}
-		if (stateCount < 6) {
+		if (stateCount < idleDwell) {
 			goto breakout;
 		}
 		[self setStateTo:([self mayFallAsleep] ? NekoStateSleep : NekoStateStop)];
@@ -768,7 +808,7 @@ static const unsigned NekoRoamNap = 240;         /* half a minute asleep */
 			[self setStateTo:NekoStateAwake];
 			goto breakout;
 		}
-		if (stateCount < 10) {
+		if (stateCount < idleDwell) {
 			goto breakout;
 		}
 		[self setStateTo:NekoStateKaki];

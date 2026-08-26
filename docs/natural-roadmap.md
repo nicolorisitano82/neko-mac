@@ -99,6 +99,48 @@ still has nothing beyond it.
 
 **Effort.** A day, most of it the spectrum test.
 
+**Done, and the plan was wrong about where the metronome was.** The roaming rest
+was at least drawn from something. The idle chain — the poses the cat cycles
+through when the pointer stops — was on **fixed counts**: four ticks sitting, ten
+playing, four scratching, six yawning, then asleep. Every time, identically, since
+1989. That is where "it ticks round like a metronome" was literally true.
+
+`NekoNoise` is Voss-McCartney: eight random walks, each redrawn half as often as
+the one before, added together, with its own generator so a test can replay the
+same afternoon twice. Measured over 4096 values against the flat draw it
+replaces:
+
+| | pink | the flat draw |
+| --- | --- | --- |
+| slope of the power spectrum | **−0.80** | 0.07 |
+| what one value says about the next | **0.75** | −0.01 |
+| spread | 0.236 | 0.287 |
+
+Adding eight uniform draws narrows the result toward the middle, and a cat whose
+pauses are all nearly average is not the point — so the values are stretched back
+out around the centre by a factor of 2.4, which brings the spread to within a
+sixth of the flat draw's while keeping the slope. That constant was measured, not
+guessed.
+
+The chain now keeps its old averages and stops keeping its old counts:
+
+| pose | was | is now |
+| --- | --- | --- |
+| sitting | 4 ticks | 2–6, mean 4.2 |
+| playing | 10 | 6–13, mean 9.6 |
+| scratching | 4 | 2–6, mean 4.2 |
+| yawning | 6 | 4–8, mean 6.3 |
+| scratching a wall | 10 | 6–14, mean 10.4 |
+
+And scratching now comes in bursts about one time in six, because blinking does
+and one scratch every time is the tell.
+
+**Found while building it.** Wall-scratching shared its fixed count with the
+playing pose, so a careless edit gave it a dwell drawn for a different pose — it
+is on the list properly now. Nothing waits for ever: every value is bounded by
+construction, which is the answer to the risk above, and the histogram is checked
+for it.
+
 ## 3. Face what it is attending to
 
 **Why third.** With eight directions and no eyes, orientation is the only
@@ -235,7 +277,7 @@ one afternoon and a day are the whole cost.
 
 - [x] 0. The reading — [natural.md](natural.md), and this roadmap
 - [x] 1. Acknowledge before answering — measured below
-- [ ] 2. Pink noise instead of a flat draw
+- [x] 2. Pink noise instead of a flat draw — measured below
 - [ ] 3. Face what it is attending to
 - [ ] 4. Stop short, and come in from the side
 - [ ] 5. A persona that survives thirty turns

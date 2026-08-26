@@ -30,6 +30,8 @@
 	unsigned restedTicks;        /* how long it has been settled and asleep */
 	unsigned roamTicks;          /* how long this roaming stretch has lasted */
 	unsigned roamRest;           /* ticks to sit still before the next errand */
+	unsigned idleDwell;          /* how long this idle pose lasts, this time */
+	unsigned scratchAgain;       /* a second scratch, now and then */
 
 	int errandPhase;             /* 0 none, 1 on its way, 2 doing the thing */
 	NekoState errandState;       /* what it does when it arrives */

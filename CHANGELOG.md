@@ -20,6 +20,29 @@ speaks, and reacts once per sentence rather than once per word. What could not b
 measured here is the recogniser's share of that wait: a test binary cannot be
 granted a microphone.
 
+### Its timing drifts instead of scattering
+
+The pauses were drawn from a flat distribution: every value as likely as every
+other, each one independent of the last. The idle chain was worse than that — the
+poses the cat cycles through when the pointer stops were on **fixed counts**, four
+ticks sitting, ten playing, four scratching, six yawning, unchanged since the
+original oneko. The comment in the source said the pauses were varied so it would
+not tick round like a metronome, which was the right instinct pointed at the
+wrong half of the problem.
+
+Perceptual studies of procedural animation are unusually specific here: motion
+driven by 1/f — pink — noise is judged natural, while the same motion with no
+jitter or with white jitter is picked as the least natural of the three. The
+difference is not the range of the values, it is that neighbouring values are
+related.
+
+So the waits now come from a stream that drifts. Measured over 4096 values: the
+slope of the power spectrum moves from 0.07 to −0.80, and what one value tells you
+about the next from −0.01 to 0.75, while the spread stays within a sixth of the
+flat draw's. Each idle pose keeps its old average and loses its old count —
+sitting 2 to 6 ticks against a fixed 4, playing 6 to 13 against 10 — and
+scratching now comes in bursts about one time in six, because blinking does.
+
 ### The location button did nothing
 
 Reported from real use: the row said “not asked yet” however often it was

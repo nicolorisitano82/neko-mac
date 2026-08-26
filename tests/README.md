@@ -28,6 +28,7 @@ again afterwards.
 | `line.m` | that the typed line takes the keyboard and gives it back — its own bundle |
 | `place.m` | the order the two location questions have to be asked in |
 | `hear.m` | that the cat reacts to a sentence starting, not to it ending |
+| `noise.m` | that its timing drifts rather than scattering — spectrum, memory, spread |
 
 ## Two things about writing more of these
 
