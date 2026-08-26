@@ -209,7 +209,9 @@ throws away flattery: a line that asserts a feeling is a line to drop.
 
 ## 8. What to build, in order
 
-Cheapest first, and each one has the measurement that decides whether it stays:
+Cheapest first, and each one has the measurement that decides whether it stays.
+[natural-roadmap.md](natural-roadmap.md) has the same list as work: the effort for
+each, what could go wrong, and what is deliberately left out.
 
 | | change | measure |
 | --- | --- | --- |
