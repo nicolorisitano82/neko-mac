@@ -32,6 +32,7 @@ again afterwards.
 | `turn.m` | that it steps toward what it is attending to, and only a step |
 | `beside.m` | that it stops an arm's length short, and off the line it walked in on |
 | `persona.m` | that the character survives the longest prompt the app can build |
+| `mood.m` | the slow layer under the mood, and the feelings it may not claim |
 
 ## Two things about writing more of these
 

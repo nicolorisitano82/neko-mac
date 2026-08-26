@@ -153,6 +153,8 @@ static const NSUInteger NekoSenseMinLength = 6;
 		return @"one of the examples, handed back";
 	if([self isInTheWrongLanguage:trimmed])
 		return @"the wrong language";
+	if([NekoVoice claimsAFeeling:trimmed])
+		return @"a feeling it does not have";
 	if([NekoVoice isNothingButFlattery:trimmed])
 		return @"a compliment with nothing behind it";
 	if([NekoVoice saysItTwice:trimmed])

@@ -348,6 +348,39 @@ which is an argument for keeping the offset small and the band narrow.
 
 **Effort.** A day and a half.
 
+**Done.** Two layers, which is the standard shape: the hour and the day underneath,
+and over it one sentence about how today has gone, taken from the verdicts the
+rate already keeps — so nothing new is watched to get it. A week, staged:
+
+| the day | what it does to the tone |
+| --- | --- |
+| answered most of them, aiming at 14 | a shade more forward |
+| answered half, aiming at 12 | a shade more forward |
+| answered one, aiming at 9 | the hour only |
+| answered none, aiming at 6 | shorter, and no complaining about it |
+| waved away twice, aiming at 4 | shorter, and no complaining about it |
+
+The slow layer adds 78 to 80 characters and never replaces the hour underneath —
+both checked, because a mood that swallows the mood is not a layer.
+
+**And the line it may not cross.** Machines are unnerving in proportion to the
+*experience* people ascribe to them, more than to how they look, so the cat may go
+quiet, sit differently or look away, and may not report a feeling it does not
+have. Thirty-odd phrases in four languages, and the distinction that makes it
+usable: identity is not a feeling. *"Mi sento solo quando chiudi il portatile"* is
+refused; *"Sono un gatto di pixel su una scrivania"* is not. Measured: 8 of 8
+claims caught across Italian, English, French and Spanish, 0 of 6 ordinary lines
+caught wrongly, and a remark that claims one is refused outright by `NekoSense`.
+
+**A number about the engine rather than the code.** With the facts withheld, a 3B
+cannot read a clock out — so a time in the answer is one it invented, and Apple's
+model obeys *"never state one"* most of the time rather than always: about one
+answer in three at worst, zero in three runs since. The test tolerates one and
+fails at two, because two would be the prompt regressing and one is this engine.
+
+**What nobody can settle here.** Whether a quieter cat reads as tact or as
+sulking. Same open question the rate raised, same answer: a week with somebody.
+
 ## 7. The tempo of an answer
 
 **Why last, and why alone.** Response delays scaled to the weight of a reply
@@ -396,5 +429,5 @@ one afternoon and a day are the whole cost.
 - [x] 3. Face what it is attending to — became *turn* toward it; measured below
 - [x] 4. Stop short, and come in from the side — measured below
 - [x] 5. A persona that survives thirty turns — became *the prompt*; measured below
-- [ ] 6. Mood from what happened, and no feeling claims
+- [x] 6. Mood from what happened, and no feeling claims — measured below
 - [ ] 7. The tempo of an answer

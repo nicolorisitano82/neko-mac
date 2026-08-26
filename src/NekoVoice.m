@@ -1,5 +1,6 @@
 #import "NekoVoice.h"
 #import "NekoAnswerProvider.h"
+#import "NekoRate.h"
 
 NSString * const NekoVoiceLastSeenKey = @"NekoVoiceLastSeen";
 NSString * const NekoVoiceGreetedKey  = @"NekoVoiceGreeted";
@@ -72,9 +73,34 @@ NSString * const NekoVoiceGreetedKey  = @"NekoVoiceGreeted";
 		[colours objectAtIndex:(NSUInteger)which]];
 }
 
+/* Under the hour and the day, a slower layer: how the day has gone. The two are
+   the standard shape for this — a short-lived emotion over a mood that moves in
+   hours — and the signals are the ones the rate already keeps, so nothing new is
+   watched to get it.
+
+   Small on purpose. A cat that sulks measurably is worse than one that does not
+   notice, and this is the same open question the rate raised: less because it was
+   ignored is either tact or passive aggression, and only living with it settles
+   which. */
++ (NSString *)appraisal
+{
+	NekoRate *rate = [NekoRate sharedRate];
+	double aiming = [rate target];
+	NSUInteger said = [rate saidToday];
+	NSUInteger answered = [rate answeredToday];
+
+	if(aiming >= 13.0 || (said >= 3 && answered * 2 >= said))
+		return @" They have been answering you today: you may be a shade more "
+		       @"forward than usual.";
+	if(aiming <= 6.0)
+		return @" Today has not gone your way. Shorter than usual, and no "
+		       @"complaining about it.";
+	return @"";
+}
+
 + (NSString *)moodNow
 {
-	return [self moodAt:[NSDate date]];
+	return [[self moodAt:[NSDate date]] stringByAppendingString:[self appraisal]];
 }
 
 #pragma mark Turning up
@@ -245,6 +271,41 @@ NSString * const NekoVoiceGreetedKey  = @"NekoVoiceGreeted";
 	[shared intersectSet:first];
 	double smaller = (double)MIN([first count], [second count]);
 	return (double)[shared count] / smaller >= 0.7;
+}
+
+/* First person plus an inner state. Written as whole phrases rather than as a
+   pronoun and a word list, because "sono" carries identity as often as feeling
+   and a cat saying what it is must go through. */
++ (NSArray *)feelingClaims
+{
+	return [NSArray arrayWithObjects:
+		/* Italian */
+		@"mi sento", @"sono triste", @"sono felice", @"sono contento", @"sono contenta",
+		@"sono solo", @"sono sola", @"mi annoio", @"mi manchi", @"ho paura",
+		@"sono geloso", @"sono ferito", @"sono offeso", @"mi sono offeso",
+		@"mi fa male", @"soffro",
+		/* English */
+		@"i feel", @"i'm feeling", @"im feeling", @"i am feeling", @"i am sad",
+		@"i'm sad", @"i am happy", @"i'm happy", @"i am lonely", @"i'm lonely",
+		@"i miss you", @"i am hurt", @"i'm hurt", @"i am bored", @"i'm bored",
+		@"i am afraid", @"i'm afraid", @"it hurts me",
+		/* French */
+		@"je me sens", @"je suis triste", @"je suis heureux", @"je suis seul",
+		@"tu me manques", @"j'ai peur", @"je m'ennuie",
+		/* Spanish */
+		@"me siento", @"estoy triste", @"estoy feliz", @"estoy solo", @"estoy sola",
+		@"te echo de menos", @"tengo miedo", @"me aburro", nil];
+}
+
++ (BOOL)claimsAFeeling:(NSString *)line
+{
+	NSString *lowered = [line lowercaseString];
+	NSEnumerator *e = [[self feelingClaims] objectEnumerator];
+	NSString *claim;
+	while((claim = [e nextObject]) != nil)
+		if([lowered rangeOfString:claim].location != NSNotFound)
+			return YES;
+	return NO;
 }
 
 + (NSString *)withoutFlattery:(NSString *)line

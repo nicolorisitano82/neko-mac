@@ -35,6 +35,16 @@ extern NSString * const NekoVoiceGreetedKey;
 + (NSString *)openingIfDue;
 + (NSString *)openingFor:(NSDate *)when lastSeen:(NSDate *)before;
 
+/* Whether a line claims an inner state in the first person — "mi sento solo",
+   "I feel ignored".
+
+   Machines are unnerving in proportion to the *experience* people ascribe to
+   them, more than to how they look: a thing that seems to feel is the uncanny
+   direction, and a pet that says it feels neglected is also a manipulation. The
+   cat may go quiet, sit differently, look away; it does not report feelings it
+   does not have. Identity is not a feeling — "sono un gatto di pixel" is fine. */
++ (BOOL)claimsAFeeling:(NSString *)line;
+
 /* Takes the compliment off the front and the restatement off the end. Returns
    the line unchanged when there is neither, which is most of the time. */
 + (NSString *)withoutFlattery:(NSString *)line;
