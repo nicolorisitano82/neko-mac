@@ -4,6 +4,7 @@
 #import "MyPanel.h"
 #import "NekoDesktop.h"
 #import "NekoSense.h"
+#import "NekoBrains.h"
 #import "NekoAnswerProvider.h"
 #import "NekoCharacter.h"
 
@@ -100,6 +101,8 @@ static const NSTimeInterval NekoAnticsAway = 150.0;
 		return NO;
 	if([self idleSeconds] > NekoAnticsAway)
 		return NO;
+	if([[NekoDesktop sharedDesktop] isBusyElsewhere])
+		return NO;                 /* a film, a presentation, a password field */
 	return lastAntic == nil || -[lastAntic timeIntervalSinceNow] > cooldown;
 }
 
@@ -147,8 +150,10 @@ static const NSTimeInterval NekoAnticsAway = 150.0;
    antic still happens, which matters more than which words it ends with. */
 - (void)askForLineInsteadOf:(NSString *)fallback
 {
-	id<NekoAnswerProvider> provider = [[NekoAsk sharedAsk] provider];
-	if(![provider isConfigured])
+	/* Same rule as the suggestions: on this Mac, and good enough to be worth
+	   hearing. When neither holds, the written-in line stays. */
+	id<NekoAnswerProvider> provider = [NekoBrains bestOnDeviceProvider];
+	if(provider == nil || ![provider isConfigured])
 		return;
 
 	NekoCharacter *character = [[NekoController sharedController] character];

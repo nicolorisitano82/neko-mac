@@ -1,5 +1,176 @@
 # Changelog
 
+## 2.1 “truelife” — 2026-08-26
+
+The codename is the branch this was written on, and the question it was written
+to answer: how close can a cat on a desktop get to something worth talking to.
+The reading behind it is in [docs/truelife.md](docs/truelife.md) and the order of
+work in [docs/truelife-roadmap.md](docs/truelife-roadmap.md); both are honest
+about what the literature says will fail.
+
+The short version of that reading: the hard part is not the model. Interruptions
+cost about ten minutes of task switching and another ten or fifteen before the
+original work resumes, and the cost depends almost entirely on *when* they land.
+So this release spends most of its effort on timing, memory and answerability,
+and almost none on making the cat cleverer.
+
+### It waits for a seam in your work
+
+The interval in the preferences used to be a trigger: when it expired, the cat
+spoke. Now it is a floor, and a remark also needs a seam — a program you have
+just left after a long stretch, a return from a real break, a burst of typing
+that has ended, a pause with work either side of it. Four seams, each measured on
+its own, each lasting twelve seconds and then gone.
+
+Two doors stay shut whatever the clock says: nothing specific to say, or a window
+filling the screen while you present or watch something. Focus and Do Not Disturb
+cannot be read at all — macOS keeps that state in a file no application may open
+and publishes no API for it — so the full-screen check is the proxy, and the
+preferences say so rather than implying otherwise.
+
+### How often it speaks is a budget for a day
+
+Replayed over one staged day, the old rule produced 19 remarks at the default
+ten-minute interval and 9 at thirty — and exactly the same number whether every
+remark was answered or every one was waved away. That is a notification with a
+slider.
+
+It now keeps three things: how many remarks today, how they landed, and how much
+of the day was actually spent at the Mac. Answered is worth one more a day, let
+go one fewer, clicked away two fewer. Over five staged days that settles at 15 a
+day when everything is answered, 8 when half are, and 4 when none are. The
+interval you set is still the ceiling on frequency: at once an hour, the day
+produced 8 remarks and the closest two were 60 minutes apart.
+
+When the day’s remarks are spent the cat still walks over, sits down and looks at
+you, and leaves without saying anything.
+
+### You can answer it
+
+A remark you cannot reply to is a notification. So after the cat speaks the
+microphone stays open for six seconds and the bubble says so, in as many words.
+Speaking while it is still being read stops it: the bubble stops counting down
+and the spoken voice is cut off mid-word in 5 ms. Silence closes the microphone
+and says nothing at all.
+
+It only does this where speech was already allowed for a question — a remark
+nobody asked for is not an occasion to ask for a microphone — and there is a
+switch beside the voice for people who do not want it.
+
+Holding the same keystroke opens a line to type in instead, which is the half of
+this that works in an open-plan office, in a meeting, and on a Mac where the
+microphone was refused; that last case now falls back to it rather than
+complaining.
+
+And one turn of history goes into the next question, so a follow-up has something
+to point at. Asked “And when?” after being told Tolkien wrote The Hobbit, Apple
+Intelligence answers 1937; without that turn, it reads out the time.
+
+### It keeps a diary, and reduces it every night
+
+A plain-text file a day under Application Support: what it noticed, what it said,
+what you said. Plain text because it is a file about a person — you can read it,
+and delete it in the Finder if you do not trust the button. Thirty days, then the
+old days go. Each night the previous day becomes at most four lines that would
+still mean something on Monday; measured on a staged day, 2.0 s and four lines,
+after the prompt learned to throw away “Xcode was open for forty minutes”.
+
+The notes are written the way somebody writes in a margin rather than the way a
+log writes — “notato build Xcode nuovo lenta, terza volta oggi” — which is 34%
+fewer characters for the same information, and matters because every line is read
+back to a model tomorrow. Negations, numbers, versions, times and names are never
+dropped. The same note twice running is written once.
+
+The diary reaches a model only through an engine that keeps it on this Mac, which
+is checked in code for all five engine settings rather than promised in a
+document. ChatGPT, Claude and a Shortcut answer questions and never see it.
+
+### How it sounds
+
+A mood that moves with the hour and the day, so the same question asked on Monday
+morning and at one in the morning does not come back in the same words: measured,
+20% of the wording shared between the two. An opening that knows when it last saw
+you — the first time today, back after a week, one in the morning — and says
+nothing at all the second time you start it in a morning.
+
+And the assistant taken out of it: no compliment before the answer, no closing
+sentence that says the opening one again. Asked for in the instructions and
+removed in code when it arrives anyway.
+
+### It can look something up
+
+Asked what had happened today, a model answered “Oggi il tempo nel mondo è
+incerto” — a confident sentence about a day it knows nothing about. Worse, the 4B
+model this Mac is set to invented a headline: “Oggi a Milano è stato annunciato il
+nuovo piano per la mobilità sostenibile.”
+
+So the cat can now fetch one of twelve feeds, every one of them tried and counted
+first: ANSA (ultima ora, mondo, tecnologia), la Repubblica, Il Sole 24 Ore
+(Italia and economia), MeteoAlarm’s warnings for Italy, Hacker News, BBC News,
+The Guardian, The New York Times, NPR. The plain forecast comes from open-meteo,
+because neither 3B Meteo nor meteo.it publishes a feed any more, and the cat
+names the source in the answer.
+
+Two rules make this safe enough to ship. **The model never names an address** —
+only one of twelve words, decided in the app before any engine is consulted,
+because a small model cannot be relied on to admit it does not know. And an
+answer built on text fetched from the web **may not open, copy or move
+anything**: a headline is written by a stranger, and there is a test that fails if
+that ever stops being true.
+
+The headlines are shown as they were written. Handed them to retell, the 4B
+turned “la ceca Ce Industries” into “la Cecoslovacchia”; somebody else’s
+sentences are not improved by a small model.
+
+Off until you switch it on, in the Ask Neko tab.
+
+### Words that do not exist
+
+Reported from real use: the cat said "hai togliuto il file". There is no such
+participle — a small model conjugating Italian by guesswork produces exactly
+that, and no amount of instruction fixes it, because the model does not know it
+is wrong.
+
+macOS knows, though. Anything the cat says on its own is now checked against the
+system dictionary in the language the app is running in, and a line containing a
+word that does not exist is thrown away rather than said. Tried against a page of
+real output: names and versions pass because a word with a digit or an inner
+capital is not the dictionary's business — Xcode, TextEdit, Safari, dates,
+numbers, colloquialisms all come through — while "togliuto" and "cazzuta" do not.
+
+The grammar checker was tried too and left out: it accepts "il gatto sono andato
+al mare" without complaint, so it would only cost time.
+
+Two limits worth stating. Nonsense that is spelled correctly still gets through:
+this catches an invented word, not an invented thought. And answers to questions
+asked out loud are deliberately not filtered — dropping one would leave somebody
+who asked something staring at a silent cat, which is worse than a clumsy
+sentence.
+
+### Smaller things, most of them found by a test
+
+The preferences learned to check themselves: every pair of controls in every tab,
+and every paragraph against the space it was given. It found five Italian labels
+that had been cut off for releases — the permissions summary, the drawing
+explanation, the interval label — and one paragraph in the Suggestions tab short
+of **424 points**, which is to say most of the page explaining what that feature
+can see had never been readable. The two long paragraphs scroll now.
+
+The typed line asked for the keyboard once, before activation had landed, which is
+why it sometimes opened without focus; it asks again the moment the application
+becomes active. An action-shaped line in a remark is thrown away rather than shown.
+The diary’s thousand-character cap could be pushed to 1002 by the mark that says
+it was cut.
+
+### The measurements are in the repository now
+
+Every number above came from a harness, and every harness used to live in a
+temporary directory. They are in [tests/](tests) now — ten of them, run with
+`tests/run.sh` — including the one this project had promised and never written:
+`screen.m`, which fails if text read from a screen ever gains a route to an
+action. Three things they cannot measure say so out loud instead of passing
+quietly: Focus and Do Not Disturb, the microphone itself, and a real week of use.
+
 ## 2.0.3 — 2026-08-25
 
 ### It kept asking why you change programs so often

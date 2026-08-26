@@ -142,6 +142,18 @@ static const float NekoBubbleRadius = 10.0f;
 	[noButton setAction:@selector(saidNo:)];
 	[noButton setHidden:YES];
 
+	/* Smaller and dimmer than the words on purpose: it is the app talking, not
+	   the cat, and it should never be read first. */
+	hintLabel = [[NSTextField alloc] initWithFrame:NSZeroRect];
+	[hintLabel setBezeled:NO];
+	[hintLabel setDrawsBackground:NO];
+	[hintLabel setEditable:NO];
+	[hintLabel setSelectable:NO];
+	[hintLabel setFont:[NSFont systemFontOfSize:11.0f]];
+	[hintLabel setTextColor:[NSColor secondaryLabelColor]];
+	[hintLabel setHidden:YES];
+	[[self contentView] addSubview:hintLabel];
+
 	picture = [[NSImageView alloc] initWithFrame:NSZeroRect];
 	[picture setImageScaling:NSImageScaleProportionallyUpOrDown];
 	[picture setHidden:YES];
@@ -156,6 +168,8 @@ static const float NekoBubbleRadius = 10.0f;
 {
 	[dismissal invalidate];
 	[label release];
+	[hintLabel release];
+	[hint release];
 	[picture release];
 	[saveButton release];
 	[yesButton release];
@@ -174,6 +188,28 @@ static const float NekoBubbleRadius = 10.0f;
 {
 	owner = target;
 	dismissedAction = action;
+}
+
+- (void)setHint:(NSString *)line
+{
+	if(hint == line || [hint isEqualToString:line])
+		return;
+	[hint release];
+	hint = [line copy];
+	/* Already on screen: grow or shrink for it now rather than at the next
+	   thing that gets said — keeping whatever was left of its welcome, since
+	   redrawing is not a reason for a bubble to become permanent. */
+	if([self isVisible] && lastText != nil) {
+		NSTimeInterval left = dismissal != nil
+			? [[dismissal fireDate] timeIntervalSinceNow] : 0.0;
+		[self showText:lastText picture:[picture image]
+		      nearRect:lastCat dismissAfter:(left > 0.0 ? left : 0.0)];
+	}
+}
+
+- (NSString *)hint
+{
+	return hint;
 }
 
 + (NSTimeInterval)readingTimeFor:(NSString *)text
@@ -202,6 +238,11 @@ static const float NekoBubbleRadius = 10.0f;
 	NSFont *font = [NSFont systemFontOfSize:0.0];
 	[label setFont:font];
 	[label setStringValue:(text ?: @"")];
+	if(lastText != text) {
+		[lastText release];
+		lastText = [(text ?: @"") copy];
+	}
+	lastCat = catFrame;
 
 	/* Measured by the cell that will draw it, not by boundingRectWithSize:.
 	   A text field keeps insets of its own, so the string wraps sooner inside
@@ -215,6 +256,17 @@ static const float NekoBubbleRadius = 10.0f;
 	float textWidth = ceilf(MIN(needed.width, room));
 	float textHeight = [text length] > 0 ? ceilf(needed.height) : 0.0f;
 
+	/* The hint sits on its own row under the words, measured the same way. */
+	float hintWidth = 0.0f, hintHeight = 0.0f;
+	[hintLabel setStringValue:(hint ?: @"")];
+	[hintLabel setHidden:([hint length] == 0)];
+	if([hint length] > 0) {
+		NSSize small = [[hintLabel cell] cellSizeForBounds:
+			NSMakeRect(0.0f, 0.0f, room, 10000.0f)];
+		hintWidth = ceilf(MIN(small.width, room));
+		hintHeight = ceilf(small.height) + 4.0f;
+	}
+
 	/* The picture is shown at whatever size fits the bubble's own limit, keeping
 	   its proportions: a 512 pixel square becomes a 320 pixel square on screen,
 	   which is a picture rather than a poster. */
@@ -227,10 +279,10 @@ static const float NekoBubbleRadius = 10.0f;
 		drawn = NSMakeSize(ceilf(natural.width * scale), ceilf(natural.height * scale));
 	}
 
-	float contentWidth = MAX(textWidth, drawn.width);
+	float contentWidth = MAX(MAX(textWidth, hintWidth), drawn.width);
 	float gap = (image != nil && [text length] > 0) ? NekoBubbleGapUnderPicture : 0.0f;
 	float width = contentWidth + 2.0f * NekoBubblePadding;
-	float height = textHeight + drawn.height + gap
+	float height = textHeight + hintHeight + drawn.height + gap
 		+ 2.0f * NekoBubblePadding + NekoBubbleTail;
 
 	NSScreen *screen = [self screenForRect:catFrame];
@@ -248,7 +300,11 @@ static const float NekoBubbleRadius = 10.0f;
 	[(NekoBubbleView *)[self contentView] setTailAtBottom:above
 	                                               offset:NSMidX(catFrame) - (x + width / 2.0f)];
 	float bottom = (above ? NekoBubbleTail : 0.0f) + NekoBubblePadding;
-	[label setFrame:NSMakeRect(NekoBubblePadding, bottom, contentWidth, textHeight)];
+	if(hintHeight > 0.0f)
+		[hintLabel setFrame:NSMakeRect(NekoBubblePadding, bottom,
+		                               contentWidth, hintHeight - 4.0f)];
+	[label setFrame:NSMakeRect(NekoBubblePadding, bottom + hintHeight,
+	                           contentWidth, textHeight)];
 	[picture setImage:image];
 	[picture setHidden:(image == nil)];
 	[saveButton setHidden:YES];
@@ -258,7 +314,7 @@ static const float NekoBubbleRadius = 10.0f;
 	[saveButton setEnabled:YES];
 	if(image != nil) {
 		NSRect where = NSMakeRect(NekoBubblePadding + (contentWidth - drawn.width) / 2.0f,
-		                          bottom + textHeight + gap,
+		                          bottom + hintHeight + textHeight + gap,
 		                          drawn.width, drawn.height);
 		[picture setFrame:where];
 		/* Top right of the drawing, a few points in, out of the way of whatever
@@ -306,6 +362,7 @@ static const float NekoBubbleRadius = 10.0f;
 	[decision release];
 	decision = [block copy];
 
+	[self setHint:nil];         /* a question with buttons says enough already */
 	[self showText:text nearRect:catFrame dismissAfter:0.0];
 
 	NSSize yesSize = [yesButton intrinsicContentSize];
@@ -412,6 +469,27 @@ static const float NekoBubbleRadius = 10.0f;
 	} else {
 		[saveButton setTitle:NSLocalizedString(@"Failed", nil)];
 	}
+}
+
+- (NSTimeInterval)secondsLeft
+{
+	if(dismissal == nil)
+		return 0.0;              /* no timer: it stays until told */
+	NSTimeInterval left = [[dismissal fireDate] timeIntervalSinceNow];
+	return left > 0.0 ? left : 0.0;
+}
+
+- (void)keepUpFor:(NSTimeInterval)seconds
+{
+	[dismissal invalidate];
+	dismissal = nil;
+	if(seconds <= 0.0)
+		return;
+	dismissal = [NSTimer scheduledTimerWithTimeInterval:seconds
+	                                            target:self
+	                                          selector:@selector(hideByTimer:)
+	                                          userInfo:nil
+	                                           repeats:NO];
 }
 
 - (void)hideByTimer:(NSTimer *)timer

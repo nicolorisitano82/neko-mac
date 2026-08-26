@@ -13,6 +13,7 @@
 {
 	id target;                   /* not retained */
 	SEL action;
+	SEL releaseAction;           /* optional: the key going back up */
 	void *reference;             /* EventHotKeyRef */
 	unsigned identifier;
 	unsigned short keyCode;
@@ -20,6 +21,11 @@
 }
 
 - (id)initWithTarget:(id)aTarget action:(SEL)anAction;
+
+/* Told when the key is let go as well as when it goes down, which is how a
+   press and a hold tell themselves apart. Carbon reports both; nothing else
+   about the registration changes. */
+- (void)setReleaseAction:(SEL)anAction;
 
 /* NO when the combination is already taken, or is missing a modifier. */
 - (BOOL)registerKeyCode:(unsigned short)code modifiers:(NSUInteger)flags;

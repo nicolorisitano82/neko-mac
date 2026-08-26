@@ -31,6 +31,7 @@
 {
 	id<NekoLocalEngine> engine;
 	dispatch_queue_t loader;        /* the model file is opened off the main thread */
+	NSString *preferred;           /* set by whoever wants a particular model */
 }
 
 /* The identifier of the model that will actually answer: whatever was chosen if
@@ -39,6 +40,12 @@
 
 /* What the menu says, installed or not. */
 - (NSString *)chosenModelIdentifier;
+
+/* Asks this instance to use one particular model, whatever the preferences say.
+   Used by NekoBrains, which needs the most capable model on the disk rather than
+   the one someone picked for asking the capital of France. Ignored when that
+   model is not installed. */
+- (void)setPreferredModel:(NSString *)identifier;
 
 /* nil until an engine is compiled into the app. The provider reports itself
    unconfigured while this is the case, and says so in the preferences rather

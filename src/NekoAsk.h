@@ -3,7 +3,7 @@
 #import <Cocoa/Cocoa.h>
 #import "NekoAnswerProvider.h"
 
-@class NekoHotKey, NekoListener, NekoBubble;
+@class NekoHotKey, NekoListener, NekoBubble, NekoLine;
 @class NekoShortcutProvider, NekoModelProvider, NekoAppleProvider;
 @class NekoOpenAIProvider, NekoLocalProvider;
 
@@ -14,6 +14,7 @@ extern NSString * const NekoAskHotKeyModifiersKey;
 extern NSString * const NekoAskProviderKey;      /* apple, openai, model, shortcut */
 extern NSString * const NekoAskShortcutNameKey;
 extern NSString * const NekoAskSpeakKey;
+extern NSString * const NekoAskFollowUpKey;      /* keep listening after speaking */
 
 /* When the cat last said something nobody asked for. Kept in the defaults so a
    restart does not hand it a fresh tongue. */
@@ -33,6 +34,16 @@ extern NSString * const NekoLastUnpromptedKey;
 	NekoHotKey *hotKey;
 	NekoListener *listener;
 	NekoBubble *bubble;
+	NekoLine *typedLine;         /* the typed half of the conversation */
+	id voice;                    /* AVSpeechSynthesizer, kept so it can be cut off */
+	BOOL beatPending;            /* a reply to wait for, once the voice is done */
+	BOOL saidUnasked;            /* what is on screen, nobody asked for */
+	BOOL fromTheWeb;             /* this answer was built on somebody else's words */
+	BOOL beatRan;                /* and something was listening for a reply */
+	NSString *askingAbout;       /* the question now in flight */
+	NSString *lastQuestion;      /* the turn before this one, so "it" resolves */
+	NSString *lastAnswer;
+	NSDate *lastTurn;
 	NekoShortcutProvider *shortcutProvider;
 	NekoModelProvider *modelProvider;
 	NekoAppleProvider *appleProvider;
@@ -64,8 +75,46 @@ extern NSString * const NekoLastUnpromptedKey;
 - (NekoModelProvider *)modelProvider;   /* the preferences hold its key */
 - (NekoOpenAIProvider *)openaiProvider;
 
-/* Starts a question, or abandons the one in progress. */
+/* Starts a question, or abandons the one in progress. Held rather than tapped,
+   the same keystroke opens a line to type in instead. */
 - (void)toggle:(id)sender;
+- (void)hotKeyLetGo:(id)sender;
+
+/* Opens the line to type in, whether or not the microphone works. */
+- (void)typeALine;
+
+/* After the cat has spoken: the microphone stays open for a few seconds so a
+   reply needs no keystroke, with the bubble saying so while it lasts. Off when
+   the switch in the preferences is off, and never when speech has not already
+   been allowed — the cat does not ask for the microphone on its own account. */
+- (void)keepListening;
+- (BOOL)isWaitingForReply;
+
+/* The turn just before this one, as it goes into the next prompt, and how it
+   gets there. Empty once a few minutes have passed. */
+- (NSString *)threadForPrompt;
+- (void)rememberQuestion:(NSString *)question answer:(NSString *)answer;
+
+/* Everything that would be sent with the next question. Public because it is
+   the only way to check what a follow-up actually asks. */
+- (NSString *)instructionsForAsking;
+
+/* Goes and looks something up: a name from NekoWeb's list, or "weather <place>".
+   Verbatim when the app itself decided to look, because then the headlines are
+   what was asked for; through the model when the model asked, because then they
+   are context for a question. */
+- (void)lookUp:(NSString *)wanted verbatim:(BOOL)asItIs;
+
+/* Two seams, so that the moment after the cat speaks can be tested on a machine
+   with no microphone and no permission to use one: whether speech has already
+   been allowed, and starting the listener. The tests override these; nothing
+   else does. */
+- (BOOL)speechAlreadyAllowed;
+- (BOOL)startListeningForReplyWithPatience:(NSTimeInterval)seconds;
+
+/* What the microphone reports during those few seconds. Called by the listener,
+   and by the tests, which have no microphone. */
+- (void)replyHeard:(NSString *)text final:(BOOL)final error:(NSError *)error;
 
 /* For the cat's own remarks, which nobody asked for. NO while it is listening,
    thinking, answering or already saying something: an interruption of an

@@ -6,6 +6,21 @@
    permission. Off until asked for, and worth nothing without the permission. */
 extern NSString * const NekoReadTextKey;
 
+/* How good a moment this is to say something.
+
+   Interruptions cost about ten minutes of task switching plus another ten or
+   fifteen before the original work resumes, and the cost depends on when they
+   land: at a breakpoint in the activity it is measurably lower, and the coarser
+   the breakpoint the cheaper it is (Iqbal & Bailey, CHI 2007/2008). These are
+   the breakpoints that can be seen from application switches, typing rate and
+   idleness alone — no screen reading, no permission. */
+typedef enum {
+	NekoBreakpointNone = 0,   /* mid-flow: say nothing */
+	NekoBreakpointFine,       /* a few seconds of quiet after working */
+	NekoBreakpointMedium,     /* a burst of typing just ended, or a short visit */
+	NekoBreakpointCoarse      /* a long stretch ended, or a real break did */
+} NekoBreakpoint;
+
 /* What the cat can tell about your day, in one place.
 
    Two tiers, deliberately separated. The first needs no permission at all and is
@@ -30,6 +45,13 @@ extern NSString * const NekoReadTextKey;
 	uint32_t keysBefore, movesBefore;
 	NSDate *sampledAt;
 	uint32_t keysPerMinute, movesPerMinute;
+
+	NSString *previousApp;         /* to notice a switch, and how long it lasted */
+	NSDate *previousAppSince;
+	NSTimeInterval previousIdle;
+	uint32_t previousKeys;         /* keys a minute at the last sample */
+	NekoBreakpoint breakpoint;
+	NSDate *breakpointAt;
 }
 
 + (NekoDesktop *)sharedDesktop;
@@ -63,6 +85,25 @@ extern NSString * const NekoReadTextKey;
 /* The text being worked on, or nil: switch off, permission missing, secure
    input, a password field, or simply nothing there. */
 - (NSString *)nearbyText;
+
+/* The best breakpoint seen in the last few seconds, and how long ago it was.
+   A breakpoint is a moment, not a state: it is worth acting on briefly and then
+   it is gone. */
+- (NekoBreakpoint)breakpointNow;
+- (NSTimeInterval)secondsSinceBreakpoint;
+- (NSString *)describeBreakpoint;
+
+/* Times when nothing should be said at all, whatever the interval says, with the
+   reason for the preferences to show. Focus and Do Not Disturb are deliberately
+   absent: macOS keeps that state where no sandboxed app can read it, so this
+   uses what can honestly be seen — a full-screen window, and secure keyboard
+   entry, which is what a password field turns on. */
+- (BOOL)isBusyElsewhere;
+- (NSString *)whyBusyElsewhere;
+
+/* Whether the highlight is anything more than "an ordinary few minutes". The
+   bar a remark has to clear along with the breakpoint. */
+- (BOOL)somethingStandsOut;
 
 /* The single fact worth a remark right now — a long stretch in one program, a
    lot of jumping about, the small hours — in one English sentence. */

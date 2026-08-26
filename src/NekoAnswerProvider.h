@@ -48,7 +48,8 @@ extern NSString *NekoAnswerInstructionsFor(NSString *persona);
 extern NSString *NekoAnswerInstructionsDrawing(NSString *persona, BOOL mayDraw);
 
 /* And with the four things it is allowed to actually do. */
-extern NSString *NekoAnswerInstructionsWith(NSString *persona, BOOL mayDraw, BOOL mayAct);
+extern NSString *NekoAnswerInstructionsWith(NSString *persona, BOOL mayDraw, BOOL mayAct,
+                                            NSString *mayLookAt);
 
 /* The handful of things the cat can truthfully know at this moment — the time,
    the date, the battery, how long the Mac has been awake — as plain lines for a

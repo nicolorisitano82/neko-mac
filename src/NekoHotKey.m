@@ -15,6 +15,10 @@ static OSStatus NekoHotKeyHandler(EventHandlerCallRef call, EventRef event, void
 		objectForKey:[NSNumber numberWithUnsignedInt:pressed.id]];
 	if(hotKey == nil)
 		return eventNotHandledErr;
+	if(GetEventKind(event) == kEventHotKeyReleased) {
+		[hotKey performSelector:@selector(fireRelease)];
+		return noErr;
+	}
 	[hotKey performSelector:@selector(fire)];
 	return noErr;
 }
@@ -26,8 +30,11 @@ static OSStatus NekoHotKeyHandler(EventHandlerCallRef call, EventRef event, void
 	if(self != [NekoHotKey class])
 		return;
 	NekoHotKeysByIdentifier = [[NSMutableDictionary alloc] init];
-	EventTypeSpec spec = { kEventClassKeyboard, kEventHotKeyPressed };
-	InstallApplicationEventHandler(&NekoHotKeyHandler, 1, &spec, NULL, NULL);
+	EventTypeSpec specs[] = {
+		{ kEventClassKeyboard, kEventHotKeyPressed },
+		{ kEventClassKeyboard, kEventHotKeyReleased }
+	};
+	InstallApplicationEventHandler(&NekoHotKeyHandler, 2, specs, NULL, NULL);
 }
 
 + (unsigned short)defaultKeyCode
@@ -56,9 +63,20 @@ static OSStatus NekoHotKeyHandler(EventHandlerCallRef call, EventRef event, void
 	[super dealloc];
 }
 
+- (void)setReleaseAction:(SEL)anAction
+{
+	releaseAction = anAction;
+}
+
 - (void)fire
 {
 	[target performSelector:action withObject:self];
+}
+
+- (void)fireRelease
+{
+	if(releaseAction != NULL)
+		[target performSelector:releaseAction withObject:self];
 }
 
 #pragma mark Registration

@@ -8,6 +8,11 @@
 #import "NekoFolderAccess.h"
 #import "NekoWakeWord.h"
 #import "NekoPermissions.h"
+#import "NekoBrains.h"
+#import "NekoRate.h"
+#import "NekoWeb.h"
+#import "NekoVoice.h"
+#import "NekoMemory.h"
 #import "NekoHotKey.h"
 #import "NekoModelProvider.h"
 #import "NekoModelStore.h"
@@ -17,6 +22,8 @@
 #import "NekoFolderAccess.h"
 #import "NekoWakeWord.h"
 #import "NekoPermissions.h"
+#import "NekoBrains.h"
+#import "NekoMemory.h"
 #import "NekoOpenAIProvider.h"
 #import "NekoModelProvider.h"
 
@@ -251,6 +258,23 @@ static const float NekoMaxStopRadius = 200.0f;
 	[[NekoAdvisor sharedAdvisor] applySettings];
 	[[NekoAntics sharedAntics] applySettings];
 	[[NekoWakeWord sharedWakeWord] applySettings];
+	/* Once a day, yesterday becomes a few durable lines. Costs nothing on the
+	   days there is nothing to reduce. */
+	[[NekoMemory sharedMemory] reflectIfDue];
+
+	/* And a hello, at most once a day, a few seconds after it turns up: a cat
+	   that greets you the instant its window appears is a dialog box. */
+	[self performSelector:@selector(sayHello) withObject:nil afterDelay:8.0];
+}
+
+- (void)sayHello
+{
+	if([self isPaused])
+		return;
+	NSString *opening = [NekoVoice openingIfDue];
+	if([opening length] == 0)
+		return;
+	[[NekoAsk sharedAsk] sayUnprompted:opening];
 }
 
 #pragma mark Settings
@@ -757,13 +781,24 @@ static const float NekoMaxStopRadius = 200.0f;
 	[content addSubview:askKeyField];
 	[askKeyField release];
 
-	askSpeakCheck = [[NSButton alloc] initWithFrame:NSMakeRect(152.0f, 162.0f, 300.0f, 18.0f)];
+	askSpeakCheck = [[NSButton alloc] initWithFrame:NSMakeRect(152.0f, 162.0f, 196.0f, 18.0f)];
 	[askSpeakCheck setButtonType:NSButtonTypeSwitch];
 	[askSpeakCheck setTitle:NekoLocalized(@"Read the answer aloud")];
 	[askSpeakCheck setTarget:self];
 	[askSpeakCheck setAction:@selector(takeAskSpeakFrom:)];
 	[content addSubview:askSpeakCheck];
 	[askSpeakCheck release];
+
+	/* On the same row as the voice because they are the same subject: how a turn
+	   ends, and whether the next one needs a keystroke. */
+	followUpCheck = [[NSButton alloc] initWithFrame:NSMakeRect(356.0f, 162.0f, 224.0f, 18.0f)];
+	[followUpCheck setButtonType:NSButtonTypeSwitch];
+	[followUpCheck setTitle:NekoLocalized(@"Listen for a reply after")];
+	[followUpCheck setToolTip:NekoLocalized(@"For a few seconds after it speaks, so an answer needs no keystroke. The bubble says so while the microphone is open.")];
+	[followUpCheck setTarget:self];
+	[followUpCheck setAction:@selector(takeFollowUpFrom:)];
+	[content addSubview:followUpCheck];
+	[followUpCheck release];
 
 	wakeCheck = [[NSButton alloc] initWithFrame:NSMakeRect(152.0f, 186.0f, 300.0f, 18.0f)];
 	[wakeCheck setButtonType:NSButtonTypeSwitch];
@@ -773,7 +808,18 @@ static const float NekoMaxStopRadius = 200.0f;
 	[content addSubview:wakeCheck];
 	[wakeCheck release];
 
-	actionsCheck = [[NSButton alloc] initWithFrame:NSMakeRect(152.0f, 138.0f, 300.0f, 18.0f)];
+	/* Beside the other switch that lets something outside this Mac into the
+	   conversation: one lets it do things here, the other lets it read things
+	   from elsewhere. */
+	webCheck = [[NSButton alloc] initWithFrame:NSMakeRect(356.0f, 138.0f, 224.0f, 18.0f)];
+	[webCheck setButtonType:NSButtonTypeSwitch];
+	[webCheck setTitle:NekoLocalized(@"Let it look up the news")];
+	[webCheck setTarget:self];
+	[webCheck setAction:@selector(takeWebFrom:)];
+	[content addSubview:webCheck];
+	[webCheck release];
+
+	actionsCheck = [[NSButton alloc] initWithFrame:NSMakeRect(152.0f, 138.0f, 196.0f, 18.0f)];
 	[actionsCheck setButtonType:NSButtonTypeSwitch];
 	[actionsCheck setTitle:NekoLocalized(@"Let it open things when I ask")];
 	[actionsCheck setTarget:self];
@@ -799,12 +845,23 @@ static const float NekoMaxStopRadius = 200.0f;
 	[content addSubview:forgetFoldersButton];
 	[forgetFoldersButton release];
 
-	askStatusField = [self labelWithString:@"" frame:NSMakeRect(20.0f, 8.0f, 556.0f, 86.0f)];
+	/* Same treatment as the suggestions tab, and for the same reason: with
+	   everything switched on this paragraph says more than eighty-six points
+	   will hold, and the part that got cut off was the part about what leaves
+	   the Mac. */
+	NSScrollView *askScroll = [[NSScrollView alloc]
+		initWithFrame:NSMakeRect(20.0f, 8.0f, 556.0f, 86.0f)];
+	[askScroll setHasVerticalScroller:YES];
+	[askScroll setDrawsBackground:NO];
+	[askScroll setBorderType:NSNoBorder];
+	askStatusField = [self labelWithString:@"" frame:NSMakeRect(0.0f, 0.0f, 538.0f, 86.0f)];
 	[askStatusField setAlignment:NSTextAlignmentLeft];
 	[[askStatusField cell] setWraps:YES];
 	[askStatusField setFont:[NSFont systemFontOfSize:11.0f]];
 	[askStatusField setTextColor:[NSColor secondaryLabelColor]];
-	[content addSubview:askStatusField];
+	[askScroll setDocumentView:askStatusField];
+	[content addSubview:askScroll];
+	[askScroll release];
 
 	[self syncAskControls];
 }
@@ -833,6 +890,20 @@ static const float NekoMaxStopRadius = 200.0f;
 	[[NSUserDefaults standardUserDefaults]
 		setBool:([sender state] == NSControlStateValueOn) forKey:NekoWakeWordKey];
 	[[NekoWakeWord sharedWakeWord] applySettings];
+	[self syncAskControls];
+}
+
+- (void)takeFollowUpFrom:(id)sender
+{
+	[[NSUserDefaults standardUserDefaults]
+		setBool:([sender state] == NSControlStateValueOn) forKey:NekoAskFollowUpKey];
+	[self syncAskControls];
+}
+
+- (void)takeWebFrom:(id)sender
+{
+	[[NSUserDefaults standardUserDefaults]
+		setBool:([sender state] == NSControlStateValueOn) forKey:NekoWebEnabledKey];
 	[self syncAskControls];
 }
 
@@ -880,6 +951,18 @@ static const float NekoMaxStopRadius = 200.0f;
 	[self syncAskControls];
 }
 
+- (void)setAskStatus:(NSString *)text
+{
+	[askStatusField setStringValue:(text ?: @"")];
+	NSSize needed = [[askStatusField cell] cellSizeForBounds:
+		NSMakeRect(0.0f, 0.0f, 538.0f, 100000.0f)];
+	float height = ceilf(needed.height);
+	if(height < 86.0f)
+		height = 86.0f;
+	[askStatusField setFrame:NSMakeRect(0.0f, 0.0f, 538.0f, height)];
+	[askStatusField scrollRectToVisible:NSMakeRect(0.0f, height - 1.0f, 538.0f, 1.0f)];
+}
+
 - (void)syncAskControls
 {
 	NekoAsk *ask = [NekoAsk sharedAsk];
@@ -910,6 +993,9 @@ static const float NekoMaxStopRadius = 200.0f;
 		? NSControlStateValueOn : NSControlStateValueOff];
 	[wakeCheck setToolTip:[NekoWakeWord unavailableReason]];
 	[actionsCheck setEnabled:on];
+	[webCheck setEnabled:on];
+	[webCheck setState:[defaults boolForKey:NekoWebEnabledKey]
+		? NSControlStateValueOn : NSControlStateValueOff];
 	BOOL acting = on && [defaults boolForKey:NekoActionsEnabledKey];
 	[foldersButton setEnabled:acting];
 	[forgetFoldersButton setEnabled:acting
@@ -917,6 +1003,9 @@ static const float NekoMaxStopRadius = 200.0f;
 	[actionsCheck setState:[defaults boolForKey:NekoActionsEnabledKey]
 		? NSControlStateValueOn : NSControlStateValueOff];
 	[askSpeakCheck setState:[defaults boolForKey:NekoAskSpeakKey]
+		? NSControlStateValueOn : NSControlStateValueOff];
+	[followUpCheck setEnabled:on];
+	[followUpCheck setState:[defaults boolForKey:NekoAskFollowUpKey]
 		? NSControlStateValueOn : NSControlStateValueOff];
 
 	/* Which combination is selected, if it is one of the offered ones. */
@@ -933,7 +1022,7 @@ static const float NekoMaxStopRadius = 200.0f;
 		}
 	}
 
-	[askStatusField setStringValue:[self askStatusLine]];
+	[self setAskStatus:[self askStatusLine]];
 }
 
 #pragma mark The local model
@@ -954,12 +1043,15 @@ static const float NekoMaxStopRadius = 200.0f;
 	while((view = [old nextObject]) != nil)
 		[view removeFromSuperview];
 
+	/* Two lines' worth: this line names whichever permissions are missing, and
+	   in Italian two names already do not fit on one. It cannot be any wider —
+	   the two buttons start at 316. */
 	permissionsSummary = [self labelWithString:@""
-	                                     frame:NSMakeRect(20.0f, 384.0f, 280.0f, 20.0f)];
+	                                     frame:NSMakeRect(20.0f, 372.0f, 288.0f, 32.0f)];
 	[permissionsSummary setAlignment:NSTextAlignmentLeft];
 	[permissionsContent addSubview:permissionsSummary];
 
-	float y = 324.0f;
+	float y = 320.0f;
 	NSEnumerator *e = [[NekoPermissions all] objectEnumerator];
 	NekoPermission *permission;
 	while((permission = [e nextObject]) != nil) {
@@ -994,7 +1086,7 @@ static const float NekoMaxStopRadius = 200.0f;
 		[permissionsContent addSubview:status];
 
 		NSTextField *why = [self labelWithString:[permission explanation]
-		                                   frame:NSMakeRect(42.0f, y - 14.0f, 430.0f, 26.0f)];
+		                                   frame:NSMakeRect(42.0f, y - 14.0f, 430.0f, 28.0f)];
 		[why setAlignment:NSTextAlignmentLeft];
 		[why setFont:[NSFont systemFontOfSize:11.0f]];
 		[[why cell] setWraps:YES];
@@ -1170,8 +1262,10 @@ static const float NekoMaxStopRadius = 200.0f;
 	[content addSubview:drawNowButton];
 	[drawNowButton release];
 
+	/* Tall enough for the longest translation of it, not the shortest: in
+	   Italian this paragraph runs three lines further than in English. */
 	drawStatusField = [self labelWithString:@""
-	                                  frame:NSMakeRect(20.0f, 96.0f, 556.0f, 112.0f)];
+	                                  frame:NSMakeRect(20.0f, 58.0f, 556.0f, 150.0f)];
 	[drawStatusField setAlignment:NSTextAlignmentLeft];
 	[[drawStatusField cell] setWraps:YES];
 	[content addSubview:drawStatusField];
@@ -1364,11 +1458,49 @@ static const float NekoMaxStopRadius = 200.0f;
 	[content addSubview:suggestNowButton];
 	[suggestNowButton release];
 
+	/* This paragraph is where everything the feature can see, everything it
+	   sends, and how it is going today are written down, and it runs to more
+	   than the tab is tall — four hundred points more in Italian, all of which
+	   used to be cut off at the bottom edge. So it scrolls, and nothing has to
+	   be left out of it to fit. */
+	NSScrollView *scroll = [[NSScrollView alloc]
+		initWithFrame:NSMakeRect(20.0f, 96.0f, 556.0f, 168.0f)];
+	[scroll setHasVerticalScroller:YES];
+	[scroll setDrawsBackground:NO];
+	[scroll setBorderType:NSNoBorder];
 	suggestStatusField = [self labelWithString:@""
-	                                     frame:NSMakeRect(20.0f, 96.0f, 556.0f, 168.0f)];
+	                                     frame:NSMakeRect(0.0f, 0.0f, 538.0f, 168.0f)];
 	[suggestStatusField setAlignment:NSTextAlignmentLeft];
 	[[suggestStatusField cell] setWraps:YES];
-	[content addSubview:suggestStatusField];
+	[scroll setDocumentView:suggestStatusField];
+	[content addSubview:scroll];
+	[scroll release];
+
+	/* What it remembers, and the two things anyone should be able to do about
+	   it: look at it, and delete it. */
+	memoryField = [self labelWithString:@"" frame:NSMakeRect(20.0f, 52.0f, 556.0f, 42.0f)];
+	[memoryField setAlignment:NSTextAlignmentLeft];
+	[memoryField setFont:[NSFont systemFontOfSize:11.0f]];
+	[[memoryField cell] setWraps:YES];
+	[content addSubview:memoryField];
+
+	NSButton *reveal = [[NSButton alloc] initWithFrame:NSMakeRect(20.0f, 22.0f, 190.0f, 28.0f)];
+	[reveal setBezelStyle:NSBezelStyleRounded];
+	[reveal setControlSize:NSControlSizeSmall];
+	[reveal setTitle:NekoLocalized(@"Show what it remembers")];
+	[reveal setTarget:self];
+	[reveal setAction:@selector(revealMemoryPressed:)];
+	[content addSubview:reveal];
+	[reveal release];
+
+	NSButton *forget = [[NSButton alloc] initWithFrame:NSMakeRect(216.0f, 22.0f, 160.0f, 28.0f)];
+	[forget setBezelStyle:NSBezelStyleRounded];
+	[forget setControlSize:NSControlSizeSmall];
+	[forget setTitle:NekoLocalized(@"Forget everything")];
+	[forget setTarget:self];
+	[forget setAction:@selector(forgetMemoryPressed:)];
+	[content addSubview:forget];
+	[forget release];
 
 	[self syncSuggestControls];
 }
@@ -1417,19 +1549,66 @@ static const float NekoMaxStopRadius = 200.0f;
 - (void)suggestNowPressed:(id)sender
 {
 	[suggestNowButton setEnabled:NO];
-	[suggestStatusField setStringValue:NekoLocalized(@"Having a look…")];
+	[self setSuggestStatus:NekoLocalized(@"Having a look…")];
 	[[NekoAdvisor sharedAdvisor] suggestNow:^(NSString *line, NSError *error) {
 		[suggestNowButton setEnabled:YES];
 		if([line length] > 0 && ![line isEqualToString:@"-"])
-			[suggestStatusField setStringValue:[NSString stringWithFormat:
+			[self setSuggestStatus:[NSString stringWithFormat:
 				NekoLocalized(@"It said: %@"), line]];
 		else if(error != nil)
-			[suggestStatusField setStringValue:[error localizedDescription]
+			[self setSuggestStatus:[error localizedDescription]
 				?: NekoLocalized(@"No engine answered.")];
 		else
-			[suggestStatusField setStringValue:
+			[self setSuggestStatus:
 				NekoLocalized(@"It had nothing worth saying about this.")];
 	}];
+}
+
+/* The diary is a file about a person, so the way to see it is the Finder rather
+   than a window of the app's own devising. */
+- (void)revealMemoryPressed:(id)sender
+{
+	NekoMemory *memory = [NekoMemory sharedMemory];
+	[[NSWorkspace sharedWorkspace] openURL:[memory directory]];
+}
+
+- (void)forgetMemoryPressed:(id)sender
+{
+	NekoMemory *memory = [NekoMemory sharedMemory];
+	if([memory dayCount] == 0 && [[memory durableLines] count] == 0)
+		return;
+
+	NSAlert *alert = [[[NSAlert alloc] init] autorelease];
+	[alert setMessageText:NekoLocalized(@"Forget everything Neko remembers?")];
+	[alert setInformativeText:[NSString stringWithFormat:
+		NekoLocalized(@"%lu day(s) of notes and %lu line(s) it had kept. This cannot be undone."),
+		(unsigned long)[memory dayCount], (unsigned long)[[memory durableLines] count]]];
+	[alert addButtonWithTitle:NekoLocalized(@"Forget")];
+	[alert addButtonWithTitle:NekoLocalized(@"Cancel")];
+	[NSApp activateIgnoringOtherApps:YES];
+	if([alert runModal] != NSAlertFirstButtonReturn)
+		return;
+	[memory forgetEverything];
+	/* How you reacted to what it said is something it learned about you too. */
+	[[NekoRate sharedRate] forgetPace];
+	[self syncSuggestControls];
+}
+
+/* Set through here rather than directly: the field is inside a scroll view now,
+   and a document view that is not as tall as its text is the same as no scroll
+   view at all. */
+- (void)setSuggestStatus:(NSString *)text
+{
+	[suggestStatusField setStringValue:(text ?: @"")];
+	NSSize needed = [[suggestStatusField cell] cellSizeForBounds:
+		NSMakeRect(0.0f, 0.0f, 538.0f, 100000.0f)];
+	float height = ceilf(needed.height);
+	if(height < 168.0f)
+		height = 168.0f;
+	[suggestStatusField setFrame:NSMakeRect(0.0f, 0.0f, 538.0f, height)];
+	/* Showing the end of a paragraph nobody has read yet is a strange way to
+	   start: the top of it, always. */
+	[suggestStatusField scrollRectToVisible:NSMakeRect(0.0f, height - 1.0f, 538.0f, 1.0f)];
 }
 
 - (void)syncSuggestControls
@@ -1453,7 +1632,19 @@ static const float NekoMaxStopRadius = 200.0f;
 		[NSNumber numberWithInteger:[defaults integerForKey:NekoSuggestEveryKey]]];
 	[suggestEveryPopUp selectItemAtIndex:(index == NSNotFound) ? 2 : index];
 
-	[suggestStatusField setStringValue:[self suggestStatusLine:roaming]];
+	[self setSuggestStatus:[self suggestStatusLine:roaming]];
+
+	NekoMemory *memory = [NekoMemory sharedMemory];
+	NSUInteger days = [memory dayCount];
+	NSUInteger kept = [[memory durableLines] count];
+	if(days == 0 && kept == 0)
+		[memoryField setStringValue:NekoLocalized(@"It remembers nothing yet. What it notices is written a day at a time, in plain text, on this Mac — never sent anywhere — kept for thirty days, and reduced each night to a few lines worth keeping.")];
+	else
+		[memoryField setStringValue:[NSString stringWithFormat:
+			NekoLocalized(@"It remembers %lu day(s) and %lu line(s) worth keeping, %@ in plain text on this Mac. Older days are removed after thirty."),
+			(unsigned long)days, (unsigned long)kept,
+			[NSByteCountFormatter stringFromByteCount:[memory bytesOnDisk]
+			                               countStyle:NSByteCountFormatterCountStyleFile]]];
 }
 
 - (NSString *)suggestStatusLine:(BOOL)roaming
@@ -1464,28 +1655,24 @@ static const float NekoMaxStopRadius = 200.0f;
 	NSMutableString *line = [NSMutableString string];
 	[line appendString:NekoLocalized(@"Curiosity comes with roaming whatever this switch says: every minute or two the cat comes over to the pointer, asks what you are writing, or goes to claw the edge of the screen. That part needs no engine and sends nothing anywhere.")];
 	[line appendString:@"\n\n"];
+	[line appendString:NekoLocalized(@"It waits for a seam in your work before saying anything: a program you have just left after a long stretch, a burst of typing that has ended, a pause. In the middle of something it stays quiet, and it says nothing at all while a window fills the screen or you are typing a password. The interval below is a floor rather than an alarm clock: how good a moment it holds out for depends on how the day has gone so far.")];
+	[line appendString:@"\n\n"];
 	[line appendString:NekoLocalized(@"While roaming, Neko glances at what you are doing and now and then says something about it — a tip, a nudge, or a joke. It waits until you have been in one application for a while, keeps quiet when you are away from the keyboard, and says nothing at all when it has nothing worth saying.")];
 	[line appendString:@"\n\n"];
 	[line appendString:NekoLocalized(@"All it can see, and all that is sent, is this:")];
 	[line appendString:@"\n"];
 	[line appendString:[[NekoAdvisor sharedAdvisor] context]];
 	[line appendString:@"\n"];
-	/* Said out loud rather than left to be discovered: a 1.5B model asked for one
-	   dry sentence in Italian produces bland or broken ones often enough that
-	   somebody would reasonably think the feature was broken. */
-	NSString *engine = [[NSUserDefaults standardUserDefaults] stringForKey:NekoAskProviderKey];
-	if([engine isEqualToString:@"local"]) {
-		NekoLocalProvider *local = [[[NekoLocalProvider alloc] init] autorelease];
-		long long size = [[NekoModelStore sharedStore]
-			installedBytesForIdentifier:[local modelIdentifier]];
-		if(size > 0 && size < 2000000000LL) {
-			NekoAppleProvider *apple = [[[NekoAppleProvider alloc] init] autorelease];
-			[line appendString:@"\n\n"];
-			[line appendString:[apple isConfigured]
-				? NekoLocalized(@"A remark is a harder thing to write than an answer, and the smaller local models are not good at it — they come out bland, or in the wrong language, or repeat a word four times. Apple Intelligence, on the Ask Neko tab, does this one much better and costs nothing.")
-				: NekoLocalized(@"A remark is a harder thing to write than an answer, and the smaller local models are not good at it. A larger model on the Local model tab, or a remote one, will do better.")];
-		}
-	}
+	/* Which engine actually speaks, said here rather than inferred from the Ask
+	   Neko tab: that setting governs questions, this one governs remarks. */
+	[line appendString:@"\n\n"];
+	[line appendString:[NekoBrains describeChoice]];
+
+	/* How many today, how they landed, and what it has made of that. The pace is
+	   the one thing here that moves by itself, so it is the one thing that has
+	   to be visible. */
+	[line appendString:@"\n\n"];
+	[line appendString:[[NekoRate sharedRate] describeToday]];
 
 	[line appendString:@"\n\n"];
 	[line appendString:NekoLocalized(@"Window titles are included only if this Mac has already granted Neko screen recording; that permission is never asked for. With Apple Intelligence or a model on this Mac, none of it leaves the Mac; with ChatGPT, Claude or a Shortcut, it is sent to that service like any other question.")];
@@ -1735,8 +1922,10 @@ static const float NekoMaxStopRadius = 200.0f;
 		return hint;
 
 	NSMutableString *line = [NSMutableString stringWithFormat:
-		NekoLocalized(@"Press %@ and ask. Neko listens until you stop talking."),
+		NekoLocalized(@"Press %@ and ask. Neko listens until you stop talking. Hold the same keys instead and a line to type in opens beside it."),
 		[ask hotKeyDisplayName]];
+	if([[NSUserDefaults standardUserDefaults] boolForKey:NekoAskFollowUpKey])
+		[line appendString:NekoLocalized(@" After it speaks it keeps listening for a few seconds — the bubble says so while it does, and talking over it stops it mid-sentence.")];
 	if([[NSUserDefaults standardUserDefaults] boolForKey:NekoWakeWordKey]) {
 		NekoWakeWord *wake = [NekoWakeWord sharedWakeWord];
 		[line appendString:@"\n\n"];
@@ -1754,6 +1943,13 @@ static const float NekoMaxStopRadius = 200.0f;
 		[line appendString:@" "];
 		[line appendString:NekoLocalized(@"Saying its name works too — which means the microphone stays open, the orange recording light stays on, and the battery notices. The listening is done on this Mac and the audio goes nowhere; it hears one word and forgets the rest.")];
 	}
+	if([[NSUserDefaults standardUserDefaults] boolForKey:NekoWebEnabledKey]) {
+		[line appendString:@"\n\n"];
+		[line appendString:NekoLocalized(@"Asked about today's news or the weather, it can fetch one of a fixed list of feeds: ANSA (the wire, world, technology), la Repubblica, Il Sole 24 Ore (Italy and business), MeteoAlarm's warnings for Italy, Hacker News, BBC News, The Guardian, The New York Times and NPR. The plain forecast comes from open-meteo, because neither 3B Meteo nor meteo.it publishes a feed any more.")];
+		[line appendString:@"\n\n"];
+		[line appendString:NekoLocalized(@"It cannot name an address of its own — only one of those words — so nothing it reads can send it somewhere else. What comes back is quoted to it as somebody else's words, and an answer built on them is not allowed to open, copy or move anything: a headline is written by a stranger. The request carries no question, no account and no cookies; the site sees that a public feed was fetched. With Apple Intelligence or a model on this Mac the headlines stay here; with ChatGPT, Claude or a Shortcut they are sent on like any other question.")];
+	}
+
 	if([[NSUserDefaults standardUserDefaults] boolForKey:NekoActionsEnabledKey]) {
 		[line appendString:@"\n\n"];
 		[line appendString:NekoLocalized(@"It can open an application, an address in a browser, one of your folders in the Finder, run one of your own Shortcuts, and copy or move a single file between your folders. That list is all of it. It always shows what it is about to do and waits for a yes; dismissing the bubble is a no. It never overwrites, never deletes, and never acts on text it read from the screen — only on what you said out loud.")];

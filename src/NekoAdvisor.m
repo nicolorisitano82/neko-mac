@@ -5,6 +5,9 @@
 #import "NekoAnswerProvider.h"
 #import "NekoDesktop.h"
 #import "NekoSense.h"
+#import "NekoBrains.h"
+#import "NekoRate.h"
+#import "NekoMemory.h"
 
 NSString * const NekoSuggestLastKey = @"NekoSuggestLast";
 
@@ -126,6 +129,10 @@ static const NSTimeInterval NekoAdvisorTyping = 3.0;
 	NSTimeInterval idle = [desktop idleSeconds];
 	if(idle > NekoAdvisorAway || idle < NekoAdvisorTyping)
 		return NO;
+
+	/* Never, whatever the clock says. */
+	if([desktop isBusyElsewhere])
+		return NO;
 	if(lastSpoke != nil
 	   && -[lastSpoke timeIntervalSinceNow] < [controller suggestionInterval])
 		return NO;
@@ -134,6 +141,18 @@ static const NSTimeInterval NekoAdvisorTyping = 3.0;
 
 	NSString *app = [desktop frontApp];
 	if([app length] == 0 || [desktop secondsInFront] < NekoAdvisorSettled)
+		return NO;
+
+	/* The interval is a floor, not a trigger. Past it, a remark also needs a
+	   seam in the work to land in and something specific to say — the two
+	   things that separate a colleague from a notification. How wide a seam it
+	   needs comes from how the day is going rather than from the silence alone:
+	   on pace it waits for the end of a long stretch in one application, behind
+	   pace a small gap will do, because by then saying nothing has its own
+	   cost. */
+	if([desktop breakpointNow] < [[NekoRate sharedRate] seamNeeded])
+		return NO;
+	if(![desktop somethingStandsOut])
 		return NO;
 
 	/* Twice the interval before saying anything else about the same
@@ -158,8 +177,11 @@ static const NSTimeInterval NekoAdvisorTyping = 3.0;
 
 - (void)suggestNow:(void (^)(NSString *line, NSError *error))report
 {
-	id<NekoAnswerProvider> provider = [[NekoAsk sharedAsk] provider];
-	if(![provider isConfigured]) {
+	/* Not the engine set for questions: the best one on this Mac. A remark
+	   nobody asked for does not go to a remote service, and a remark written by
+	   a model too small to hold the instructions is not worth the interruption. */
+	id<NekoAnswerProvider> provider = [NekoBrains bestOnDeviceProvider];
+	if(provider == nil || ![provider isConfigured]) {
 		if(report != NULL)
 			report(nil, [NSError errorWithDomain:NekoAskErrorDomain
 			                                code:NekoAskErrorNotConfigured
@@ -170,7 +192,13 @@ static const NSTimeInterval NekoAdvisorTyping = 3.0;
 	NekoCharacter *character = [[NekoController sharedController] character];
 	NSString *instructions = NekoSuggestionInstructionsFor([character persona]);
 	NSString *subject = [[[[NekoDesktop sharedDesktop] frontApp] copy] autorelease];
-	NSString *context = [self context];
+
+	/* What is going on, plus what the cat remembers. The engine here is always
+	   an on-device one, so the diary is not going anywhere. */
+	NSString *memory = [[NekoMemory sharedMemory] contextForPrompt];
+	NSString *context = [memory length] > 0
+		? [NSString stringWithFormat:@"%@\n%@", memory, [self context]]
+		: [self context];
 	void (^callerReport)(NSString *, NSError *) =
 		report != NULL ? Block_copy(report) : nil;
 
@@ -201,6 +229,11 @@ static const NSTimeInterval NekoAdvisorTyping = 3.0;
 		if([NekoSense isWorthSaying:line]) {
 			[[NSUserDefaults standardUserDefaults]
 				setObject:line forKey:NekoSuggestLastKey];
+			/* Written down before it is said, so that a remark and what
+			   prompted it end up next to each other in the diary. */
+			NekoMemory *memory = [NekoMemory sharedMemory];
+			[memory noteNoticed:[[NekoDesktop sharedDesktop] highlight]];
+			[memory noteSaid:line];
 			[[NekoAsk sharedAsk] sayUnprompted:line];
 		}
 

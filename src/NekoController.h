@@ -45,7 +45,9 @@ extern NSString * const NekoSettingsDidChangeNotification;
 	NSTextField *askShortcutField;
 	NSSecureTextField *askKeyField;
 	NSButton *askSpeakCheck;
+	NSButton *followUpCheck;
 	NSButton *actionsCheck;
+	NSButton *webCheck;
 	NSButton *wakeCheck;
 	NSButton *foldersButton;
 	NSButton *forgetFoldersButton;
@@ -70,6 +72,7 @@ extern NSString * const NekoSettingsDidChangeNotification;
 	NSTextField *drawStatusField;
 	NSPopUpButton *suggestEveryPopUp;
 	NSTextField *suggestStatusField;
+	NSTextField *memoryField;
 	NSButton *suggestNowButton;
 }
 

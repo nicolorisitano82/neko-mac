@@ -11,6 +11,10 @@
 @interface NekoBubble : NSPanel
 {
 	NSTextField *label;
+	NSTextField *hintLabel;      /* the small line under the words */
+	NSString *hint;
+	NSString *lastText;          /* so a hint can redraw what is already up */
+	NSRect lastCat;
 	NSImageView *picture;
 	NSButton *saveButton;        /* over a drawing, while the pointer is inside */
 	NSTrackingArea *hover;
@@ -41,6 +45,18 @@
 - (void)askText:(NSString *)text
        nearRect:(NSRect)catFrame
         decided:(void (^)(BOOL yes))block;
+
+/* A small dim line under the words, for saying what the app is doing rather
+   than what the cat is saying: "listening" while the microphone is open. Set it
+   before showing something; it lasts until it is set to nil. */
+- (void)setHint:(NSString *)line;
+- (NSString *)hint;
+
+/* How long is left before it goes away on its own, and a way to give it longer.
+   Used when the microphone stays open after the words: the sign that says so
+   has to be on screen for as long as the microphone is. */
+- (NSTimeInterval)secondsLeft;
+- (void)keepUpFor:(NSTimeInterval)seconds;
 
 - (void)hide;
 - (BOOL)isShowing;

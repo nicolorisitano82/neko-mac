@@ -23,6 +23,7 @@ NSString * const NekoAskLocalModelKey = @"NekoAskLocalModel";
 
 - (void)dealloc
 {
+	[preferred release];
 	if(loader != NULL)
 		dispatch_release(loader);
 	[engine cancel];
@@ -35,9 +36,25 @@ NSString * const NekoAskLocalModelKey = @"NekoAskLocalModel";
 	return NSLocalizedString(@"A model on this Mac", nil);
 }
 
+- (void)setPreferredModel:(NSString *)identifier
+{
+	if(preferred == identifier)
+		return;
+	/* Changing model means the loaded one is the wrong one. */
+	if(![preferred isEqualToString:identifier]) {
+		[engine cancel];
+		[(id)engine release];
+		engine = nil;
+	}
+	[preferred release];
+	preferred = [identifier copy];
+}
+
 - (NSString *)modelIdentifier
 {
 	NSArray *installed = [[NekoModelStore sharedStore] installedIdentifiers];
+	if([preferred length] > 0 && [installed containsObject:preferred])
+		return preferred;
 	NSString *chosen = [[NSUserDefaults standardUserDefaults]
 		stringForKey:NekoAskLocalModelKey];
 

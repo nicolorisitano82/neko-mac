@@ -10,6 +10,11 @@
    asked for. None of that is worth showing, and a cat that says nothing is
    better than a cat that says "Codice, codice, codice, codice."
 
+   It judges what the cat says on its own, where saying nothing is a perfectly
+   good outcome. An answer to a question asked out loud does not come through
+   here: dropping that would leave somebody who asked something staring at a
+   cat, which is worse than a clumsy sentence.
+
    Everything here is a rejection, never a repair: a line is shown as written or
    not at all. */
 @interface NekoSense : NSObject
@@ -19,5 +24,9 @@
 
 /* Why it was thrown away, for the preferences and the logs. nil when it passes. */
 + (NSString *)problemWith:(NSString *)line;
+
+/* The first word in the line that the system dictionary does not know, or nil.
+   Names, versions and file names are left alone. */
++ (NSString *)unknownWordIn:(NSString *)line;
 
 @end
