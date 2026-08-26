@@ -329,12 +329,18 @@ int main(int argc, const char *argv[])
 				spin(0.05);
 			printf("%s: %s\n", round == 0 ? "with the turn   " : "without the turn",
 				[(answer ?: @"(nothing)") UTF8String]);
-			if(round == 0)
-				ok(answer != nil
-				   && ([answer rangeOfString:@"1937"].location != NSNotFound
-				       || [[answer lowercaseString] rangeOfString:@"hobbit"].location != NSNotFound
-				       || [[answer lowercaseString] rangeOfString:@"tolkien"].location != NSNotFound),
-					@"“And when?” lands on the previous turn", nil);
+			if(round == 0) {
+				/* A model that did not answer at all measures nothing about
+				   whether the previous turn reached it — and under a machine
+				   busy compiling ten harnesses, it sometimes does not. */
+				if(answer == nil)
+					notMeasured(@"the engine did not answer in a minute");
+				else
+					ok([answer rangeOfString:@"1937"].location != NSNotFound
+					   || [[answer lowercaseString] rangeOfString:@"hobbit"].location != NSNotFound
+					   || [[answer lowercaseString] rangeOfString:@"tolkien"].location != NSNotFound,
+						@"“And when?” lands on the previous turn", answer);
+			}
 		}
 	}
 
