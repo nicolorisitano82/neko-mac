@@ -165,6 +165,43 @@ constantly.
 
 **Effort.** A day.
 
+**Done, and the plan did not survive looking at the art.** Before writing any of
+it the sprites were opened and enlarged. Two of the three things this step
+promised turned out to be impossible or already true:
+
+- **Facing without moving cannot be done with these frames.** The eight
+  directional poses are a *gallop* — the cat stretched out mid-stride — because
+  oneko never needed a standing pose that faces sideways. Frozen, one of them
+  reads as a cat stuck, not a cat looking. The only pose that faces the viewer at
+  rest is the sitting one, and the only alert pose is sitting up with its ears
+  twitching. So orientation here can only be said by *moving*: attention is a
+  step, not a stare.
+- **Looking away while thinking is already true.** The thinking pose is the cat
+  scratching its own ear with its eyes shut. That is aversion, arrived at in 1989
+  for other reasons. Nothing to build.
+
+So what was built is `turnToward:` — a step or two toward whatever it is
+attending to, ending sitting up alert — called when a question starts and before
+an unasked remark, with the words waiting for the turn to finish because a bubble
+is placed against the cat's frame and speaking mid-step would leave it behind.
+
+| | measured |
+| --- | --- |
+| direction chosen, over eight staged angles | **8 of 8** correct |
+| distance travelled toward a target 800 points away | **29 points** |
+| something inside the stopping radius | no turn, no pose change |
+
+**The mistake worth recording.** The first version stepped 44 points; the radius
+at which the cat considers itself arrived is 48. It set off and stood still,
+insisting it was on its way — and three of the eight directions passed anyway
+because the vertical reference point was half a sprite out, which made those
+distances just long enough to move. Both are fixed, both are in the test, and the
+step is now derived from the stopping radius rather than from a number that looked
+about right.
+
+**What still needs a week rather than a harness.** Whether any of this raises the
+answered rate. The counter is there; the week is not.
+
 ## 4. Stop short, and come in from the side
 
 **Why fourth.** The curious antics currently cross the screen and sit *on* the
@@ -278,7 +315,7 @@ one afternoon and a day are the whole cost.
 - [x] 0. The reading — [natural.md](natural.md), and this roadmap
 - [x] 1. Acknowledge before answering — measured below
 - [x] 2. Pink noise instead of a flat draw — measured below
-- [ ] 3. Face what it is attending to
+- [x] 3. Face what it is attending to — became *turn* toward it; measured below
 - [ ] 4. Stop short, and come in from the side
 - [ ] 5. A persona that survives thirty turns
 - [ ] 6. Mood from what happened, and no feeling claims

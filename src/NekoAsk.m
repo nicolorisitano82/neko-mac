@@ -316,6 +316,22 @@ static const NSTimeInterval NekoHoldToType = 0.5;
 {
 	if(![self canSpeakUnprompted] || [text length] == 0)
 		return;
+
+	/* Look up before speaking. A remark that arrives while the cat is facing the
+	   other way is a remark from a machine; the turn is what makes it the cat's.
+	   The words wait for it — a bubble is placed against the cat's frame when it
+	   is shown, so speaking mid-step would leave it behind. */
+	unsigned turning = turnedForRemark ? 0 : [[self panel] turnToward:[NSEvent mouseLocation]];
+	if(turning > 0) {
+		turnedForRemark = YES;   /* once, whatever the pointer does next */
+		[pendingRemark release];
+		pendingRemark = [text copy];
+		[NSObject cancelPreviousPerformRequestsWithTarget:self
+		                                        selector:@selector(sayItNow) object:nil];
+		[self performSelector:@selector(sayItNow) withObject:nil
+		           afterDelay:(NSTimeInterval)turning * 0.125 + 0.1];
+		return;
+	}
 	/* The advisor writes its own remarks down before saying them; anything else
 	   that speaks unasked gets recorded here. */
 	/* One clock for everything the cat says without being asked — a suggestion,
@@ -326,6 +342,7 @@ static const NSTimeInterval NekoHoldToType = 0.5;
 	[[NekoRate sharedRate] noteSaid];
 	saidUnasked = YES;
 	beatRan = NO;
+	turnedForRemark = NO;
 	NSTimeInterval showing = [NekoBubble readingTimeFor:text];
 	phase = NekoPhaseAnswering;
 	[[self panel] holdWithState:NekoStateStop];
@@ -336,6 +353,17 @@ static const NSTimeInterval NekoHoldToType = 0.5;
 	   said, which is what a reply to it will be about. */
 	[self rememberQuestion:nil answer:text];
 	[self wantAReply];
+}
+
+/* The other half of -sayUnprompted:, after the cat has turned. */
+- (void)sayItNow
+{
+	NSString *text = [[pendingRemark retain] autorelease];
+	[pendingRemark release];
+	pendingRemark = nil;
+	if([text length] == 0 || ![self canSpeakUnprompted])
+		return;
+	[self sayUnprompted:text];
 }
 
 - (void)showDrawing:(NSImage *)picture near:(id)ignored
@@ -440,6 +468,10 @@ static const NSTimeInterval NekoHoldToType = 0.5;
 {
 	if(listener == nil)
 		listener = [[NekoListener alloc] init];
+
+	/* Turn toward whoever is talking before settling down to listen. Done first
+	   because holding the cat still is what stops it turning at all. */
+	[[self panel] turnToward:[NSEvent mouseLocation]];
 
 	phase = NekoPhaseListening;
 	heardSomething = NO;

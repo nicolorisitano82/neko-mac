@@ -180,7 +180,11 @@ int main(void)
 		unsigned low = 9999, high = 0, distinct = 0;
 		double mean = 0.0;
 		int round;
-		for(round = 0; round < 400; round++) {
+		/* Four thousand, not four hundred: with values this correlated the
+		   effective sample is a fraction of the count, and a mean taken over
+		   four hundred wanders enough to fail a tolerance that is otherwise
+		   perfectly reasonable. Which is the whole point of the stream. */
+		for(round = 0; round < 4000; round++) {
 			/* setStateTo: ignores a repeat, so alternate with something else. */
 			((void (*)(id, SEL, NekoState))objc_msgSend)(panel, @selector(setStateTo:),
 				NekoStateAwake);
@@ -192,11 +196,11 @@ int main(void)
 			if(dwell > high) high = dwell;
 			if(dwell < 64 && seen[dwell] == 0) { seen[dwell] = 1; distinct++; }
 		}
-		mean /= 400.0;
+		mean /= 4000.0;
 		printf("      %-11s base %2u   %u…%u ticks, mean %.2f, %u different\n",
 			chain[c].name, chain[c].base, low, high, mean, distinct);
 		ok(low >= 1 && high <= (unsigned)((double)chain[c].base * 1.4 + 0.5)
-		   && fabs(mean - (double)chain[c].base) < 0.6 && distinct >= 3,
+		   && fabs(mean - (double)chain[c].base) < 0.5 && distinct >= 3,
 			[NSString stringWithFormat:@"%s varies around its old fixed count",
 				chain[c].name], nil);
 	}

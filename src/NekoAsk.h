@@ -40,6 +40,8 @@ extern NSString * const NekoLastUnpromptedKey;
 	BOOL saidUnasked;            /* what is on screen, nobody asked for */
 	BOOL fromTheWeb;             /* this answer was built on somebody else's words */
 	BOOL heardSomething;         /* it has visibly noticed this sentence starting */
+	NSString *pendingRemark;     /* said once the cat has turned to say it */
+	BOOL turnedForRemark;        /* one turn per remark, however far it moved */
 	BOOL beatRan;                /* and something was listening for a reply */
 	NSString *askingAbout;       /* the question now in flight */
 	NSString *lastQuestion;      /* the turn before this one, so "it" resolves */

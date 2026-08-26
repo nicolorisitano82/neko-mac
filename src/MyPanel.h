@@ -53,6 +53,18 @@
    arrive and carry on as normal. Roaming only: the other two behaviours have
    their own ideas about where the cat belongs. */
 - (void)errandTo:(NSPoint)point thenState:(NekoState)state forTicks:(unsigned)ticks;
+
+/* Turns toward something and takes a step or two, ending sitting up alert.
+
+   Orientation is the cheapest attention signal a character has, and in this
+   sprite set it can only be said by moving: the eight directional poses are a
+   gallop, and one frozen mid-stride reads as a cat stuck rather than a cat
+   looking. So attention is a step, not a stare.
+
+   Returns how many ticks it will take, or 0 when it is close enough already and
+   nothing needs to happen. Unlike an errand this ignores whether the cat is
+   busy speaking: whoever calls it is the reason it is about to speak. */
+- (unsigned)turnToward:(NSPoint)point;
 - (BOOL)isOnErrand;
 - (BOOL)isRoaming;
 

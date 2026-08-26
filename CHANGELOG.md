@@ -43,6 +43,27 @@ flat draw's. Each idle pose keeps its old average and loses its old count —
 sitting 2 to 6 ticks against a fixed 4, playing 6 to 13 against 10 — and
 scratching now comes in bursts about one time in six, because blinking does.
 
+### It turns toward you before it says anything
+
+Attention, in a character, is mostly orientation — and this one had none: the
+sprite faced wherever it last walked. So it now takes a step toward whoever it is
+about to talk to, and sits up alert when it arrives: when a question starts, and
+before a remark nobody asked for. The words wait for the turn, because a speech
+bubble is placed against the cat and one placed mid-step would be left behind.
+
+Two things the plan promised turned out not to be buildable, and the sprites said
+so before any code was written. Facing without moving is impossible with these
+frames: the eight directional poses are a gallop, and a frozen one reads as a cat
+stuck rather than a cat looking. And looking away while thinking is already true —
+the thinking pose is the cat scratching its ear with its eyes shut, which has been
+aversion since 1989 for entirely different reasons.
+
+Measured: the right direction in 8 of 8 staged angles, 29 points travelled toward
+something 800 points away, and no fussing at all for anything already close. The
+first version of it stepped 44 points when the radius at which the cat considers
+itself arrived is 48, so it set off and stood still; the step is derived from that
+radius now.
+
 ### The location button did nothing
 
 Reported from real use: the row said “not asked yet” however often it was

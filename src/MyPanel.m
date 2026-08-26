@@ -360,6 +360,59 @@ static const unsigned NekoRoamNap = 240;         /* half a minute asleep */
 
 #pragma mark Errands
 
+/* Anything nearer than the stopping radius plus this is already close enough
+   that turning would be fussing — and anything nearer than the radius itself
+   cannot be walked to at all, since arriving is defined as being that close.
+   That is the mistake this constant exists to record: the first version stepped
+   44 points, the radius is 48, and the cat stood still while insisting it had
+   set off. */
+static const float NekoTurnSlack = 40.0f;
+static const float NekoTurnStep = 30.0f;
+
+- (unsigned)turnToward:(NSPoint)point
+{
+	if(!roamMode || held)
+		return 0;
+
+	/* The same reference point the chasing code uses: the middle of the sprite
+	   horizontally, its feet vertically. Measuring from anywhere else makes the
+	   distances disagree by half a cat. */
+	NSRect frame = [self frame];
+	NSPoint here = NSMakePoint(NSMidX(frame), NSMinY(frame));
+	float dx = point.x - here.x, dy = point.y - here.y;
+	float distance = sqrtf(dx * dx + dy * dy);
+	if(distance < stopRadius + NekoTurnSlack)
+		return 0;               /* it is already looking at the right corner */
+
+	/* A step toward it, not a journey to it. It stops a radius short of
+	   whatever it walks at, so the target has to be that much further out than
+	   the distance actually travelled. */
+	float reach = MIN(stopRadius + NekoTurnStep, distance - stopRadius / 2.0f);
+	if(reach <= stopRadius + 4.0f)
+		return 0;
+	NSPoint target = NSMakePoint(here.x + dx / distance * reach,
+	                             here.y + dy / distance * reach);
+
+	wanderTarget = target;
+	wanderMouse = [NSEvent mouseLocation];
+	wandering = YES;
+	errandPhase = 1;
+	errandState = NekoStateAwake;
+	errandHold = 4;
+	errandTicks = 0;
+	restedTicks = 0;
+	if(![self isWalking])
+		[self setStateTo:NekoStateAwake];
+	[self startTimer];
+
+	/* Ticks for the part it actually walks — the target less the radius it stops
+	   short by — plus the pose at the end, plus the few ticks the chain spends
+	   sitting up before it sets off. */
+	float travel = MAX(reach - stopRadius, 4.0f);
+	unsigned walking = (unsigned)(travel / MAX(speed, 1.0f)) + 1;
+	return walking + errandHold + 4;
+}
+
 - (void)errandTo:(NSPoint)point thenState:(NekoState)state forTicks:(unsigned)ticks
 {
 	if(!roamMode || held || [self isSpeaking])

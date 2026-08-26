@@ -29,6 +29,7 @@ again afterwards.
 | `place.m` | the order the two location questions have to be asked in |
 | `hear.m` | that the cat reacts to a sentence starting, not to it ending |
 | `noise.m` | that its timing drifts rather than scattering — spectrum, memory, spread |
+| `turn.m` | that it steps toward what it is attending to, and only a step |
 
 ## Two things about writing more of these
 

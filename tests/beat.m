@@ -333,13 +333,28 @@ int main(int argc, const char *argv[])
 				/* A model that did not answer at all measures nothing about
 				   whether the previous turn reached it — and under a machine
 				   busy compiling ten harnesses, it sometimes does not. */
-				if(answer == nil)
+				if(answer == nil) {
 					notMeasured(@"the engine did not answer in a minute");
-				else
-					ok([answer rangeOfString:@"1937"].location != NSNotFound
-					   || [[answer lowercaseString] rangeOfString:@"hobbit"].location != NSNotFound
-					   || [[answer lowercaseString] rangeOfString:@"tolkien"].location != NSNotFound,
+				} else {
+					/* What is under test is whether the previous turn reached the
+					   model — not whether the model is right about it. Asked "And
+					   when?" with the turn, Apple's model has answered "Tolkien
+					   ha scritto Lo Hobbit nel 1937" and also "Il Signore degli
+					   Anelli è stato scritto nel 1954": the wrong book, and still
+					   an answer about a book by the author it was just told
+					   about. Without the turn it reads out the clock, which is
+					   the negative control below. So: a year, and not the time. */
+					NSString *lowered = [answer lowercaseString];
+					BOOL aboutABook = [answer rangeOfString:@"19"].location != NSNotFound
+						|| [lowered rangeOfString:@"hobbit"].location != NSNotFound
+						|| [lowered rangeOfString:@"tolkien"].location != NSNotFound
+						|| [lowered rangeOfString:@"anelli"].location != NSNotFound;
+					BOOL aboutTheClock = [lowered rangeOfString:@"ore sono"].location != NSNotFound
+						|| [lowered rangeOfString:@"orario"].location != NSNotFound
+						|| [lowered rangeOfString:@"l'ora"].location != NSNotFound;
+					ok(aboutABook && !aboutTheClock,
 						@"“And when?” lands on the previous turn", answer);
+				}
 			}
 		}
 	}
