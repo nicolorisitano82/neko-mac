@@ -231,13 +231,18 @@ int main(void)
 		if([got count] > 0)
 			printf("          %s\n", [[got objectAtIndex:0] UTF8String]);
 	}
-	if(reached == 0)
+	if(reached == 0) {
 		notMeasured(@"no feed answered: there is probably no network here");
-	else
-		ok(reached == tried,
-			@"every source on the list answers",
+	} else {
+		/* Not all of them, every time: one publisher having a bad minute is not
+		   this app being broken, and a suite that fails on somebody else's
+		   server teaches people to ignore it. Two silent at once is a list that
+		   needs looking at. */
+		ok(reached + 1 >= tried,
+			@"the sources on the list answer",
 			[NSString stringWithFormat:@"%lu of %lu", (unsigned long)reached,
 				(unsigned long)tried]);
+	}
 
 	printf("\n--- and the weather ---\n");
 

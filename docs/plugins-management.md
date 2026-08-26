@@ -167,7 +167,32 @@ The paragraph at the bottom is not decoration. It is the sentence somebody needs
 when they are deciding whether to trust a folder they downloaded, and it belongs
 where they are deciding.
 
-## 8. What to build first
+## 8. What is built so far
+
+The first slice, on the `2.5` branch:
+
+- **`NekoPlugin`** — reads a manifest and refuses in sentences: no readable
+  `plugin.plist`, an identifier that is not of the form `com.example.thing`, no
+  name, no interface version, an interface from the future, a Neko version from
+  the future, one of the app's own markers in its summary, feeds without asking
+  for the network, an address that is not `https`, a feed word with a space in it,
+  and — refused rather than ignored — extending something this version does not
+  offer. A refused plugin still appears in the list with the reason.
+- **`NekoPlugins`** — the folder inside the container, the enabled list, copying
+  one in, removing it. Arriving is not the same as being on.
+- **`NekoPluginsPanel`** — its own window, opened from the menu, with the
+  paragraph about what none of them can reach at the bottom of it.
+- **Feeds**, wired into the router that answers "che notizie ci sono", consulted
+  only after every built-in source so a plugin can never shadow a word the app
+  already has. The example plugin in `examples/` names one feed `wired` on
+  purpose, to make that visible.
+
+Twenty-six checks in `tests/plugin.m`, the whole path included: it arrives
+switched off, its feed is unreachable, switching it on makes the feed answer to
+its word, switching it off removes it again, and removing the plugin leaves
+nothing.
+
+## 9. What to build next
 
 Four steps, each shippable alone, in the order that keeps the app defensible at
 every point:
@@ -189,7 +214,7 @@ Steps 1 to 3 are perhaps a week between them. Step 4 is a week on its own, mostl
 in the failure paths, and it should not be started until something exists that
 step 3 cannot do.
 
-## 9. What this design refuses to do, and why
+## 10. What this design refuses to do, and why
 
 - **No in-process loading.** Section 0 of [plugins.md](plugins.md).
 - **No plugin store.** An app that downloads code is a different app with a

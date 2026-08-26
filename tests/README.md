@@ -34,6 +34,7 @@ again afterwards.
 | `persona.m` | that the character survives the longest prompt the app can build |
 | `mood.m` | the slow layer under the mood, and the feelings it may not claim |
 | `distil.m` | that a month-old memory is summarised rather than dropped |
+| `plugin.m` | what a plugin may be, what it is refused for, and the whole install path |
 | `tempo.m` | how long a short answer waits, and everything exempt from waiting |
 
 ## Two things about writing more of these

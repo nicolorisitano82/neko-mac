@@ -114,11 +114,16 @@ int main(void)
 	NSPoint far = NSMakePoint(1400.0f, 416.0f);
 	unsigned ticks = [panel turnToward:far];
 	onlyStagedTicks(panel);
+	/* Until the errand is over, and no further: what is being measured is the
+	   step it takes toward something, not where it happens to be forty ticks
+	   later. Ticking past the arrival let the roaming chain start its next
+	   wander, and one full-suite run measured the cat four points *behind* where
+	   it started. */
 	int step;
-	for(step = 0; step < 40; step++)
+	for(step = 0; step < 60 && [panel isOnErrand]; step++)
 		[panel handleTimer:nil];
 	float travelled = NSMinX([panel frame]) - 600.0f;
-	printf("      target was 800 points away, it moved %.0f in 40 ticks\n", travelled);
+	printf("      target was 800 points away, it moved %.0f before it stopped\n", travelled);
 	ok(travelled > 8.0f && travelled < 90.0f,
 		@"it takes a step toward it and stops",
 		[NSString stringWithFormat:@"%.0f points", travelled]);
