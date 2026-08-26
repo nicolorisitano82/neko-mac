@@ -30,6 +30,12 @@ NSString * const NekoPlaceDidChangeNotification = @"NekoPlaceDidChange";
 	return [CLLocationManager locationServicesEnabled];
 }
 
+/* What the system last told us, which is not the same as what a manager says the
+   moment it is made: a fresh CLLocationManager answers "not determined" until the
+   answer arrives on the delegate, and the Permissions row is drawn before that.
+   Kept in the defaults so the row is right immediately after a relaunch too. */
+static NSString * const NekoPlaceStatusKey = @"NekoPlaceStatus";
+
 + (NSInteger)authorizationStatus
 {
 	if(NSClassFromString(@"CLLocationManager") == Nil)
@@ -39,6 +45,12 @@ NSString * const NekoPlaceDidChangeNotification = @"NekoPlaceDidChange";
 		status = [(CLLocationManager *)[[self sharedPlace] manager] authorizationStatus];
 	else
 		status = [CLLocationManager authorizationStatus];
+	if(status == kCLAuthorizationStatusNotDetermined) {
+		NSInteger remembered = [[NSUserDefaults standardUserDefaults]
+			integerForKey:NekoPlaceStatusKey];
+		if(remembered > 0)
+			return remembered;
+	}
 	switch(status) {
 		case kCLAuthorizationStatusNotDetermined: return 0;
 		case kCLAuthorizationStatusDenied:        return 1;
@@ -111,6 +123,7 @@ NSString * const NekoPlaceDidChangeNotification = @"NekoPlaceDidChange";
 	[defaults removeObjectForKey:NekoPlaceTownKey];
 	[defaults removeObjectForKey:NekoPlaceRegionKey];
 	[defaults removeObjectForKey:NekoPlaceAskedKey];
+	[defaults removeObjectForKey:NekoPlaceStatusKey];
 }
 
 #pragma mark Finding out
@@ -145,6 +158,12 @@ NSString * const NekoPlaceDidChangeNotification = @"NekoPlaceDidChange";
 	}
 	[[NSNotificationCenter defaultCenter]
 		postNotificationName:NekoPlaceDidChangeNotification object:self];
+}
+
+- (void)lookAgain:(void (^)(NSString *town, NSString *region))done
+{
+	[[NSUserDefaults standardUserDefaults] removeObjectForKey:NekoPlaceAskedKey];
+	[self findOut:done];
 }
 
 - (void)findOut:(void (^)(NSString *town, NSString *region))done
@@ -201,6 +220,15 @@ NSString * const NekoPlaceDidChangeNotification = @"NekoPlaceDidChange";
    the app was running. Either way this is the moment the answer exists. */
 - (void)authorizationChanged
 {
+	if(@available(macOS 11.0, *)) {
+		CLAuthorizationStatus now = [(CLLocationManager *)[self manager] authorizationStatus];
+		if(now != kCLAuthorizationStatusNotDetermined)
+			[[NSUserDefaults standardUserDefaults]
+				setInteger:(now == kCLAuthorizationStatusAuthorizedAlways
+				            || now == kCLAuthorizationStatusAuthorized) ? 3
+				           : (now == kCLAuthorizationStatusRestricted ? 2 : 1)
+				    forKey:NekoPlaceStatusKey];
+	}
 	[[NSNotificationCenter defaultCenter]
 		postNotificationName:NekoPlaceDidChangeNotification object:self];
 

@@ -10,14 +10,18 @@
 #import <Cocoa/Cocoa.h>
 #import "support.h"
 #import "NekoPlace.h"
+#import <CoreLocation/CoreLocation.h>
 #import "NekoWeb.h"
+#import "NekoPermissions.h"
 
 /* Stands in for CLLocationManager and writes down what it is asked to do. */
 @interface Recorder : NSObject
 {
 	NSMutableArray *told;
+	CLAuthorizationStatus status;
 }
 - (NSArray *)told;
+- (void)setStatus:(CLAuthorizationStatus)theStatus;
 @end
 
 @implementation Recorder
@@ -25,6 +29,10 @@
 - (void)dealloc { [told release]; [super dealloc]; }
 - (NSArray *)told { return told; }
 - (void)requestWhenInUseAuthorization { [told addObject:@"permission"]; }
+/* The app asks the manager what the system decided, so the stand-in has to have
+   an answer: the real one is the reason this test aborted the first time. */
+- (CLAuthorizationStatus)authorizationStatus { return status; }
+- (void)setStatus:(CLAuthorizationStatus)theStatus { status = theStatus; }
 - (void)requestLocation { [told addObject:@"position"]; }
 - (void)setDelegate:(id)delegate {}
 - (void)setDesiredAccuracy:(double)accuracy {}
@@ -47,7 +55,20 @@
 	return fake;
 }
 - (NSInteger)permission { return staged; }
-- (void)setPermission:(NSInteger)status { staged = status; }
+- (void)setPermission:(NSInteger)status
+{
+	staged = status;
+	/* CoreLocation's own scale, which is not this app's: 1 is restricted there
+	   and denied here. */
+	CLAuthorizationStatus real = kCLAuthorizationStatusNotDetermined;
+	if(status == 3)
+		real = kCLAuthorizationStatusAuthorizedAlways;
+	else if(status == 1)
+		real = kCLAuthorizationStatusDenied;
+	else if(status == 2)
+		real = kCLAuthorizationStatusRestricted;
+	[(Recorder *)[self manager] setStatus:real];
+}
 - (NSArray *)told { return [(Recorder *)[self manager] told]; }
 @end
 
@@ -90,6 +111,43 @@ int main(void)
 	ok([[place told] count] == 2 && [[[place told] lastObject] isEqualToString:@"position"],
 		@"then, and only then, it asks where it is",
 		[[place told] componentsJoinedByString:@", "]);
+
+	printf("\n--- and a button asks again ---\n");
+
+	/* The defect this exists for: with a town already known and looked up today,
+	   the button returned in six milliseconds having done nothing at all. */
+	[defaults setObject:@"Bovalino" forKey:NekoPlaceTownKey];
+	[defaults setObject:@"Calabria" forKey:NekoPlaceRegionKey];
+	[defaults setObject:[NSDate date] forKey:NekoPlaceAskedKey];
+	StagedPlace *pressed = [[StagedPlace alloc] init];
+	[pressed setPermission:3];
+	__block BOOL answered2 = NO;
+	[pressed findOut:^(NSString *town, NSString *region) { answered2 = YES; }];
+	spin(0.2);
+	ok([[pressed told] count] == 0 && answered2,
+		@"the automatic path leaves a town found today alone", nil);
+	[pressed lookAgain:^(NSString *town, NSString *region) { }];
+	spin(0.2);
+	ok([[pressed told] count] == 1
+	   && [[[pressed told] firstObject] isEqualToString:@"position"],
+		@"and a button asks the system again anyway",
+		[[pressed told] componentsJoinedByString:@", "]);
+
+	printf("\n--- and the row says what is true before the status settles ---\n");
+
+	[defaults setObject:@"Bovalino" forKey:NekoPlaceTownKey];
+	NSEnumerator *rows = [[NekoPermissions all] objectEnumerator];
+	NekoPermission *row;
+	while((row = [rows nextObject]) != nil) {
+		if(![[row identifier] isEqualToString:@"location"])
+			continue;
+		ok([row permissionState] == NekoPermissionGranted,
+			@"a town in hand outranks a status that has not arrived",
+			[NSString stringWithFormat:@"state %ld", (long)[row permissionState]]);
+		ok([[row explanation] rangeOfString:@"Bovalino"].location != NSNotFound,
+			@"and the row names the place, so pressing it shows something",
+			[row explanation]);
+	}
 
 	printf("\n--- refused ---\n");
 

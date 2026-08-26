@@ -57,8 +57,18 @@
 		return NekoPermissionLocalized(@"Window titles, and nothing else. Neko never asks for this one: it is used if you granted it for some other reason, and simply left out if not.");
 	if([identifier isEqualToString:@"folders"])
 		return NekoPermissionLocalized(@"Handed over one folder at a time, in a panel, so the cat can copy or move a file. Nothing is read until you do.");
-	if([identifier isEqualToString:@"location"])
+	if([identifier isEqualToString:@"location"]) {
+		NSString *town = [[NekoPlace sharedPlace] town];
+		NSString *region = [[NekoPlace sharedPlace] region];
+		/* Pressing a button and seeing nothing change is the same as a button
+		   that does nothing, so when there is an answer the row shows it. */
+		if([town length] > 0)
+			return [NSString stringWithFormat:
+				NekoPermissionLocalized(@"It knows it is in %@%@ — the name of the town and of the region, and nothing finer. No coordinates are kept, and it asks macOS again no oftener than once a day."),
+				town, [region length] > 0
+					? [NSString stringWithFormat:@", %@", region] : @""];
 		return NekoPermissionLocalized(@"So that “what is the weather” and “what is happening here” need no city named. It keeps the name of the town and of the region, never the coordinates, and asks macOS for a position no oftener than once a day.");
+	}
 	return @"";
 }
 
@@ -99,6 +109,12 @@
 	if([identifier isEqualToString:@"location"]) {
 		if(![NekoPlace isAvailable])
 			return NekoPermissionUnavailable;
+		/* A town in hand outranks a status that has not settled: a freshly made
+		   CLLocationManager answers "not determined" until the system gets round
+		   to telling it otherwise, which is after this row was drawn. Knowing
+		   where the Mac is means it was allowed. */
+		if([[[NekoPlace sharedPlace] town] length] > 0)
+			return NekoPermissionGranted;
 		switch([NekoPlace authorizationStatus]) {
 			case 3:  return NekoPermissionGranted;
 			case 1:
@@ -169,8 +185,12 @@
 		return;
 	}
 	if([identifier isEqualToString:@"location"]) {
-		/* One position, turned into two words and then forgotten. */
-		[[NekoPlace sharedPlace] findOut:^(NSString *town, NSString *region) { }];
+		/* Pressed by hand, so it looks again whatever it already knows: the
+		   once-a-day rule is there to stop the app pestering the system, not to
+		   stop somebody asking. Before this, pressing the button with a town
+		   already in hand returned in six milliseconds having done nothing at
+		   all — which is exactly what "the button does nothing" was. */
+		[[NekoPlace sharedPlace] lookAgain:^(NSString *town, NSString *region) { }];
 		return;
 	}
 	if([identifier isEqualToString:@"folders"]) {

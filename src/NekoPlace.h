@@ -63,6 +63,10 @@ extern NSString * const NekoPlaceDidChangeNotification;
    it could not or may not. Does nothing more than once a day. */
 - (void)findOut:(void (^)(NSString *town, NSString *region))done;
 
+/* The same, ignoring the once-a-day rule. What a button does: somebody asking is
+   not the app pestering the system. */
+- (void)lookAgain:(void (^)(NSString *town, NSString *region))done;
+
 /* Whether it is worth calling: something to gain and permission to try. */
 - (BOOL)mayLook;
 

@@ -259,6 +259,12 @@ static const float NekoMaxStopRadius = 200.0f;
 	[[NekoAdvisor sharedAdvisor] applySettings];
 	[[NekoAntics sharedAntics] applySettings];
 	[[NekoWakeWord sharedWakeWord] applySettings];
+	/* Touched early on purpose: a CLLocationManager reports the real
+	   authorization on its delegate a moment after it is made, and the
+	   Permissions tab was being drawn before that moment. */
+	if([NekoPlace isAvailable])
+		(void)[NekoPlace sharedPlace];
+
 	/* Once a day, yesterday becomes a few durable lines. Costs nothing on the
 	   days there is nothing to reduce. */
 	[[NekoMemory sharedMemory] reflectIfDue];
