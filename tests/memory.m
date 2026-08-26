@@ -32,6 +32,12 @@ int main(int argc, const char *argv[])
 	NSString *today = [memory contextForPrompt];
 	ok([today rangeOfString:NekoTestMark].location != NSNotFound,
 		@"three kinds of line, and they come back", nil);
+	ok([today rangeOfString:@"Today, most recent last"].location != NSNotFound,
+		@"and today always has room in the block, whatever else is remembered", nil);
+	ok([today rangeOfString:NekoTestMark].location != NSNotFound
+	   && [today length] <= 1000,
+		@"and the newest notes are the ones that survive the budget",
+		[NSString stringWithFormat:@"%lu characters", (unsigned long)[today length]]);
 	ok([today length] <= 1000,
 		@"the block a model is handed is capped",
 		[NSString stringWithFormat:@"%lu characters", (unsigned long)[today length]]);
@@ -103,7 +109,7 @@ int main(int argc, const char *argv[])
 	while((one = [lines nextObject]) != nil)
 		if([one rangeOfString:NekoTestMark].location != NSNotFound)
 			written++;
-	ok(written == 1, @"three identical looks, one line",
+	ok(written == 1, @"three identical looks, one line in today's notes",
 		[NSString stringWithFormat:@"%lu line(s)", (unsigned long)written]);
 
 	printf("\n--- and what it forgets ---\n");

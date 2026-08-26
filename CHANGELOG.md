@@ -157,6 +157,37 @@ before permission, that the position is asked for the moment permission arrives,
 and that a refusal asks for nothing at all. A test may not ask for a real
 permission — a refusal can only be undone in System Settings.
 
+### After thirty days it summarises instead of forgetting
+
+The daily notes were reduced every night to a few dated lines, and those lines
+were dropped once there were forty of them — silently, oldest first. That is the
+one kind of forgetting nobody asked for.
+
+There is a third tier now. When a dated line turns thirty days old it goes through
+a second pass with everything else that is expiring, and what survives becomes a
+*standing* line with no date on it. The nightly pass asks what will still be true
+on Monday; this one asks what will still be true in six months, which is a
+different question: "the release notes are due Friday" passes the first and fails
+the second, and what a month of those should leave behind is "ships on Fridays".
+
+Measured on a staged month — ten dated lines, half of them noise — it produced
+five standing lines in 2.2 seconds: ships Fridays, writes the changelog after the
+build passes, asks not to be interrupted during a build. "Xcode was open for forty
+minutes on Tuesday" and "switched programs fourteen times" did not survive, which
+is the whole point. The first attempt kept them and repeated itself twice over, so
+the prompt names them as the lines to drop and near-duplicates are merged in code
+as well.
+
+**Nothing is deleted for age without having been read.** With no on-device engine
+there is no summary, and so there is no deletion either: the lines wait. Only a
+ceiling far above the working set — three times it — ever drops one unread.
+
+Two things this found in passing. Adding a tier pushed today's notes out of the
+block a model is given, so each tier has its own share of the budget now. And when
+there is not room for all of today, the lines kept are the newest rather than the
+oldest — the opposite of what the code did, and the newest are exactly the ones a
+follow-up is about.
+
 ## 2.1 “truelife” — 2026-08-26
 
 The codename is the branch this was written on, and the question it was written

@@ -10,11 +10,23 @@
    see exactly what is there, and you can delete it with the Finder if you do not
    trust the button.
 
-   Once a day the previous day is reduced to at most a handful of durable lines —
-   "works late on Tuesdays", "the deadline is Friday" — and the daily files are
-   kept for thirty days and then removed. That is the shape the memory literature
-   converged on: a small working set, a consolidated store, and explicit
-   forgetting rather than an unbounded diary.
+   Three tiers, each one shorter-lived and larger than the next. Once a day the
+   previous day is reduced to at most a handful of dated lines — "works late on
+   Tuesdays", "the deadline is Friday" — and the daily files are kept for thirty
+   days and then removed, since by then they have been read. When a dated line
+   itself turns thirty days old it is not thrown away either: it goes through a
+   second pass with everything else that is expiring, and what survives becomes a
+   *standing* line, undated, of which there are never more than a dozen. "Ships on
+   Fridays." "Would rather be told than asked."
+
+   That is the shape the memory literature converged on — a small working set, a
+   consolidated store, reflection over the reflections — and the reason for the
+   second pass is that the alternative is what this used to do: silently drop the
+   oldest line once there were forty of them.
+
+   Nothing is deleted for age without having been read first. If there is no
+   engine to read with, the lines wait rather than going: only a hard ceiling, far
+   above the usual, ever drops one unread.
 
    Two rules hold without exception. The reflection is written by whatever
    NekoBrains says is the best engine on this Mac, which is never a remote one.
@@ -25,6 +37,7 @@
 {
 	NSDate *reflectedAt;
 	BOOL reflecting;
+	BOOL distilling;
 }
 
 + (NekoMemory *)sharedMemory;
@@ -49,7 +62,14 @@
    engine. Returns immediately; the work happens on a queue. */
 - (void)reflectIfDue;
 
+/* The month-scale pass: dated lines that have aged out, plus the standing ones,
+   reduced to what would still be worth knowing in six months. Does nothing when
+   nothing has aged out, and — deliberately — nothing at all when there is no
+   on-device engine, so that age alone never deletes anything unread. */
+- (void)distilIfDue;
+
 - (NSArray *)durableLines;
+- (NSArray *)standingLines;
 
 /* Housekeeping, all of it available from the preferences. */
 - (NSUInteger)dayCount;

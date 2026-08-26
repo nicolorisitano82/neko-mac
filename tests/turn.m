@@ -13,11 +13,27 @@
 #import "support.h"
 #import "MyPanel.h"
 #import "NekoController.h"
+#import <objc/runtime.h>
 
 @interface MyPanel (Testing)
 - (void)handleTimer:(NSTimer *)timer;
 - (void)setStateTo:(NekoState)state;
 @end
+
+/* The panel runs a timer of its own at eight frames a second, and a real tick
+   arriving between two staged ones is enough to change what this measures. So
+   the timer is put out before each measurement and only the staged ticks move
+   the cat. Found the honest way: the test passed alone and failed inside the
+   full suite, where everything is slower and more ticks land. */
+static void onlyStagedTicks(MyPanel *panel)
+{
+	Ivar found = class_getInstanceVariable([MyPanel class], "myTimer");
+	if(found == NULL)
+		return;
+	NSTimer *ticking = (NSTimer *)object_getIvar(panel, found);
+	[ticking invalidate];
+	object_setIvar(panel, found, nil);
+}
 
 static NSString *nameOf(NekoState state)
 {
@@ -72,6 +88,7 @@ int main(void)
 		[panel setStateTo:NekoStateStop];
 		NSPoint at = NSMakePoint(616.0f + angles[i].dx, 416.0f + angles[i].dy);
 		unsigned ticks = [panel turnToward:at];
+		onlyStagedTicks(panel);
 		/* The chain holds the alert pose for a few ticks before it sets off, so
 		   the direction is visible a moment later, not immediately. */
 		int t;
@@ -96,6 +113,7 @@ int main(void)
 	[panel setStateTo:NekoStateStop];
 	NSPoint far = NSMakePoint(1400.0f, 416.0f);
 	unsigned ticks = [panel turnToward:far];
+	onlyStagedTicks(panel);
 	int step;
 	for(step = 0; step < 40; step++)
 		[panel handleTimer:nil];
