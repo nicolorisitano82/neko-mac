@@ -267,8 +267,10 @@ in the project: `FoundationModels` ships no headers, so a Swift shim is the only
 way in. The GGUF engine is `src/NekoLlamaEngine.mm`, and `build.sh` clones and
 builds llama.cpp once into `~/Library/Caches/neko-llama` before linking it — the
 Xcode project lists the file but does not compile it, since it has no llama
-libraries to link. The Intel half of the universal binary leaves both out: Apple
-Intelligence needs Apple silicon, and so does the Metal build here. [docs/ask-neko.md](docs/ask-neko.md) has the design,
+libraries to link, and both need Apple silicon — which is why this project is
+**arm64 only**. It used to ship a universal binary whose Intel half had neither the
+local model nor Apple's, and a slice that cannot do the things the app is for is
+worse than no slice at all. [docs/ask-neko.md](docs/ask-neko.md) has the design,
 including the part that cannot work: Siri has no public API that hands an answer
 back to another application.
 

@@ -331,12 +331,13 @@ taste:
   Line Tools, nothing to install;
 - `JSONDecoder`/`JSONEncoder` are in Foundation, so the protocol above is a dozen
   lines;
-- one command produces a universal binary with no runtime to bundle;
+- one command produces the binary, with no runtime to bundle;
 - and it is what the app itself uses for its own Swift half.
 
 Any language works — the app only knows stdin, stdout and an exit code. What the
-app requires is a **universal binary or a script with a shebang**, no external
-runtime to install, and an ad-hoc signature.
+app requires is an **arm64 binary or a script with a shebang**, no external
+runtime to install, and an ad-hoc signature. This project is Apple silicon only —
+see the note below — so there is no Intel slice to build and none to test.
 
 ### A complete text filter
 
@@ -398,24 +399,17 @@ swiftc -O -target arm64-apple-macos11.0 filter.swift -o filter
 codesign --sign - --force filter
 ```
 
-**About architectures, measured while writing this guide.** With only the Command
-Line Tools installed, the Intel slice does not build: they ship the Swift
-compatibility libraries for `arm64` alone, and `swiftc -target x86_64…` ends in
-*"ld: warning: ignoring file … fat file missing arch 'x86_64'"* followed by a link
-failure. This is the same wall the app's own Swift half hit, and `build.sh` says so
-in a comment. So:
+**About architectures.** This project is **arm64 only**, deliberately: the local
+model engine is a Metal build, Apple Intelligence needs Apple silicon, and the
+Command Line Tools ship the Swift compatibility libraries for arm64 alone — an
+Intel slice would be an app without a local model, without Apple's model and
+without the Swift file that reaches it. The app used to build a universal binary
+whose Intel half was exactly that, and it does not any more.
 
-- **With the Command Line Tools**: build `arm64`, and say in your `Summary` that
-  it is Apple silicon only.
-- **With full Xcode installed**: build both and join them, which is what the app
-  itself would need to ship a universal helper.
-
-```bash
-swiftc -O -target arm64-apple-macos11.0  filter.swift -o filter-arm64
-swiftc -O -target x86_64-apple-macos11.0 filter.swift -o filter-x86_64
-lipo -create filter-arm64 filter-x86_64 -output filter && rm filter-arm64 filter-x86_64
-codesign --sign - --force filter
-```
+So: build `arm64`, and do not spend an afternoon on `lipo`. If you try the Intel
+target with only the Command Line Tools installed you will get
+*"ld: warning: ignoring file … fat file missing arch 'x86_64'"* and a link
+failure, which is the same wall the app's own Swift half hit.
 
 A program that cannot run on the Mac it finds itself on is refused with a sentence
 rather than failing at the moment somebody asks a question — see the table in
@@ -469,7 +463,7 @@ Downloads on a click. Your program does not touch the filesystem.
   one.
 - `Summary` says what somebody deciding whether to trust you needs to know — where
   data goes, above all — and contains no marker.
-- If you ship a program: universal, ad-hoc signed, works from `echo … | ./filter`,
+- If you ship a program: arm64, ad-hoc signed, works from `echo … | ./filter`,
   answers inside 8 seconds, never writes a file, and returns an `error` rather
   than nonsense when it cannot do its job.
 - Your README says what the plugin cannot do as well as what it can. The panel
