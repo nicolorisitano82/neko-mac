@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased — 2.5
+## 2.5 — 2026-08-27
 
 ### Plugins
 
