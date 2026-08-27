@@ -350,10 +350,16 @@ happen to them proves nothing about whether it was understood.
 
 ### Two of them ship with the app, as examples
 
-`examples/Spotify.nekoplugin` and `examples/Apple Music.nekoplugin`, six verbs
-each: search and artist through an address, volume up, volume down, pause and skip
-through four Shortcuts you make. Their READMEs say which half is which, and why
-enabling both at once means two cats answering the same sentence.
+`examples/Spotify.nekoplugin` and `examples/Apple Music.nekoplugin` in this
+repository, and inside the app itself — **Plugins… → Examples…** shows them in
+Finder, ready to drag onto **Add…**. Six verbs each: search and artist through an
+address, volume up, volume down, pause and skip through four Shortcuts you make.
+Their READMEs say which half is which, and why enabling both at once means two
+cats answering the same sentence.
+
+They ship switched off and outside the seeded folder, which is the honest place
+for an example: something to read and copy, not something that starts answering
+for you.
 
 ## 5. Getting it wrong: every refusal, and its sentence
 

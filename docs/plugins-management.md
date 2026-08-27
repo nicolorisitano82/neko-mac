@@ -48,7 +48,7 @@ What happens between choosing a folder and having a plugin:
    is executed.
 2. **It is checked against the interface.** `Interface` newer than the app knows
    about, `MinimumApp` above this version, a duplicate identifier, a fragment over
-   budget, a fragment containing a marker, a verb with `Confirms = false`, a route
+   budget, a fragment containing a marker, a verb with no `Confirm` sentence, a route
    in a language the app does not serve: each one refused, each one with the
    sentence that says which.
 3. **It is described back.** Not "com.example.markets wants permissions" — the
@@ -166,7 +166,7 @@ a state word, and two controls.
   1 route, ships a program                                Reveal · Remove
   disabled: the program changed since you enabled it
 
-  [ Add… ]  [ Show the folder ]
+  [ Add… ]  [ Show the folder ]  [ Examples… ]
 
   Plugins live in Neko's own folder in Application Support. Nothing here runs
   inside Neko, and nothing here can see your diary, your screen, your files or
@@ -176,6 +176,19 @@ a state word, and two controls.
 The paragraph at the bottom is not decoration. It is the sentence somebody needs
 when they are deciding whether to trust a folder they downloaded, and it belongs
 where they are deciding.
+
+**Examples…** shows the folders that ship inside the app, selected in Finder, so
+that the next thing to do — drag one onto **Add…** — is in front of somebody
+rather than described to them. They are inside the bundle, which means read-only
+and signed with everything else; they are deliberately *not* in the seeded folder,
+because the two music ones want Shortcuts nobody has yet and enabling both at once
+means two cats answering the same sentence. The button is not drawn at all if no
+examples shipped: a button that reveals an empty folder is worse than no button.
+
+A verb, in the same list, reads *"6 phrases it listens for"*, and the switch is the
+same switch. Verbs additionally do nothing at all while **Actions** is off,
+whatever this window says — that consent already has a home and is not moved
+here.
 
 ## 8. What is built so far
 

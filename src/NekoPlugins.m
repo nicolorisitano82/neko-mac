@@ -49,6 +49,33 @@ static NSString * const NekoPluginsSeededKey = @"NekoPluginsSeeded";
 	return [NSURL fileURLWithPath:path];
 }
 
+/* Read straight out of the bundle. Nothing is copied, nothing is enabled: these
+   are folders somebody may choose to add, in the one place a downloaded app can
+   keep them where they cannot be edited. */
+- (NSURL *)examplesDirectory
+{
+	NSString *path = [[[NSBundle mainBundle] resourcePath]
+		stringByAppendingPathComponent:@"Examples"];
+	if(![[NSFileManager defaultManager] fileExistsAtPath:path])
+		return nil;
+	return [NSURL fileURLWithPath:path];
+}
+
+- (NSArray *)examples
+{
+	NSURL *folder = [self examplesDirectory];
+	if(folder == nil)
+		return [NSArray array];
+	NSMutableArray *found = [NSMutableArray array];
+	NSEnumerator *e = [[[NSFileManager defaultManager]
+		contentsOfDirectoryAtPath:[folder path] error:NULL] objectEnumerator];
+	NSString *name;
+	while((name = [e nextObject]) != nil)
+		if([[name pathExtension] isEqualToString:@"nekoplugin"])
+			[found addObject:[folder URLByAppendingPathComponent:name]];
+	return found;
+}
+
 #pragma mark What is there
 
 - (void)reload

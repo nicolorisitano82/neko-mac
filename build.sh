@@ -33,6 +33,14 @@ if [ -d Plugins ]; then
 	ditto --noextattr --noqtn Plugins "$APP/Contents/Resources/Plugins"
 fi
 
+# The examples. Not in Plugins/, because that folder is seeded into the container
+# and switched on: these two want three Shortcuts each that nobody has yet, and
+# enabling both at once means two cats answering the same sentence. They ship so
+# that somebody who has just read about verbs has something to point Add… at.
+if [ -d examples ]; then
+	ditto --noextattr --noqtn examples "$APP/Contents/Resources/Examples"
+fi
+
 # arm64 only. This project is Apple silicon and says so everywhere: the local
 # model engine is a Metal build, Apple Intelligence needs Apple silicon, and the
 # Command Line Tools ship the Swift compatibility libraries for arm64 alone — so

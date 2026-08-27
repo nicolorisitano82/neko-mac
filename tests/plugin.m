@@ -11,6 +11,7 @@
 #import "support.h"
 #import "NekoPlugin.h"
 #import "NekoPlugins.h"
+#import "NekoPluginsPanel.h"
 #import "NekoWeb.h"
 #import "NekoPluginText.h"
 #import "NekoCharacter.h"
@@ -426,6 +427,33 @@ int main(void)
 	ok([[[NekoWeb sourceNamed:@"wired"] name] isEqualToString:@"Wired Italia"],
 		@"the built-in word wins, whatever a plugin calls itself",
 		[[NekoWeb sourceNamed:@"wired"] name]);
+
+	printf("\n--- the three buttons in the window ---\n");
+
+	/* Measured rather than assumed, because the Add… button shipped in 2.5
+	   looking correct from the code and doing nothing anybody could see. */
+	NekoPluginsPanel *panel = [NekoPluginsPanel sharedPanel];
+	NSMutableDictionary *buttons = [NSMutableDictionary dictionary];
+	NSEnumerator *views = [[[[panel window] contentView] subviews] objectEnumerator];
+	NSView *view;
+	while((view = [views nextObject]) != nil)
+		if([view isKindOfClass:[NSButton class]])
+			[buttons setObject:view forKey:[(NSButton *)view title]];
+	ok([buttons count] == 3, @"three of them, and no more",
+		[[buttons allKeys] componentsJoinedByString:@", "]);
+	NSEnumerator *titles = [buttons keyEnumerator];
+	NSString *title;
+	BOOL wired = YES;
+	while((title = [titles nextObject]) != nil) {
+		NSButton *button = [buttons objectForKey:title];
+		if([button target] == nil || [button action] == NULL
+		   || ![[button target] respondsToSelector:[button action]])
+			wired = NO;
+	}
+	ok(wired, @"each with a target that answers to its action", nil);
+	ok([buttons objectForKey:NSLocalizedString(@"Examples…", nil)] != nil,
+		@"the examples one is there, because examples shipped",
+		[[buttons allKeys] componentsJoinedByString:@", "]);
 
 	int result = NekoTestResult();
 	[pool release];

@@ -33,10 +33,26 @@ checked twice — once when the manifest is read, once at the moment of doing:
 - **A switch turned off between the question and the yes counts.** Enablement is
   re-checked when the verb runs, not when it matched.
 
-The two examples are in `examples/`, one for Spotify and one for Apple Music, each
-with a README explaining which half of it is an address and which half needs a
-Shortcut you make yourself — and that enabling both at once means two cats
-answering the same sentence.
+### The examples ship inside the app
+
+Two of them, one for Spotify and one for Apple Music, six verbs each, with READMEs
+explaining which half is an address and which half needs a Shortcut you make
+yourself — and that enabling both at once means two cats answering the same
+sentence.
+
+They are in the app bundle rather than in the seeded folder, and the plugins
+window has a third button, **Examples…**, which shows them in Finder ready to drag
+onto **Add…**. Not seeded, because seeding switches a plugin on and these two want
+Shortcuts nobody has yet. The button is not drawn at all if no examples shipped.
+
+### Also
+
+- The plugins window's three buttons are measured now — that each has a target
+  which answers to its action — which is the check that would have caught 2.5's
+  invisible Add panel.
+- `tests/verb.m`, 41 checks. `tests/plugin.m` used `Verbs` as its example of an
+  extension point that does not exist; it is `Routes` now, which is the next thing
+  that will have to change.
 
 ## 2.5.1 — 2026-08-27
 

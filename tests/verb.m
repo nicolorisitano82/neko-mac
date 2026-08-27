@@ -20,6 +20,12 @@
 #import "NekoBubble.h"
 #import <objc/runtime.h>
 
+/* Private, and used here the way tests/screen.m uses it: between two staged
+   questions, so the second one does not arrive on top of the first. */
+@interface NekoAsk (TestOnly)
+- (void)cancelEverything;
+@end
+
 static NSURL *stage(NSString *name, NSDictionary *manifest)
 {
 	NSString *path = [NSTemporaryDirectory() stringByAppendingPathComponent:
@@ -229,21 +235,28 @@ int main(void)
 		[registry remove:installed];
 	}
 
-	printf("\n--- the two examples that ship with the app ---\n");
+	printf("\n--- the examples that ship inside the app ---\n");
 
-	NSArray *examples = [NSArray arrayWithObjects:
-		@"examples/Spotify.nekoplugin", @"examples/Apple Music.nekoplugin", nil];
+	/* Read out of the bundle rather than out of the source folder: what matters
+	   is that somebody who downloaded the disk image has something to point Add…
+	   at, and that it is not switched on behind their back. */
+	NSArray *examples = [[NekoPlugins sharedPlugins] examples];
+	ok([examples count] >= 2, @"they are in the bundle, where Add… can reach them",
+		[NSString stringWithFormat:@"%lu", (unsigned long)[examples count]]);
 	NSEnumerator *e = [examples objectEnumerator];
-	NSString *path;
-	while((path = [e nextObject]) != nil) {
-		if(![[NSFileManager defaultManager] fileExistsAtPath:path]) {
-			notMeasured([NSString stringWithFormat:@"%@ is not beside this test", path]);
-			continue;
-		}
-		NekoPlugin *example = [[[NekoPlugin alloc] initWithFolder:
-			[NSURL fileURLWithPath:path]] autorelease];
+	NSURL *folder;
+	int withVerbs = 0;
+	while((folder = [e nextObject]) != nil) {
+		NSString *path = [folder path];
+		NekoPlugin *example = [[[NekoPlugin alloc] initWithFolder:folder] autorelease];
 		ok([example isUsable], [NSString stringWithFormat:@"%@ reads",
 			[path lastPathComponent]], [example refusal]);
+		NekoPlugin *sameOne = [registry pluginWithIdentifier:[example identifier]];
+		ok(sameOne == nil || ![registry isEnabled:sameOne],
+			@"and was not installed and switched on for somebody", nil);
+		if([[example verbs] count] == 0)
+			continue;
+		withVerbs++;
 		ok([[example verbs] count] == 6, @"with its six phrases",
 			[example describeWhatItAdds]);
 		/* Every one of them read back, and none of them a marker. */
@@ -257,6 +270,8 @@ int main(void)
 		}
 		ok(allSafe, @"and every one of them says what it is about to do", nil);
 	}
+	ok(withVerbs == 2, @"and two of them are the music ones",
+		[NSString stringWithFormat:@"%d", withVerbs]);
 
 	int result = NekoTestResult();
 	[pool release];
