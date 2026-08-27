@@ -189,10 +189,20 @@ The first slice, on the `2.5` branch:
   one in, removing it. Arriving is not the same as being on.
 - **`NekoPluginsPanel`** — its own window, opened from the menu, with the
   paragraph about what none of them can reach at the bottom of it.
-- **Feeds**, wired into the router that answers "che notizie ci sono", consulted
-  only after every built-in source so a plugin can never shadow a word the app
-  already has. The example plugin in `examples/` names one feed `wired` on
-  purpose, to make that visible.
+- **Feeds**, wired into the router that answers "che notizie ci sono". The app's
+  own two dozen sources moved out of `NekoWeb.m` and into a plugin that ships
+  inside the bundle, which is the honest test of the interface: if they could not
+  be expressed as a plugin, it was not an interface yet. It is copied into the
+  container at launch and switched on the first time it arrives — the one
+  exception to *arriving is not the same as being on*, because a plugin shipped by
+  the app is not a folder somebody downloaded, and the news would otherwise have
+  stopped working on the day it moved. Switched off by hand, it stays off through
+  every later launch and update.
+- **Text in and out**, by running one of the user's own Shortcuts: the plugin
+  names a Shortcut and never a program. What comes back may change words and
+  nothing else — a marker anywhere in it and the whole transformation is thrown
+  away — it never blocks the conversation, it sees the words and nothing around
+  them, and the diary keeps what was actually said rather than the rewording.
 
 Twenty-six checks in `tests/plugin.m`, the whole path included: it arrives
 switched off, its feed is unreachable, switching it on makes the feed answer to
@@ -200,6 +210,15 @@ its word, switching it off removes it again, and removing the plugin leaves
 nothing.
 
 ## 9. What to build next
+
+**Pictures out.** Same shape as text: a plugin names a Shortcut, is handed a
+description, and hands back an image — which the app shows with the same Save
+button it already has, and which the plugin may never write to disk itself. It is
+the next slice rather than this one because an image has two more things to settle
+that text does not: what happens when it comes back enormous, and whether it
+replaces the local painter or sits beside it.
+
+**Then verbs and routes**, which is where the interface stops being about data.
 
 Four steps, each shippable alone, in the order that keeps the app defensible at
 every point:

@@ -136,7 +136,7 @@ static NSString * const NekoPluginMarkers[] = { @"ACTION:", @"IMAGE:", @"LOOK:",
 		return;
 	}
 
-	NSArray *known = [NSArray arrayWithObjects:@"Feeds", nil];
+	NSArray *known = [NSArray arrayWithObjects:@"Feeds", @"Text", nil];
 	NSEnumerator *e = [extends keyEnumerator];
 	NSString *key;
 	while((key = [e nextObject]) != nil)
@@ -147,6 +147,41 @@ static NSString * const NekoPluginMarkers[] = { @"ACTION:", @"IMAGE:", @"LOOK:",
 		}
 
 	[self checkFeeds:[extends objectForKey:@"Feeds"]];
+	[self checkText:[extends objectForKey:@"Text"]];
+}
+
+/* Text processing: the plugin is handed what somebody said, or what the cat is
+   about to say, and hands something back.
+
+   It is done by running one of the user's own Shortcuts, which is the whole of
+   why it is allowed at all: the Shortcut is theirs, they wrote it or installed
+   it, and nothing new runs inside this app. A plugin names a Shortcut; it cannot
+   name a program. */
+- (void)checkText:(NSDictionary *)text
+{
+	if(text == nil)
+		return;
+	if(![text isKindOfClass:[NSDictionary class]]) {
+		[self refuse:NekoPluginLocalized(@"Its Text section is not a dictionary.")];
+		return;
+	}
+
+	NSString *shortcut = [text objectForKey:@"Shortcut"];
+	if([shortcut length] == 0) {
+		[self refuse:NekoPluginLocalized(@"It processes text without naming a Shortcut to do it with.")];
+		return;
+	}
+	if([text objectForKey:@"Program"] != nil || [text objectForKey:@"Executable"] != nil) {
+		[self refuse:NekoPluginLocalized(@"It wants to process text with a program of its own, which this version does not allow — only one of your own Shortcuts.")];
+		return;
+	}
+
+	NSString *direction = [[text objectForKey:@"Direction"] lowercaseString];
+	NSArray *allowed = [NSArray arrayWithObjects:@"in", @"out", @"both", nil];
+	if(![allowed containsObject:direction ?: @""]) {
+		[self refuse:NekoPluginLocalized(@"Its Text section has to say Direction: in, out or both.")];
+		return;
+	}
 }
 
 - (void)checkFeeds:(NSArray *)feeds
@@ -201,18 +236,72 @@ static NSString * const NekoPluginMarkers[] = { @"ACTION:", @"IMAGE:", @"LOOK:",
 	if(![self isUsable])
 		return [NSArray array];
 	NSArray *feeds = [[manifest objectForKey:@"Extends"] objectForKey:@"Feeds"];
-	return [feeds isKindOfClass:[NSArray class]] ? feeds : [NSArray array];
+	if(![feeds isKindOfClass:[NSArray class]])
+		return [NSArray array];
+
+	/* A detail is looked up as a string key before it is used. For the plugin
+	   that ships with the app that means its descriptions stay translated —
+	   they are the same keys the code used to hold — and for anybody else's
+	   plugin the string simply passes through, which is right: the app has no
+	   translations for words it has never seen. */
+	NSMutableArray *localized = [NSMutableArray array];
+	NSEnumerator *e = [feeds objectEnumerator];
+	NSDictionary *feed;
+	while((feed = [e nextObject]) != nil) {
+		NSMutableDictionary *one = [NSMutableDictionary dictionaryWithDictionary:feed];
+		NSString *detail = [feed objectForKey:@"Detail"];
+		if([detail length] > 0)
+			[one setObject:NSLocalizedString(detail, nil) forKey:@"Detail"];
+		[localized addObject:one];
+	}
+	return localized;
+}
+
+- (NSDictionary *)text
+{
+	if(![self isUsable])
+		return nil;
+	NSDictionary *text = [[manifest objectForKey:@"Extends"] objectForKey:@"Text"];
+	return [text isKindOfClass:[NSDictionary class]] ? text : nil;
+}
+
+- (NSString *)textShortcut
+{
+	return [[self text] objectForKey:@"Shortcut"];
+}
+
+- (BOOL)processesTextGoing:(BOOL)inward
+{
+	NSString *direction = [[[self text] objectForKey:@"Direction"] lowercaseString];
+	if([direction isEqualToString:@"both"])
+		return YES;
+	return [direction isEqualToString:(inward ? @"in" : @"out")];
 }
 
 - (NSString *)describeWhatItAdds
 {
+	NSMutableArray *parts = [NSMutableArray array];
 	NSUInteger feeds = [[self feeds] count];
-	if(feeds == 0)
-		return NekoPluginLocalized(@"nothing this version of Neko can use yet");
 	if(feeds == 1)
-		return NekoPluginLocalized(@"1 feed");
-	return [NSString stringWithFormat:NekoPluginLocalized(@"%lu feeds"),
-		(unsigned long)feeds];
+		[parts addObject:NekoPluginLocalized(@"1 feed")];
+	else if(feeds > 1)
+		[parts addObject:[NSString stringWithFormat:
+			NekoPluginLocalized(@"%lu feeds"), (unsigned long)feeds]];
+
+	if([self text] != nil) {
+		NSString *which = [self processesTextGoing:YES]
+			? ([self processesTextGoing:NO]
+				? NekoPluginLocalized(@"what you say and what it answers")
+				: NekoPluginLocalized(@"what you say"))
+			: NekoPluginLocalized(@"what it answers");
+		[parts addObject:[NSString stringWithFormat:
+			NekoPluginLocalized(@"passes %@ through your Shortcut “%@”"),
+			which, [self textShortcut]]];
+	}
+
+	if([parts count] == 0)
+		return NekoPluginLocalized(@"nothing this version of Neko can use yet");
+	return [parts componentsJoinedByString:NekoPluginLocalized(@", and ")];
 }
 
 @end

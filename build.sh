@@ -26,6 +26,13 @@ printf 'APPL????' > "$APP/Contents/PkgInfo"
 # --noqtn/--noextattr: never carry a download quarantine into the bundle.
 ditto --noextattr --noqtn Resources "$APP/Contents/Resources"
 
+# The plugins that ship with the app. They are copied into the container on first
+# launch and switched on there; inside the bundle they are read-only and signed
+# with everything else.
+if [ -d Plugins ]; then
+	ditto --noextattr --noqtn Plugins "$APP/Contents/Resources/Plugins"
+fi
+
 # One architecture at a time, because the Swift half can only target one at a
 # time, and lipo puts them back together. Swift is here for a single file:
 # FoundationModels ships no headers, so Apple's on-device model can only be
@@ -35,7 +42,7 @@ SOURCES="src/main.m src/MyView.m src/MyPanel.m src/NekoCharacter.m src/NekoContr
 	src/NekoAppleProvider.m src/NekoOpenAIProvider.m src/NekoKeychain.m
 	src/NekoModelStore.m src/NekoLocalProvider.m
 	src/NekoHotKey.m src/NekoListener.m src/NekoBubble.m src/NekoLine.m src/NekoAsk.m
-	src/NekoAdvisor.m src/NekoAntics.m src/NekoDesktop.m src/NekoPainter.m src/NekoSense.m src/NekoAction.m src/NekoFolderAccess.m src/NekoWakeWord.m src/NekoPermissions.m src/NekoBrains.m src/NekoMemory.m src/NekoRate.m src/NekoWeb.m src/NekoVoice.m src/NekoPlace.m src/NekoPlugin.m src/NekoPlugins.m src/NekoPluginsPanel.m src/NekoNoise.m"
+	src/NekoAdvisor.m src/NekoAntics.m src/NekoDesktop.m src/NekoPainter.m src/NekoSense.m src/NekoAction.m src/NekoFolderAccess.m src/NekoWakeWord.m src/NekoPermissions.m src/NekoBrains.m src/NekoMemory.m src/NekoRate.m src/NekoWeb.m src/NekoVoice.m src/NekoPlace.m src/NekoPlugin.m src/NekoPlugins.m src/NekoPluginText.m src/NekoPluginsPanel.m src/NekoNoise.m"
 FRAMEWORKS="-framework Cocoa -framework ServiceManagement -framework Carbon
 	-framework Security -framework AVFoundation -framework NaturalLanguage -framework IOKit -framework CoreLocation
 	-Xlinker -weak_framework -Xlinker Speech"

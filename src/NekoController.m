@@ -13,6 +13,7 @@
 #import "NekoWeb.h"
 #import "NekoPlace.h"
 #import "NekoPluginsPanel.h"
+#import "NekoPlugins.h"
 #import "NekoVoice.h"
 #import "NekoMemory.h"
 #import "NekoHotKey.h"
@@ -273,6 +274,10 @@ static const float NekoMaxStopRadius = 200.0f;
 	   Permissions tab was being drawn before that moment. */
 	if([NekoPlace isAvailable])
 		(void)[NekoPlace sharedPlace];
+
+	/* The plugins that ship inside the app are put in place before anything asks
+	   what feeds exist — the news sources are one of them now. */
+	[[NekoPlugins sharedPlugins] seedFromBundle];
 
 	/* Once a day, yesterday becomes a few durable lines. Costs nothing on the
 	   days there is nothing to reduce. */

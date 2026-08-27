@@ -194,17 +194,28 @@ static const float NekoRowHeight = 86.0f;
 		[switchOn setIdentifier:[plugin identifier]];
 		[rows addSubview:switchOn];
 
-		NSButton *remove = [[[NSButton alloc] initWithFrame:
-			NSMakeRect(width - 134.0f, top - 56.0f, 126.0f, 24.0f)] autorelease];
-		[remove setBezelStyle:NSBezelStyleRounded];
-		[remove setControlSize:NSControlSizeSmall];
-		[remove setFont:[NSFont systemFontOfSize:
-			[NSFont systemFontSizeForControlSize:NSControlSizeSmall]]];
-		[remove setTitle:NekoPanelLocalized(@"Remove…")];
-		[remove setTarget:self];
-		[remove setAction:@selector(removePressed:)];
-		[remove setIdentifier:[plugin identifier]];
-		[rows addSubview:remove];
+		BOOL shipped = [registry isBundled:plugin];
+		if(shipped) {
+			/* Removing one that ships with the app would only mean it came back
+			   at the next launch. The switch is the whole of what to offer. */
+			NSTextField *note = [self labelAt:
+				NSMakeRect(width - 134.0f, top - 52.0f, 126.0f, 16.0f)
+			                             text:NekoPanelLocalized(@"ships with Neko")
+			                            small:YES];
+			[rows addSubview:note];
+		} else {
+			NSButton *remove = [[[NSButton alloc] initWithFrame:
+				NSMakeRect(width - 134.0f, top - 56.0f, 126.0f, 24.0f)] autorelease];
+			[remove setBezelStyle:NSBezelStyleRounded];
+			[remove setControlSize:NSControlSizeSmall];
+			[remove setFont:[NSFont systemFontOfSize:
+				[NSFont systemFontSizeForControlSize:NSControlSizeSmall]]];
+			[remove setTitle:NekoPanelLocalized(@"Remove…")];
+			[remove setTarget:self];
+			[remove setAction:@selector(removePressed:)];
+			[remove setIdentifier:[plugin identifier]];
+			[rows addSubview:remove];
+		}
 	}
 
 	[rows scrollRectToVisible:NSMakeRect(0.0f, height - 1.0f, width, 1.0f)];

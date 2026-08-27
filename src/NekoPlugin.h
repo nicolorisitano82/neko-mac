@@ -46,6 +46,12 @@ extern const NSInteger NekoPluginInterface;
 - (NSArray *)feeds;              /* NSDictionary each: Identifier, Name, Detail, Address */
 - (BOOL)wantsNetwork;
 
+/* Text processing, done by running one of the user's own Shortcuts — never a
+   program of the plugin's own. nil when it does not process text. */
+- (NSDictionary *)text;
+- (NSString *)textShortcut;
+- (BOOL)processesTextGoing:(BOOL)inward;   /* YES for what you said, NO for the answer */
+
 /* "2 feeds", "nothing yet" — the line under its name in the panel. */
 - (NSString *)describeWhatItAdds;
 

@@ -4,6 +4,11 @@
 NSString * const NekoPluginsEnabledKey = @"NekoPluginsEnabled";
 NSString * const NekoPluginsDidChangeNotification = @"NekoPluginsDidChange";
 
+/* Which bundled plugins have already been put in place, and at which version, so
+   that a newer app can replace an older copy without switching anything back on
+   that somebody switched off. */
+static NSString * const NekoPluginsSeededKey = @"NekoPluginsSeeded";
+
 #define NekoPluginsLocalized(text) NSLocalizedString(text, nil)
 
 @implementation NekoPlugins
@@ -157,6 +162,86 @@ NSString * const NekoPluginsDidChangeNotification = @"NekoPluginsDidChange";
 {
 	[self setEnabled:NO for:plugin];
 	[[NSFileManager defaultManager] removeItemAtURL:[plugin folder] error:NULL];
+	[self reload];
+	[[NSNotificationCenter defaultCenter]
+		postNotificationName:NekoPluginsDidChangeNotification object:self];
+}
+
+#pragma mark The ones that ship with the app
+
+- (NSURL *)bundledDirectory
+{
+	NSString *path = [[NSBundle mainBundle] pathForResource:@"Plugins" ofType:nil];
+	return [path length] > 0 ? [NSURL fileURLWithPath:path] : nil;
+}
+
+- (BOOL)isBundled:(NekoPlugin *)plugin
+{
+	NSURL *inside = [self bundledDirectory];
+	if(inside == nil)
+		return NO;
+	return [[NSFileManager defaultManager] fileExistsAtPath:
+		[[inside URLByAppendingPathComponent:[[plugin folder] lastPathComponent]] path]];
+}
+
+- (void)seedFromBundle
+{
+	NSURL *inside = [self bundledDirectory];
+	if(inside == nil)
+		return;
+
+	NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
+	NSMutableDictionary *seeded = [NSMutableDictionary dictionaryWithDictionary:
+		[defaults dictionaryForKey:NekoPluginsSeededKey]];
+	NSFileManager *files = [NSFileManager defaultManager];
+	NSArray *names = [files contentsOfDirectoryAtPath:[inside path] error:NULL];
+	NSEnumerator *e = [names objectEnumerator];
+	NSString *name;
+	BOOL changed = NO;
+
+	while((name = [e nextObject]) != nil) {
+		if(![name hasSuffix:@".nekoplugin"])
+			continue;
+		NekoPlugin *shipped = [[[NekoPlugin alloc] initWithFolder:
+			[inside URLByAppendingPathComponent:name]] autorelease];
+		if(![shipped isUsable]) {
+			/* The app shipping a plugin it refuses is a bug in the app, and a
+			   silent one would be the worst kind. */
+			NSLog(@"Neko: the plugin shipped as %@ was refused — %@", name, [shipped refusal]);
+			continue;
+		}
+
+		NSString *already = [seeded objectForKey:[shipped identifier]];
+		BOOL firstTime = (already == nil);
+		NSURL *destination = [[self directory] URLByAppendingPathComponent:name];
+		BOOL there = [files fileExistsAtPath:[destination path]];
+		BOOL newer = !firstTime
+			&& [[shipped version] compare:already options:NSNumericSearch] == NSOrderedDescending;
+
+		if(there && !newer && !firstTime)
+			continue;              /* the copy in place is the one to use */
+
+		[files removeItemAtURL:destination error:NULL];
+		if(![files copyItemAtURL:[shipped folder] toURL:destination error:NULL])
+			continue;
+		[seeded setObject:[shipped version] forKey:[shipped identifier]];
+		changed = YES;
+
+		if(!firstTime)
+			continue;              /* an update never touches the switch */
+
+		/* The one exception, and only the first time this plugin has ever been
+		   seen: switched on, because these are the feeds the app has always
+		   had. */
+		[self reload];
+		NekoPlugin *installed = [self pluginWithIdentifier:[shipped identifier]];
+		if(installed != nil)
+			[self setEnabled:YES for:installed];
+	}
+
+	if(!changed)
+		return;
+	[defaults setObject:seeded forKey:NekoPluginsSeededKey];
 	[self reload];
 	[[NSNotificationCenter defaultCenter]
 		postNotificationName:NekoPluginsDidChangeNotification object:self];

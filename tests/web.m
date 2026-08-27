@@ -12,6 +12,7 @@
 #import "NekoAction.h"
 #import "NekoAppleProvider.h"
 #import "NekoPlace.h"
+#import "NekoPlugins.h"
 #import "NekoAnswerProvider.h"
 
 @interface NekoWeb (Testing)
@@ -42,6 +43,9 @@ int main(void)
 	[NSApplication sharedApplication];
 	[NSApp setActivationPolicy:NSApplicationActivationPolicyAccessory];
 	NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
+	/* The feeds ship as a plugin now, and putting the bundled ones in place is
+	   what the app does at launch. Without this there are no sources to test. */
+	[[NekoPlugins sharedPlugins] seedFromBundle];
 	NekoWeb *web = [NekoWeb sharedWeb];
 
 	printf("\n--- the list is closed ---\n");

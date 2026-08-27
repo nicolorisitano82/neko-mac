@@ -12,6 +12,7 @@
 #import "NekoPlugin.h"
 #import "NekoPlugins.h"
 #import "NekoWeb.h"
+#import "NekoPluginText.h"
 
 static NSURL *stage(NSString *name, NSDictionary *manifest)
 {
@@ -139,6 +140,7 @@ int main(void)
 	printf("\n--- installed, switched on, switched off ---\n");
 
 	NekoPlugins *registry = [NekoPlugins sharedPlugins];
+
 	NSArray *before = [[[registry all] copy] autorelease];
 	NSString *problem = [registry installFrom:
 		[NSURL fileURLWithPath:@"examples/Il Post.nekoplugin"]];
@@ -168,7 +170,110 @@ int main(void)
 			@"and removing it leaves nothing", nil);
 	}
 
-	printf("\n--- and a plugin cannot shadow a built-in source ---\n");
+	printf("\n--- processing text ---\n");
+
+	/* Declared with a direction and one of the user's own Shortcuts, and never
+	   with a program of the plugin's own. */
+	NSMutableDictionary *withText = good();
+	[withText setObject:[NSDictionary dictionaryWithObject:
+		[NSDictionary dictionaryWithObjectsAndKeys:
+			@"both", @"Direction", @"Tidy up", @"Shortcut", nil]
+	                                               forKey:@"Text"] forKey:@"Extends"];
+	NekoPlugin *speaks = readPlugin(@"text", withText);
+	ok([speaks isUsable], @"a text plugin naming a Shortcut is accepted", [speaks refusal]);
+	ok([speaks processesTextGoing:YES] && [speaks processesTextGoing:NO],
+		@"both directions", [speaks describeWhatItAdds]);
+
+	NSMutableDictionary *oneWay = good();
+	[oneWay setObject:[NSDictionary dictionaryWithObject:
+		[NSDictionary dictionaryWithObjectsAndKeys:
+			@"out", @"Direction", @"Tidy up", @"Shortcut", nil]
+	                                             forKey:@"Text"] forKey:@"Extends"];
+	NekoPlugin *outward = readPlugin(@"out", oneWay);
+	ok([outward processesTextGoing:NO] && ![outward processesTextGoing:YES],
+		@"or one", [outward describeWhatItAdds]);
+
+	NSMutableDictionary *noShortcut = good();
+	[noShortcut setObject:[NSDictionary dictionaryWithObject:
+		[NSDictionary dictionaryWithObject:@"both" forKey:@"Direction"]
+	                                                 forKey:@"Text"] forKey:@"Extends"];
+	ok([[readPlugin(@"noshort", noShortcut) refusal]
+			rangeOfString:@"without naming a Shortcut"].location != NSNotFound,
+		@"without a Shortcut it is refused, and for that reason",
+		[readPlugin(@"noshort", noShortcut) refusal]);
+
+	NSMutableDictionary *ownProgram = good();
+	[ownProgram setObject:[NSDictionary dictionaryWithObject:
+		[NSDictionary dictionaryWithObjectsAndKeys:
+			@"both", @"Direction", @"Tidy up", @"Shortcut",
+			@"./filter", @"Program", nil]
+	                                                 forKey:@"Text"] forKey:@"Extends"];
+	ok([[readPlugin(@"program", ownProgram) refusal]
+			rangeOfString:@"program of its own"].location != NSNotFound,
+		@"and with a program of its own it is refused, and for that reason",
+		[readPlugin(@"program", ownProgram) refusal]);
+
+	NSMutableDictionary *sideways = good();
+	[sideways setObject:[NSDictionary dictionaryWithObject:
+		[NSDictionary dictionaryWithObjectsAndKeys:
+			@"sideways", @"Direction", @"Tidy up", @"Shortcut", nil]
+	                                               forKey:@"Text"] forKey:@"Extends"];
+	ok([[readPlugin(@"sideways", sideways) refusal]
+			rangeOfString:@"Direction"].location != NSNotFound,
+		@"a direction that is not in, out or both is refused, and for that reason",
+		[readPlugin(@"sideways", sideways) refusal]);
+
+	printf("\n--- and nothing processes text unless one is switched on ---\n");
+
+	ok(![NekoPluginText anythingProcesses:YES] && ![NekoPluginText anythingProcesses:NO],
+		@"with none enabled, both directions cost nothing", nil);
+
+	__block NSString *came = nil;
+	__block BOOL back = NO;
+	[NekoPluginText pass:@"che ore sono" inward:YES
+	          completion:^(NSString *result, NSString *pluginName) {
+		came = [result copy];
+		back = YES;
+	}];
+	spin(0.2);
+	ok(back && [came isEqualToString:@"che ore sono"],
+		@"and the words come back exactly as they went in", came);
+
+	printf("\n--- the one that ships inside the app ---\n");
+
+	/* What the app does at launch, done here so the sources exist at all: the two
+	   dozen feeds live in a plugin now rather than in NekoWeb.m. */
+	[registry seedFromBundle];
+	NekoPlugin *news = [registry pluginWithIdentifier:@"com.nekomac.news"];
+	ok(news != nil, @"it is put in place without being asked", [news name]);
+	ok([registry isBundled:news], @"and is known to ship with the app", nil);
+	ok([registry isEnabled:news],
+		@"switched on, because these are the feeds the app has always had", nil);
+	ok([[NekoWeb sources] count] >= 24, @"which is where the sources come from",
+		[NSString stringWithFormat:@"%lu", (unsigned long)[[NekoWeb sources] count]]);
+	ok([[[NekoWeb sourceNamed:@"ansa"] name] isEqualToString:@"ANSA"],
+		@"by name", [[NekoWeb sourceNamed:@"ansa"] name]);
+	ok([[NekoWeb namesForInstructions] rangeOfString:@"weather"].location != NSNotFound
+	   && [[NekoWeb namesForInstructions] componentsSeparatedByString:@","].count <= 10,
+		@"and the handful shown to a model is unchanged",
+		[NekoWeb namesForInstructions]);
+
+	printf("\n--- switched off, and it stays off ---\n");
+
+	[registry setEnabled:NO for:news];
+	ok([[NekoWeb sources] count] == 0, @"no sources at all", nil);
+	ok([NekoWeb wantedFor:@"cosa è successo oggi nel mondo?"] == nil,
+		@"and a news question is not sent looking for something that is not there",
+		[NekoWeb wantedFor:@"cosa è successo oggi nel mondo?"]);
+
+	/* The rule that matters for a plugin the app ships: seeding again — which is
+	   what the next launch does — must not switch it back on. */
+	[registry seedFromBundle];
+	ok(![registry isEnabled:[registry pluginWithIdentifier:@"com.nekomac.news"]],
+		@"and the next launch leaves it off", nil);
+	[registry setEnabled:YES for:[registry pluginWithIdentifier:@"com.nekomac.news"]];
+
+	printf("\n--- and a plugin cannot shadow one that is already there ---\n");
 
 	ok([[[NekoWeb sourceNamed:@"wired"] name] isEqualToString:@"Wired Italia"],
 		@"the built-in word wins, whatever a plugin calls itself",

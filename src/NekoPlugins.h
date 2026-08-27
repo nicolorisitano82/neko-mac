@@ -49,4 +49,22 @@ extern NSString * const NekoPluginsDidChangeNotification;
 /* Every feed every enabled plugin adds, as NekoWeb wants them. */
 - (NSArray *)feeds;
 
+/* Copies the plugins that ship inside the app into the container, and switches
+   them on the first time each one arrives.
+
+   That last part is the one exception to "arriving is not the same as being on",
+   and it is deliberate: a plugin that ships with the app is not a folder somebody
+   downloaded, and the news feeds it carries are the ones the app has always had.
+   Arriving switched off would mean the news simply stopped working on the day
+   they moved out of the code.
+
+   Switched on once, and never again. Somebody who turns one off finds it still
+   off after the next launch, and after the next update — that is the whole point
+   of the switch. */
+- (void)seedFromBundle;
+
+/* Ships with the app: it can be switched off, and it cannot be removed, because
+   removing it would only mean it came back at the next launch. */
+- (BOOL)isBundled:(NekoPlugin *)plugin;
+
 @end
