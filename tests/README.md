@@ -60,6 +60,14 @@ A helper called `read` collides with `unistd.h`'s, and the compiler's complaint
 points at the call site rather than the definition. Twice now. Anything shared
 with a system function wants a longer name in these files.
 
+## And a third
+
+A test that checks *which* refusal came back must compare against
+`NSLocalizedString(key, nil)`, not against the English. Three checks in
+`plugin.m` pinned the English words and broke the moment the plugin strings were
+translated — the app was right and the tests were wrong, which is the more
+embarrassing way round.
+
 ## The other trap
 
 AppKit drains the autorelease pool while the run loop turns, and `spin()` turns

@@ -198,8 +198,10 @@ int main(void)
 	[noShortcut setObject:[NSDictionary dictionaryWithObject:
 		[NSDictionary dictionaryWithObject:@"both" forKey:@"Direction"]
 	                                                 forKey:@"Text"] forKey:@"Extends"];
-	ok([[readPlugin(@"noshort", noShortcut) refusal]
-			rangeOfString:@"without naming a Shortcut"].location != NSNotFound,
+	/* Pinned to the key rather than to the English: the app is translated, and a
+	   test that reads its display language passes only in one of four. */
+	ok([[readPlugin(@"noshort", noShortcut) refusal] isEqualToString:
+			NSLocalizedString(@"It processes text without naming a Shortcut to do it with.", nil)],
 		@"without a Shortcut it is refused, and for that reason",
 		[readPlugin(@"noshort", noShortcut) refusal]);
 
@@ -209,8 +211,8 @@ int main(void)
 			@"both", @"Direction", @"Tidy up", @"Shortcut",
 			@"./filter", @"Program", nil]
 	                                                 forKey:@"Text"] forKey:@"Extends"];
-	ok([[readPlugin(@"program", ownProgram) refusal]
-			rangeOfString:@"program of its own"].location != NSNotFound,
+	ok([[readPlugin(@"program", ownProgram) refusal] isEqualToString:
+			NSLocalizedString(@"It wants to process text with a program of its own, which this version does not allow — only one of your own Shortcuts.", nil)],
 		@"and with a program of its own it is refused, and for that reason",
 		[readPlugin(@"program", ownProgram) refusal]);
 
@@ -219,8 +221,8 @@ int main(void)
 		[NSDictionary dictionaryWithObjectsAndKeys:
 			@"sideways", @"Direction", @"Tidy up", @"Shortcut", nil]
 	                                               forKey:@"Text"] forKey:@"Extends"];
-	ok([[readPlugin(@"sideways", sideways) refusal]
-			rangeOfString:@"Direction"].location != NSNotFound,
+	ok([[readPlugin(@"sideways", sideways) refusal] isEqualToString:
+			NSLocalizedString(@"Its Text section has to say Direction: in, out or both.", nil)],
 		@"a direction that is not in, out or both is refused, and for that reason",
 		[readPlugin(@"sideways", sideways) refusal]);
 
@@ -316,8 +318,10 @@ int main(void)
 	[missing setObject:[NSDictionary dictionaryWithObject:
 		[NSArray arrayWithObject:@"Nobody.nekochar"] forKey:@"Characters"]
 	            forKey:@"Extends"];
-	ok([[readPlugin(@"nocat", missing) refusal]
-			rangeOfString:@"not inside it"].location != NSNotFound,
+	ok([[readPlugin(@"nocat", missing) refusal] isEqualToString:
+			[NSString stringWithFormat:
+				NSLocalizedString(@"It says it ships the character “%@”, and that folder is not inside it.", nil),
+				@"Nobody.nekochar"]],
 		@"a character it does not actually ship is refused",
 		[readPlugin(@"nocat", missing) refusal]);
 
@@ -325,8 +329,8 @@ int main(void)
 	[notAFolder setObject:[NSDictionary dictionaryWithObject:
 		[NSArray arrayWithObject:@"sprites.zip"] forKey:@"Characters"]
 	               forKey:@"Extends"];
-	ok([[readPlugin(@"zip", notAFolder) refusal]
-			rangeOfString:@".nekochar"].location != NSNotFound,
+	ok([[readPlugin(@"zip", notAFolder) refusal] isEqualToString:
+			NSLocalizedString(@"Each of its characters has to be the name of a folder ending in .nekochar.", nil)],
 		@"and so is something that is not a character folder",
 		[readPlugin(@"zip", notAFolder) refusal]);
 
@@ -375,7 +379,9 @@ int main(void)
 	                                 atomically:YES encoding:NSUTF8StringEncoding error:NULL];
 	NekoPlugin *unreadable = [[[NekoPlugin alloc] initWithFolder:broken] autorelease];
 	ok(![unreadable isUsable]
-	   && [[unreadable refusal] rangeOfString:@"fr.lproj"].location != NSNotFound,
+	   && [[unreadable refusal] isEqualToString:[NSString stringWithFormat:
+			NSLocalizedString(@"Its %@ translations cannot be read; plugin.strings has to be a property list.", nil),
+			@"fr.lproj"]],
 		@"and a language folder that cannot be read is an authoring mistake, said so",
 		[unreadable refusal]);
 

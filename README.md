@@ -525,6 +525,44 @@ Packing `Neko.nekochar` reproduces oneko.js' own sheet pixel for pixel, and
 packing an imported skin reproduces the sheet it was sliced from; `--verify
 SHEET` runs that comparison.
 
+## Plugins
+
+Somebody else can add to this app, and the shape of it is decided by one fact:
+Neko is sandboxed and holds a microphone, a location, folders you handed over by
+name, and a diary about your working life. Code loaded into that process would
+inherit all of it. So **a plugin is a folder with a manifest, read and never
+run** — and the manifest is the whole contract. What it declares is what it may
+be asked, and an extension point this version does not offer is refused rather
+than ignored.
+
+They live in Neko's own folder in Application Support, and they are managed in a
+window of their own — **Plugins…** in the menu, not a tab in the preferences,
+because a plugin is not a setting but a thing you installed. Adding one is a panel
+rather than a drag into the Finder: the sandbox can only read inside its own
+container, and that is what the sandbox costs.
+
+A plugin arrives **switched off**. Every refusal is a sentence you can act on, and
+a refused plugin stays in the list with the reason rather than disappearing.
+
+Four things one can do today:
+
+| | |
+| --- | --- |
+| **Feeds** | news sources, answering to one plain word. The app's own two dozen ship this way — `Plugins/Neko News.nekoplugin` inside the bundle — which is the honest test of the interface. |
+| **Text, in and out** | rewording what you said before the engine sees it, or what the cat answers before it is shown. Done by running **one of your own Shortcuts**; a plugin may name a Shortcut and never a program. |
+| **Characters** | `.nekochar` folders, joining the menu when the plugin is switched on. Add, never replace: an identifier the app already ships is not reachable. |
+| **Its own translations** | `<lang>.lproj/plugin.strings`, keyed on the English strings in its manifest. English-only is allowed and says English things. |
+
+What no plugin is given, by design: the diary, the screen, the microphone, where
+the Mac is, or the ability to make the cat speak on its own. And never an action —
+text a plugin produced or read can no more open something than text read off the
+screen can, which is a rule with a test that fails if it is broken.
+
+[docs/plugin-guide.md](docs/plugin-guide.md) is how to write one: the manifest key
+by key, every refusal and its exact sentence, and the executable interface —
+one JSON object in on stdin, one out on stdout — which is **specified and not yet
+implemented**, so a plugin can be built against a contract that will not move.
+
 ## The web version
 
 `web/` holds a TypeScript port of oneko.js that wears all 28 characters,
