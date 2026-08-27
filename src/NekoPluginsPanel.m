@@ -249,19 +249,29 @@ static const float NekoRowHeight = 86.0f;
 	[choose setPrompt:NekoPanelLocalized(@"Add")];
 	[choose setMessage:NekoPanelLocalized(@"Choose a plugin folder — its name ends in .nekoplugin. It will be copied in and left switched off.")];
 
-	if([choose runModal] != NSModalResponseOK)
-		return;
+	/* A sheet on this window, not an application-modal panel.
+	   Measured, and it is why "Add does absolutely nothing" was true: this app is
+	   an accessory — no Dock icon — and an app-modal open panel from one opens
+	   behind whatever the person is looking at. The panel was there every time;
+	   nobody could see it. A sheet is attached to the window and cannot be
+	   behind anything. */
+	[NSApp activateIgnoringOtherApps:YES];
+	[[self window] makeKeyAndOrderFront:nil];
+	[choose beginSheetModalForWindow:[self window]
+	              completionHandler:^(NSModalResponse answer) {
+		if(answer != NSModalResponseOK)
+			return;
+		NSString *problem = [[NekoPlugins sharedPlugins] installFrom:[choose URL]];
+		[self refresh];
+		if(problem == nil)
+			return;
 
-	NSString *problem = [[NekoPlugins sharedPlugins] installFrom:[choose URL]];
-	[self refresh];
-	if(problem == nil)
-		return;
-
-	NSAlert *alert = [[[NSAlert alloc] init] autorelease];
-	[alert setMessageText:NekoPanelLocalized(@"That one was not added")];
-	[alert setInformativeText:problem];
-	[alert addButtonWithTitle:NekoPanelLocalized(@"All right")];
-	[alert runModal];
+		NSAlert *alert = [[[NSAlert alloc] init] autorelease];
+		[alert setMessageText:NekoPanelLocalized(@"That one was not added")];
+		[alert setInformativeText:problem];
+		[alert addButtonWithTitle:NekoPanelLocalized(@"All right")];
+		[alert beginSheetModalForWindow:[self window] completionHandler:nil];
+	}];
 }
 
 - (void)removePressed:(id)sender
@@ -278,11 +288,17 @@ static const float NekoRowHeight = 86.0f;
 		[plugin describeWhatItAdds]]];
 	[alert addButtonWithTitle:NekoPanelLocalized(@"Remove")];
 	[alert addButtonWithTitle:NekoPanelLocalized(@"Cancel")];
-	if([alert runModal] != NSAlertFirstButtonReturn)
-		return;
 
-	[[NekoPlugins sharedPlugins] remove:plugin];
-	[self refresh];
+	/* A sheet, for the same reason as the one above. */
+	NekoPlugin *kept = [plugin retain];
+	[alert beginSheetModalForWindow:[self window]
+	            completionHandler:^(NSModalResponse answer) {
+		if(answer == NSAlertFirstButtonReturn) {
+			[[NekoPlugins sharedPlugins] remove:kept];
+			[self refresh];
+		}
+		[kept release];
+	}];
 }
 
 - (void)revealFolderPressed:(id)sender

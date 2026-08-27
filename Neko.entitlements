@@ -11,6 +11,18 @@
 	<!-- The Save button under a drawing writes there and nowhere else. -->
 	<key>com.apple.security.files.downloads.read-write</key>
 	<true/>
+	<!-- Every file panel in this app is one the person asked for by pressing a
+	     button: handing over a folder, choosing a plugin. This is what lets the app
+	     actually read what they chose — Powerbox grants access to the picked item
+	     through this entitlement, and without it a chosen folder could be shown and
+	     then not opened.
+
+	     It was added while chasing "the Add button does absolutely nothing", and it
+	     is worth recording that it was *not* the cause: with it removed again, the
+	     panel service still started. The cause was the panel being application
+	     modal in an app with no Dock icon; the fix is in NekoPluginsPanel. -->
+	<key>com.apple.security.files.user-selected.read-write</key>
+	<true/>
 	<key>com.apple.security.personal-information.location</key>
 	<true/>
 </dict>

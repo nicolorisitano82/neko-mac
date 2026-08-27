@@ -23,4 +23,7 @@
 /* Opens it, brings it forward, and redraws it from what is installed. */
 - (void)show:(id)sender;
 
+/* What the Add… button does. Public so a test can drive it without a mouse. */
+- (void)addPressed:(id)sender;
+
 @end
