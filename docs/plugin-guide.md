@@ -90,7 +90,7 @@ format — and `plutil -convert xml1` is a good habit before shipping.
 | `MinimumApp` | string | recommended | the oldest Neko that can run it. |
 | `Summary` | string | recommended | one sentence, shown under the name. |
 | `Wants` | array of strings | when needed | `network` is the only one so far. Declare it or your feeds are refused. |
-| `Extends` | dict | **yes**, in practice | what you actually add — the next sections. |
+| `Extends` | dict | **yes**, in practice | what you actually add — `Feeds`, `Text`, `Characters`. |
 
 Unknown keys inside `Extends` are **refused, not ignored**: ignoring one would
 mean your plugin believes it is doing something it is not.
@@ -172,6 +172,78 @@ a remote engine sees the question, expand your own abbreviations, force a house
 style. Useless things: anything that needs to know what came before, because you
 are handed one string.
 
+## 4a. Characters
+
+A plugin can ship characters — the cat itself, or a dog, or whatever somebody
+drew. A character is a `.nekochar` folder: thirty-one PNGs or GIFs and a
+`character.plist`, exactly the format the app's own forty-three use. Copy one out
+of `Neko.app/Contents/Resources/Characters` and look at it; that is the whole
+documentation of the format.
+
+```
+My Thing.nekoplugin/
+    plugin.plist
+    Ratto.nekochar/
+        character.plist
+        mati2.gif  awake.gif  right1.gif  …
+```
+
+```xml
+<key>Characters</key>
+<array>
+    <string>Ratto.nekochar</string>
+</array>
+```
+
+Named one by one, not found by scanning: the manifest is the contract, and a
+folder that appears after it was written is not part of it. Each name must end in
+`.nekochar`, must actually be inside your plugin, and must contain a readable
+`character.plist` whose `Identifier` is one plain word.
+
+Nothing in `Wants` — a character is images.
+
+The rule that matters: **a plugin can add a character and never replace one.** If
+your character's identifier is one the app already ships, the app's own wins and
+yours is simply not in the list. Choose your own word.
+
+Switched on, your character appears in the menu at once — the list is thrown away
+and rebuilt when a plugin changes. Switched off, it disappears from the menu, and
+if it was the one in use the app falls back to its own first character.
+
+## 4b. Your own translations
+
+The app runs in English, Italian, French and Spanish. A plugin carries its own
+translations, in its own folder:
+
+```
+My Thing.nekoplugin/
+    plugin.plist
+    it.lproj/plugin.strings
+    fr.lproj/plugin.strings
+```
+
+`plugin.strings` is a property list — the same `"key" = "value";` format as
+anywhere else in macOS, or XML if you prefer. The keys are **the English strings
+from your manifest**:
+
+```
+"Markets" = "Mercati";
+"Two feeds about the markets." = "Due feed sui mercati.";
+"markets, in Italian" = "mercati, in italiano";
+```
+
+What is looked up: your `Name`, your `Summary`, and every feed `Name` and
+`Detail`. The order is your strings, then the app's own tables, then the string as
+you wrote it. That second step is why the feeds that ship inside the app keep
+their translations without a strings file of their own — their details are phrases
+Neko already translates.
+
+A plugin that ships English only says English things. That is your business, and
+the app will not refuse you for it. What it does refuse is a `*.lproj` folder
+whose `plugin.strings` cannot be read at all: *"Its fr.lproj translations cannot be
+read; plugin.strings has to be a property list."* A silent fallback there would
+leave you believing your translations work.
+
 ## 5. Getting it wrong: every refusal, and its sentence
 
 The app refuses in sentences rather than codes, and a refused plugin stays in the
@@ -197,6 +269,12 @@ list with its reason so you can fix it. These are the exact sentences:
 | `Text` without `Shortcut` | *It processes text without naming a Shortcut to do it with.* |
 | `Text` with a `Program` | *It wants to process text with a program of its own, which this version does not allow — only one of your own Shortcuts.* |
 | `Direction` not in/out/both | *Its Text section has to say Direction: in, out or both.* |
+| `Characters` not a list | *Its Characters section is not a list.* |
+| a character name not ending in `.nekochar` | *Each of its characters has to be the name of a folder ending in .nekochar.* |
+| a character folder that is not there | *It says it ships the character "Ratto.nekochar", and that folder is not inside it.* |
+| a character with no readable manifest | *The character "Ratto.nekochar" has no readable character.plist with an Identifier in it.* |
+| a character identifier with a space | *The character identifier "two words" has punctuation or spaces in it; it has to be one plain word.* |
+| an unreadable `.lproj/plugin.strings` | *Its fr.lproj translations cannot be read; plugin.strings has to be a property list.* |
 
 Two identifiers claiming the same string: the first one read wins, and the second
 is not used.

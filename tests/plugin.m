@@ -13,6 +13,7 @@
 #import "NekoPlugins.h"
 #import "NekoWeb.h"
 #import "NekoPluginText.h"
+#import "NekoCharacter.h"
 
 static NSURL *stage(NSString *name, NSDictionary *manifest)
 {
@@ -238,6 +239,145 @@ int main(void)
 	spin(0.2);
 	ok(back && [came isEqualToString:@"che ore sono"],
 		@"and the words come back exactly as they went in", came);
+
+	printf("\n--- shipping a character ---\n");
+
+	/* A real character folder, copied out of the app's own resources: staging a
+	   set of thirty-one sprites by hand would test the staging, not the app. */
+	NSString *ours = [[[NSBundle mainBundle] resourcePath]
+		stringByAppendingPathComponent:@"Characters/Kuro.nekochar"];
+	if(![[NSFileManager defaultManager] fileExistsAtPath:ours]) {
+		notMeasured(@"no character to copy out of the app's resources");
+	} else {
+		NSURL *withCat = stage(@"cat", nil);
+		NSMutableDictionary *manifest = good();
+		[manifest setObject:[NSDictionary dictionaryWithObject:
+			[NSArray arrayWithObject:@"Borrowed.nekochar"] forKey:@"Characters"]
+		             forKey:@"Extends"];
+		[manifest setObject:[NSArray array] forKey:@"Wants"];   /* images need nothing */
+		[manifest setObject:@"com.example.cat" forKey:@"Identifier"];
+		[manifest writeToFile:[[withCat path]
+			stringByAppendingPathComponent:@"plugin.plist"] atomically:YES];
+		NSString *copied = [[withCat path]
+			stringByAppendingPathComponent:@"Borrowed.nekochar"];
+		[[NSFileManager defaultManager] copyItemAtPath:ours toPath:copied error:NULL];
+
+		/* Given its own identity, so this measures a character arriving rather
+		   than only the rule that stops one being replaced. */
+		NSString *inner = [copied stringByAppendingPathComponent:@"character.plist"];
+		NSMutableDictionary *its = [NSMutableDictionary dictionaryWithContentsOfFile:inner];
+		[its setObject:@"borrowed" forKey:@"Identifier"];
+		[its setObject:@"Borrowed" forKey:@"Name"];
+		[its writeToFile:inner atomically:YES];
+
+		NekoPlugin *cat = [[[NekoPlugin alloc] initWithFolder:withCat] autorelease];
+		ok([cat isUsable], @"a plugin may ship a character", [cat refusal]);
+		ok([[cat characterPaths] count] == 1, @"named in the manifest",
+			[cat describeWhatItAdds]);
+
+		NSUInteger before = [[NekoCharacter availableCharacters] count];
+		NSString *problem = [registry installFrom:withCat];
+		ok(problem == nil, @"it installs", problem);
+		NekoPlugin *installed = [registry pluginWithIdentifier:@"com.example.cat"];
+		[registry setEnabled:YES for:installed];
+		[NekoCharacter forgetTheList];
+		NSUInteger after = [[NekoCharacter availableCharacters] count];
+		ok(after == before + 1, @"and switched on, the cat can be it",
+			[NSString stringWithFormat:@"%lu before, %lu after",
+				(unsigned long)before, (unsigned long)after]);
+		ok([[[NekoCharacter characterWithIdentifier:@"borrowed"] name]
+				isEqualToString:@"Borrowed"],
+			@"by name, out of the plugin's folder",
+			[[NekoCharacter characterWithIdentifier:@"borrowed"] name]);
+
+		/* And the collision rule: renamed back to one the app already ships, it
+		   is simply not reachable. */
+		[its setObject:@"neko" forKey:@"Identifier"];
+		[its writeToFile:[[[registry pluginWithIdentifier:@"com.example.cat"] folder] path]
+			? [[[[registry pluginWithIdentifier:@"com.example.cat"] folder] path]
+				stringByAppendingPathComponent:@"Borrowed.nekochar/character.plist"]
+			: inner atomically:YES];
+		[NekoCharacter forgetTheList];
+		ok([[[NekoCharacter characterWithIdentifier:@"neko"] name] isEqualToString:@"Neko"],
+			@"but it cannot replace one the app already ships",
+			[[NekoCharacter characterWithIdentifier:@"neko"] name]);
+
+		[registry setEnabled:NO for:installed];
+		[NekoCharacter forgetTheList];
+		ok([NekoCharacter characterWithIdentifier:@"borrowed"] == nil
+		   || ![[[NekoCharacter characterWithIdentifier:@"borrowed"] identifier]
+				isEqualToString:@"borrowed"],
+			@"switched off, it is not in the list at all", nil);
+		[registry remove:installed];
+		[NekoCharacter forgetTheList];
+	}
+
+	NSMutableDictionary *missing = good();
+	[missing setObject:[NSDictionary dictionaryWithObject:
+		[NSArray arrayWithObject:@"Nobody.nekochar"] forKey:@"Characters"]
+	            forKey:@"Extends"];
+	ok([[readPlugin(@"nocat", missing) refusal]
+			rangeOfString:@"not inside it"].location != NSNotFound,
+		@"a character it does not actually ship is refused",
+		[readPlugin(@"nocat", missing) refusal]);
+
+	NSMutableDictionary *notAFolder = good();
+	[notAFolder setObject:[NSDictionary dictionaryWithObject:
+		[NSArray arrayWithObject:@"sprites.zip"] forKey:@"Characters"]
+	               forKey:@"Extends"];
+	ok([[readPlugin(@"zip", notAFolder) refusal]
+			rangeOfString:@".nekochar"].location != NSNotFound,
+		@"and so is something that is not a character folder",
+		[readPlugin(@"zip", notAFolder) refusal]);
+
+	printf("\n--- its own translations ---\n");
+
+	NSURL *translated = stage(@"strings", nil);
+	NSMutableDictionary *inItalian = good();
+	[inItalian setObject:@"com.example.strings" forKey:@"Identifier"];
+	[inItalian setObject:@"A Test" forKey:@"Name"];
+	[inItalian setObject:@"Two feeds about nothing." forKey:@"Summary"];
+	[inItalian writeToFile:[[translated path] stringByAppendingPathComponent:@"plugin.plist"]
+	         atomically:YES];
+	NSString *lproj = [[translated path] stringByAppendingPathComponent:@"it.lproj"];
+	[[NSFileManager defaultManager] createDirectoryAtPath:lproj
+	                         withIntermediateDirectories:YES attributes:nil error:NULL];
+	[[NSDictionary dictionaryWithObjectsAndKeys:
+		@"Una prova", @"A Test",
+		@"Due feed che non dicono niente.", @"Two feeds about nothing.",
+		@"per una prova", @"for a test", nil]
+		writeToFile:[lproj stringByAppendingPathComponent:@"plugin.strings"] atomically:YES];
+
+	NekoPlugin *italian = [[[NekoPlugin alloc] initWithFolder:translated] autorelease];
+	BOOL runningItalian = [[[[NSBundle mainBundle] preferredLocalizations] firstObject]
+		hasPrefix:@"it"];
+	if(!runningItalian) {
+		notMeasured(@"the app is not running in Italian here, so its own strings win nothing");
+	} else {
+		ok([[italian name] isEqualToString:@"Una prova"],
+			@"a plugin's own strings are used for its name", [italian name]);
+		ok([[italian summary] hasPrefix:@"Due feed"],
+			@"and its summary", [italian summary]);
+		ok([[[[italian feeds] firstObject] objectForKey:@"Detail"]
+				isEqualToString:@"per una prova"],
+			@"and its feed details",
+			[[[italian feeds] firstObject] objectForKey:@"Detail"]);
+	}
+
+	NSURL *broken = stage(@"broken", nil);
+	[good() writeToFile:[[broken path] stringByAppendingPathComponent:@"plugin.plist"]
+	         atomically:YES];
+	NSString *badProj = [[broken path] stringByAppendingPathComponent:@"fr.lproj"];
+	[[NSFileManager defaultManager] createDirectoryAtPath:badProj
+	                         withIntermediateDirectories:YES attributes:nil error:NULL];
+	[@"this is not a property list" writeToFile:
+		[badProj stringByAppendingPathComponent:@"plugin.strings"]
+	                                 atomically:YES encoding:NSUTF8StringEncoding error:NULL];
+	NekoPlugin *unreadable = [[[NekoPlugin alloc] initWithFolder:broken] autorelease];
+	ok(![unreadable isUsable]
+	   && [[unreadable refusal] rangeOfString:@"fr.lproj"].location != NSNotFound,
+		@"and a language folder that cannot be read is an authoring mistake, said so",
+		[unreadable refusal]);
 
 	printf("\n--- the one that ships inside the app ---\n");
 

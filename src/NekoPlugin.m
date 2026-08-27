@@ -24,6 +24,7 @@ static NSString * const NekoPluginMarkers[] = { @"ACTION:", @"IMAGE:", @"LOOK:",
 {
 	[folder release];
 	[manifest release];
+	[strings release];
 	[refusal release];
 	[super dealloc];
 }
@@ -40,12 +41,12 @@ static NSString * const NekoPluginMarkers[] = { @"ACTION:", @"IMAGE:", @"LOOK:",
 
 - (NSString *)name
 {
-	return [manifest objectForKey:@"Name"] ?: [self identifier];
+	return [self localized:([manifest objectForKey:@"Name"] ?: [self identifier])];
 }
 
 - (NSString *)version { return [manifest objectForKey:@"Version"] ?: @"?"; }
 - (NSString *)author  { return [manifest objectForKey:@"Author"] ?: @""; }
-- (NSString *)summary { return [manifest objectForKey:@"Summary"] ?: @""; }
+- (NSString *)summary { return [self localized:([manifest objectForKey:@"Summary"] ?: @"")]; }
 
 - (BOOL)wantsNetwork
 {
@@ -136,7 +137,7 @@ static NSString * const NekoPluginMarkers[] = { @"ACTION:", @"IMAGE:", @"LOOK:",
 		return;
 	}
 
-	NSArray *known = [NSArray arrayWithObjects:@"Feeds", @"Text", nil];
+	NSArray *known = [NSArray arrayWithObjects:@"Feeds", @"Text", @"Characters", nil];
 	NSEnumerator *e = [extends keyEnumerator];
 	NSString *key;
 	while((key = [e nextObject]) != nil)
@@ -148,6 +149,75 @@ static NSString * const NekoPluginMarkers[] = { @"ACTION:", @"IMAGE:", @"LOOK:",
 
 	[self checkFeeds:[extends objectForKey:@"Feeds"]];
 	[self checkText:[extends objectForKey:@"Text"]];
+	[self checkCharacters:[extends objectForKey:@"Characters"]];
+	[self checkStrings];
+}
+
+/* Characters a plugin ships. Named one by one rather than found by scanning the
+   folder, for the same reason as everything else here: the manifest is the
+   contract, and a folder that appears after it was written is not part of it. */
+- (void)checkCharacters:(NSArray *)characters
+{
+	if(characters == nil)
+		return;
+	if(![characters isKindOfClass:[NSArray class]]) {
+		[self refuse:NekoPluginLocalized(@"Its Characters section is not a list.")];
+		return;
+	}
+
+	NSFileManager *files = [NSFileManager defaultManager];
+	NSEnumerator *e = [characters objectEnumerator];
+	NSString *name;
+	while((name = [e nextObject]) != nil) {
+		if(![name isKindOfClass:[NSString class]]
+		   || ![[name pathExtension] isEqualToString:@"nekochar"]) {
+			[self refuse:NekoPluginLocalized(@"Each of its characters has to be the name of a folder ending in .nekochar.")];
+			return;
+		}
+		NSString *inside = [[folder path] stringByAppendingPathComponent:name];
+		if(![files fileExistsAtPath:inside]) {
+			[self refuse:[NSString stringWithFormat:
+				NekoPluginLocalized(@"It says it ships the character “%@”, and that folder is not inside it."), name]];
+			return;
+		}
+		NSDictionary *manifestOfCharacter = [NSDictionary dictionaryWithContentsOfFile:
+			[inside stringByAppendingPathComponent:@"character.plist"]];
+		NSString *word = [manifestOfCharacter objectForKey:@"Identifier"];
+		if([word length] == 0) {
+			[self refuse:[NSString stringWithFormat:
+				NekoPluginLocalized(@"The character “%@” has no readable character.plist with an Identifier in it."), name]];
+			return;
+		}
+		if([word rangeOfCharacterFromSet:
+				[[NSCharacterSet alphanumericCharacterSet] invertedSet]].location != NSNotFound) {
+			[self refuse:[NSString stringWithFormat:
+				NekoPluginLocalized(@"The character identifier “%@” has punctuation or spaces in it; it has to be one plain word."), word]];
+			return;
+		}
+	}
+}
+
+/* A language folder that cannot be read is an authoring mistake, and a silent
+   fallback would leave the author believing their translations work. */
+- (void)checkStrings
+{
+	NSFileManager *files = [NSFileManager defaultManager];
+	NSEnumerator *e = [[files contentsOfDirectoryAtPath:[folder path] error:NULL]
+		objectEnumerator];
+	NSString *entry;
+	while((entry = [e nextObject]) != nil) {
+		if(![[entry pathExtension] isEqualToString:@"lproj"])
+			continue;
+		NSString *table = [[[folder path] stringByAppendingPathComponent:entry]
+			stringByAppendingPathComponent:@"plugin.strings"];
+		if(![files fileExistsAtPath:table])
+			continue;
+		if([NSDictionary dictionaryWithContentsOfFile:table] == nil) {
+			[self refuse:[NSString stringWithFormat:
+				NekoPluginLocalized(@"Its %@ translations cannot be read; plugin.strings has to be a property list."), entry]];
+			return;
+		}
+	}
 }
 
 /* Text processing: the plugin is handed what somebody said, or what the cat is
@@ -251,10 +321,71 @@ static NSString * const NekoPluginMarkers[] = { @"ACTION:", @"IMAGE:", @"LOOK:",
 		NSMutableDictionary *one = [NSMutableDictionary dictionaryWithDictionary:feed];
 		NSString *detail = [feed objectForKey:@"Detail"];
 		if([detail length] > 0)
-			[one setObject:NSLocalizedString(detail, nil) forKey:@"Detail"];
+			[one setObject:[self localized:detail] forKey:@"Detail"];
+		NSString *shown = [feed objectForKey:@"Name"];
+		if([shown length] > 0)
+			[one setObject:[self localized:shown] forKey:@"Name"];
 		[localized addObject:one];
 	}
 	return localized;
+}
+
+- (NSArray *)characterPaths
+{
+	if(![self isUsable])
+		return [NSArray array];
+	NSArray *named = [[manifest objectForKey:@"Extends"] objectForKey:@"Characters"];
+	if(![named isKindOfClass:[NSArray class]])
+		return [NSArray array];
+	NSMutableArray *paths = [NSMutableArray array];
+	NSEnumerator *e = [named objectEnumerator];
+	NSString *name;
+	while((name = [e nextObject]) != nil)
+		[paths addObject:[[folder path] stringByAppendingPathComponent:name]];
+	return paths;
+}
+
+/* The plugin's own strings, for the language the app is running in. Loaded once,
+   and only if it ships any. */
+- (NSDictionary *)strings
+{
+	if(strings != nil)
+		return strings;
+
+	NSFileManager *files = [NSFileManager defaultManager];
+	NSEnumerator *e = [[[NSBundle mainBundle] preferredLocalizations] objectEnumerator];
+	NSString *language;
+	while((language = [e nextObject]) != nil) {
+		NSString *code = [language length] > 2 ? [language substringToIndex:2] : language;
+		NSEnumerator *tries = [[NSArray arrayWithObjects:language, code, nil] objectEnumerator];
+		NSString *attempt;
+		while((attempt = [tries nextObject]) != nil) {
+			NSString *path = [[[folder path] stringByAppendingPathComponent:
+				[attempt stringByAppendingPathExtension:@"lproj"]]
+				stringByAppendingPathComponent:@"plugin.strings"];
+			if(![files fileExistsAtPath:path])
+				continue;
+			NSDictionary *read = [NSDictionary dictionaryWithContentsOfFile:path];
+			if(read != nil) {
+				strings = [read retain];
+				return strings;
+			}
+		}
+	}
+	strings = [[NSDictionary dictionary] retain];   /* asked, and there is none */
+	return strings;
+}
+
+- (NSString *)localized:(NSString *)key
+{
+	if([key length] == 0)
+		return key;
+	NSString *mine = [[self strings] objectForKey:key];
+	if([mine length] > 0)
+		return mine;
+	/* The app's own tables next: that is how the feeds shipped inside the app
+	   keep their translations without shipping a strings file of their own. */
+	return NSLocalizedString(key, nil);
 }
 
 - (NSDictionary *)text
@@ -287,6 +418,13 @@ static NSString * const NekoPluginMarkers[] = { @"ACTION:", @"IMAGE:", @"LOOK:",
 	else if(feeds > 1)
 		[parts addObject:[NSString stringWithFormat:
 			NekoPluginLocalized(@"%lu feeds"), (unsigned long)feeds]];
+
+	NSUInteger characters = [[self characterPaths] count];
+	if(characters == 1)
+		[parts addObject:NekoPluginLocalized(@"1 character")];
+	else if(characters > 1)
+		[parts addObject:[NSString stringWithFormat:
+			NekoPluginLocalized(@"%lu characters"), (unsigned long)characters]];
 
 	if([self text] != nil) {
 		NSString *which = [self processesTextGoing:YES]

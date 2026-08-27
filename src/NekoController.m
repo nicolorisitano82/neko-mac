@@ -277,6 +277,10 @@ static const float NekoMaxStopRadius = 200.0f;
 
 	/* The plugins that ship inside the app are put in place before anything asks
 	   what feeds exist — the news sources are one of them now. */
+	[[NSNotificationCenter defaultCenter] addObserver:self
+	                                        selector:@selector(pluginsChanged:)
+	                                            name:NekoPluginsDidChangeNotification
+	                                          object:nil];
 	[[NekoPlugins sharedPlugins] seedFromBundle];
 
 	/* Once a day, yesterday becomes a few durable lines. Costs nothing on the
@@ -2128,6 +2132,14 @@ static const float NekoMaxStopRadius = 200.0f;
 	/* The system owns this one, so it is read back rather than remembered. */
 	[loginCheck setState:[self opensAtLogin] ? NSControlStateValueOn : NSControlStateValueOff];
 	[self updateValueFields];
+}
+
+/* A plugin that arrives, leaves, or is switched can bring characters with it. */
+- (void)pluginsChanged:(NSNotification *)note
+{
+	[NekoCharacter forgetTheList];
+	[self buildCharacterMenu];
+	[self settingsChanged];
 }
 
 - (void)showPlugins:(id)sender
