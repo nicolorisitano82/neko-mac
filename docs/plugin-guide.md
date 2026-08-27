@@ -19,7 +19,7 @@ a **separate process** that speaks JSON over a pipe and knows nothing about the
 inside of the app.
 
 Everything in sections 1 to 5 works in Neko 2.5 and later, except verbs
-(section 4c), which need 2.6. Section 6 is a specification, not a description: a
+(section 4c), which need 2.6, and the player door, which needs 2.7. Section 6 is a specification, not a description: a
 manifest that declares it is refused today, with the sentence that says so.
 
 ## 1. The shape of one
@@ -291,8 +291,9 @@ of the user's own Shortcuts.
 | `Phrases` | yes | the words to listen for, three letters at least each |
 | `Confirm` | yes | the sentence shown before anything happens; a `%@` in it is filled with the rest of what was said |
 | `Summary` | no | one line, shown in the plugins window |
-| `Url` | one of the two | the address to open; a `%@` in it is filled with the rest of what was said, percent-encoded |
-| `Shortcut` | one of the two | the name of a Shortcut the user has; it is handed the rest of what was said |
+| `Url` | one of the three | the address to open; a `%@` in it is filled with the rest of what was said, percent-encoded |
+| `Shortcut` | one of the three | the name of a Shortcut the user has; it is handed the rest of what was said |
+| `Player` + `Command` | one of the three | `music` or `spotify`, and one command from the closed list below |
 
 `Confirm` and `Summary` go through your `*.lproj/plugin.strings` like everything
 else, so a verb can read itself back in four languages.
@@ -311,14 +312,18 @@ means for you:
   swift*.
 - **The argument is everything after the phrase**, trimmed of spaces and of
   `? ! . , ; : “ ” " '`.
-- **A `%@` with nothing to fill it is not a match.** If your `Url` has a `%@` and
-  the person said only *"metti"*, no verb fires and the question goes on to the
-  engine as usual.
+- **A verb that needs words is not a match without them.** If your `Confirm`
+  sentence has a `%@` in it — or your `Url` does — and the person said only
+  *"metti"*, no verb fires and the question goes on to the engine as usual. One
+  without a `%@` is complete as it stands: *"alza il volume"* is the whole
+  sentence. (This is asked of the read-back rather than of the door, because a
+  Shortcut and a player can want the words just as much as an address can. Asking
+  the address alone is what made 2.6's volume verbs do nothing.)
 - **Only when doing things is switched on.** Verbs live under the same switch as
   the app's own actions, in Settings → Actions. Off, nothing you listed is even
   looked at.
 
-### The two doors, and what is behind them
+### The three doors, and what is behind them
 
 **An address.** `Url` may begin with `https`, `spotify`, `music`, `itms`, `itmss`
 or `mailto`, and with nothing else. `file:` is refused. `shortcuts:` is refused as
@@ -331,7 +336,28 @@ themselves and calls it what you told them to. If it is not there, the verb
 answers *"That did not work."* Nothing comes back from it — a verb does something,
 it does not answer. Your manifest must declare `Wants = shortcuts`.
 
-Exactly one of the two, never both. A verb that could do two things is a verb
+**A player.** `Player` is `music` or `spotify`; `Command` is one of `play`,
+`pause`, `playpause`, `next`, `previous`, `volumeup`, `volumedown`, `playnamed`.
+Neko sends it to Music or Spotify itself, through the scripting dictionary each of
+them publishes, and macOS asks the person once per application under Privacy &
+Security → Automation. Your manifest must declare `Wants = players`.
+
+You do not supply a line of script, and a verb carrying a `Script` or
+`AppleScript` key is refused. The scripts live in `NekoPlayer.m`, in one file,
+where anybody deciding whether to trust this can read every command a plugin is
+able to cause.
+
+Two limits worth knowing before you design around them, both measured:
+
+- **`playnamed` works on `music` only, and only in the person's own library.**
+  Musica's dictionary cannot search the streaming catalogue and Spotify's cannot
+  search at all. Asked for `playnamed` on `spotify`, the verb answers a sentence
+  saying so.
+- **`music://music.apple.com/search?term=…` does not search.** It brings Musica
+  forward, selects Cerca, and drops the term. Do not ship it; an earlier version
+  of the Apple Music example did.
+
+Exactly one of the three, never two. A verb that could do two things is a verb
 whose read-back sentence is a lie.
 
 ### What is checked, and when
@@ -352,10 +378,10 @@ happen to them proves nothing about whether it was understood.
 
 `examples/Spotify.nekoplugin` and `examples/Apple Music.nekoplugin` in this
 repository, and inside the app itself — **Plugins… → Examples…** shows them in
-Finder, ready to drag onto **Add…**. Six verbs each: search and artist through an
-address, volume up, volume down, pause and skip through four Shortcuts you make.
-Their READMEs say which half is which, and why enabling both at once means two
-cats answering the same sentence.
+Finder, ready to drag onto **Add…**. Eight verbs and seven: volume, pause, resume,
+skip and back sent straight to the player, and searching through the one address
+each of them honours. Nothing to build. Their READMEs say what each cannot do, and
+why enabling both at once means two cats answering the same sentence.
 
 They ship switched off and outside the seeded folder, which is the honest place
 for an example: something to read and copy, not something that starts answering
@@ -399,11 +425,16 @@ list with its reason so you can fix it. These are the exact sentences:
 | a marker in a phrase | *One of its verbs carries one of Neko's own markers in a phrase.* |
 | no `Confirm` | *The verb "search" has no Confirm sentence, and nothing here happens without being read back first.* |
 | a marker in `Confirm` | *One of its verbs carries one of Neko's own markers in its Confirm sentence.* |
-| neither or both of `Url` and `Shortcut` | *The verb "search" needs exactly one of Url or Shortcut.* |
+| not exactly one of `Url`, `Shortcut`, `Player`+`Command` | *The verb "search" needs exactly one of Url, Shortcut, or Player and Command.* |
 | a verb with a `Program` | *One of its verbs wants to run a program of its own, which this version does not allow.* |
 | a scheme outside the list, `shortcuts:` included | *The verb "search" opens an address Neko will not open; allowed are https, spotify, music, itms and mailto.* |
 | a `Url` verb without `Wants = open` | *It has verbs that open an address without asking to open things.* |
 | a `Shortcut` verb without `Wants = shortcuts` | *It has verbs that run one of your Shortcuts without asking to.* |
+| a `Player` verb without `Wants = players` | *It has verbs that command Music or Spotify without asking to.* |
+| a player that is not music or spotify | *The verb "play" names the player "Terminal", and Neko only knows music and spotify.* |
+| a command outside the list | *The verb "play" asks for "quit", which is not one of the commands Neko can send.* |
+| `Player` without `Command`, or the other way round | *The verb "play" needs both a Player and a Command.* |
+| a verb carrying a `Script` of its own | *One of its verbs carries a script of its own. Neko sends its own commands to Music and Spotify and never anybody else's.* |
 | an unreadable `.lproj/plugin.strings` | *Its fr.lproj translations cannot be read; plugin.strings has to be a property list.* |
 
 Two identifiers claiming the same string: the first one read wins, and the second
@@ -667,8 +698,8 @@ Downloads on a click. Your program does not touch the filesystem.
 - `Interface` is the one you tested against; `MinimumApp` is honest.
 - Every feed word is one plain word, is not a word the app already governs, and
   every address is `https`.
-- `Wants` lists everything you actually use: `network`, `open` and `shortcuts` for
-  verbs, and `program` if you ship one.
+- `Wants` lists everything you actually use: `network`, `open`, `shortcuts` and
+  `players` for verbs, and `program` if you ship one.
 - `Summary` says what somebody deciding whether to trust you needs to know — where
   data goes, above all — and contains no marker.
 - Every verb has a `Confirm` sentence that names the thing and the place, exactly

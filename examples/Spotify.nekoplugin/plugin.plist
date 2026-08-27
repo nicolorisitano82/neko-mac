@@ -22,26 +22,13 @@
 					<string>put on</string>
 				</array>
 				<key>Summary</key>
-				<string>searches Spotify and opens it</string>
+				<string>searches Spotify and brings it forward</string>
 				<key>Url</key>
 				<string>spotify:search:%@</string>
 			</dict>
 			<dict>
-				<key>Confirm</key>
-				<string>Cerco “%@” su Spotify?</string>
-				<key>Identifier</key>
-				<string>artist</string>
-				<key>Phrases</key>
-				<array>
-					<string>metti qualcosa di</string>
-					<string>play something by</string>
-				</array>
-				<key>Summary</key>
-				<string>searches an artist on Spotify</string>
-				<key>Url</key>
-				<string>spotify:search:%@</string>
-			</dict>
-			<dict>
+				<key>Command</key>
+				<string>volumeup</string>
 				<key>Confirm</key>
 				<string>Alzo il volume?</string>
 				<key>Identifier</key>
@@ -50,15 +37,18 @@
 				<array>
 					<string>alza il volume</string>
 					<string>più forte</string>
+					<string>alza</string>
 					<string>volume up</string>
 					<string>louder</string>
 				</array>
-				<key>Shortcut</key>
-				<string>Neko Volume Up</string>
+				<key>Player</key>
+				<string>spotify</string>
 				<key>Summary</key>
-				<string>runs your “Neko Volume Up” Shortcut</string>
+				<string>tells spotify to turn it up</string>
 			</dict>
 			<dict>
+				<key>Command</key>
+				<string>volumedown</string>
 				<key>Confirm</key>
 				<string>Abbasso il volume?</string>
 				<key>Identifier</key>
@@ -67,15 +57,18 @@
 				<array>
 					<string>abbassa il volume</string>
 					<string>più piano</string>
+					<string>abbassa</string>
 					<string>volume down</string>
 					<string>quieter</string>
 				</array>
-				<key>Shortcut</key>
-				<string>Neko Volume Down</string>
+				<key>Player</key>
+				<string>spotify</string>
 				<key>Summary</key>
-				<string>runs your “Neko Volume Down” Shortcut</string>
+				<string>tells spotify to turn it down</string>
 			</dict>
 			<dict>
+				<key>Command</key>
+				<string>pause</string>
 				<key>Confirm</key>
 				<string>Metto in pausa?</string>
 				<key>Identifier</key>
@@ -86,13 +79,35 @@
 					<string>ferma la musica</string>
 					<string>pausa</string>
 					<string>pause the music</string>
+					<string>stop the music</string>
 				</array>
-				<key>Shortcut</key>
-				<string>Neko Pause</string>
+				<key>Player</key>
+				<string>spotify</string>
 				<key>Summary</key>
-				<string>runs your “Neko Pause” Shortcut</string>
+				<string>tells spotify to pause</string>
 			</dict>
 			<dict>
+				<key>Command</key>
+				<string>play</string>
+				<key>Confirm</key>
+				<string>Riprendo?</string>
+				<key>Identifier</key>
+				<string>play</string>
+				<key>Phrases</key>
+				<array>
+					<string>riprendi</string>
+					<string>riprendi la musica</string>
+					<string>resume</string>
+					<string>keep playing</string>
+				</array>
+				<key>Player</key>
+				<string>spotify</string>
+				<key>Summary</key>
+				<string>tells spotify to start again</string>
+			</dict>
+			<dict>
+				<key>Command</key>
+				<string>next</string>
 				<key>Confirm</key>
 				<string>Passo alla prossima?</string>
 				<key>Identifier</key>
@@ -104,10 +119,28 @@
 					<string>next track</string>
 					<string>skip this</string>
 				</array>
-				<key>Shortcut</key>
-				<string>Neko Next Track</string>
+				<key>Player</key>
+				<string>spotify</string>
 				<key>Summary</key>
-				<string>runs your “Neko Next Track” Shortcut</string>
+				<string>tells spotify to skip</string>
+			</dict>
+			<dict>
+				<key>Command</key>
+				<string>previous</string>
+				<key>Confirm</key>
+				<string>Torno alla precedente?</string>
+				<key>Identifier</key>
+				<string>previous</string>
+				<key>Phrases</key>
+				<array>
+					<string>canzone precedente</string>
+					<string>torna indietro</string>
+					<string>previous track</string>
+				</array>
+				<key>Player</key>
+				<string>spotify</string>
+				<key>Summary</key>
+				<string>tells spotify to go back</string>
 			</dict>
 		</array>
 	</dict>
@@ -118,17 +151,17 @@
 	<key>License</key>
 	<string>public domain</string>
 	<key>MinimumApp</key>
-	<string>2.6</string>
+	<string>2.7</string>
 	<key>Name</key>
 	<string>Spotify</string>
 	<key>Summary</key>
-	<string>Searching and playing needs no permission — it opens a spotify: address. Volume, pause and skip need three Shortcuts of your own, named below.</string>
+	<string>Volume, pause and skip go straight to Spotify — no Shortcut to make. “Metti Taylor Swift” opens the search in Spotify, because Spotify lets nothing outside it search: its window does that, and then it plays.</string>
 	<key>Version</key>
-	<string>1.0</string>
+	<string>2.0</string>
 	<key>Wants</key>
 	<array>
+		<string>players</string>
 		<string>open</string>
-		<string>shortcuts</string>
 	</array>
 </dict>
 </plist>

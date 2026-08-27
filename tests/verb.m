@@ -284,7 +284,7 @@ int main(void)
 		if([[example verbs] count] == 0)
 			continue;
 		withVerbs++;
-		ok([[example verbs] count] == 6, @"with its six phrases",
+		ok([[example verbs] count] >= 7, @"with all of its verbs",
 			[example describeWhatItAdds]);
 		/* Every one of them read back, and none of them a marker. */
 		NSEnumerator *v = [[example verbs] objectEnumerator];

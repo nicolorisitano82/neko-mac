@@ -1,5 +1,90 @@
 # Changelog
 
+## 2.7 — 2026-08-27
+
+### Music and Spotify, spoken to directly
+
+2.6 gave a plugin verbs, and made a bad call about how one of them should reach a
+music player: through a Shortcut the person had to build first. The report came
+back the same day — *"alzo e abbasso il volume ma lui dice di non capire il
+comando"* — and then, plainly: *"non vorrei usassi le shortcut, ma ti integrassi
+direttamente con spotify e musica di apple."*
+
+So Neko talks to them itself. `Extends.Verbs` gains a third door beside `Url` and
+`Shortcut`: a **`Player`** and a **`Command`**, both from closed lists — `music`
+or `spotify`, and one of `play`, `pause`, `playpause`, `next`, `previous`,
+`volumeup`, `volumedown`, `playnamed`. Volume, pause and skip now work the moment
+you switch the plugin on, with nothing to build.
+
+**Measured before it was designed**, because a sandbox is not a thing to reason
+about: a throwaway application bundle, signed exactly like Neko —
+`com.apple.security.temporary-exception.apple-events` naming `com.apple.Music` and
+`com.spotify.client` and nothing else — read Music's volume, set it and put it
+back, counted the library, and read Spotify's player state and current track, all
+from inside its container. The entitlement carries that measurement in a comment
+next to it.
+
+**A plugin never supplies a line of script.** The AppleScript lives in
+`NekoPlayer.m`, in one place, where it can be read; a plugin names a player and a
+command and nothing else. A verb carrying a `Script` key is refused outright —
+refused rather than ignored, which is the rule everywhere else in that file.
+
+**macOS still asks**, once per application, under Privacy & Security → Automation.
+The Permissions tab has a row for it that brings the prompt up at a moment you
+chose, and — the trap the Accessibility and Location buttons both fell into
+before — if the answer is already no, it opens the pane instead of pressing a
+button that silently does nothing.
+
+Two things this honestly cannot do, and both are said in a sentence rather than
+hidden:
+
+- **Spotify cannot be searched from outside.** Its dictionary plays a URI and does
+  not search, so *"metti Taylor Swift"* opens the search in Spotify's own window,
+  which is what its `spotify:` address is for.
+- **Apple Music's catalogue is not scriptable either.** *"Metti Battisti"* plays
+  from **your own library** — artist first, then title — and says *"nella tua
+  libreria non c'è niente di Battisti"* when there is not.
+
+### The volume verbs did nothing at all
+
+Beneath the design mistake was a plain one. A verb whose address holds a `%@` has
+nothing to open without a word after it, and the test for that was
+`[address rangeOfString:@"%@"].location != NSNotFound`. Sent to a verb with **no**
+address, `rangeOfString:` answers `{0, 0}` — and 0 is not `NSNotFound`. So every
+Shortcut verb said with nothing after it was silently discarded: *"alza il
+volume"*, *"pausa"*, *"prossima canzone"*, all of them.
+
+The rule asks the read-back now instead of the address — a sentence with a `%@` in
+it needs words, one without is complete as it stands. And the check that was
+missing is in place: for both examples, **all 64 phrases** are said exactly as
+written and have to come back as their own verb. It would have caught this on the
+first run.
+
+### And when a Shortcut really is missing
+
+Plugins may still use Shortcuts, and 2.6 answered a missing one with *"non ha
+funzionato"*, which is true and useless. It says which Shortcut now, and the
+plugins window lists the ones a switched-on plugin needs and you have not made.
+
+### Also
+
+- Both examples rewritten: eight verbs for Apple Music, seven for Spotify, and not
+  a single Shortcut to build.
+- `tests/player.m`, 18 checks: the two closed lists, six ways a manifest is
+  refused, and the volume of a running Music turned down ten and put back.
+- **Opening the Permissions tab used to ask for the permission.** The first way to
+  find out whether macOS allows this was to try it and see — and trying is exactly
+  what brings the prompt up, so looking at a window would have asked to control
+  Music. It reads the consent database now
+  (`AEDeterminePermissionToAutomateTarget`, `askUserIfNeeded` NO), which answers
+  allowed, refused or never-asked and shows nobody anything. Found because sending
+  an Apple Event reached the run loop in the middle of building the tab and drew
+  its footer twice — `tests/layout.m` complained about three overlaps that had
+  nothing to do with layout.
+- AppleScript has no `min` and no `max`. The first draft of the volume commands
+  assumed it did, and answered *"Musica non l'ha fatto"* until a test asked what
+  the volume was before and after.
+
 ## 2.6 — 2026-08-27
 
 ### Verbs: a plugin can ask to be told when you say something

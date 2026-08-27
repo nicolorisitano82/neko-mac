@@ -220,8 +220,9 @@ Two slices: plugins in 2.5, verbs in 2.6.
   away — it never blocks the conversation, it sees the words and nothing around
   them, and the diary keeps what was actually said rather than the rewording.
 
-- **Verbs** — a plugin lists phrases and, for each, one door: an address from a
-  closed list of schemes, or one of the user's own Shortcuts. The app matches the
+- **Verbs** — a plugin lists phrases and, for each, one door of three: an address
+  from a closed list of schemes, one of the user's own Shortcuts, or (2.7) a
+  command sent straight to Music or Spotify. The app matches the
   phrase in code before any engine is consulted, whole-word and longest-first,
   reads the plugin's own `Confirm` sentence back with the words in it, and opens
   nothing until somebody clicks yes. Enablement is checked again at that moment,

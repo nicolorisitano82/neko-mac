@@ -1,5 +1,7 @@
 #import "NekoPermissions.h"
 #import "NekoPlace.h"
+#import "NekoPlayer.h"
+#import "NekoPluginVerbs.h"
 #import "NekoListener.h"
 #import "NekoDesktop.h"
 #import "NekoWakeWord.h"
@@ -42,6 +44,8 @@
 		return NekoPermissionLocalized(@"Your folders");
 	if([identifier isEqualToString:@"location"])
 		return NekoPermissionLocalized(@"Where you are");
+	if([identifier isEqualToString:@"players"])
+		return NekoPermissionLocalized(@"Music and Spotify");
 	return identifier;
 }
 
@@ -57,6 +61,8 @@
 		return NekoPermissionLocalized(@"Window titles, and nothing else. Neko never asks for this one: it is used if you granted it for some other reason, and simply left out if not.");
 	if([identifier isEqualToString:@"folders"])
 		return NekoPermissionLocalized(@"Handed over one folder at a time, in a panel, so the cat can copy or move a file. Nothing is read until you do.");
+	if([identifier isEqualToString:@"players"])
+		return NekoPermissionLocalized(@"So that “alza il volume”, “metti in pausa” and “prossima canzone” reach Music and Spotify themselves. Those two applications and no others, with a fixed list of commands Neko sends. macOS asks once for each of them.");
 	if([identifier isEqualToString:@"location"]) {
 		NSString *town = [[NekoPlace sharedPlace] town];
 		NSString *region = [[NekoPlace sharedPlace] region];
@@ -106,6 +112,25 @@
 	if([identifier isEqualToString:@"folders"])
 		return [[[NekoFolderAccess sharedAccess] allowedKeys] count] > 0
 			? NekoPermissionGranted : NekoPermissionUnknown;
+	if([identifier isEqualToString:@"players"]) {
+		/* Read from the consent database, which costs nothing and asks nobody
+		   anything: a tab that prompted for permission by being looked at would be
+		   worse than no tab. Granted when either of the two says yes; refused only
+		   when every one that is here says no. */
+		NekoPlayerConsent music = [NekoPlayer consentFor:@"music"];
+		NekoPlayerConsent spotify = [NekoPlayer consentFor:@"spotify"];
+		if(music == NekoPlayerConsentImpossible
+		   && spotify == NekoPlayerConsentImpossible)
+			return NekoPermissionUnavailable;
+		if(music == NekoPlayerConsentGiven || spotify == NekoPlayerConsentGiven)
+			return NekoPermissionGranted;
+		if((music == NekoPlayerConsentRefused
+		    || music == NekoPlayerConsentImpossible)
+		   && (spotify == NekoPlayerConsentRefused
+		       || spotify == NekoPlayerConsentImpossible))
+			return NekoPermissionDenied;
+		return NekoPermissionUnknown;
+	}
 	if([identifier isEqualToString:@"location"]) {
 		if(![NekoPlace isAvailable])
 			return NekoPermissionUnavailable;
@@ -139,6 +164,10 @@
 	   the cat asks which town instead of knowing. */
 	if([identifier isEqualToString:@"location"])
 		return NO;
+	/* Only if something actually listens for one of those phrases: a plugin the
+	   person switched on. Nothing here is wanted by the app on its own. */
+	if([identifier isEqualToString:@"players"])
+		return [NekoPluginVerbs anythingCommandsAPlayer];
 	return NO;                    /* screen recording is never needed, only used */
 }
 
@@ -184,6 +213,22 @@
 		CGRequestScreenCaptureAccess();
 		return;
 	}
+	if([identifier isEqualToString:@"players"]) {
+		/* There is no API that asks. The prompt belongs to the first Apple event
+		   that needs one, so the smallest harmless question is sent to whichever
+		   of the two is here, and macOS does the asking. */
+		if([NekoPlayer isInstalled:@"music"])
+			[NekoPlayer askToControl:@"music"];
+		if([NekoPlayer isInstalled:@"spotify"])
+			[NekoPlayer askToControl:@"spotify"];
+		/* macOS asks once. After a no it answers no without showing anything,
+		   which is what "the Ask button does nothing" was twice before — so if the
+		   answer is still no a moment later, the pane where it can be changed is
+		   opened instead. */
+		[self performSelector:@selector(settingsIfStillRefused)
+		           withObject:nil afterDelay:1.2];
+		return;
+	}
 	if([identifier isEqualToString:@"location"]) {
 		/* Pressed by hand, so it looks again whatever it already knows: the
 		   once-a-day rule is there to stop the app pestering the system, not to
@@ -224,6 +269,8 @@
 		pane = @"Privacy_AllFiles";
 	else if([identifier isEqualToString:@"location"])
 		pane = @"Privacy_LocationServices";
+	else if([identifier isEqualToString:@"players"])
+		pane = @"Privacy_Automation";
 	if(pane == nil)
 		return;
 	[[NSWorkspace sharedWorkspace] openURL:[NSURL URLWithString:
@@ -239,7 +286,8 @@
 {
 	NSMutableArray *all = [NSMutableArray array];
 	NSEnumerator *e = [[NSArray arrayWithObjects:@"microphone", @"speech",
-		@"accessibility", @"location", @"folders", @"screen", nil] objectEnumerator];
+		@"accessibility", @"location", @"players", @"folders", @"screen",
+		nil] objectEnumerator];
 	NSString *key;
 	while((key = [e nextObject]) != nil)
 		[all addObject:[[[NekoPermission alloc] initWithIdentifier:key] autorelease]];

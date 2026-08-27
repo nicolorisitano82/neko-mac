@@ -2,6 +2,9 @@
 #import "NekoPlugins.h"
 #import "NekoPlugin.h"
 #import "NekoShortcutProvider.h"
+#import "NekoPlayer.h"
+
+#define NekoVerbsLocalized(text) NSLocalizedString(text, nil)
 
 @implementation NekoPluginVerbs
 
@@ -12,6 +15,22 @@
 	while((plugin = [e nextObject]) != nil)
 		if([[plugin verbs] count] > 0)
 			return YES;
+	return NO;
+}
+
++ (BOOL)anythingCommandsAPlayer
+{
+	NSEnumerator *e = [[[NekoPlugins sharedPlugins] enabled] objectEnumerator];
+	NekoPlugin *plugin;
+	while((plugin = [e nextObject]) != nil) {
+		if(![plugin wantsToControlPlayers])
+			continue;
+		NSEnumerator *v = [[plugin verbs] objectEnumerator];
+		NSDictionary *verb;
+		while((verb = [v nextObject]) != nil)
+			if([[verb objectForKey:@"Player"] length] > 0)
+				return YES;
+	}
 	return NO;
 }
 
@@ -120,6 +139,11 @@
 
 + (BOOL)perform:(NSDictionary *)verb
 {
+	return [self perform:verb saying:NULL];
+}
+
++ (BOOL)perform:(NSDictionary *)verb saying:(NSString **)problem
+{
 	/* Asked again at the moment of doing, not at the moment of matching: a switch
 	   turned off between the question and the yes has to count. */
 	NekoPlugin *plugin = [[NekoPlugins sharedPlugins]
@@ -152,6 +176,19 @@
 		return url != nil && [[NSWorkspace sharedWorkspace] openURL:url];
 	}
 
+	/* Music and Spotify, spoken to directly: the reason 2.6's volume verbs needed
+	   a Shortcut nobody had made. The plugin named a player and a command; the
+	   script that carries it out is the app's own. */
+	NSString *player = [verb objectForKey:@"Player"];
+	NSString *command = [verb objectForKey:@"Command"];
+	if([player length] > 0 && [command length] > 0) {
+		if(![plugin wantsToControlPlayers])
+			return NO;
+		if(![NekoPlayer knows:player] || ![NekoPlayer knowsCommand:command])
+			return NO;              /* checked twice: on reading, and on doing */
+		return [NekoPlayer perform:command on:player with:argument saying:problem];
+	}
+
 	NSString *shortcut = [verb objectForKey:@"Shortcut"];
 	if([shortcut length] == 0 || ![plugin wantsShortcuts])
 		return NO;
@@ -160,8 +197,15 @@
 	   from it: a verb does something, it does not answer. */
 	NekoShortcutProvider *runner = [[[NekoShortcutProvider alloc]
 		initWithShortcutName:shortcut] autorelease];
-	if(![runner shortcutExists])
+	if(![runner shortcutExists]) {
+		/* The one failure somebody can do something about, so it is said by name
+		   rather than as "that did not work". */
+		if(problem != NULL)
+			*problem = [NSString stringWithFormat:
+				NekoVerbsLocalized(@"You have no Shortcut called “%@”. The plugin says how to make it."),
+				shortcut];
 		return NO;
+	}
 	return [runner launchShortcutWithURL:[runner urlForQuestion:argument]];
 }
 

@@ -1111,10 +1111,12 @@ static const NSTimeInterval NekoHoldToType = 0.5;
 			[self sayInCharacter:NekoAskLocalized(@"All right, I will not.")];
 			return;
 		}
-		if([NekoPluginVerbs perform:verb])
+		NSString *problem = nil;
+		if([NekoPluginVerbs perform:verb saying:&problem])
 			[self sayInCharacter:NekoAskLocalized(@"Done.")];
 		else
-			[self sayInCharacter:NekoAskLocalized(@"That did not work.")];
+			[self sayInCharacter:problem
+				?: NekoAskLocalized(@"That did not work.")];
 	}];
 }
 
