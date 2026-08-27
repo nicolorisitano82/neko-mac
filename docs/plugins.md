@@ -210,9 +210,13 @@ Verb = { Identifier = "search"; Phrases = ( "metti", "play" );
 - **`Confirm` is required**, not a flag that could be false. A verb without a
   sentence to read back is refused when the manifest is read, which means the
   read-back cannot be switched off by a plugin — only by not being installed.
-- **Exactly one of `Url` or `Shortcut`.** An address from a closed list of schemes
-  — https, spotify, music, itms, mailto — or a Shortcut the user made. Neither is
-  a `Kind`: there is no third door to add.
+- **Exactly one door of three.** An address from a closed list of schemes — https,
+  spotify, music, itms, mailto — or a Shortcut the user made, or a command sent to
+  Music or Spotify. The third arrived in 2.7 because the second was the wrong
+  answer for a music player: *"non vorrei usassi le shortcut, ma ti integrassi
+  direttamente."* It is a `Player` and a `Command`, each from a closed list, and a
+  plugin never supplies script text — the AppleScript is the app's, in one file
+  that can be read.
 - **`file:` is refused, and so is `shortcuts:` as an address.** The second one
   matters more: it is how a plugin would run a Shortcut while declaring it only
   wanted to open a link.

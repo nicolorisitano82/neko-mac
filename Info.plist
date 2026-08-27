@@ -19,11 +19,11 @@
 	<key>CFBundlePackageType</key>
 	<string>APPL</string>
 	<key>CFBundleShortVersionString</key>
-	<string>2.6</string>
+	<string>2.7</string>
 	<key>CFBundleSignature</key>
 	<string>????</string>
 	<key>CFBundleVersion</key>
-	<string>2.6</string>
+	<string>2.7</string>
 	<key>NSHumanReadableCopyright</key>
 	<string>Public domain</string>
 	<key>NSMainNibFile</key>
@@ -40,5 +40,7 @@
 	<string>So that “what is the weather” and “what is happening here” need no town named. Neko keeps the name of the town and of the region, never the coordinates.</string>
 	<key>NSLocationWhenInUseUsageDescription</key>
 	<string>So that “what is the weather” and “what is happening here” need no town named. Neko keeps the name of the town and of the region, never the coordinates.</string>
+	<key>NSAppleEventsUsageDescription</key>
+	<string>So that “alza il volume”, “metti in pausa” and “prossima canzone” reach Music and Spotify directly. Neko speaks to those two applications and to no others, with a fixed list of commands it can send.</string>
 </dict>
 </plist>

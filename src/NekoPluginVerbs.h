@@ -20,6 +20,10 @@
 /* NO when nothing enabled declares a verb, which costs nothing to ask. */
 + (BOOL)anythingListens;
 
+/* Whether any of that is a command for Music or Spotify — which is what decides
+   whether the Permissions tab has anything to ask macOS for. */
++ (BOOL)anythingCommandsAPlayer;
+
 /* The best match for what somebody said, or nil. Longest phrase wins, so
    "alza il volume" beats "alza". The dictionary returned carries the verb's own
    keys plus:
@@ -33,5 +37,10 @@
    the plugin is gone, when its switch went off between the question and the yes,
    or when the address turns out not to be one Neko will open. */
 + (BOOL)perform:(NSDictionary *)verb;
+
+/* The same, with the sentence to say when it could not. "That did not work" is
+   true and useless: the one thing that goes wrong here is a Shortcut somebody has
+   not made yet, and the app knows its name. */
++ (BOOL)perform:(NSDictionary *)verb saying:(NSString **)problem;
 
 @end

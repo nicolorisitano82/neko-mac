@@ -25,5 +25,24 @@
 	<true/>
 	<key>com.apple.security.personal-information.location</key>
 	<true/>
+	<!-- Two applications by name, and no others: Music and Spotify. This is what
+	     lets "alza il volume" and "prossima canzone" actually do something rather
+	     than ask for a Shortcut somebody has never made.
+
+	     Measured before it was designed, because a sandbox is not something to
+	     reason about: a throwaway bundle signed exactly like this one read Music's
+	     volume, set it and put it back, counted the library, and read Spotify's
+	     state and current track — all from inside the sandbox.
+
+	     macOS still asks the person, once per application, under Privacy &
+	     Security > Automation, and a refusal there is answered in a sentence that
+	     names the setting. The scripts themselves live in NekoPlayer.m and nowhere
+	     else; a plugin names a player and a command from two closed lists and can
+	     never supply a line of script. -->
+	<key>com.apple.security.temporary-exception.apple-events</key>
+	<array>
+		<string>com.apple.Music</string>
+		<string>com.spotify.client</string>
+	</array>
 </dict>
 </plist>

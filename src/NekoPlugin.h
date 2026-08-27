@@ -49,6 +49,10 @@ extern const NSInteger NekoPluginInterface;
 - (BOOL)wantsToOpenThings;
 - (BOOL)wantsShortcuts;
 
+/* "players": the right to send one of a closed list of commands to Music or to
+   Spotify. Not the right to script them — the scripts are the app's. */
+- (BOOL)wantsToControlPlayers;
+
 /* The schemes a verb may open, and the only ones. */
 + (NSArray *)openableSchemes;
 
@@ -77,6 +81,11 @@ extern const NSInteger NekoPluginInterface;
    program of the plugin's own. nil when it does not process text. */
 - (NSDictionary *)text;
 - (NSString *)textShortcut;
+
+/* Every Shortcut of yours this plugin needs, verbs and text together, in the
+   order they were declared. Which of them exist is not asked here: a manifest is
+   read, and Shortcuts are somebody's own business. */
+- (NSArray *)shortcutsItNeeds;
 - (BOOL)processesTextGoing:(BOOL)inward;   /* YES for what you said, NO for the answer */
 
 /* "2 feeds", "nothing yet" — the line under its name in the panel. */

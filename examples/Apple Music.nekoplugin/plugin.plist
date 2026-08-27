@@ -9,10 +9,12 @@
 		<key>Verbs</key>
 		<array>
 			<dict>
+				<key>Command</key>
+				<string>playnamed</string>
 				<key>Confirm</key>
-				<string>Metto “%@” in Musica?</string>
+				<string>Metto “%@” dalla tua libreria?</string>
 				<key>Identifier</key>
-				<string>search</string>
+				<string>playnamed</string>
 				<key>Phrases</key>
 				<array>
 					<string>metti</string>
@@ -21,10 +23,10 @@
 					<string>play</string>
 					<string>put on</string>
 				</array>
-				<key>Shortcut</key>
-				<string>Neko Play Music</string>
+				<key>Player</key>
+				<string>music</string>
 				<key>Summary</key>
-				<string>runs your “Neko Play Music” Shortcut with what you asked for</string>
+				<string>plays something from your library in Musica</string>
 			</dict>
 			<dict>
 				<key>Confirm</key>
@@ -42,6 +44,8 @@
 				<string>music://music.apple.com/radio</string>
 			</dict>
 			<dict>
+				<key>Command</key>
+				<string>volumeup</string>
 				<key>Confirm</key>
 				<string>Alzo il volume?</string>
 				<key>Identifier</key>
@@ -50,15 +54,18 @@
 				<array>
 					<string>alza il volume</string>
 					<string>più forte</string>
+					<string>alza</string>
 					<string>volume up</string>
 					<string>louder</string>
 				</array>
-				<key>Shortcut</key>
-				<string>Neko Volume Up</string>
+				<key>Player</key>
+				<string>music</string>
 				<key>Summary</key>
-				<string>runs your “Neko Volume Up” Shortcut</string>
+				<string>tells music to turn it up</string>
 			</dict>
 			<dict>
+				<key>Command</key>
+				<string>volumedown</string>
 				<key>Confirm</key>
 				<string>Abbasso il volume?</string>
 				<key>Identifier</key>
@@ -67,15 +74,18 @@
 				<array>
 					<string>abbassa il volume</string>
 					<string>più piano</string>
+					<string>abbassa</string>
 					<string>volume down</string>
 					<string>quieter</string>
 				</array>
-				<key>Shortcut</key>
-				<string>Neko Volume Down</string>
+				<key>Player</key>
+				<string>music</string>
 				<key>Summary</key>
-				<string>runs your “Neko Volume Down” Shortcut</string>
+				<string>tells music to turn it down</string>
 			</dict>
 			<dict>
+				<key>Command</key>
+				<string>pause</string>
 				<key>Confirm</key>
 				<string>Metto in pausa?</string>
 				<key>Identifier</key>
@@ -86,13 +96,35 @@
 					<string>ferma la musica</string>
 					<string>pausa</string>
 					<string>pause the music</string>
+					<string>stop the music</string>
 				</array>
-				<key>Shortcut</key>
-				<string>Neko Pause</string>
+				<key>Player</key>
+				<string>music</string>
 				<key>Summary</key>
-				<string>runs your “Neko Pause” Shortcut</string>
+				<string>tells music to pause</string>
 			</dict>
 			<dict>
+				<key>Command</key>
+				<string>play</string>
+				<key>Confirm</key>
+				<string>Riprendo?</string>
+				<key>Identifier</key>
+				<string>play</string>
+				<key>Phrases</key>
+				<array>
+					<string>riprendi</string>
+					<string>riprendi la musica</string>
+					<string>resume</string>
+					<string>keep playing</string>
+				</array>
+				<key>Player</key>
+				<string>music</string>
+				<key>Summary</key>
+				<string>tells music to start again</string>
+			</dict>
+			<dict>
+				<key>Command</key>
+				<string>next</string>
 				<key>Confirm</key>
 				<string>Passo alla prossima?</string>
 				<key>Identifier</key>
@@ -104,10 +136,28 @@
 					<string>next track</string>
 					<string>skip this</string>
 				</array>
-				<key>Shortcut</key>
-				<string>Neko Next Track</string>
+				<key>Player</key>
+				<string>music</string>
 				<key>Summary</key>
-				<string>runs your “Neko Next Track” Shortcut</string>
+				<string>tells music to skip</string>
+			</dict>
+			<dict>
+				<key>Command</key>
+				<string>previous</string>
+				<key>Confirm</key>
+				<string>Torno alla precedente?</string>
+				<key>Identifier</key>
+				<string>previous</string>
+				<key>Phrases</key>
+				<array>
+					<string>canzone precedente</string>
+					<string>torna indietro</string>
+					<string>previous track</string>
+				</array>
+				<key>Player</key>
+				<string>music</string>
+				<key>Summary</key>
+				<string>tells music to go back</string>
 			</dict>
 		</array>
 	</dict>
@@ -118,17 +168,17 @@
 	<key>License</key>
 	<string>public domain</string>
 	<key>MinimumApp</key>
-	<string>2.6</string>
+	<string>2.7</string>
 	<key>Name</key>
 	<string>Apple Music</string>
 	<key>Summary</key>
-	<string>Nothing here opens a search address: Musica takes the path of a link and drops the words, measured. Searching, volume, pause and skip all run Shortcuts of your own, named below. Radio is the one plain address.</string>
+	<string>Volume, pause and skip go straight to Musica — no Shortcut to make. “Metti Battisti” plays from your own library: the streaming catalogue is not something anything outside Musica can search, and this does not pretend otherwise.</string>
 	<key>Version</key>
-	<string>1.1</string>
+	<string>2.0</string>
 	<key>Wants</key>
 	<array>
+		<string>players</string>
 		<string>open</string>
-		<string>shortcuts</string>
 	</array>
 </dict>
 </plist>

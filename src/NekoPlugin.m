@@ -1,4 +1,5 @@
 #import "NekoPlugin.h"
+#import "NekoPlayer.h"
 
 const NSInteger NekoPluginInterface = 1;
 
@@ -57,6 +58,7 @@ static NSString * const NekoPluginMarkers[] = { @"ACTION:", @"IMAGE:", @"LOOK:",
 - (BOOL)wantsNetwork      { return [self wants:@"network"]; }
 - (BOOL)wantsToOpenThings { return [self wants:@"open"]; }
 - (BOOL)wantsShortcuts    { return [self wants:@"shortcuts"]; }
+- (BOOL)wantsToControlPlayers { return [self wants:@"players"]; }
 
 #pragma mark Reading it
 
@@ -271,15 +273,30 @@ static NSString * const NekoPluginMarkers[] = { @"ACTION:", @"IMAGE:", @"LOOK:",
 			return;
 		}
 
+		/* Exactly one door of three: an address, a Shortcut of yours, or a
+		   command sent to Music or Spotify. A verb that could do two things is a
+		   verb whose read-back sentence is a lie. */
 		NSString *address = [verb objectForKey:@"Url"];
 		NSString *shortcut = [verb objectForKey:@"Shortcut"];
-		if(([address length] == 0) == ([shortcut length] == 0)) {
+		NSString *player = [verb objectForKey:@"Player"];
+		NSString *command = [verb objectForKey:@"Command"];
+		int doors = ([address length] > 0 ? 1 : 0) + ([shortcut length] > 0 ? 1 : 0)
+			+ ([player length] > 0 || [command length] > 0 ? 1 : 0);
+		if(doors != 1) {
 			[self refuse:[NSString stringWithFormat:
-				NekoPluginLocalized(@"The verb “%@” needs exactly one of Url or Shortcut."), word]];
+				NekoPluginLocalized(@"The verb “%@” needs exactly one of Url, Shortcut, or Player and Command."), word]];
 			return;
 		}
 		if([verb objectForKey:@"Program"] != nil || [verb objectForKey:@"Executable"] != nil) {
 			[self refuse:NekoPluginLocalized(@"One of its verbs wants to run a program of its own, which this version does not allow.")];
+			return;
+		}
+		/* Refused rather than ignored, which is the rule everywhere in this file.
+		   Nothing reads these keys, so a plugin carrying one is either mistaken
+		   about what it can do or hoping the next version will read it. Both are
+		   better answered now. */
+		if([verb objectForKey:@"Script"] != nil || [verb objectForKey:@"AppleScript"] != nil) {
+			[self refuse:NekoPluginLocalized(@"One of its verbs carries a script of its own. Neko sends its own commands to Music and Spotify and never anybody else’s.")];
 			return;
 		}
 
@@ -299,9 +316,34 @@ static NSString * const NekoPluginMarkers[] = { @"ACTION:", @"IMAGE:", @"LOOK:",
 				[self refuse:NekoPluginLocalized(@"It has verbs that open an address without asking to open things.")];
 				return;
 			}
-		} else if(![self wantsShortcuts]) {
-			[self refuse:NekoPluginLocalized(@"It has verbs that run one of your Shortcuts without asking to.")];
-			return;
+		} else if([shortcut length] > 0) {
+			if(![self wantsShortcuts]) {
+				[self refuse:NekoPluginLocalized(@"It has verbs that run one of your Shortcuts without asking to.")];
+				return;
+			}
+		} else {
+			/* Two closed lists, and nothing else gets through. A plugin names a
+			   player and a command; the script that carries it out lives in the
+			   app, in one file, where it can be read. */
+			if([player length] == 0 || [command length] == 0) {
+				[self refuse:[NSString stringWithFormat:
+					NekoPluginLocalized(@"The verb “%@” needs both a Player and a Command."), word]];
+				return;
+			}
+			if(![NekoPlayer knows:player]) {
+				[self refuse:[NSString stringWithFormat:
+					NekoPluginLocalized(@"The verb “%@” names the player “%@”, and Neko only knows music and spotify."), word, player]];
+				return;
+			}
+			if(![NekoPlayer knowsCommand:command]) {
+				[self refuse:[NSString stringWithFormat:
+					NekoPluginLocalized(@"The verb “%@” asks for “%@”, which is not one of the commands Neko can send."), word, command]];
+				return;
+			}
+			if(![self wantsToControlPlayers]) {
+				[self refuse:NekoPluginLocalized(@"It has verbs that command Music or Spotify without asking to.")];
+				return;
+			}
 		}
 	}
 }
@@ -463,6 +505,22 @@ static NSString * const NekoPluginMarkers[] = { @"ACTION:", @"IMAGE:", @"LOOK:",
 		[localized addObject:one];
 	}
 	return localized;
+}
+
+- (NSArray *)shortcutsItNeeds
+{
+	NSMutableArray *names = [NSMutableArray array];
+	NSEnumerator *e = [[self verbs] objectEnumerator];
+	NSDictionary *verb;
+	while((verb = [e nextObject]) != nil) {
+		NSString *name = [verb objectForKey:@"Shortcut"];
+		if([name length] > 0 && ![names containsObject:name])
+			[names addObject:name];
+	}
+	NSString *text = [self textShortcut];
+	if([text length] > 0 && ![names containsObject:text])
+		[names addObject:text];
+	return names;
 }
 
 - (NSArray *)characterPaths

@@ -1,6 +1,7 @@
 #import "NekoPluginsPanel.h"
 #import "NekoPlugins.h"
 #import "NekoPlugin.h"
+#import "NekoShortcutProvider.h"
 
 #define NekoPanelLocalized(text) NSLocalizedString(text, nil)
 
@@ -206,6 +207,32 @@ static const float NekoRowHeight = 86.0f;
 		[switchOn setAction:@selector(switchPressed:)];
 		[switchOn setIdentifier:[plugin identifier]];
 		[rows addSubview:switchOn];
+
+		/* The one thing that goes wrong after a plugin is switched on: it names
+		   Shortcuts of yours, and you have not made them yet. Said here, where you
+		   can go and make them, rather than only in the bubble at the moment it
+		   fails. */
+		NSMutableArray *missing = [NSMutableArray array];
+		if([plugin isUsable] && [registry isEnabled:plugin]) {
+			NSEnumerator *wanted = [[plugin shortcutsItNeeds] objectEnumerator];
+			NSString *name;
+			while((name = [wanted nextObject]) != nil) {
+				NekoShortcutProvider *runner = [[[NekoShortcutProvider alloc]
+					initWithShortcutName:name] autorelease];
+				if(![runner shortcutExists])
+					[missing addObject:name];
+			}
+		}
+		if([missing count] > 0) {
+			NSTextField *needs = [self labelAt:
+				NSMakeRect(8.0f, top - 90.0f, width - 150.0f, 16.0f)
+			                              text:[NSString stringWithFormat:
+				NekoPanelLocalized(@"Shortcuts you have not made yet: %@"),
+				[missing componentsJoinedByString:@", "]]
+			                             small:YES];
+			[needs setTextColor:[NSColor systemOrangeColor]];
+			[rows addSubview:needs];
+		}
 
 		BOOL shipped = [registry isBundled:plugin];
 		if(shipped) {

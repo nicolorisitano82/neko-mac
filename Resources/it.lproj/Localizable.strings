@@ -441,3 +441,20 @@
 "1 phrase it listens for" = "1 frase che ascolta";
 "%lu phrases it listens for" = "%lu frasi che ascolta";
 "Examples…" = "Esempi…";
+
+/* 2.7: Music and Spotify, spoken to directly */
+"The verb “%@” needs exactly one of Url, Shortcut, or Player and Command." = "Il verbo “%@” ha bisogno di uno solo tra Url, Shortcut, oppure Player e Command.";
+"One of its verbs carries a script of its own. Neko sends its own commands to Music and Spotify and never anybody else’s." = "Uno dei suoi verbi porta uno script suo. Neko manda i propri comandi a Musica e Spotify e mai quelli di qualcun altro.";
+"The verb “%@” needs both a Player and a Command." = "Il verbo “%@” ha bisogno sia di Player sia di Command.";
+"The verb “%@” names the player “%@”, and Neko only knows music and spotify." = "Il verbo “%@” nomina il lettore “%@”, e Neko conosce solo music e spotify.";
+"The verb “%@” asks for “%@”, which is not one of the commands Neko can send." = "Il verbo “%@” chiede “%@”, che non è uno dei comandi che Neko sa mandare.";
+"It has verbs that command Music or Spotify without asking to." = "Ha verbi che comandano Musica o Spotify senza chiedere di farlo.";
+"%@ is not on this Mac." = "%@ non c’è su questo Mac.";
+"%@ does not let anything else search it; only its own window can." = "%@ non si lascia cercare da fuori; può farlo solo la sua finestra.";
+"macOS will not let me control %@ until you allow it in Privacy & Security, under Automation." = "macOS non mi lascia controllare %@ finché non lo permetti in Privacy e sicurezza, sotto Automazione.";
+"%@ would not do it." = "%@ non l’ha fatto.";
+"There is nothing by “%@” in your library." = "Nella tua libreria non c’è niente di “%@”.";
+"Music and Spotify" = "Musica e Spotify";
+"So that “alza il volume”, “metti in pausa” and “prossima canzone” reach Music and Spotify themselves. Those two applications and no others, with a fixed list of commands Neko sends. macOS asks once for each of them." = "Così “alza il volume”, “metti in pausa” e “prossima canzone” arrivano a Musica e a Spotify direttamente. Quelle due applicazioni e nessun’altra, con un elenco fisso di comandi che Neko manda. macOS lo chiede una volta per ciascuna.";
+"Shortcuts you have not made yet: %@" = "Comandi rapidi che non hai ancora creato: %@";
+"You have no Shortcut called “%@”. The plugin says how to make it." = "Non hai nessun comando rapido che si chiama “%@”. Il plugin spiega come farlo.";
