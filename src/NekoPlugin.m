@@ -48,12 +48,15 @@ static NSString * const NekoPluginMarkers[] = { @"ACTION:", @"IMAGE:", @"LOOK:",
 - (NSString *)author  { return [manifest objectForKey:@"Author"] ?: @""; }
 - (NSString *)summary { return [self localized:([manifest objectForKey:@"Summary"] ?: @"")]; }
 
-- (BOOL)wantsNetwork
+- (BOOL)wants:(NSString *)what
 {
 	NSArray *wants = [manifest objectForKey:@"Wants"];
-	return [wants isKindOfClass:[NSArray class]]
-		&& [wants containsObject:@"network"];
+	return [wants isKindOfClass:[NSArray class]] && [wants containsObject:what];
 }
+
+- (BOOL)wantsNetwork      { return [self wants:@"network"]; }
+- (BOOL)wantsToOpenThings { return [self wants:@"open"]; }
+- (BOOL)wantsShortcuts    { return [self wants:@"shortcuts"]; }
 
 #pragma mark Reading it
 
@@ -137,7 +140,8 @@ static NSString * const NekoPluginMarkers[] = { @"ACTION:", @"IMAGE:", @"LOOK:",
 		return;
 	}
 
-	NSArray *known = [NSArray arrayWithObjects:@"Feeds", @"Text", @"Characters", nil];
+	NSArray *known = [NSArray arrayWithObjects:@"Feeds", @"Text", @"Characters",
+		@"Verbs", nil];
 	NSEnumerator *e = [extends keyEnumerator];
 	NSString *key;
 	while((key = [e nextObject]) != nil)
@@ -150,6 +154,7 @@ static NSString * const NekoPluginMarkers[] = { @"ACTION:", @"IMAGE:", @"LOOK:",
 	[self checkFeeds:[extends objectForKey:@"Feeds"]];
 	[self checkText:[extends objectForKey:@"Text"]];
 	[self checkCharacters:[extends objectForKey:@"Characters"]];
+	[self checkVerbs:[extends objectForKey:@"Verbs"]];
 	[self checkStrings];
 }
 
@@ -192,6 +197,110 @@ static NSString * const NekoPluginMarkers[] = { @"ACTION:", @"IMAGE:", @"LOOK:",
 				[[NSCharacterSet alphanumericCharacterSet] invertedSet]].location != NSNotFound) {
 			[self refuse:[NSString stringWithFormat:
 				NekoPluginLocalized(@"The character identifier “%@” has punctuation or spaces in it; it has to be one plain word."), word]];
+			return;
+		}
+	}
+}
+
+/* The schemes a verb may open. A closed list, and the reasoning is the same as
+   for the feeds: if a plugin could name any scheme, a phrase somebody says would
+   be able to reach anything on the Mac that registers one — including the one
+   that runs Shortcuts, which would hide behind an address what the Shortcut field
+   shows in the panel. */
++ (NSArray *)openableSchemes
+{
+	return [NSArray arrayWithObjects:@"https:", @"spotify:", @"music:", @"itms:",
+		@"itmss:", @"mailto:", nil];
+}
+
+/* Phrases the plugin wants to hear, and what it wants done. */
+- (void)checkVerbs:(NSArray *)verbs
+{
+	if(verbs == nil)
+		return;
+	if(![verbs isKindOfClass:[NSArray class]]) {
+		[self refuse:NekoPluginLocalized(@"Its Verbs section is not a list.")];
+		return;
+	}
+
+	NSMutableSet *taken = [NSMutableSet set];
+	NSEnumerator *e = [verbs objectEnumerator];
+	NSDictionary *verb;
+	while((verb = [e nextObject]) != nil) {
+		if(![verb isKindOfClass:[NSDictionary class]]) {
+			[self refuse:NekoPluginLocalized(@"One of its verbs is not a dictionary.")];
+			return;
+		}
+		NSString *word = [verb objectForKey:@"Identifier"];
+		if([word length] == 0 || [taken containsObject:word]) {
+			[self refuse:NekoPluginLocalized(@"Each of its verbs needs its own Identifier.")];
+			return;
+		}
+		[taken addObject:word];
+
+		NSArray *phrases = [verb objectForKey:@"Phrases"];
+		if(![phrases isKindOfClass:[NSArray class]] || [phrases count] == 0) {
+			[self refuse:[NSString stringWithFormat:
+				NekoPluginLocalized(@"The verb “%@” lists no Phrases to listen for."), word]];
+			return;
+		}
+		NSEnumerator *p = [phrases objectEnumerator];
+		NSString *phrase;
+		while((phrase = [p nextObject]) != nil) {
+			if(![phrase isKindOfClass:[NSString class]] || [phrase length] < 3) {
+				[self refuse:[NSString stringWithFormat:
+					NekoPluginLocalized(@"The verb “%@” has a phrase too short to match on; three letters at least."), word]];
+				return;
+			}
+			if([self carriesAMarker:phrase]) {
+				[self refuse:NekoPluginLocalized(@"One of its verbs carries one of Neko’s own markers in a phrase.")];
+				return;
+			}
+		}
+
+		/* The read-back. Every deed in this app is shown before it happens, and a
+		   verb that skips it would be the one exception — so it is refused. */
+		NSString *confirm = [verb objectForKey:@"Confirm"];
+		if([confirm length] == 0) {
+			[self refuse:[NSString stringWithFormat:
+				NekoPluginLocalized(@"The verb “%@” has no Confirm sentence, and nothing here happens without being read back first."), word]];
+			return;
+		}
+		if([self carriesAMarker:confirm]) {
+			[self refuse:NekoPluginLocalized(@"One of its verbs carries one of Neko’s own markers in its Confirm sentence.")];
+			return;
+		}
+
+		NSString *address = [verb objectForKey:@"Url"];
+		NSString *shortcut = [verb objectForKey:@"Shortcut"];
+		if(([address length] == 0) == ([shortcut length] == 0)) {
+			[self refuse:[NSString stringWithFormat:
+				NekoPluginLocalized(@"The verb “%@” needs exactly one of Url or Shortcut."), word]];
+			return;
+		}
+		if([verb objectForKey:@"Program"] != nil || [verb objectForKey:@"Executable"] != nil) {
+			[self refuse:NekoPluginLocalized(@"One of its verbs wants to run a program of its own, which this version does not allow.")];
+			return;
+		}
+
+		if([address length] > 0) {
+			BOOL allowed = NO;
+			NSEnumerator *s = [[NekoPlugin openableSchemes] objectEnumerator];
+			NSString *scheme;
+			while((scheme = [s nextObject]) != nil)
+				if([[address lowercaseString] hasPrefix:scheme])
+					allowed = YES;
+			if(!allowed) {
+				[self refuse:[NSString stringWithFormat:
+					NekoPluginLocalized(@"The verb “%@” opens an address Neko will not open; allowed are https, spotify, music, itms and mailto."), word]];
+				return;
+			}
+			if(![self wantsToOpenThings]) {
+				[self refuse:NekoPluginLocalized(@"It has verbs that open an address without asking to open things.")];
+				return;
+			}
+		} else if(![self wantsShortcuts]) {
+			[self refuse:NekoPluginLocalized(@"It has verbs that run one of your Shortcuts without asking to.")];
 			return;
 		}
 	}
@@ -330,6 +439,32 @@ static NSString * const NekoPluginMarkers[] = { @"ACTION:", @"IMAGE:", @"LOOK:",
 	return localized;
 }
 
+- (NSArray *)verbs
+{
+	if(![self isUsable])
+		return [NSArray array];
+	NSArray *verbs = [[manifest objectForKey:@"Extends"] objectForKey:@"Verbs"];
+	if(![verbs isKindOfClass:[NSArray class]])
+		return [NSArray array];
+
+	/* The two sentences a person reads go through the plugin's own translations
+	   first, like everything else it shows. */
+	NSMutableArray *localized = [NSMutableArray array];
+	NSEnumerator *e = [verbs objectEnumerator];
+	NSDictionary *verb;
+	while((verb = [e nextObject]) != nil) {
+		NSMutableDictionary *one = [NSMutableDictionary dictionaryWithDictionary:verb];
+		NSString *confirm = [verb objectForKey:@"Confirm"];
+		if([confirm length] > 0)
+			[one setObject:[self localized:confirm] forKey:@"Confirm"];
+		NSString *summary = [verb objectForKey:@"Summary"];
+		if([summary length] > 0)
+			[one setObject:[self localized:summary] forKey:@"Summary"];
+		[localized addObject:one];
+	}
+	return localized;
+}
+
 - (NSArray *)characterPaths
 {
 	if(![self isUsable])
@@ -425,6 +560,13 @@ static NSString * const NekoPluginMarkers[] = { @"ACTION:", @"IMAGE:", @"LOOK:",
 	else if(characters > 1)
 		[parts addObject:[NSString stringWithFormat:
 			NekoPluginLocalized(@"%lu characters"), (unsigned long)characters]];
+
+	NSUInteger verbs = [[self verbs] count];
+	if(verbs == 1)
+		[parts addObject:NekoPluginLocalized(@"1 phrase it listens for")];
+	else if(verbs > 1)
+		[parts addObject:[NSString stringWithFormat:
+			NekoPluginLocalized(@"%lu phrases it listens for"), (unsigned long)verbs]];
 
 	if([self text] != nil) {
 		NSString *which = [self processesTextGoing:YES]

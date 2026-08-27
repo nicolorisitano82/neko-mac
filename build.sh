@@ -33,6 +33,14 @@ if [ -d Plugins ]; then
 	ditto --noextattr --noqtn Plugins "$APP/Contents/Resources/Plugins"
 fi
 
+# The examples. Not in Plugins/, because that folder is seeded into the container
+# and switched on: these two want three Shortcuts each that nobody has yet, and
+# enabling both at once means two cats answering the same sentence. They ship so
+# that somebody who has just read about verbs has something to point Add… at.
+if [ -d examples ]; then
+	ditto --noextattr --noqtn examples "$APP/Contents/Resources/Examples"
+fi
+
 # arm64 only. This project is Apple silicon and says so everywhere: the local
 # model engine is a Metal build, Apple Intelligence needs Apple silicon, and the
 # Command Line Tools ship the Swift compatibility libraries for arm64 alone — so
@@ -48,7 +56,7 @@ SOURCES="src/main.m src/MyView.m src/MyPanel.m src/NekoCharacter.m src/NekoContr
 	src/NekoAppleProvider.m src/NekoOpenAIProvider.m src/NekoKeychain.m
 	src/NekoModelStore.m src/NekoLocalProvider.m
 	src/NekoHotKey.m src/NekoListener.m src/NekoBubble.m src/NekoLine.m src/NekoAsk.m
-	src/NekoAdvisor.m src/NekoAntics.m src/NekoDesktop.m src/NekoPainter.m src/NekoSense.m src/NekoAction.m src/NekoFolderAccess.m src/NekoWakeWord.m src/NekoPermissions.m src/NekoBrains.m src/NekoMemory.m src/NekoRate.m src/NekoWeb.m src/NekoVoice.m src/NekoPlace.m src/NekoPlugin.m src/NekoPlugins.m src/NekoPluginText.m src/NekoPluginsPanel.m src/NekoNoise.m"
+	src/NekoAdvisor.m src/NekoAntics.m src/NekoDesktop.m src/NekoPainter.m src/NekoSense.m src/NekoAction.m src/NekoFolderAccess.m src/NekoWakeWord.m src/NekoPermissions.m src/NekoBrains.m src/NekoMemory.m src/NekoRate.m src/NekoWeb.m src/NekoVoice.m src/NekoPlace.m src/NekoPlugin.m src/NekoPlugins.m src/NekoPluginText.m src/NekoPluginVerbs.m src/NekoPluginsPanel.m src/NekoNoise.m"
 FRAMEWORKS="-framework Cocoa -framework ServiceManagement -framework Carbon
 	-framework Security -framework AVFoundation -framework NaturalLanguage -framework IOKit -framework CoreLocation
 	-Xlinker -weak_framework -Xlinker Speech"

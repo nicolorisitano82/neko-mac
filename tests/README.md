@@ -35,6 +35,8 @@ again afterwards.
 | `mood.m` | the slow layer under the mood, and the feelings it may not claim |
 | `distil.m` | that a month-old memory is summarised rather than dropped |
 | `plugin.m` | what a plugin may be, what it is refused for, and the whole install path |
+| `verb.m` | a phrase a plugin asked to hear: refused ten ways, matched, read back, and dismissed |
+| `frame.m` | that the cat owns the sprite it is drawing, across a character swap |
 | `tempo.m` | how long a short answer waits, and everything exempt from waiting |
 
 ## Two things about writing more of these

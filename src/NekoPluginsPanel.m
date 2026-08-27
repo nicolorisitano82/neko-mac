@@ -89,6 +89,19 @@ static const float NekoRowHeight = 86.0f;
 	[folder setAutoresizingMask:NSViewMaxXMargin | NSViewMaxYMargin];
 	[content addSubview:folder];
 
+	/* Only if any shipped. A button that reveals an empty folder is worse than no
+	   button. */
+	if([[[NekoPlugins sharedPlugins] examples] count] > 0) {
+		NSButton *examples = [[[NSButton alloc] initWithFrame:
+			NSMakeRect(352.0f, 56.0f, 170.0f, 30.0f)] autorelease];
+		[examples setBezelStyle:NSBezelStyleRounded];
+		[examples setTitle:NekoPanelLocalized(@"Examples…")];
+		[examples setTarget:self];
+		[examples setAction:@selector(revealExamplesPressed:)];
+		[examples setAutoresizingMask:NSViewMaxXMargin | NSViewMaxYMargin];
+		[content addSubview:examples];
+	}
+
 	/* The sentence somebody needs while deciding whether to trust a folder they
 	   downloaded, in the place where they are deciding. */
 	NSTextField *footer = [[[NSTextField alloc] initWithFrame:
@@ -304,6 +317,16 @@ static const float NekoRowHeight = 86.0f;
 - (void)revealFolderPressed:(id)sender
 {
 	[[NSWorkspace sharedWorkspace] openURL:[[NekoPlugins sharedPlugins] directory]];
+}
+
+/* Shown in Finder with the folders selected, so that the next thing to do — drag
+   one onto Add… — is in front of somebody rather than described to them. */
+- (void)revealExamplesPressed:(id)sender
+{
+	NSArray *examples = [[NekoPlugins sharedPlugins] examples];
+	if([examples count] == 0)
+		return;
+	[[NSWorkspace sharedWorkspace] activateFileViewerSelectingURLs:examples];
 }
 
 @end

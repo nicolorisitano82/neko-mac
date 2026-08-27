@@ -111,6 +111,9 @@ extern NSString * const NekoLastUnpromptedKey;
 - (NSString *)threadForPrompt;
 - (void)rememberQuestion:(NSString *)question answer:(NSString *)answer;
 
+/* A plugin's verb, read back before anything happens. */
+- (void)proposeVerb:(NSDictionary *)verb;
+
 /* The two halves either side of a plugin having a look at the words: the second
    is what actually asks, and what actually says. */
 - (void)askAfterPlugins:(NSString *)question;

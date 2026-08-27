@@ -46,6 +46,12 @@ static unsigned NekoIdleTicksFor(NekoState state)
 	[stateFrames release];
 	stateFrames = [[character framesForState:theState] retain];
 	stateTicksPerFrame = [character ticksPerFrameForState:theState];
+	/* Handed over here and not left until the next tick: between the two, a
+	   redraw would draw a frame of the pose this one replaced — and after a
+	   character swap that frame belongs to an array nobody is holding any more.
+	   tickCount is zero, so frame zero is what the next tick would pick anyway. */
+	if([stateFrames count] > 0)
+		[view setImageTo:(NSImage *)[stateFrames objectAtIndex:0]];
 	[view setNeedsDisplay:YES];
 }
 

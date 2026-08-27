@@ -1,5 +1,121 @@
 # Changelog
 
+## 2.6 — 2026-08-27
+
+### Verbs: a plugin can ask to be told when you say something
+
+2.5 let a plugin add feeds, characters and a text filter. All three are things it
+*is*; none of them is a thing it *does*. This version adds the fourth kind,
+`Extends.Verbs`: a list of phrases, and for each one a door — an address, or one
+of your own Shortcuts.
+
+What that buys, with the two plugins that now ship as examples: *"metti Taylor
+Swift"* opens the search in Spotify or in Music, *"alza il volume"* runs the
+Shortcut you named for it, *"pausa"* and *"prossima canzone"* likewise.
+
+The rules are the ones the rest of the app already lives under, and they are
+checked twice — once when the manifest is read, once at the moment of doing:
+
+- **The app recognises the phrase, never a model.** Matching is whole-word, the
+  longest phrase wins, and a phrase that appears inside a longer word does not
+  count: *"mettiamo che sia lunedì"* is not a request for music. Verbs are looked
+  at before any engine is consulted, on the same rails as the news.
+- **Nothing happens without a read-back.** A verb with no `Confirm` sentence is
+  refused outright, and the sentence is shown with the words you said in it before
+  anything opens. Dismissing the bubble is a no.
+- **A verb may open exactly one of two doors**, an address or a Shortcut, and not
+  both. Addresses are limited to https, spotify, music, itms and mailto — which
+  means `file:` is refused, and so is `shortcuts:` smuggled in as an address to
+  get around the Shortcut half.
+- **A plugin still gets none of what matters.** No diary, no screen, no
+  microphone, no location, and no way to make the cat speak on its own. A verb is
+  a door somebody chose to open, held open for one click.
+- **A switch turned off between the question and the yes counts.** Enablement is
+  re-checked when the verb runs, not when it matched.
+
+### The examples ship inside the app
+
+Two of them, one for Spotify and one for Apple Music, six verbs each, with READMEs
+explaining which half is an address and which half needs a Shortcut you make
+yourself — and that enabling both at once means two cats answering the same
+sentence.
+
+They are in the app bundle rather than in the seeded folder, and the plugins
+window has a third button, **Examples…**, which shows them in Finder ready to drag
+onto **Add…**. Not seeded, because seeding switches a plugin on and these two want
+Shortcuts nobody has yet. The button is not drawn at all if no examples shipped.
+
+### The volume verbs did nothing, and Apple Music could not search
+
+Both reported against this version before it went out, and both mine.
+
+**"Alza il volume" was not recognised at all.** A verb whose address contains a
+`%@` has nothing to open without a word after it, so the matcher skipped it — and
+the test for that was `[address rangeOfString:@"%@"].location != NSNotFound`.
+Sent to a verb with no address at all, `rangeOfString:` answers `{0, 0}`, and 0 is
+not `NSNotFound`. So every Shortcut verb said with nothing after it — *alza il
+volume*, *più forte*, *abbassa il volume*, *prossima canzone*, *volume up* — looked
+like an address waiting for a word and was thrown away. The rule now asks the
+**read-back** instead of the address, which is the right question: a sentence with
+a `%@` in it needs the words, whichever door is behind it, and one without is
+complete as it stands.
+
+The check that was missing is now in `tests/verb.m`: for both shipped examples,
+every phrase of every verb is said exactly as written and has to come back as its
+own verb — 23 phrases each. A plugin whose phrases never match is refused by
+nothing; it simply never answers, which is precisely how this shipped.
+
+**Apple Music opened but did not search.** Measured rather than reasoned about:
+`music://music.apple.com/search?term=Battisti` brings Musica forward, selects
+**Cerca**, and leaves the field empty — the app honours the path of the link and
+drops the query. Forcing the web address into Musica lands on the same empty page.
+So the example stops pretending: searching runs a Shortcut of yours,
+`Neko Play Music`, handed the words you said, and the README has the three-action
+recipe. Radio stays an address, because a path with no query does work. The
+example is version 1.1 — remove and re-add it to pick it up.
+
+The Spotify example's `spotify:search:` is Spotify's own documented URI and is
+**not** verified here: the attempt ran into Spotify's first-run local-network
+prompt, which is the user's to answer, so it was left alone and the README says so
+rather than claiming a measurement that was not taken.
+
+### Switching a plugin on or off closed the app
+
+Reported against this version before it went out: *"quando ho selezionato un
+plugin oppure ho cliccato sulla checkbox del plugin, l'app si è chiusa."* Two
+crash reports, both `EXC_BAD_ACCESS` at `-[MyView drawRect:] + 104` — which is
+the one line in that method that sends a message.
+
+The cat's view held the sprite it was drawing **without owning it**, which was
+true and harmless for eighteen years: the frames belong to the character, and the
+character does not go anywhere. Plugins can ship characters, so switching one
+changed that. The switch posts a notification, the controller forgets the
+character list, the panel is handed a different character object for the same
+name, releases the old one and the frames it was holding — and the redraw that
+comes immediately after draws a frame from the array nobody is holding any more.
+
+Two fixes, both small. The view retains what it is given, which is the defect.
+And a change of pose hands the view its first frame straight away instead of
+leaving it until the next tick, so there is no window in which the view is showing
+a frame from the pose before it — `tickCount` is zero at that point, so frame zero
+is what the next tick would have chosen anyway.
+
+`tests/frame.m`, 12 checks, written before the fix and confirmed against the
+unfixed sources: the harness segfaults there, in the same place the crash reports
+name. What it measures is the ownership rather than the symptom — handing the view
+an image nobody else holds and then letting go of it — plus the whole reported
+path, the news plugin switched on and off four times with a real redraw between
+each.
+
+### Also
+
+- The plugins window's three buttons are measured now — that each has a target
+  which answers to its action — which is the check that would have caught 2.5's
+  invisible Add panel.
+- `tests/verb.m`, 41 checks. `tests/plugin.m` used `Verbs` as its example of an
+  extension point that does not exist; it is `Routes` now, which is the next thing
+  that will have to change.
+
 ## 2.5.1 — 2026-08-27
 
 ### The Add button in the plugins window opened a panel nobody could see

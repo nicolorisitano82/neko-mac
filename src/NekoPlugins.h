@@ -28,6 +28,11 @@ extern NSString * const NekoPluginsDidChangeNotification;
 
 - (NSURL *)directory;
 
+/* The examples inside the bundle, if any shipped: read-only, never seeded, and
+   there so that Add… has somewhere to point. */
+- (NSURL *)examplesDirectory;
+- (NSArray *)examples;
+
 /* Everything installed, refused ones included: a plugin that cannot be used is
    still shown, with the sentence saying why. */
 - (NSArray *)all;
