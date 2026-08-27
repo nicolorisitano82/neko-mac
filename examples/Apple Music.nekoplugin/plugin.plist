@@ -10,7 +10,7 @@
 		<array>
 			<dict>
 				<key>Confirm</key>
-				<string>Cerco “%@” in Musica?</string>
+				<string>Metto “%@” in Musica?</string>
 				<key>Identifier</key>
 				<string>search</string>
 				<key>Phrases</key>
@@ -21,10 +21,10 @@
 					<string>play</string>
 					<string>put on</string>
 				</array>
+				<key>Shortcut</key>
+				<string>Neko Play Music</string>
 				<key>Summary</key>
-				<string>searches Apple Music and opens it</string>
-				<key>Url</key>
-				<string>music://music.apple.com/search?term=%@</string>
+				<string>runs your “Neko Play Music” Shortcut with what you asked for</string>
 			</dict>
 			<dict>
 				<key>Confirm</key>
@@ -122,9 +122,9 @@
 	<key>Name</key>
 	<string>Apple Music</string>
 	<key>Summary</key>
-	<string>Searching and playing needs no permission — it opens a music: address. Volume, pause and skip need three Shortcuts of your own, named below.</string>
+	<string>Nothing here opens a search address: Musica takes the path of a link and drops the words, measured. Searching, volume, pause and skip all run Shortcuts of your own, named below. Radio is the one plain address.</string>
 	<key>Version</key>
-	<string>1.0</string>
+	<string>1.1</string>
 	<key>Wants</key>
 	<array>
 		<string>open</string>

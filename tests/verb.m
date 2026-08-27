@@ -133,7 +133,12 @@ int main(void)
 		aVerb(@"search", [NSArray arrayWithObjects:@"metti", @"play", nil],
 			@"Cerco “%@” su Spotify?", @"spotify:search:%@", nil),
 		aVerb(@"volumeup", [NSArray arrayWithObjects:@"alza il volume", @"alza", nil],
-			@"Alzo il volume?", nil, @"Neko Volume Up"), nil];
+			@"Alzo il volume?", nil, @"Neko Volume Up"),
+		/* No shorter phrase to fall back on, on purpose: with "alza" in the list
+		   above, "alza il volume" matched through it and the check below passed
+		   while the real plugins did not work at all. */
+		aVerb(@"next", [NSArray arrayWithObject:@"prossima canzone"],
+			@"Passo alla prossima?", nil, @"Neko Next Track"), nil];
 	NSString *problem = [registry installFrom:
 		stage(@"live", manifestWith(verbs, open))];
 	NekoPlugin *installed = [registry pluginWithIdentifier:@"com.example.verbs"];
@@ -161,6 +166,17 @@ int main(void)
 		ok([[longer objectForKey:@"Sentence"] isEqualToString:@"Alzo il volume?"],
 			@"and a read-back without a %@ is used as it is",
 			[longer objectForKey:@"Sentence"]);
+
+		/* The whole sentence being the phrase, with no shorter phrase behind it
+		   and nothing after it: this is what the two music plugins do all day,
+		   and what stopped working. */
+		NSDictionary *bare = [NekoPluginVerbs matchFor:@"prossima canzone"];
+		ok([[bare objectForKey:@"Identifier"] isEqualToString:@"next"],
+			@"a phrase said with nothing after it is still the verb",
+			[bare objectForKey:@"Identifier"]);
+		ok([[bare objectForKey:@"Sentence"] isEqualToString:@"Passo alla prossima?"],
+			@"and its read-back needs no words to be complete",
+			[bare objectForKey:@"Sentence"]);
 
 		ok([NekoPluginVerbs matchFor:@"mettiamo che sia lunedì"] == nil,
 			@"a phrase inside a longer word does not match", nil);
@@ -251,9 +267,20 @@ int main(void)
 		NekoPlugin *example = [[[NekoPlugin alloc] initWithFolder:folder] autorelease];
 		ok([example isUsable], [NSString stringWithFormat:@"%@ reads",
 			[path lastPathComponent]], [example refusal]);
-		NekoPlugin *sameOne = [registry pluginWithIdentifier:[example identifier]];
-		ok(sameOne == nil || ![registry isEnabled:sameOne],
-			@"and was not installed and switched on for somebody", nil);
+		/* Not "it is not installed" — somebody may well have installed it, and
+		   that is theirs to decide. What must be true is that nothing installs it
+		   for them: the seeded folder, which is the one seedFromBundle copies and
+		   switches on, must not contain it. */
+		NSString *seeded = [[[NSBundle mainBundle] resourcePath]
+			stringByAppendingPathComponent:@"Plugins"];
+		BOOL amongTheSeeded = NO;
+		NSEnumerator *inThere = [[[NSFileManager defaultManager]
+			contentsOfDirectoryAtPath:seeded error:NULL] objectEnumerator];
+		NSString *seededName;
+		while((seededName = [inThere nextObject]) != nil)
+			if([seededName isEqualToString:[path lastPathComponent]])
+				amongTheSeeded = YES;
+		ok(!amongTheSeeded, @"and nothing puts it in place for somebody", nil);
 		if([[example verbs] count] == 0)
 			continue;
 		withVerbs++;
@@ -272,6 +299,63 @@ int main(void)
 	}
 	ok(withVerbs == 2, @"and two of them are the music ones",
 		[NSString stringWithFormat:@"%d", withVerbs]);
+
+	printf("\n--- every phrase they ship hears itself ---\n");
+
+	/* The check that was missing. A plugin whose phrases do not match is not
+	   refused by anything — it simply never answers, which is how "alza il
+	   volume" shipped doing nothing. So: install each of them, and say every
+	   phrase of every verb exactly as written. A verb whose read-back needs the
+	   words is said with a word after it; one that does not is said bare. */
+	NSEnumerator *again = [examples objectEnumerator];
+	while((folder = [again nextObject]) != nil) {
+		NekoPlugin *read = [[[NekoPlugin alloc] initWithFolder:folder] autorelease];
+		if([[read verbs] count] == 0)
+			continue;
+		/* Whatever somebody has installed here stays installed: this puts it
+		   back the way it found it, and only removes what it added itself. */
+		BOOL wasThere = [registry pluginWithIdentifier:[read identifier]] != nil;
+		NSString *why = wasThere ? nil : [registry installFrom:folder];
+		NekoPlugin *live = [registry pluginWithIdentifier:[read identifier]];
+		if(live == nil) {
+			notMeasured([NSString stringWithFormat:@"%@ could not be installed: %@",
+				[[folder path] lastPathComponent], why]);
+			continue;
+		}
+		BOOL was = [registry isEnabled:live];
+		[registry setEnabled:YES for:live];
+
+		NSUInteger heard = 0, spoken = 0;
+		NSMutableArray *deaf = [NSMutableArray array];
+		NSEnumerator *v = [[live verbs] objectEnumerator];
+		NSDictionary *verb;
+		while((verb = [v nextObject]) != nil) {
+			BOOL needsWords = [[verb objectForKey:@"Confirm"]
+				rangeOfString:@"%@"].location != NSNotFound;
+			NSEnumerator *p = [[verb objectForKey:@"Phrases"] objectEnumerator];
+			NSString *phrase;
+			while((phrase = [p nextObject]) != nil) {
+				NSString *said = needsWords
+					? [phrase stringByAppendingString:@" qualcosa"] : phrase;
+				NSDictionary *hit = [NekoPluginVerbs matchFor:said];
+				spoken++;
+				if([[hit objectForKey:@"Identifier"]
+				        isEqualToString:[verb objectForKey:@"Identifier"]])
+					heard++;
+				else
+					[deaf addObject:[NSString stringWithFormat:@"%@ → %@", said,
+						[hit objectForKey:@"Identifier"] ?: @"nothing"]];
+			}
+		}
+		ok(heard == spoken, [NSString stringWithFormat:@"%@ hears all %lu of its phrases",
+			[[folder path] lastPathComponent], (unsigned long)spoken],
+			[deaf componentsJoinedByString:@", "]);
+
+		if(!was)
+			[registry setEnabled:NO for:live];
+		if(!wasThere)
+			[registry remove:live];
+	}
 
 	int result = NekoTestResult();
 	[pool release];

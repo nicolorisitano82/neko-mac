@@ -70,10 +70,26 @@
 				/* Longest phrase wins: "alza il volume" beats "alza". */
 				if(bestPhrase != nil && [phrase length] <= [bestPhrase length])
 					continue;
-				/* An address with a %@ in it has nothing to open without one. */
+				/* A verb that needs words is not a match without them: "metti"
+				   on its own is not a request for a particular song, and the
+				   read-back would say so — "Metto “” in Musica?". A verb that
+				   needs none is complete as it stands, and "alza il volume" is the
+				   whole sentence.
+				   Which it is, is decided by the sentence the person will be shown
+				   rather than by the door behind it: a Shortcut can want the words
+				   just as much as an address can. (This is where the volume verbs
+				   were lost. The test was on Url alone, and rangeOfString: sent to
+				   a nil address answers {0, 0} — 0 is not NSNotFound, so every
+				   Shortcut verb said with nothing after it looked like an address
+				   waiting for a word.) */
 				NSString *address = [verb objectForKey:@"Url"];
-				if([address rangeOfString:@"%@"].location != NSNotFound
-				   && [argument length] == 0)
+				NSString *readBack = [verb objectForKey:@"Confirm"];
+				BOOL needsWords =
+					([address length] > 0
+					 && [address rangeOfString:@"%@"].location != NSNotFound)
+					|| ([readBack length] > 0
+					    && [readBack rangeOfString:@"%@"].location != NSNotFound);
+				if(needsWords && [argument length] == 0)
 					continue;
 				best = verb;
 				bestPhrase = phrase;

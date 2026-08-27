@@ -2,11 +2,16 @@
 
 Six phrases. They split in two, and the split is the interesting part.
 
-**Searching and playing needs nothing.** "Metti Taylor Swift" opens
+**Searching needs nothing.** "Metti Taylor Swift" opens
 `spotify:search:Taylor%20Swift`, which is an address like any other — no
-permission, no automation, no Apple events. Spotify comes forward with the search
-already done. It does not press play for you: an address cannot, and pretending
-otherwise would be worse than saying so.
+permission, no automation, no Apple events. It does not press play for you: an
+address cannot, and pretending otherwise would be worse than saying so.
+
+That URI is Spotify's own documented one, and unlike the Apple Music example's it
+has **not** been verified here — the attempt ran into Spotify's first-run
+local-network prompt and was left alone. If it comes forward without the search
+done, it is the same failure Apple Music had, and the fix is the same: make the
+search a Shortcut. Say so and it will be changed.
 
 **Volume, pause and skip need three Shortcuts of your own**, because macOS
 publishes no address for them:

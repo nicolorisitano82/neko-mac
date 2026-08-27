@@ -45,6 +45,40 @@ window has a third button, **Examples…**, which shows them in Finder ready to 
 onto **Add…**. Not seeded, because seeding switches a plugin on and these two want
 Shortcuts nobody has yet. The button is not drawn at all if no examples shipped.
 
+### The volume verbs did nothing, and Apple Music could not search
+
+Both reported against this version before it went out, and both mine.
+
+**"Alza il volume" was not recognised at all.** A verb whose address contains a
+`%@` has nothing to open without a word after it, so the matcher skipped it — and
+the test for that was `[address rangeOfString:@"%@"].location != NSNotFound`.
+Sent to a verb with no address at all, `rangeOfString:` answers `{0, 0}`, and 0 is
+not `NSNotFound`. So every Shortcut verb said with nothing after it — *alza il
+volume*, *più forte*, *abbassa il volume*, *prossima canzone*, *volume up* — looked
+like an address waiting for a word and was thrown away. The rule now asks the
+**read-back** instead of the address, which is the right question: a sentence with
+a `%@` in it needs the words, whichever door is behind it, and one without is
+complete as it stands.
+
+The check that was missing is now in `tests/verb.m`: for both shipped examples,
+every phrase of every verb is said exactly as written and has to come back as its
+own verb — 23 phrases each. A plugin whose phrases never match is refused by
+nothing; it simply never answers, which is precisely how this shipped.
+
+**Apple Music opened but did not search.** Measured rather than reasoned about:
+`music://music.apple.com/search?term=Battisti` brings Musica forward, selects
+**Cerca**, and leaves the field empty — the app honours the path of the link and
+drops the query. Forcing the web address into Musica lands on the same empty page.
+So the example stops pretending: searching runs a Shortcut of yours,
+`Neko Play Music`, handed the words you said, and the README has the three-action
+recipe. Radio stays an address, because a path with no query does work. The
+example is version 1.1 — remove and re-add it to pick it up.
+
+The Spotify example's `spotify:search:` is Spotify's own documented URI and is
+**not** verified here: the attempt ran into Spotify's first-run local-network
+prompt, which is the user's to answer, so it was left alone and the README says so
+rather than claiming a measurement that was not taken.
+
 ### Switching a plugin on or off closed the app
 
 Reported against this version before it went out: *"quando ho selezionato un
