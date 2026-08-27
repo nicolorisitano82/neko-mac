@@ -45,6 +45,34 @@ window has a third button, **Examples…**, which shows them in Finder ready to 
 onto **Add…**. Not seeded, because seeding switches a plugin on and these two want
 Shortcuts nobody has yet. The button is not drawn at all if no examples shipped.
 
+### Switching a plugin on or off closed the app
+
+Reported against this version before it went out: *"quando ho selezionato un
+plugin oppure ho cliccato sulla checkbox del plugin, l'app si è chiusa."* Two
+crash reports, both `EXC_BAD_ACCESS` at `-[MyView drawRect:] + 104` — which is
+the one line in that method that sends a message.
+
+The cat's view held the sprite it was drawing **without owning it**, which was
+true and harmless for eighteen years: the frames belong to the character, and the
+character does not go anywhere. Plugins can ship characters, so switching one
+changed that. The switch posts a notification, the controller forgets the
+character list, the panel is handed a different character object for the same
+name, releases the old one and the frames it was holding — and the redraw that
+comes immediately after draws a frame from the array nobody is holding any more.
+
+Two fixes, both small. The view retains what it is given, which is the defect.
+And a change of pose hands the view its first frame straight away instead of
+leaving it until the next tick, so there is no window in which the view is showing
+a frame from the pose before it — `tickCount` is zero at that point, so frame zero
+is what the next tick would have chosen anyway.
+
+`tests/frame.m`, 12 checks, written before the fix and confirmed against the
+unfixed sources: the harness segfaults there, in the same place the crash reports
+name. What it measures is the ownership rather than the symptom — handing the view
+an image nobody else holds and then letting go of it — plus the whole reported
+path, the news plugin switched on and off four times with a real redraw between
+each.
+
 ### Also
 
 - The plugins window's three buttons are measured now — that each has a target
