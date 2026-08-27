@@ -51,6 +51,10 @@ typedef enum {
    app resources are broken. */
 + (NSArray *)availableCharacters;
 
+/* Thrown away when a plugin is switched on or off, since plugins can ship
+   characters and the list is cached. */
++ (void)forgetTheList;
+
 /* The character with that identifier, or the first available one. */
 + (NekoCharacter *)characterWithIdentifier:(NSString *)theIdentifier;
 

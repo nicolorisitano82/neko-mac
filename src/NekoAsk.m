@@ -5,6 +5,7 @@
 #import "NekoBrains.h"
 #import "NekoRate.h"
 #import "NekoWeb.h"
+#import "NekoPluginText.h"
 #import "NekoVoice.h"
 #import "NekoFolderAccess.h"
 #import "NekoWakeWord.h"
@@ -852,9 +853,37 @@ static const NSTimeInterval NekoHoldToType = 0.5;
 		[self judgeUnasked:NekoVerdictAnswered];
 
 	fromTheWeb = NO;
+	/* What was said is what is remembered. A plugin may reword what the engine is
+	   asked; it may not rewrite somebody's diary. */
 	[[NekoMemory sharedMemory] noteHeard:question];
 	[askingAbout release];
 	askingAbout = [question copy];
+
+	if([NekoPluginText anythingProcesses:YES]) {
+		/* Held still and visibly busy while a Shortcut of theirs has a look at
+		   it: this is the one thing on the way in that can take a second. */
+		phase = NekoPhaseThinking;
+		[[self panel] holdWithState:NekoStateKaki];
+		[self startThinkingAbout:question];
+		[NekoPluginText pass:question inward:YES
+		          completion:^(NSString *result, NSString *pluginName) {
+			[self stopThinking];
+			if([result isEqualToString:question]) {
+				[self askAfterPlugins:question];
+				return;
+			}
+			/* Said out loud, because a question that reaches the engine reworded
+			   and answers something slightly different is otherwise a mystery. */
+			NSLog(@"Neko: %@ reworded the question", pluginName);
+			[self askAfterPlugins:result];
+		}];
+		return;
+	}
+	[self askAfterPlugins:question];
+}
+
+- (void)askAfterPlugins:(NSString *)question
+{
 
 	/* Decided here rather than by the model, and before the engine is even
 	   consulted. Measured on this Mac: asked to read ansa.it, a 4B answered with
@@ -1174,6 +1203,22 @@ static const NSTimeInterval NekoHoldToType = 0.5;
 }
 
 - (void)reallyAnswer:(NSString *)text
+{
+	/* Last of all, and only for something that is going to be said as words:
+	   the markers have already been settled above, so a plugin cannot turn an
+	   answer into a deed by handing one back. */
+	if([NekoPluginText anythingProcesses:NO]) {
+		NSString *asAnswered = [[text copy] autorelease];
+		[NekoPluginText pass:asAnswered inward:NO
+		          completion:^(NSString *result, NSString *pluginName) {
+			[self sayAfterPlugins:result];
+		}];
+		return;
+	}
+	[self sayAfterPlugins:text];
+}
+
+- (void)sayAfterPlugins:(NSString *)text
 {
 	phase = NekoPhaseAnswering;
 	[[self panel] holdWithState:NekoStateStop];

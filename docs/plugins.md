@@ -6,6 +6,10 @@ the code that exists today rather than in the abstract. The companion document,
 [plugins-management.md](plugins-management.md), covers installing, enabling,
 disabling and removing them.
 
+[plugin-guide.md](plugin-guide.md) is the practical companion to this document:
+the folder, the manifest key by key, every refusal and the sentence the panel
+shows for it, and a worked example of the executable protocol in Swift.
+
 ## 0. The precedent, and why it decides the shape
 
 This app already has plugins. A character is a folder with a manifest and some
@@ -319,14 +323,21 @@ and plugins do not get an exemption:
 1. **Is the executable kind worth it at all?** Everything in section 6 except the
    translator is declarative. If the first ten plugins anybody writes are data,
    the protocol is a liability with a timeout.
-2. **How does a plugin ship a character?** Characters already work; the manifest
-   could simply point at a `.nekochar` folder inside the plugin. Whether that is
-   better than dropping the folder where it already goes is not obvious.
+2. ~~**How does a plugin ship a character?**~~ **Answered: it does.** The manifest
+   names `.nekochar` folders inside the plugin, one by one, and they join the menu
+   when it is switched on. A plugin can add a character and never replace one: an
+   identifier the app already ships is not reachable. Dropping a folder next to
+   the app's resources still works and is still fine for one's own machine — a
+   plugin is how you give one to somebody else, with a name, a version and a
+   switch.
 3. **Signing and trust.** An executable plugin from the internet is the same
    problem as any other download, and this app is itself unsigned. Section 4 of
    [plugins-management.md](plugins-management.md) is the honest answer, and it is
    not a comfortable one.
-4. **Localisation.** Plugin strings are the plugin's problem, but the app's own
-   four languages mean a plugin that ships English only will make the cat
-   bilingual mid-sentence. The manifest should carry per-language strings and the
-   app should refuse a route whose language it cannot serve.
+4. ~~**Localisation.**~~ **Answered: inside the plugin.** A plugin carries
+   `<lang>.lproj/plugin.strings`, keyed on the English strings in its own
+   manifest, and the app looks there first, then in its own tables, then gives
+   back the string as written. English-only is allowed and says English things —
+   the app does not refuse a plugin for the languages it lacks. It does refuse a
+   language folder whose strings file cannot be read, because a silent fallback
+   would leave the author believing it worked.

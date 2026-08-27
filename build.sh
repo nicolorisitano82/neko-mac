@@ -26,16 +26,29 @@ printf 'APPL????' > "$APP/Contents/PkgInfo"
 # --noqtn/--noextattr: never carry a download quarantine into the bundle.
 ditto --noextattr --noqtn Resources "$APP/Contents/Resources"
 
-# One architecture at a time, because the Swift half can only target one at a
-# time, and lipo puts them back together. Swift is here for a single file:
-# FoundationModels ships no headers, so Apple's on-device model can only be
-# reached from Swift.
+# The plugins that ship with the app. They are copied into the container on first
+# launch and switched on there; inside the bundle they are read-only and signed
+# with everything else.
+if [ -d Plugins ]; then
+	ditto --noextattr --noqtn Plugins "$APP/Contents/Resources/Plugins"
+fi
+
+# arm64 only. This project is Apple silicon and says so everywhere: the local
+# model engine is a Metal build, Apple Intelligence needs Apple silicon, and the
+# Command Line Tools ship the Swift compatibility libraries for arm64 alone — so
+# the Intel half of the universal binary that used to come out of here was an app
+# without a local model, without Apple's model, and without the Swift file that
+# reaches it. A slice that cannot do the things the app is for is worse than no
+# slice at all.
+#
+# Swift is here for one file: FoundationModels ships no headers, so Apple's
+# on-device model can only be reached from Swift.
 SOURCES="src/main.m src/MyView.m src/MyPanel.m src/NekoCharacter.m src/NekoController.m
 	src/NekoAnswerProvider.m src/NekoShortcutProvider.m src/NekoModelProvider.m
 	src/NekoAppleProvider.m src/NekoOpenAIProvider.m src/NekoKeychain.m
 	src/NekoModelStore.m src/NekoLocalProvider.m
 	src/NekoHotKey.m src/NekoListener.m src/NekoBubble.m src/NekoLine.m src/NekoAsk.m
-	src/NekoAdvisor.m src/NekoAntics.m src/NekoDesktop.m src/NekoPainter.m src/NekoSense.m src/NekoAction.m src/NekoFolderAccess.m src/NekoWakeWord.m src/NekoPermissions.m src/NekoBrains.m src/NekoMemory.m src/NekoRate.m src/NekoWeb.m src/NekoVoice.m src/NekoPlace.m src/NekoNoise.m"
+	src/NekoAdvisor.m src/NekoAntics.m src/NekoDesktop.m src/NekoPainter.m src/NekoSense.m src/NekoAction.m src/NekoFolderAccess.m src/NekoWakeWord.m src/NekoPermissions.m src/NekoBrains.m src/NekoMemory.m src/NekoRate.m src/NekoWeb.m src/NekoVoice.m src/NekoPlace.m src/NekoPlugin.m src/NekoPlugins.m src/NekoPluginText.m src/NekoPluginsPanel.m src/NekoNoise.m"
 FRAMEWORKS="-framework Cocoa -framework ServiceManagement -framework Carbon
 	-framework Security -framework AVFoundation -framework NaturalLanguage -framework IOKit -framework CoreLocation
 	-Xlinker -weak_framework -Xlinker Speech"
@@ -119,48 +132,35 @@ else
 	HAVE_DIFFUSION=no
 	echo "note: the app is built without the drawing helper"
 fi
-SLICES=""
+ARCH=arm64
+SLICE=$SCRATCH/$ARCH
+mkdir -p "$SLICE"
 
-for ARCH in arm64 x86_64; do
-	SLICE=$SCRATCH/$ARCH
-	mkdir -p "$SLICE"
-	for SOURCE in $SOURCES; do
-		clang -arch "$ARCH" -fno-objc-arc -fblocks -O2 -isysroot "$SDK" \
-			-mmacosx-version-min=$DEPLOYMENT -Wno-deprecated-declarations \
-			-c "$SOURCE" -o "$SLICE/$(basename "$SOURCE" .m).o"
-	done
-	if [ "$ARCH" = arm64 ] && [ "$HAVE_LLAMA" = yes ]; then
-		# Objective-C++: llama.cpp is C with C++ headers.
-		clang++ -arch "$ARCH" -fno-objc-arc -x objective-c++ -std=c++17 -O2 \
-			-isysroot "$SDK" -mmacosx-version-min=$DEPLOYMENT \
-			-Isrc -I"$LLAMA_CACHE/src/include" -I"$LLAMA_CACHE/src/ggml/include" \
-			-c src/NekoLlamaEngine.mm -o "$SLICE/NekoLlamaEngine.o"
-		LLAMA_LINK="$(llama_libs) -lc++ -framework Metal -framework MetalKit -framework Accelerate"
-	else
-		LLAMA_LINK=""
-	fi
-
-	if [ "$ARCH" = arm64 ]; then
-		# -parse-as-library: without it a lone Swift file is treated as a script
-		# and brings its own main().
-		swiftc -target "$ARCH-apple-macos$DEPLOYMENT" -sdk "$SDK" -O -parse-as-library \
-			-c src/NekoAppleModel.swift -o "$SLICE/NekoAppleModel.o"
-		# Linked by swiftc, which knows where the Swift runtime lives.
-		swiftc -target "$ARCH-apple-macos$DEPLOYMENT" -sdk "$SDK" \
-			"$SLICE"/*.o $LLAMA_LINK $FRAMEWORKS -framework FoundationModels \
-			-o "$SLICE/Neko"
-	else
-		# No Swift in the Intel slice: the Command Line Tools ship the Swift
-		# compatibility libraries for arm64 only. Nothing is lost — Apple
-		# Intelligence needs Apple silicon anyway — and the provider already
-		# reports itself unavailable when the class is missing.
-		clang -arch "$ARCH" -isysroot "$SDK" -mmacosx-version-min=$DEPLOYMENT \
-			"$SLICE"/*.o $FRAMEWORKS -o "$SLICE/Neko"
-	fi
-	SLICES="$SLICES $SLICE/Neko"
+for SOURCE in $SOURCES; do
+	clang -arch "$ARCH" -fno-objc-arc -fblocks -O2 -isysroot "$SDK" \
+		-mmacosx-version-min=$DEPLOYMENT -Wno-deprecated-declarations \
+		-c "$SOURCE" -o "$SLICE/$(basename "$SOURCE" .m).o"
 done
 
-lipo -create $SLICES -output "$APP/Contents/MacOS/Neko"
+if [ "$HAVE_LLAMA" = yes ]; then
+	# Objective-C++: llama.cpp is C with C++ headers.
+	clang++ -arch "$ARCH" -fno-objc-arc -x objective-c++ -std=c++17 -O2 \
+		-isysroot "$SDK" -mmacosx-version-min=$DEPLOYMENT \
+		-Isrc -I"$LLAMA_CACHE/src/include" -I"$LLAMA_CACHE/src/ggml/include" \
+		-c src/NekoLlamaEngine.mm -o "$SLICE/NekoLlamaEngine.o"
+	LLAMA_LINK="$(llama_libs) -lc++ -framework Metal -framework MetalKit -framework Accelerate"
+else
+	LLAMA_LINK=""
+fi
+
+# -parse-as-library: without it a lone Swift file is treated as a script and
+# brings its own main().
+swiftc -target "$ARCH-apple-macos$DEPLOYMENT" -sdk "$SDK" -O -parse-as-library \
+	-c src/NekoAppleModel.swift -o "$SLICE/NekoAppleModel.o"
+# Linked by swiftc, which knows where the Swift runtime lives.
+swiftc -target "$ARCH-apple-macos$DEPLOYMENT" -sdk "$SDK" \
+	"$SLICE"/*.o $LLAMA_LINK $FRAMEWORKS -framework FoundationModels \
+	-o "$APP/Contents/MacOS/Neko"
 
 # The drawing helper travels inside the bundle, signed with everything else.
 if [ "$HAVE_DIFFUSION" = yes ]; then

@@ -1,0 +1,286 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>Author</key>
+	<string>ships with Neko</string>
+	<key>Extends</key>
+	<dict>
+		<key>Feeds</key>
+		<array>
+			<dict>
+				<key>Address</key>
+				<string>https://www.ansa.it/sito/notizie/topnews/topnews_rss.xml</string>
+				<key>Detail</key>
+				<string>the wire, in Italian</string>
+				<key>Identifier</key>
+				<string>ansa</string>
+				<key>Name</key>
+				<string>ANSA</string>
+				<key>Prominent</key>
+				<true/>
+			</dict>
+			<dict>
+				<key>Address</key>
+				<string>https://www.ansa.it/sito/notizie/mondo/mondo_rss.xml</string>
+				<key>Detail</key>
+				<string>world news, in Italian</string>
+				<key>Identifier</key>
+				<string>mondo</string>
+				<key>Name</key>
+				<string>ANSA</string>
+				<key>Prominent</key>
+				<true/>
+			</dict>
+			<dict>
+				<key>Address</key>
+				<string>https://www.ansa.it/sito/notizie/tecnologia/tecnologia_rss.xml</string>
+				<key>Detail</key>
+				<string>technology, in Italian</string>
+				<key>Identifier</key>
+				<string>tecnologia</string>
+				<key>Name</key>
+				<string>ANSA</string>
+				<key>Prominent</key>
+				<true/>
+			</dict>
+			<dict>
+				<key>Address</key>
+				<string>https://www.repubblica.it/rss/homepage/rss2.0.xml</string>
+				<key>Detail</key>
+				<string>an Italian daily</string>
+				<key>Identifier</key>
+				<string>repubblica</string>
+				<key>Name</key>
+				<string>la Repubblica</string>
+			</dict>
+			<dict>
+				<key>Address</key>
+				<string>https://www.ilsole24ore.com/rss/italia.xml</string>
+				<key>Detail</key>
+				<string>Italy, from the financial daily</string>
+				<key>Identifier</key>
+				<string>sole24</string>
+				<key>Name</key>
+				<string>Il Sole 24 Ore</string>
+			</dict>
+			<dict>
+				<key>Address</key>
+				<string>https://www.ilsole24ore.com/rss/economia.xml</string>
+				<key>Detail</key>
+				<string>business and markets</string>
+				<key>Identifier</key>
+				<string>economia</string>
+				<key>Name</key>
+				<string>Il Sole 24 Ore</string>
+			</dict>
+			<dict>
+				<key>Address</key>
+				<string>https://feeds.meteoalarm.org/feeds/meteoalarm-legacy-atom-italy</string>
+				<key>Detail</key>
+				<string>official weather warnings for Italy</string>
+				<key>Identifier</key>
+				<string>allerta</string>
+				<key>Name</key>
+				<string>MeteoAlarm</string>
+				<key>Prominent</key>
+				<true/>
+			</dict>
+			<dict>
+				<key>Address</key>
+				<string>https://news.ycombinator.com/rss</string>
+				<key>Detail</key>
+				<string>what programmers are reading</string>
+				<key>Identifier</key>
+				<string>hn</string>
+				<key>Name</key>
+				<string>Hacker News</string>
+				<key>Prominent</key>
+				<true/>
+			</dict>
+			<dict>
+				<key>Address</key>
+				<string>https://feeds.bbci.co.uk/news/rss.xml</string>
+				<key>Detail</key>
+				<string>British, in English</string>
+				<key>Identifier</key>
+				<string>bbc</string>
+				<key>Name</key>
+				<string>BBC News</string>
+				<key>Prominent</key>
+				<true/>
+			</dict>
+			<dict>
+				<key>Address</key>
+				<string>https://www.theguardian.com/world/rss</string>
+				<key>Detail</key>
+				<string>world news, in English</string>
+				<key>Identifier</key>
+				<string>guardian</string>
+				<key>Name</key>
+				<string>The Guardian</string>
+			</dict>
+			<dict>
+				<key>Address</key>
+				<string>https://rss.nytimes.com/services/xml/rss/nyt/HomePage.xml</string>
+				<key>Detail</key>
+				<string>American, in English</string>
+				<key>Identifier</key>
+				<string>nyt</string>
+				<key>Name</key>
+				<string>The New York Times</string>
+				<key>Prominent</key>
+				<true/>
+			</dict>
+			<dict>
+				<key>Address</key>
+				<string>https://feeds.npr.org/1001/rss.xml</string>
+				<key>Detail</key>
+				<string>American radio news</string>
+				<key>Identifier</key>
+				<string>npr</string>
+				<key>Name</key>
+				<string>NPR</string>
+			</dict>
+			<dict>
+				<key>Address</key>
+				<string>https://xml2.corriereobjects.it/rss/homepage.xml</string>
+				<key>Detail</key>
+				<string>an Italian daily</string>
+				<key>Identifier</key>
+				<string>corriere</string>
+				<key>Name</key>
+				<string>Corriere della Sera</string>
+			</dict>
+			<dict>
+				<key>Address</key>
+				<string>https://www.ilfattoquotidiano.it/feed/</string>
+				<key>Detail</key>
+				<string>an Italian daily</string>
+				<key>Identifier</key>
+				<string>fatto</string>
+				<key>Name</key>
+				<string>Il Fatto Quotidiano</string>
+			</dict>
+			<dict>
+				<key>Address</key>
+				<string>https://www.rainews.it/rss/tutti</string>
+				<key>Detail</key>
+				<string>the Italian public broadcaster</string>
+				<key>Identifier</key>
+				<string>rai</string>
+				<key>Name</key>
+				<string>RaiNews</string>
+			</dict>
+			<dict>
+				<key>Address</key>
+				<string>https://www.tgcom24.mediaset.it/rss/homepage.xml</string>
+				<key>Detail</key>
+				<string>Italian television news</string>
+				<key>Identifier</key>
+				<string>tgcom</string>
+				<key>Name</key>
+				<string>Tgcom24</string>
+			</dict>
+			<dict>
+				<key>Address</key>
+				<string>https://www.agi.it/cronaca/rss</string>
+				<key>Detail</key>
+				<string>an Italian wire service</string>
+				<key>Identifier</key>
+				<string>agi</string>
+				<key>Name</key>
+				<string>AGI</string>
+			</dict>
+			<dict>
+				<key>Address</key>
+				<string>https://www.ansa.it/sito/notizie/politica/politica_rss.xml</string>
+				<key>Detail</key>
+				<string>Italian politics</string>
+				<key>Identifier</key>
+				<string>politica</string>
+				<key>Name</key>
+				<string>ANSA</string>
+			</dict>
+			<dict>
+				<key>Address</key>
+				<string>https://www.ansa.it/sito/notizie/cultura/cultura_rss.xml</string>
+				<key>Detail</key>
+				<string>culture, in Italian</string>
+				<key>Identifier</key>
+				<string>cultura</string>
+				<key>Name</key>
+				<string>ANSA</string>
+			</dict>
+			<dict>
+				<key>Address</key>
+				<string>https://www.ansa.it/sito/notizie/sport/sport_rss.xml</string>
+				<key>Detail</key>
+				<string>sport, in Italian</string>
+				<key>Identifier</key>
+				<string>sport</string>
+				<key>Name</key>
+				<string>ANSA</string>
+			</dict>
+			<dict>
+				<key>Address</key>
+				<string>https://www.gazzetta.it/rss/home.xml</string>
+				<key>Detail</key>
+				<string>the Italian sports daily</string>
+				<key>Identifier</key>
+				<string>gazzetta</string>
+				<key>Name</key>
+				<string>La Gazzetta dello Sport</string>
+			</dict>
+			<dict>
+				<key>Address</key>
+				<string>https://www.wired.it/feed/rss</string>
+				<key>Detail</key>
+				<string>technology and culture, in Italian</string>
+				<key>Identifier</key>
+				<string>wired</string>
+				<key>Name</key>
+				<string>Wired Italia</string>
+			</dict>
+			<dict>
+				<key>Address</key>
+				<string>https://www.dday.it/rss</string>
+				<key>Detail</key>
+				<string>consumer technology, in Italian</string>
+				<key>Identifier</key>
+				<string>dday</string>
+				<key>Name</key>
+				<string>DDay.it</string>
+			</dict>
+			<dict>
+				<key>Address</key>
+				<string>https://www.focus.it/rss</string>
+				<key>Detail</key>
+				<string>science, in Italian</string>
+				<key>Identifier</key>
+				<string>focus</string>
+				<key>Name</key>
+				<string>Focus</string>
+			</dict>
+		</array>
+	</dict>
+	<key>Identifier</key>
+	<string>com.nekomac.news</string>
+	<key>Interface</key>
+	<integer>1</integer>
+	<key>License</key>
+	<string>same as the app</string>
+	<key>MinimumApp</key>
+	<string>2.5</string>
+	<key>Name</key>
+	<string>News and weather</string>
+	<key>Summary</key>
+	<string>The feeds Neko has always had: Italian wires and dailies, four English-language papers, weather warnings, and what programmers are reading.</string>
+	<key>Version</key>
+	<string>1.0</string>
+	<key>Wants</key>
+	<array>
+		<string>network</string>
+	</array>
+</dict>
+</plist>

@@ -50,7 +50,9 @@ extern NSString * const NekoWebEnabledKey;
 + (NekoWeb *)sharedWeb;
 - (BOOL)isEnabled;
 
-/* The closed list, and the only way into it. */
+/* The list, which is now whatever the enabled plugins provide — the app's own
+   two dozen feeds included, since they ship as a plugin. Closed in the sense that
+   matters: a model may name a word from it and can never name an address. */
 + (NSArray *)sources;
 + (NekoWebSource *)sourceNamed:(NSString *)identifier;
 

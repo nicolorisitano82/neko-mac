@@ -111,6 +111,11 @@ extern NSString * const NekoLastUnpromptedKey;
 - (NSString *)threadForPrompt;
 - (void)rememberQuestion:(NSString *)question answer:(NSString *)answer;
 
+/* The two halves either side of a plugin having a look at the words: the second
+   is what actually asks, and what actually says. */
+- (void)askAfterPlugins:(NSString *)question;
+- (void)sayAfterPlugins:(NSString *)text;
+
 /* Everything that would be sent with the next question. Public because it is
    the only way to check what a follow-up actually asks. */
 - (NSString *)instructionsForAsking;

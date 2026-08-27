@@ -1,4 +1,6 @@
 #import "NekoCharacter.h"
+#import "NekoPlugins.h"
+#import "NekoPlugin.h"
 
 /* Manifest key of every state, indexed by NekoState. */
 static NSString * const NekoStateKeys[NekoStateCount] = {
@@ -39,32 +41,61 @@ static NSString * const NekoCharacterDirectory = @"Characters";
 
 #pragma mark Discovery
 
+static NSArray *NekoCharacterCache = nil;
+
+/* The ones inside the app, and then the ones enabled plugins ship. The app's own
+   win a collision: a plugin cannot replace Neko with something else called
+   "neko", it can only add. */
 + (NSArray *)availableCharacters
 {
-	static NSArray *cached = nil;
-	if(cached != nil)
-		return cached;
+	if(NekoCharacterCache != nil)
+		return NekoCharacterCache;
+
+	NSMutableArray *characters = [NSMutableArray array];
+	NSMutableSet *taken = [NSMutableSet set];
 
 	NSString *root = [[[NSBundle mainBundle] resourcePath]
 		stringByAppendingPathComponent:NekoCharacterDirectory];
-	NSArray *entries = [[NSFileManager defaultManager]
-		contentsOfDirectoryAtPath:root error:NULL];
-	NSMutableArray *characters = [NSMutableArray array];
-
-	NSEnumerator *e = [entries objectEnumerator];
+	NSEnumerator *e = [[[NSFileManager defaultManager]
+		contentsOfDirectoryAtPath:root error:NULL] objectEnumerator];
 	NSString *entry;
 	while((entry = [e nextObject]) != nil) {
 		if(![[entry pathExtension] isEqualToString:NekoCharacterExtension])
 			continue;
 		NekoCharacter *character = [[[NekoCharacter alloc]
 			initWithPath:[root stringByAppendingPathComponent:entry]] autorelease];
-		if(character != nil)
+		if(character == nil || [taken containsObject:[character identifier]])
+			continue;
+		[taken addObject:[character identifier]];
+		[characters addObject:character];
+	}
+
+	NSEnumerator *plugins = [[[NekoPlugins sharedPlugins] enabled] objectEnumerator];
+	NekoPlugin *plugin;
+	while((plugin = [plugins nextObject]) != nil) {
+		NSEnumerator *paths = [[plugin characterPaths] objectEnumerator];
+		NSString *path;
+		while((path = [paths nextObject]) != nil) {
+			NekoCharacter *character = [[[NekoCharacter alloc]
+				initWithPath:path] autorelease];
+			if(character == nil || [taken containsObject:[character identifier]])
+				continue;
+			[taken addObject:[character identifier]];
 			[characters addObject:character];
+		}
 	}
 
 	[characters sortUsingSelector:@selector(compareByName:)];
-	cached = [characters copy];
-	return cached;
+	NekoCharacterCache = [characters copy];
+	return NekoCharacterCache;
+}
+
+/* Switching a plugin on or off changes who is available, and the list is
+   cached — so it is thrown away rather than left saying yesterday's answer. */
++ (void)forgetTheList
+{
+	[NekoCharacterCache release];
+	NekoCharacterCache = nil;
 }
 
 + (NekoCharacter *)characterWithIdentifier:(NSString *)theIdentifier

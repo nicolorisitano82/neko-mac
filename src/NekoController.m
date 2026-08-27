@@ -12,6 +12,8 @@
 #import "NekoRate.h"
 #import "NekoWeb.h"
 #import "NekoPlace.h"
+#import "NekoPluginsPanel.h"
+#import "NekoPlugins.h"
 #import "NekoVoice.h"
 #import "NekoMemory.h"
 #import "NekoHotKey.h"
@@ -147,6 +149,14 @@ static const float NekoMaxStopRadius = 200.0f;
 	                keyEquivalent:@","];
 	[item setTarget:self];
 
+	/* Its own item, because plugins are not settings: they are things somebody
+	   installed, and the window that manages them says more than a tab has room
+	   for. */
+	item = [menu addItemWithTitle:NekoLocalized(@"Plugins…")
+	                       action:@selector(showPlugins:)
+	                keyEquivalent:@""];
+	[item setTarget:self];
+
 	[menu addItem:[NSMenuItem separatorItem]];
 
 	askItem = [menu addItemWithTitle:NekoLocalized(@"Ask Neko")
@@ -264,6 +274,14 @@ static const float NekoMaxStopRadius = 200.0f;
 	   Permissions tab was being drawn before that moment. */
 	if([NekoPlace isAvailable])
 		(void)[NekoPlace sharedPlace];
+
+	/* The plugins that ship inside the app are put in place before anything asks
+	   what feeds exist — the news sources are one of them now. */
+	[[NSNotificationCenter defaultCenter] addObserver:self
+	                                        selector:@selector(pluginsChanged:)
+	                                            name:NekoPluginsDidChangeNotification
+	                                          object:nil];
+	[[NekoPlugins sharedPlugins] seedFromBundle];
 
 	/* Once a day, yesterday becomes a few durable lines. Costs nothing on the
 	   days there is nothing to reduce. */
@@ -2114,6 +2132,19 @@ static const float NekoMaxStopRadius = 200.0f;
 	/* The system owns this one, so it is read back rather than remembered. */
 	[loginCheck setState:[self opensAtLogin] ? NSControlStateValueOn : NSControlStateValueOff];
 	[self updateValueFields];
+}
+
+/* A plugin that arrives, leaves, or is switched can bring characters with it. */
+- (void)pluginsChanged:(NSNotification *)note
+{
+	[NekoCharacter forgetTheList];
+	[self buildCharacterMenu];
+	[self settingsChanged];
+}
+
+- (void)showPlugins:(id)sender
+{
+	[[NekoPluginsPanel sharedPanel] show:sender];
 }
 
 - (void)showPreferences:(id)sender

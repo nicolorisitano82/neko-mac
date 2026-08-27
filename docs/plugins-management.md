@@ -8,6 +8,9 @@ The rule underneath all of it: **nothing a plugin can do is a surprise.** It is
 declared in a manifest, shown in a panel before it is switched on, visible in a
 list afterwards, and undoable in one click.
 
+[plugin-guide.md](plugin-guide.md) is what to read if you are writing one rather
+than deciding what they may be.
+
 ## 1. Where they live
 
 ```
@@ -32,7 +35,12 @@ container and holds nothing else.
 
 ## 2. Adding one
 
-A **Plugins** tab, seventh in the preferences window, and an **Add…** button.
+A window of its own — **Plugins…** in the menu, not a tab in the preferences.
+Plugins are not settings: the preferences are things about how the cat behaves,
+and a plugin is a thing somebody installed. The window also has to say more than a
+tab has room for, and the paragraph about what none of them can reach belongs
+where somebody is deciding whether to trust a folder they downloaded.
+
 What happens between choosing a folder and having a plugin:
 
 1. **It is read, not run.** The manifest is parsed; anything unreadable stops here
@@ -141,13 +149,13 @@ sentence, where the person can see it.
 | a fragment that turns out to break answers | the row's switch, and the whole thing is gone |
 
 A plugin never fails silently and never fails loudly. It fails in one line in the
-tab and one sentence in the bubble.
+window and one sentence in the bubble.
 
-## 7. The tab
+## 7. The window
 
-Seventh tab, and it should look like the Permissions tab rather than a marketplace:
-a scrolling list of rows, one row per plugin, each with the name, the author, what
-it extends, a state word, and two controls.
+It should look like the Permissions tab rather than a marketplace: a scrolling
+list of rows, one row per plugin, each with the name, the author, what it extends,
+a state word, and two controls.
 
 ```
 ● ANSA Sport            Somebody · 1.2                    [switch]
@@ -158,16 +166,62 @@ it extends, a state word, and two controls.
   1 route, ships a program                                Reveal · Remove
   disabled: the program changed since you enabled it
 
-  [ Add… ]        Plugins live in Application Support. Nothing here can see your
-                  diary, your screen or your files, and nothing here can make the
-                  cat speak on its own.
+  [ Add… ]  [ Show the folder ]
+
+  Plugins live in Neko's own folder in Application Support. Nothing here runs
+  inside Neko, and nothing here can see your diary, your screen, your files or
+  where you are — or make the cat speak on its own.
 ```
 
 The paragraph at the bottom is not decoration. It is the sentence somebody needs
 when they are deciding whether to trust a folder they downloaded, and it belongs
 where they are deciding.
 
-## 8. What to build first
+## 8. What is built so far
+
+The first slice, on the `2.5` branch:
+
+- **`NekoPlugin`** — reads a manifest and refuses in sentences: no readable
+  `plugin.plist`, an identifier that is not of the form `com.example.thing`, no
+  name, no interface version, an interface from the future, a Neko version from
+  the future, one of the app's own markers in its summary, feeds without asking
+  for the network, an address that is not `https`, a feed word with a space in it,
+  and — refused rather than ignored — extending something this version does not
+  offer. A refused plugin still appears in the list with the reason.
+- **`NekoPlugins`** — the folder inside the container, the enabled list, copying
+  one in, removing it. Arriving is not the same as being on.
+- **`NekoPluginsPanel`** — its own window, opened from the menu, with the
+  paragraph about what none of them can reach at the bottom of it.
+- **Feeds**, wired into the router that answers "che notizie ci sono". The app's
+  own two dozen sources moved out of `NekoWeb.m` and into a plugin that ships
+  inside the bundle, which is the honest test of the interface: if they could not
+  be expressed as a plugin, it was not an interface yet. It is copied into the
+  container at launch and switched on the first time it arrives — the one
+  exception to *arriving is not the same as being on*, because a plugin shipped by
+  the app is not a folder somebody downloaded, and the news would otherwise have
+  stopped working on the day it moved. Switched off by hand, it stays off through
+  every later launch and update.
+- **Text in and out**, by running one of the user's own Shortcuts: the plugin
+  names a Shortcut and never a program. What comes back may change words and
+  nothing else — a marker anywhere in it and the whole transformation is thrown
+  away — it never blocks the conversation, it sees the words and nothing around
+  them, and the diary keeps what was actually said rather than the rewording.
+
+Twenty-six checks in `tests/plugin.m`, the whole path included: it arrives
+switched off, its feed is unreachable, switching it on makes the feed answer to
+its word, switching it off removes it again, and removing the plugin leaves
+nothing.
+
+## 9. What to build next
+
+**Pictures out.** Same shape as text: a plugin names a Shortcut, is handed a
+description, and hands back an image — which the app shows with the same Save
+button it already has, and which the plugin may never write to disk itself. It is
+the next slice rather than this one because an image has two more things to settle
+that text does not: what happens when it comes back enormous, and whether it
+replaces the local painter or sits beside it.
+
+**Then verbs and routes**, which is where the interface stops being about data.
 
 Four steps, each shippable alone, in the order that keeps the app defensible at
 every point:
@@ -189,7 +243,7 @@ Steps 1 to 3 are perhaps a week between them. Step 4 is a week on its own, mostl
 in the failure paths, and it should not be started until something exists that
 step 3 cannot do.
 
-## 9. What this design refuses to do, and why
+## 10. What this design refuses to do, and why
 
 - **No in-process loading.** Section 0 of [plugins.md](plugins.md).
 - **No plugin store.** An app that downloads code is a different app with a

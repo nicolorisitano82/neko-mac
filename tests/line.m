@@ -58,7 +58,12 @@ static void run(void)
 	while(![line isKeyWindow] && [until timeIntervalSinceNow] > 0.0)
 		spin(0.1);
 
-	if([NSApp isActive])
+	BOOL screenLocked = [[before bundleIdentifier]
+		isEqualToString:@"com.apple.loginwindow"];
+	if(screenLocked)
+		say(@"---   the screen was locked, where being active and being key part "
+		    @"company; not measured");
+	else if([NSApp isActive])
 		ok([line isKeyWindow], @"the line takes the keyboard",
 			@"the application was brought to the front");
 	else

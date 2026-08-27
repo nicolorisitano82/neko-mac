@@ -2,6 +2,7 @@
 #import "NekoAnswerProvider.h"
 #import "NekoAction.h"   /* NekoWithoutMarkdown: the same markers, the same stripping */
 #import "NekoPlace.h"
+#import "NekoPlugins.h"
 
 NSString * const NekoWebEnabledKey = @"NekoWebEnabled";
 
@@ -72,132 +73,44 @@ static const NSTimeInterval NekoWebPatience = 8.0;
 
 #pragma mark The list
 
-/* Every one of these was fetched and counted before it was written down here.
-   Reuters and the Associated Press are missing because they stopped publishing
-   feeds. So are 3B Meteo and meteo.it: neither publishes one — every address
-   they ever used answers with their own home page — so the plain forecast comes
-   from open-meteo, which needs no key and no account, and the cat says where the
-   numbers came from rather than implying somebody else vouched for them. The
-   warnings are a different thing and do have a feed: MeteoAlarm, which is what
-   the national services publish through. */
+/* Where the list went. Every one of these feeds was fetched and counted before
+   it was written down — and they are now written down in a plugin that ships
+   inside the app rather than in this file, which is the honest test of the plugin
+   interface: if the app's own two dozen sources cannot be expressed as a plugin,
+   it is not an interface yet.
+
+   Reuters and the Associated Press are missing from it because they stopped
+   publishing feeds. So are 3B Meteo and meteo.it: neither publishes one — every
+   address they ever used answers with their own home page — so the plain forecast
+   comes from open-meteo, which needs no key and no account, and the cat says
+   where the numbers came from rather than implying somebody else vouched for
+   them. The warnings are a different thing and do have a feed: MeteoAlarm, which
+   is what the national services publish through.
+
+   A consequence worth stating: switch that plugin off and the cat has no news
+   sources at all, and says so when asked. That is the same switch as any other
+   plugin's, which is the point of moving them. */
 + (NSArray *)sources
 {
-	static NSArray *list = nil;
-	if(list != nil)
-		return list;
-
-	NSString *(^L)(NSString *) = ^(NSString *text) { return NSLocalizedString(text, nil); };
-	list = [[NSArray alloc] initWithObjects:
-		[[[NekoWebSource alloc] initWithIdentifier:@"ansa" name:@"ANSA"
-			detail:L(@"the wire, in Italian")
-			address:@"https://www.ansa.it/sito/notizie/topnews/topnews_rss.xml"
-			prominent:YES] autorelease],
-		[[[NekoWebSource alloc] initWithIdentifier:@"mondo" name:@"ANSA"
-			detail:L(@"world news, in Italian")
-			address:@"https://www.ansa.it/sito/notizie/mondo/mondo_rss.xml"
-			prominent:YES] autorelease],
-		[[[NekoWebSource alloc] initWithIdentifier:@"tecnologia" name:@"ANSA"
-			detail:L(@"technology, in Italian")
-			address:@"https://www.ansa.it/sito/notizie/tecnologia/tecnologia_rss.xml"
-			prominent:YES] autorelease],
-		[[[NekoWebSource alloc] initWithIdentifier:@"repubblica" name:@"la Repubblica"
-			detail:L(@"an Italian daily")
-			address:@"https://www.repubblica.it/rss/homepage/rss2.0.xml"
-			prominent:NO] autorelease],
-		[[[NekoWebSource alloc] initWithIdentifier:@"sole24" name:@"Il Sole 24 Ore"
-			detail:L(@"Italy, from the financial daily")
-			address:@"https://www.ilsole24ore.com/rss/italia.xml"
-			prominent:NO] autorelease],
-		[[[NekoWebSource alloc] initWithIdentifier:@"economia" name:@"Il Sole 24 Ore"
-			detail:L(@"business and markets")
-			address:@"https://www.ilsole24ore.com/rss/economia.xml"
-			prominent:NO] autorelease],
-		/* Atom rather than RSS, and no summary under the title: the warning is
-		   the title. Attributed by name because their licence asks for it. */
-		[[[NekoWebSource alloc] initWithIdentifier:@"allerta" name:@"MeteoAlarm"
-			detail:L(@"official weather warnings for Italy")
-			address:@"https://feeds.meteoalarm.org/feeds/meteoalarm-legacy-atom-italy"
-			prominent:YES] autorelease],
-		[[[NekoWebSource alloc] initWithIdentifier:@"hn" name:@"Hacker News"
-			detail:L(@"what programmers are reading")
-			address:@"https://news.ycombinator.com/rss"
-			prominent:YES] autorelease],
-		[[[NekoWebSource alloc] initWithIdentifier:@"bbc" name:@"BBC News"
-			detail:L(@"British, in English")
-			address:@"https://feeds.bbci.co.uk/news/rss.xml"
-			prominent:YES] autorelease],
-		[[[NekoWebSource alloc] initWithIdentifier:@"guardian" name:@"The Guardian"
-			detail:L(@"world news, in English")
-			address:@"https://www.theguardian.com/world/rss"
-			prominent:NO] autorelease],
-		[[[NekoWebSource alloc] initWithIdentifier:@"nyt" name:@"The New York Times"
-			detail:L(@"American, in English")
-			address:@"https://rss.nytimes.com/services/xml/rss/nyt/HomePage.xml"
-			prominent:YES] autorelease],
-		[[[NekoWebSource alloc] initWithIdentifier:@"npr" name:@"NPR"
-			detail:L(@"American radio news")
-			address:@"https://feeds.npr.org/1001/rss.xml"
-			prominent:NO] autorelease],
-
-		/* Italian dailies, wires and topics, taken from a published list of
-		   Italian feeds and each one fetched with this application's own user
-		   agent before it went in — a feed that answers a browser and refuses
-		   Neko is no use here. Il Post is the one that got away: 403 whatever
-		   it is asked with. */
-		[[[NekoWebSource alloc] initWithIdentifier:@"corriere" name:@"Corriere della Sera"
-			detail:L(@"an Italian daily")
-			address:@"https://xml2.corriereobjects.it/rss/homepage.xml"
-			prominent:NO] autorelease],
-		[[[NekoWebSource alloc] initWithIdentifier:@"fatto" name:@"Il Fatto Quotidiano"
-			detail:L(@"an Italian daily")
-			address:@"https://www.ilfattoquotidiano.it/feed/"
-			prominent:NO] autorelease],
-		[[[NekoWebSource alloc] initWithIdentifier:@"rai" name:@"RaiNews"
-			detail:L(@"the Italian public broadcaster")
-			address:@"https://www.rainews.it/rss/tutti"
-			prominent:NO] autorelease],
-		[[[NekoWebSource alloc] initWithIdentifier:@"tgcom" name:@"Tgcom24"
-			detail:L(@"Italian television news")
-			address:@"https://www.tgcom24.mediaset.it/rss/homepage.xml"
-			prominent:NO] autorelease],
-		[[[NekoWebSource alloc] initWithIdentifier:@"agi" name:@"AGI"
-			detail:L(@"an Italian wire service")
-			address:@"https://www.agi.it/cronaca/rss"
-			prominent:NO] autorelease],
-		[[[NekoWebSource alloc] initWithIdentifier:@"politica" name:@"ANSA"
-			detail:L(@"Italian politics")
-			address:@"https://www.ansa.it/sito/notizie/politica/politica_rss.xml"
-			prominent:NO] autorelease],
-		[[[NekoWebSource alloc] initWithIdentifier:@"cultura" name:@"ANSA"
-			detail:L(@"culture, in Italian")
-			address:@"https://www.ansa.it/sito/notizie/cultura/cultura_rss.xml"
-			prominent:NO] autorelease],
-		[[[NekoWebSource alloc] initWithIdentifier:@"sport" name:@"ANSA"
-			detail:L(@"sport, in Italian")
-			address:@"https://www.ansa.it/sito/notizie/sport/sport_rss.xml"
-			prominent:NO] autorelease],
-		[[[NekoWebSource alloc] initWithIdentifier:@"gazzetta" name:@"La Gazzetta dello Sport"
-			detail:L(@"the Italian sports daily")
-			address:@"https://www.gazzetta.it/rss/home.xml"
-			prominent:NO] autorelease],
-		[[[NekoWebSource alloc] initWithIdentifier:@"wired" name:@"Wired Italia"
-			detail:L(@"technology and culture, in Italian")
-			address:@"https://www.wired.it/feed/rss"
-			prominent:NO] autorelease],
-		[[[NekoWebSource alloc] initWithIdentifier:@"dday" name:@"DDay.it"
-			detail:L(@"consumer technology, in Italian")
-			address:@"https://www.dday.it/rss"
-			prominent:NO] autorelease],
-		[[[NekoWebSource alloc] initWithIdentifier:@"focus" name:@"Focus"
-			detail:L(@"science, in Italian")
-			address:@"https://www.focus.it/rss"
-			prominent:NO] autorelease], nil];
-	return list;
+	NSMutableArray *sources = [NSMutableArray array];
+	NSMutableSet *taken = [NSMutableSet set];
+	NSEnumerator *e = [[[NekoPlugins sharedPlugins] feeds] objectEnumerator];
+	NSDictionary *feed;
+	while((feed = [e nextObject]) != nil) {
+		NSString *word = [[feed objectForKey:@"Identifier"] lowercaseString];
+		if([word length] == 0 || [taken containsObject:word])
+			continue;            /* the first plugin to claim a word keeps it */
+		[taken addObject:word];
+		[sources addObject:[[[NekoWebSource alloc]
+			initWithIdentifier:word
+			              name:[feed objectForKey:@"Name"]
+			            detail:[feed objectForKey:@"Detail"] ?: @""
+			           address:[feed objectForKey:@"Address"]
+			         prominent:[[feed objectForKey:@"Prominent"] boolValue]] autorelease]];
+	}
+	return sources;
 }
 
-/* One publisher, twenty regions, one shape of address — and every one of them
-   fetched before it was written down here. The keys are what CoreLocation calls
-   the region, flattened: no spaces, no hyphens, no apostrophes, lower case. */
 + (NSDictionary *)regions
 {
 	return [NSDictionary dictionaryWithObjectsAndKeys:
@@ -271,6 +184,7 @@ static const NSTimeInterval NekoWebPatience = 8.0;
 	while((source = [e nextObject]) != nil)
 		if([[source identifier] isEqualToString:wanted])
 			return source;
+
 	return nil;
 }
 
@@ -414,6 +328,43 @@ static const NSTimeInterval NekoWebPatience = 8.0;
 	return [self longestMatchIn:lowered from:[self mastheads]];
 }
 
+/* A word only a plugin knows, matched as a whole word and never as a fragment.
+   Fragments were a mistake worth recording: the source called "mondo" turned
+   "cosa è successo nel mondo" into a request for that one feed instead of the
+   wire, because the word was in the sentence. */
++ (NSString *)pluginWordIn:(NSString *)lowered
+{
+	/* Only words the app's own vocabulary does not already govern. The two dozen
+	   feeds ship as a plugin now, so without this the identifier "mondo" became a
+	   trigger word and "cosa è successo nel mondo" asked for that one feed
+	   instead of the wire. The mastheads and topics tables are where the app's
+	   own words are decided; a plugin's word is anything else. */
+	NSMutableSet *governed = [NSMutableSet set];
+	[governed addObjectsFromArray:[[self mastheads] allValues]];
+	[governed addObjectsFromArray:[[self topics] allValues]];
+
+	NSCharacterSet *letters = [NSCharacterSet letterCharacterSet];
+	NSEnumerator *e = [[self sources] objectEnumerator];
+	NekoWebSource *source;
+	while((source = [e nextObject]) != nil) {
+		NSString *word = [source identifier];
+		if([governed containsObject:word])
+			continue;
+		NSRange found = [lowered rangeOfString:word];
+		if(found.location == NSNotFound)
+			continue;
+		if(found.location > 0
+		   && [letters characterIsMember:[lowered characterAtIndex:found.location - 1]])
+			continue;
+		NSUInteger after = NSMaxRange(found);
+		if(after < [lowered length]
+		   && [letters characterIsMember:[lowered characterAtIndex:after]])
+			continue;
+		return word;
+	}
+	return nil;
+}
+
 + (BOOL)phrase:(NSString *)lowered hasAnyOf:(NSArray *)words
 {
 	NSEnumerator *e = [words objectEnumerator];
@@ -459,8 +410,11 @@ static const NSTimeInterval NekoWebPatience = 8.0;
 	/* A source named out loud settles it before anything else does: "allerte
 	   meteo" is a feed, not a forecast, and asking for the BBC is asking for the
 	   BBC whatever else is in the sentence. */
+	/* A word the vocabulary knows but nothing provides — the news plugin switched
+	   off, say — is not a lookup. Better to answer the question than to promise a
+	   source and then not have it. */
 	NSString *named = [self sourceMentionedIn:lowered];
-	if(named != nil)
+	if(named != nil && [self sourceNamed:named] != nil)
 		return named;
 
 	BOOL aboutWeather = [self phrase:lowered hasAnyOf:[NSArray arrayWithObjects:
@@ -501,10 +455,22 @@ static const NSTimeInterval NekoWebPatience = 8.0;
 	if(topic != nil && [self sourceNamed:topic] != nil)
 		return topic;
 
+	/* And a word only a plugin knows, for the same reason and under the same
+	   condition: the sentence has already said it is after the news. */
+	NSString *added = [self pluginWordIn:lowered];
+	if(added != nil)
+		return added;
+
 	/* Asked for the news without naming anywhere: the wire, in the language the
-	   application is running in. */
+	   application is running in — if anything still provides it. With the news
+	   plugin switched off there is nothing to fetch, and a question is better
+	   answered than promised. */
 	NSString *language = [[[NSBundle mainBundle] preferredLocalizations] firstObject] ?: @"en";
-	return [language hasPrefix:@"it"] ? @"ansa" : @"bbc";
+	NSString *wire = [language hasPrefix:@"it"] ? @"ansa" : @"bbc";
+	if([self sourceNamed:wire] != nil)
+		return wire;
+	NekoWebSource *any = [[self sources] firstObject];
+	return any != nil ? [any identifier] : nil;
 }
 
 #pragma mark Fetching

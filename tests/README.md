@@ -34,6 +34,7 @@ again afterwards.
 | `persona.m` | that the character survives the longest prompt the app can build |
 | `mood.m` | the slow layer under the mood, and the feelings it may not claim |
 | `distil.m` | that a month-old memory is summarised rather than dropped |
+| `plugin.m` | what a plugin may be, what it is refused for, and the whole install path |
 | `tempo.m` | how long a short answer waits, and everything exempt from waiting |
 
 ## Two things about writing more of these
@@ -53,7 +54,21 @@ auxiliary binary inside a bundle the moment it asks for anything private), and
 the nightly reflection (it needs yesterday's file and a model; measured in the
 roadmap instead).
 
-## One trap worth knowing
+## Two traps worth knowing
+
+A helper called `read` collides with `unistd.h`'s, and the compiler's complaint
+points at the call site rather than the definition. Twice now. Anything shared
+with a system function wants a longer name in these files.
+
+## And a third
+
+A test that checks *which* refusal came back must compare against
+`NSLocalizedString(key, nil)`, not against the English. Three checks in
+`plugin.m` pinned the English words and broke the moment the plugin strings were
+translated — the app was right and the tests were wrong, which is the more
+embarrassing way round.
+
+## The other trap
 
 AppKit drains the autorelease pool while the run loop turns, and `spin()` turns
 it. Anything a test holds *across* a spin — an array it is iterating, a string it

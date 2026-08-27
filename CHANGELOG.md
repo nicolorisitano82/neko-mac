@@ -1,5 +1,96 @@
 # Changelog
 
+## 2.5 — 2026-08-27
+
+### Plugins
+
+Somebody else can add to this app now, and the shape of it is decided by one
+fact: Neko is sandboxed and holds a microphone, a location, folders handed over by
+name and a diary about somebody's working life. Code loaded into that process
+would inherit all of it, and the entitlement that allows such loading is the one
+that would make the sandbox decorative. So **a plugin is a folder with a manifest,
+read and never run.**
+
+The manifest is the whole contract. What it declares is what it may be asked, and
+an extension point this version does not offer is **refused rather than ignored** —
+ignoring one would mean the plugin believes it is doing something it is not. Every
+refusal is a sentence somebody can act on, and a refused plugin stays in the list
+with the reason rather than vanishing.
+
+**Their own window**, opened from the menu, not a seventh tab in the preferences.
+Plugins are not settings — the preferences are about how the cat behaves, and a
+plugin is a thing somebody installed. The window carries the paragraph about what
+none of them can reach, where somebody is deciding whether to trust a folder they
+downloaded. Installing is a panel rather than a drag into the Finder, because the
+sandbox can only read inside its own container; that is what the sandbox costs and
+it is said out loud.
+
+Four things a plugin can do in this version:
+
+- **Feeds.** The app's own two dozen news sources moved out of `NekoWeb.m` and
+  into a plugin that ships inside the bundle — the honest test of the interface,
+  since if they could not be expressed as a plugin it was not an interface yet.
+  It installs itself at launch and is switched on the first time it arrives, which
+  is the one exception to *arriving is not the same as being on*: a plugin the app
+  ships is not a folder somebody downloaded, and the news would otherwise have
+  stopped working on the day it moved out of the code. Switched off by hand it
+  stays off, through the next launch and through an update, and the panel offers no
+  Remove because removing it would only mean it came back.
+- **Text, in and out.** A plugin can be handed what somebody said before the
+  engine sees it, or what the cat is about to say before it is shown. The work is
+  done by one of the user's own Shortcuts — the manifest names a Shortcut and a
+  program of its own is refused outright — so the trust is theirs and nothing new
+  runs inside the app. It may change words and nothing else, it never blocks the
+  conversation, it sees the words and nothing around them, and the diary keeps what
+  was actually said rather than the rewording.
+- **Characters.** `.nekochar` folders named one by one in the manifest, joining the
+  menu the moment the plugin is switched on. Add, never replace: an identifier the
+  app already ships is not reachable.
+- **Its own translations.** `<lang>.lproj/plugin.strings`, keyed on the English
+  strings in the manifest, looked up before the app's own tables. English-only is
+  allowed and says English things; a language folder whose strings cannot be read
+  is refused, and named.
+
+And a specification rather than a feature: [the plugin
+guide](docs/plugin-guide.md) writes down the **executable interface** — one JSON
+object in on stdin, one out on stdout, one request per launch, eight seconds, no
+home directory, no diary, no screen text, no location — as `Interface 2`, which
+this version refuses with the sentence that says so. It is written down now so a
+plugin can be built against a contract that will not move under it.
+
+Three things went wrong while building it, and each is in a test now. Moving the
+feeds into a plugin made the word "mondo" — one of their identifiers — turn "cosa
+è successo nel mondo" into a request for that single feed, because plugin words
+were matched as fragments anywhere in a sentence. A marker in the *middle* of a
+plugin's returned text passed the gate, because the app's own routing only ever
+looks at the first word; for a plugin's output it is now a marker in any position.
+And the first character test proved the collision rule instead of the feature,
+because the folder it copied carried an identifier the app already had.
+
+### arm64 only, and honestly this time
+
+The app used to come out of `build.sh` as a universal binary. Its Intel half had
+no local model engine — that is a Metal build, guarded by an `if arm64` — no Apple
+Intelligence, which needs Apple silicon, and not even the Swift file that reaches
+it, because the Command Line Tools ship the Swift compatibility libraries for
+arm64 alone. It was an app that could chase the pointer and answer nothing, and
+the README promised it to people.
+
+One slice now, no `lipo`, and the README, the homepage and the plugin guide say
+Apple silicon rather than universal. A slice that cannot do the things the app is
+for is worse than no slice at all.
+
+### Three measurements that were failing on the machine, not the code
+
+All three passed alone and failed inside a full suite run, which is the signature
+of a test measuring the clock instead of the thing. The turn test ticked forty
+times and measured where the cat ended up — past the arrival the roaming chain
+starts the next wander, and one run measured it four points *behind* where it
+started. The feed test required all twenty-five publishers to answer, and a suite
+that fails on somebody else's server teaches people to ignore it. The barge-in
+test asserted 300 ms when what it proves is "the middle of a word", and half a
+second is still the middle of a word.
+
 ## 2.2.1 — 2026-08-26
 
 ### The location button really did nothing, and here is why
