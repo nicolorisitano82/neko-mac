@@ -18,7 +18,7 @@ data, or one of the user's own Shortcuts, or — the part specified in section 6
 a **separate process** that speaks JSON over a pipe and knows nothing about the
 inside of the app.
 
-Everything in sections 1 to 5 works in the build on the `2.5` branch. Section 6
+Everything in sections 1 to 5 works in Neko 2.5 and later. Section 6
 is a specification, not a description: a manifest that declares it is refused
 today, with the sentence that says so.
 

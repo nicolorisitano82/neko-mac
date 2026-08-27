@@ -1,5 +1,39 @@
 # Changelog
 
+## 2.5.1 — 2026-08-27
+
+### The Add button in the plugins window opened a panel nobody could see
+
+Reported an hour after 2.5 went out: *"in plugin aggiungi non fa niente di
+niente."* It didn't, from where anybody was standing.
+
+The button was wired correctly — target and action read back from a harness — and
+the panel service started every time it was pressed. The panel was opening
+**application-modal from an app with no Dock icon**, which puts it behind whatever
+the person is looking at. It is a sheet on the plugins window now, which cannot be
+behind anything, and so are the two alerts that follow it: the failure message and
+the removal confirmation. Measured in the real bundle: the sheet attaches, with the
+app active and the window visible.
+
+Also added, though it turned out **not** to be the cause: the sandbox entitlement
+for user-selected files. Powerbox grants access to a chosen item through it, so
+without it a folder could be picked and then not opened. The control experiment
+that cleared it — removing the entitlement again and watching the panel service
+start anyway — is recorded next to the key in the entitlements file, because a
+comment naming the wrong cause is worse than no comment.
+
+**Two process notes, both mine.** I diagnosed the missing entitlement by reading
+the file, and only the control experiment talked me out of it. And two probes in
+between measured nothing at all: they were edits looking for an anchor that no
+longer existed, so they changed nothing silently while I read their absence as
+evidence. That is the class of mistake `tests/docs.m` was written for the same
+afternoon, made twice in an hour. Probes assert their anchors now.
+
+**Still to do, and not guessed at:** the folder handover has the same shape — an
+application-modal open panel — and the same complaint against it from an earlier
+release, where I treated the symptom by opening a menu instead. It is synchronous,
+so a sheet there is a real change rather than a line. Measured and fixed next.
+
 ## 2.5 — 2026-08-27
 
 ### Plugins
