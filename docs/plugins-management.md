@@ -179,7 +179,7 @@ where they are deciding.
 
 ## 8. What is built so far
 
-The first slice, on the `2.5` branch:
+Two slices: plugins in 2.5, verbs in 2.6.
 
 - **`NekoPlugin`** — reads a manifest and refuses in sentences: no readable
   `plugin.plist`, an identifier that is not of the form `com.example.thing`, no
@@ -207,10 +207,26 @@ The first slice, on the `2.5` branch:
   away — it never blocks the conversation, it sees the words and nothing around
   them, and the diary keeps what was actually said rather than the rewording.
 
+- **Verbs** — a plugin lists phrases and, for each, one door: an address from a
+  closed list of schemes, or one of the user's own Shortcuts. The app matches the
+  phrase in code before any engine is consulted, whole-word and longest-first,
+  reads the plugin's own `Confirm` sentence back with the words in it, and opens
+  nothing until somebody clicks yes. Enablement is checked again at that moment,
+  so a switch turned off between the question and the yes counts. A verb with no
+  read-back sentence is refused outright, and so is `shortcuts:` disguised as an
+  address. Verbs only work at all while **Actions** is switched on, because a verb
+  is the app opening something and that consent already has a home.
+  `examples/Spotify.nekoplugin` and `examples/Apple Music.nekoplugin` are six
+  verbs each.
+
 Twenty-six checks in `tests/plugin.m`, the whole path included: it arrives
 switched off, its feed is unreachable, switching it on makes the feed answer to
 its word, switching it off removes it again, and removing the plugin leaves
-nothing.
+nothing. Thirty-five more in `tests/verb.m`: ten manifests refused one reason at a
+time, the matching including the phrase that must *not* match inside a longer
+word, the argument cut with its capitals intact, the two refusals that happen at
+the moment of doing rather than of reading, and — live, in the real bubble — the
+read-back appearing with a yes and a no on it, and a dismissal doing nothing.
 
 ## 9. What to build next
 
@@ -221,7 +237,10 @@ the next slice rather than this one because an image has two more things to sett
 that text does not: what happens when it comes back enormous, and whether it
 replaces the local painter or sits beside it.
 
-**Then verbs and routes**, which is where the interface stops being about data.
+**Then routes**, which is where the interface stops being about data. Verbs
+shipped in 2.6 and are described in section 8; a route is the harder half, because
+a route decides what a question *is* and a verb only decides that one phrase was
+in it.
 
 Four steps, each shippable alone, in the order that keeps the app defensible at
 every point:

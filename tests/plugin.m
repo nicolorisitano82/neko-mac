@@ -102,12 +102,14 @@ int main(void)
 		@"feeds without asking for the network are refused",
 		[readPlugin(@"nonet", sneaky) refusal]);
 
+	/* Verbs used to be the example here, and shipped in 2.6. Routes are the next
+	   thing this file will have to change. */
 	NSMutableDictionary *unknown = good();
-	[unknown setObject:[NSDictionary dictionaryWithObject:[NSArray array] forKey:@"Verbs"]
+	[unknown setObject:[NSDictionary dictionaryWithObject:[NSArray array] forKey:@"Routes"]
 	            forKey:@"Extends"];
-	ok(![readPlugin(@"verbs", unknown) isUsable],
+	ok(![readPlugin(@"routes", unknown) isUsable],
 		@"and extending something this version does not offer is refused, not ignored",
-		[readPlugin(@"verbs", unknown) refusal]);
+		[readPlugin(@"routes", unknown) refusal]);
 
 	NSMutableDictionary *http = good();
 	NSMutableDictionary *plain = [NSMutableDictionary dictionaryWithDictionary:

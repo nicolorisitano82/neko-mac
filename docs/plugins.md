@@ -194,20 +194,42 @@ today.
 
 ### 3.6 Markers and verbs — `NekoAction`
 
-The verb list is closed on purpose: six verbs, each one read back to the user and
-waiting for a yes. `Extends.Verbs` adds to it, and the price of admission is the
-same as the existing six:
+**Shipped in 2.6.** The app's own verb list is closed on purpose: six verbs, each
+one read back to the user and waiting for a yes. `Extends.Verbs` adds to it, and
+the price of admission is the same as the existing six.
+
+The shape it ended up with is narrower than the one sketched here first, and the
+narrowing is the interesting part. What was sketched had a `Kind`, which invited
+more kinds later; what shipped has two keys and no third one is possible:
 
 ```
-Verb = { Name = "play"; Summary = "Play %@ in Music"; Kind = "shortcut";
-         Shortcut = "Play album"; Confirms = true; }
+Verb = { Identifier = "search"; Phrases = ( "metti", "play" );
+         Confirm = "Cerco “%@” su Spotify?"; Url = "spotify:search:%@"; }
 ```
 
-`Confirms` cannot be false. A plugin verb goes through `propose:` like everything
-else: shown in the bubble, performed on a yes, and a dismissed bubble is a no.
-Verbs that would touch files are not available to plugins at all — file work goes
-through the folders the user handed over by name, and those were handed to the
-app.
+- **`Confirm` is required**, not a flag that could be false. A verb without a
+  sentence to read back is refused when the manifest is read, which means the
+  read-back cannot be switched off by a plugin — only by not being installed.
+- **Exactly one of `Url` or `Shortcut`.** An address from a closed list of schemes
+  — https, spotify, music, itms, mailto — or a Shortcut the user made. Neither is
+  a `Kind`: there is no third door to add.
+- **`file:` is refused, and so is `shortcuts:` as an address.** The second one
+  matters more: it is how a plugin would run a Shortcut while declaring it only
+  wanted to open a link.
+- **The phrase is matched by the app, in code**, whole-word and longest-first,
+  before any engine is consulted — the same rails as the news routing in 3.3, and
+  for the reason measured there: a model asked to recognise intent invents it.
+- **Everything is checked twice**, once on reading the manifest and once after the
+  yes: still installed, still enabled, still allowed to open things.
+
+A plugin verb goes through the bubble like everything else: shown, performed on a
+yes, and a dismissed bubble is a no. Verbs that would touch files are not
+available to plugins at all — file work goes through the folders the user handed
+over by name, and those were handed to the app.
+
+Two examples ship in `examples/`, for Spotify and for Apple Music, and they split
+along exactly the line above: searching is an address and needs no permission,
+while volume, pause and skip need Shortcuts the user writes.
 
 ### 3.7 Filtering — `NekoSense`, `NekoVoice`
 

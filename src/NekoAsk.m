@@ -6,6 +6,7 @@
 #import "NekoRate.h"
 #import "NekoWeb.h"
 #import "NekoPluginText.h"
+#import "NekoPluginVerbs.h"
 #import "NekoVoice.h"
 #import "NekoFolderAccess.h"
 #import "NekoWakeWord.h"
@@ -898,6 +899,18 @@ static const NSTimeInterval NekoHoldToType = 0.5;
 		return;
 	}
 
+	/* And a phrase a plugin asked to hear, recognised in the same place and for
+	   the same reason. Only when doing things is switched on: a verb is the app
+	   opening something, and that consent already has a home. */
+	if([[NSUserDefaults standardUserDefaults] boolForKey:NekoActionsEnabledKey]
+	   && [NekoPluginVerbs anythingListens]) {
+		NSDictionary *verb = [NekoPluginVerbs matchFor:question];
+		if(verb != nil) {
+			[self proposeVerb:verb];
+			return;
+		}
+	}
+
 	id<NekoAnswerProvider> provider = [self provider];
 	if(![provider isConfigured]) {
 		phase = NekoPhaseIdle;
@@ -1082,6 +1095,26 @@ static const NSTimeInterval NekoHoldToType = 0.5;
 		[NSObject cancelPreviousPerformRequestsWithTarget:self
 		                                         selector:@selector(finish) object:nil];
 		[self performSelector:@selector(finish) withObject:nil afterDelay:showing];
+	}];
+}
+
+/* A plugin's verb, read back in its own words and waiting for a yes — the same
+   rule as every other deed here, and the plugin does not get to skip it: a verb
+   with no Confirm sentence is refused when the manifest is read. */
+- (void)proposeVerb:(NSDictionary *)verb
+{
+	phase = NekoPhaseAnswering;
+	[[self panel] holdWithState:NekoStateAwake];
+	[bubble askText:[verb objectForKey:@"Sentence"] nearRect:[[self panel] frame]
+	        decided:^(BOOL yes) {
+		if(!yes) {
+			[self sayInCharacter:NekoAskLocalized(@"All right, I will not.")];
+			return;
+		}
+		if([NekoPluginVerbs perform:verb])
+			[self sayInCharacter:NekoAskLocalized(@"Done.")];
+		else
+			[self sayInCharacter:NekoAskLocalized(@"That did not work.")];
 	}];
 }
 

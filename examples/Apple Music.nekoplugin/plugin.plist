@@ -1,0 +1,134 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>Author</key>
+	<string>an example, shipped with Neko</string>
+	<key>Extends</key>
+	<dict>
+		<key>Verbs</key>
+		<array>
+			<dict>
+				<key>Confirm</key>
+				<string>Cerco “%@” in Musica?</string>
+				<key>Identifier</key>
+				<string>search</string>
+				<key>Phrases</key>
+				<array>
+					<string>metti</string>
+					<string>ascolta</string>
+					<string>fai sentire</string>
+					<string>play</string>
+					<string>put on</string>
+				</array>
+				<key>Summary</key>
+				<string>searches Apple Music and opens it</string>
+				<key>Url</key>
+				<string>music://music.apple.com/search?term=%@</string>
+			</dict>
+			<dict>
+				<key>Confirm</key>
+				<string>Apro la radio in Musica?</string>
+				<key>Identifier</key>
+				<string>radio</string>
+				<key>Phrases</key>
+				<array>
+					<string>metti la radio</string>
+					<string>play the radio</string>
+				</array>
+				<key>Summary</key>
+				<string>opens Apple Music radio</string>
+				<key>Url</key>
+				<string>music://music.apple.com/radio</string>
+			</dict>
+			<dict>
+				<key>Confirm</key>
+				<string>Alzo il volume?</string>
+				<key>Identifier</key>
+				<string>volumeup</string>
+				<key>Phrases</key>
+				<array>
+					<string>alza il volume</string>
+					<string>più forte</string>
+					<string>volume up</string>
+					<string>louder</string>
+				</array>
+				<key>Shortcut</key>
+				<string>Neko Volume Up</string>
+				<key>Summary</key>
+				<string>runs your “Neko Volume Up” Shortcut</string>
+			</dict>
+			<dict>
+				<key>Confirm</key>
+				<string>Abbasso il volume?</string>
+				<key>Identifier</key>
+				<string>volumedown</string>
+				<key>Phrases</key>
+				<array>
+					<string>abbassa il volume</string>
+					<string>più piano</string>
+					<string>volume down</string>
+					<string>quieter</string>
+				</array>
+				<key>Shortcut</key>
+				<string>Neko Volume Down</string>
+				<key>Summary</key>
+				<string>runs your “Neko Volume Down” Shortcut</string>
+			</dict>
+			<dict>
+				<key>Confirm</key>
+				<string>Metto in pausa?</string>
+				<key>Identifier</key>
+				<string>pause</string>
+				<key>Phrases</key>
+				<array>
+					<string>metti in pausa</string>
+					<string>ferma la musica</string>
+					<string>pausa</string>
+					<string>pause the music</string>
+				</array>
+				<key>Shortcut</key>
+				<string>Neko Pause</string>
+				<key>Summary</key>
+				<string>runs your “Neko Pause” Shortcut</string>
+			</dict>
+			<dict>
+				<key>Confirm</key>
+				<string>Passo alla prossima?</string>
+				<key>Identifier</key>
+				<string>next</string>
+				<key>Phrases</key>
+				<array>
+					<string>prossima canzone</string>
+					<string>salta questa</string>
+					<string>next track</string>
+					<string>skip this</string>
+				</array>
+				<key>Shortcut</key>
+				<string>Neko Next Track</string>
+				<key>Summary</key>
+				<string>runs your “Neko Next Track” Shortcut</string>
+			</dict>
+		</array>
+	</dict>
+	<key>Identifier</key>
+	<string>com.example.applemusic</string>
+	<key>Interface</key>
+	<integer>1</integer>
+	<key>License</key>
+	<string>public domain</string>
+	<key>MinimumApp</key>
+	<string>2.6</string>
+	<key>Name</key>
+	<string>Apple Music</string>
+	<key>Summary</key>
+	<string>Searching and playing needs no permission — it opens a music: address. Volume, pause and skip need three Shortcuts of your own, named below.</string>
+	<key>Version</key>
+	<string>1.0</string>
+	<key>Wants</key>
+	<array>
+		<string>open</string>
+		<string>shortcuts</string>
+	</array>
+</dict>
+</plist>

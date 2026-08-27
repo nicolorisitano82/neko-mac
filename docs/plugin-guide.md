@@ -18,9 +18,9 @@ data, or one of the user's own Shortcuts, or — the part specified in section 6
 a **separate process** that speaks JSON over a pipe and knows nothing about the
 inside of the app.
 
-Everything in sections 1 to 5 works in Neko 2.5 and later. Section 6
-is a specification, not a description: a manifest that declares it is refused
-today, with the sentence that says so.
+Everything in sections 1 to 5 works in Neko 2.5 and later, except verbs
+(section 4c), which need 2.6. Section 6 is a specification, not a description: a
+manifest that declares it is refused today, with the sentence that says so.
 
 ## 1. The shape of one
 
@@ -244,6 +244,117 @@ whose `plugin.strings` cannot be read at all: *"Its fr.lproj translations cannot
 read; plugin.strings has to be a property list."* A silent fallback there would
 leave you believing your translations work.
 
+## 4c. Verbs — phrases you ask to be told about
+
+A verb is a phrase and a door. You list the words; when somebody says them, the
+app reads your sentence back, and on a yes it opens one thing: an address, or one
+of the user's own Shortcuts.
+
+```xml
+<key>Extends</key>
+<dict>
+    <key>Verbs</key>
+    <array>
+        <dict>
+            <key>Identifier</key>  <string>search</string>
+            <key>Phrases</key>
+            <array>
+                <string>metti</string>
+                <string>play</string>
+                <string>put on</string>
+            </array>
+            <key>Confirm</key>     <string>Cerco “%@” su Spotify?</string>
+            <key>Summary</key>     <string>searches Spotify and opens it</string>
+            <key>Url</key>         <string>spotify:search:%@</string>
+        </dict>
+        <dict>
+            <key>Identifier</key>  <string>volumeup</string>
+            <key>Phrases</key>
+            <array>
+                <string>alza il volume</string>
+                <string>volume up</string>
+            </array>
+            <key>Confirm</key>     <string>Alzo il volume?</string>
+            <key>Shortcut</key>    <string>Neko Volume Up</string>
+        </dict>
+    </array>
+</dict>
+<key>Wants</key>
+<array><string>open</string><string>shortcuts</string></array>
+```
+
+### The keys
+
+| key | required | what it is |
+| --- | --- | --- |
+| `Identifier` | yes | one plain word, unique inside your plugin |
+| `Phrases` | yes | the words to listen for, three letters at least each |
+| `Confirm` | yes | the sentence shown before anything happens; a `%@` in it is filled with the rest of what was said |
+| `Summary` | no | one line, shown in the plugins window |
+| `Url` | one of the two | the address to open; a `%@` in it is filled with the rest of what was said, percent-encoded |
+| `Shortcut` | one of the two | the name of a Shortcut the user has; it is handed the rest of what was said |
+
+`Confirm` and `Summary` go through your `*.lproj/plugin.strings` like everything
+else, so a verb can read itself back in four languages.
+
+### How a phrase is matched
+
+Matching is done by the app, in code, before any model is consulted. What that
+means for you:
+
+- **Whole words only.** `metti` matches *"metti Taylor Swift"* and does not match
+  *"mettiamo che sia lunedì"*. A phrase inside a longer word is not a match.
+- **Longest wins.** With both `alza` and `alza il volume` listed, *"alza il volume
+  per favore"* is the second one. Order in the array does not matter; length does.
+- **Case is ignored, and the words are not.** The argument is cut from what was
+  actually said, so `spotify:search:%@` gets *Taylor Swift* and not *taylor
+  swift*.
+- **The argument is everything after the phrase**, trimmed of spaces and of
+  `? ! . , ; : “ ” " '`.
+- **A `%@` with nothing to fill it is not a match.** If your `Url` has a `%@` and
+  the person said only *"metti"*, no verb fires and the question goes on to the
+  engine as usual.
+- **Only when doing things is switched on.** Verbs live under the same switch as
+  the app's own actions, in Settings → Actions. Off, nothing you listed is even
+  looked at.
+
+### The two doors, and what is behind them
+
+**An address.** `Url` may begin with `https`, `spotify`, `music`, `itms`, `itmss`
+or `mailto`, and with nothing else. `file:` is refused. `shortcuts:` is refused as
+an address — that is what `Shortcut` is for, and smuggling it in here to skip the
+Shortcut half is the one attack this list exists to stop. Your manifest must
+declare `Wants = open`.
+
+**A Shortcut.** `Shortcut` is a name, and a name only: the user makes the Shortcut
+themselves and calls it what you told them to. If it is not there, the verb
+answers *"That did not work."* Nothing comes back from it — a verb does something,
+it does not answer. Your manifest must declare `Wants = shortcuts`.
+
+Exactly one of the two, never both. A verb that could do two things is a verb
+whose read-back sentence is a lie.
+
+### What is checked, and when
+
+Twice. Once when the manifest is read — everything in the table above, plus the
+scheme, plus the markers. And once at the moment of doing, after the yes: the
+plugin still installed, still enabled, still allowed to open things. A switch
+turned off between the question and the yes counts as off.
+
+### Write the read-back as if it were the only thing the person reads
+
+Because it is. *"Cerco “Taylor Swift” su Spotify?"* names the thing and the place.
+*"Faccio?"* names nothing, and would be accepted by the app and rejected by
+anybody sensible. A `Confirm` that repeats the words back without saying what will
+happen to them proves nothing about whether it was understood.
+
+### Two of them ship with the app, as examples
+
+`examples/Spotify.nekoplugin` and `examples/Apple Music.nekoplugin`, six verbs
+each: search and artist through an address, volume up, volume down, pause and skip
+through four Shortcuts you make. Their READMEs say which half is which, and why
+enabling both at once means two cats answering the same sentence.
+
 ## 5. Getting it wrong: every refusal, and its sentence
 
 The app refuses in sentences rather than codes, and a refused plugin stays in the
@@ -256,10 +367,10 @@ list with its reason so you can fix it. These are the exact sentences:
 | no `Name` | *It has no Name to show.* |
 | no `Interface` | *It does not say which plugin interface it was written for.* |
 | `Interface` above what the app knows | *It was written for a newer version of Neko's plugin interface (2; this one understands 1).* |
-| `MinimumApp` above the app | *It needs Neko 3.0 or newer, and this is 2.5.* |
+| `MinimumApp` above the app | *It needs Neko 3.0 or newer, and this is 2.6.* |
 | a marker in `Summary` | *Its summary contains one of Neko's own markers, which a plugin may not write.* |
 | `Extends` not a dict | *Its Extends section is not a dictionary.* |
-| an extension point that does not exist | *It extends "Verbs", which this version of Neko does not offer yet.* |
+| an extension point that does not exist | *It extends "Routes", which this version of Neko does not offer yet.* |
 | `Feeds` not a list | *Its Feeds section is not a list.* |
 | feeds without `Wants = network` | *It adds feeds without asking for the network, so nothing could be fetched.* |
 | a feed missing `Identifier` or `Name` | *One of its feeds has no Identifier or no Name.* |
@@ -274,6 +385,19 @@ list with its reason so you can fix it. These are the exact sentences:
 | a character folder that is not there | *It says it ships the character "Ratto.nekochar", and that folder is not inside it.* |
 | a character with no readable manifest | *The character "Ratto.nekochar" has no readable character.plist with an Identifier in it.* |
 | a character identifier with a space | *The character identifier "two words" has punctuation or spaces in it; it has to be one plain word.* |
+| `Verbs` not a list | *Its Verbs section is not a list.* |
+| a verb that is not a dict | *One of its verbs is not a dictionary.* |
+| a verb with no `Identifier`, or one repeated | *Each of its verbs needs its own Identifier.* |
+| a verb with no `Phrases` | *The verb "search" lists no Phrases to listen for.* |
+| a phrase of one or two letters | *The verb "search" has a phrase too short to match on; three letters at least.* |
+| a marker in a phrase | *One of its verbs carries one of Neko's own markers in a phrase.* |
+| no `Confirm` | *The verb "search" has no Confirm sentence, and nothing here happens without being read back first.* |
+| a marker in `Confirm` | *One of its verbs carries one of Neko's own markers in its Confirm sentence.* |
+| neither or both of `Url` and `Shortcut` | *The verb "search" needs exactly one of Url or Shortcut.* |
+| a verb with a `Program` | *One of its verbs wants to run a program of its own, which this version does not allow.* |
+| a scheme outside the list, `shortcuts:` included | *The verb "search" opens an address Neko will not open; allowed are https, spotify, music, itms and mailto.* |
+| a `Url` verb without `Wants = open` | *It has verbs that open an address without asking to open things.* |
+| a `Shortcut` verb without `Wants = shortcuts` | *It has verbs that run one of your Shortcuts without asking to.* |
 | an unreadable `.lproj/plugin.strings` | *Its fr.lproj translations cannot be read; plugin.strings has to be a property list.* |
 
 Two identifiers claiming the same string: the first one read wins, and the second
@@ -537,10 +661,14 @@ Downloads on a click. Your program does not touch the filesystem.
 - `Interface` is the one you tested against; `MinimumApp` is honest.
 - Every feed word is one plain word, is not a word the app already governs, and
   every address is `https`.
-- `Wants` lists everything you actually use: `network`, and `program` if you ship
-  one.
+- `Wants` lists everything you actually use: `network`, `open` and `shortcuts` for
+  verbs, and `program` if you ship one.
 - `Summary` says what somebody deciding whether to trust you needs to know — where
   data goes, above all — and contains no marker.
+- Every verb has a `Confirm` sentence that names the thing and the place, exactly
+  one of `Url` or `Shortcut`, and phrases that are not words somebody says by
+  accident. Say the sentence out loud: if it does not tell you what is about to
+  happen, rewrite it.
 - If you ship a program: arm64, ad-hoc signed, works from `echo … | ./filter`,
   answers inside 8 seconds, never writes a file, and returns an `error` rather
   than nonsense when it cannot do its job.
@@ -556,9 +684,18 @@ Not a limitation of this version — the design:
 - **the microphone**, the camera, or where the Mac is;
 - **the ability to make the cat speak on its own**, which belongs to the pacing
   the app spent a release getting right;
-- **an action**, ever, from any text it produced or read. That rule has a test
-  that fails if it is broken, and the test's staged feed contains
-  `ACTION: open-app Terminal` as a headline.
+- **an action taken on text**, ever — not on text it produced, not on text it
+  fetched, not on text the screen contained. That rule has a test that fails if it
+  is broken, and the test's staged feed contains `ACTION: open-app Terminal` as a
+  headline.
+
+A verb is not a hole in that last one, and it is worth being exact about why. A
+verb fires on **what the person said out loud or typed**, never on text; it opens
+**one door out of two**, both of them named in the manifest before anything was
+said; and it opens it **after a sentence was read back and somebody clicked yes**.
+What a plugin gets is a phrase it may be told about. It does not get to decide
+what happens next, and it never finds out what was said unless one of its own
+phrases was in it.
 
 If your idea needs one of those, it is not a plugin — it is a change to the app,
 and the place for it is an issue rather than a manifest.

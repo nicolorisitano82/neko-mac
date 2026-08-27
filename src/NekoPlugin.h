@@ -46,6 +46,19 @@ extern const NSInteger NekoPluginInterface;
 /* What it declared, already checked against what it wants. */
 - (NSArray *)feeds;              /* NSDictionary each: Identifier, Name, Detail, Address */
 - (BOOL)wantsNetwork;
+- (BOOL)wantsToOpenThings;
+- (BOOL)wantsShortcuts;
+
+/* The schemes a verb may open, and the only ones. */
++ (NSArray *)openableSchemes;
+
+/* Verbs: phrases the plugin wants to hear, and what to do about them.
+
+   Each is a dictionary with Identifier, Phrases, Confirm, and exactly one of Url
+   or Shortcut. The app matches the phrases itself, reads the deed back, and waits
+   for a yes — a verb that declares no confirmation is refused, because every deed
+   in this app is read back before it happens. */
+- (NSArray *)verbs;
 
 /* Character folders the plugin ships, as absolute paths. A character is images
    and a manifest, so this needs nothing but disk. */

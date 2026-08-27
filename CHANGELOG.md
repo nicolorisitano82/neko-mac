@@ -1,5 +1,43 @@
 # Changelog
 
+## 2.6 — 2026-08-27
+
+### Verbs: a plugin can ask to be told when you say something
+
+2.5 let a plugin add feeds, characters and a text filter. All three are things it
+*is*; none of them is a thing it *does*. This version adds the fourth kind,
+`Extends.Verbs`: a list of phrases, and for each one a door — an address, or one
+of your own Shortcuts.
+
+What that buys, with the two plugins that now ship as examples: *"metti Taylor
+Swift"* opens the search in Spotify or in Music, *"alza il volume"* runs the
+Shortcut you named for it, *"pausa"* and *"prossima canzone"* likewise.
+
+The rules are the ones the rest of the app already lives under, and they are
+checked twice — once when the manifest is read, once at the moment of doing:
+
+- **The app recognises the phrase, never a model.** Matching is whole-word, the
+  longest phrase wins, and a phrase that appears inside a longer word does not
+  count: *"mettiamo che sia lunedì"* is not a request for music. Verbs are looked
+  at before any engine is consulted, on the same rails as the news.
+- **Nothing happens without a read-back.** A verb with no `Confirm` sentence is
+  refused outright, and the sentence is shown with the words you said in it before
+  anything opens. Dismissing the bubble is a no.
+- **A verb may open exactly one of two doors**, an address or a Shortcut, and not
+  both. Addresses are limited to https, spotify, music, itms and mailto — which
+  means `file:` is refused, and so is `shortcuts:` smuggled in as an address to
+  get around the Shortcut half.
+- **A plugin still gets none of what matters.** No diary, no screen, no
+  microphone, no location, and no way to make the cat speak on its own. A verb is
+  a door somebody chose to open, held open for one click.
+- **A switch turned off between the question and the yes counts.** Enablement is
+  re-checked when the verb runs, not when it matched.
+
+The two examples are in `examples/`, one for Spotify and one for Apple Music, each
+with a README explaining which half of it is an address and which half needs a
+Shortcut you make yourself — and that enabling both at once means two cats
+answering the same sentence.
+
 ## 2.5.1 — 2026-08-27
 
 ### The Add button in the plugins window opened a panel nobody could see
