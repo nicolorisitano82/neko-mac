@@ -6,6 +6,10 @@ the code that exists today rather than in the abstract. The companion document,
 [plugins-management.md](plugins-management.md), covers installing, enabling,
 disabling and removing them.
 
+[plugin-guide.md](plugin-guide.md) is the practical companion to this document:
+the folder, the manifest key by key, every refusal and the sentence the panel
+shows for it, and a worked example of the executable protocol in Swift.
+
 ## 0. The precedent, and why it decides the shape
 
 This app already has plugins. A character is a folder with a manifest and some

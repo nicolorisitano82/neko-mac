@@ -8,6 +8,9 @@ The rule underneath all of it: **nothing a plugin can do is a surprise.** It is
 declared in a manifest, shown in a panel before it is switched on, visible in a
 list afterwards, and undoable in one click.
 
+[plugin-guide.md](plugin-guide.md) is what to read if you are writing one rather
+than deciding what they may be.
+
 ## 1. Where they live
 
 ```
