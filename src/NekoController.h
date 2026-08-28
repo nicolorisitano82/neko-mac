@@ -13,7 +13,9 @@ extern NSString * const NekoScaleKey;      /* 1.0 or 2.0 */
 extern NSString * const NekoStopRadiusKey; /* points to keep from the pointer */
 extern NSString * const NekoIdleSleepKey;  /* BOOL, cat falls asleep when idle */
 extern NSString * const NekoWanderKey;     /* BOOL, cat strolls off on its own */
-extern NSString * const NekoBehaviourKey; /* "follow", "windows" or "roam" */
+extern NSString * const NekoBehaviourKey; /* "follow", "windows", "roam" or "flee" */
+extern NSString * const NekoStayKey;      /* asked to stay where it is */
+extern NSString * const NekoStayPointKey; /* and where that was */
 extern NSString * const NekoSuggestKey;    /* BOOL, unasked suggestions while roaming */
 extern NSString * const NekoSuggestEveryKey; /* minutes between suggestions */
 extern NSString * const NekoPausedKey;     /* BOOL, cat hidden and frozen */
@@ -26,6 +28,7 @@ extern NSString * const NekoSettingsDidChangeNotification;
 	MyPanel *panel;              /* not retained, owned by the nib */
 	NSStatusItem *statusItem;
 	NSMenuItem *pauseItem;
+	NSMenuItem *stayItem;
 	NSMenuItem *askItem;
 	NSTabView *prefsTabs;
 	NSMenu *characterMenu;
@@ -92,6 +95,15 @@ extern NSString * const NekoSettingsDidChangeNotification;
 /* The third behaviour: the cat goes where it likes and the pointer means
    nothing to it. Suggestions live here and nowhere else. */
 - (BOOL)roamsOnItsOwn;
+
+/* The pointer as something to get away from rather than something to sit
+   beside. */
+- (BOOL)fleesThePointer;
+
+/* Orthogonal to all four: whatever it was doing, it does it here. Toggled from
+   the menu, remembered across launches along with the spot. */
+- (BOOL)staysWhereItIs;
+- (void)toggleStay:(id)sender;
 
 /* YES only while roaming and switched on: the flag alone is not enough. */
 - (BOOL)suggestsUnasked;

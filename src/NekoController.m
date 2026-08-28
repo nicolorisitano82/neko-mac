@@ -38,6 +38,8 @@ NSString * const NekoStopRadiusKey = @"NekoStopRadius";
 NSString * const NekoIdleSleepKey  = @"NekoIdleSleep";
 NSString * const NekoWanderKey     = @"NekoWander";
 NSString * const NekoBehaviourKey  = @"NekoBehaviour";
+NSString * const NekoStayKey       = @"NekoStay";
+NSString * const NekoStayPointKey  = @"NekoStayPoint";
 NSString * const NekoPausedKey     = @"NekoPaused";
 NSString * const NekoSuggestKey    = @"NekoSuggest";
 NSString * const NekoSuggestEveryKey = @"NekoSuggestEvery";
@@ -138,6 +140,16 @@ static const float NekoMaxStopRadius = 200.0f;
 	                    keyEquivalent:@""];
 	[pauseItem setTarget:self];
 
+	/* Where somebody is standing when they think it: the cat is in the way, and
+	   the menu is one click above it. Not a drag, because the cat is not a
+	   control — it ignores the mouse entirely, which is how it can sit on top of
+	   everything without being in the way of a click. */
+	stayItem = [menu addItemWithTitle:NekoLocalized(@"Stay here")
+	                           action:@selector(toggleStay:)
+	                    keyEquivalent:@""];
+	[stayItem setTarget:self];
+	[self updateStayItem];
+
 	[menu addItem:[NSMenuItem separatorItem]];
 
 	NSMenuItem *item = [menu addItemWithTitle:NekoLocalized(@"Character") action:NULL keyEquivalent:@""];
@@ -228,6 +240,43 @@ static const float NekoMaxStopRadius = 200.0f;
 	[[NekoAsk sharedAsk] toggle:sender];
 }
 
+/* On: remember where it is standing now. Off: forget it. The point is only ever
+   written at the moment somebody asks for it, so a cat that wandered off while
+   staying was switched off does not quietly move the mark. */
+- (void)toggleStay:(id)sender
+{
+	NSUserDefaults *settings = [NSUserDefaults standardUserDefaults];
+	BOOL wanted = ![self staysWhereItIs];
+	[settings setBool:wanted forKey:NekoStayKey];
+	if(wanted && panel != nil)
+		[settings setObject:NSStringFromPoint([panel frame].origin)
+		             forKey:NekoStayPointKey];
+	else if(!wanted)
+		[settings removeObjectForKey:NekoStayPointKey];
+	[self updateStayItem];
+	[self settingsChanged];
+}
+
+- (void)updateStayItem
+{
+	[stayItem setState:[self staysWhereItIs] ? NSControlStateValueOn
+	                                         : NSControlStateValueOff];
+}
+
+/* At launch only, and only if it was left staying: the spot it was asked to
+   keep. Put back through the panel, which is what knows how to keep a sprite on
+   a screen — the display it was on may not be there any more. */
+- (void)restoreStayPoint
+{
+	if(![self staysWhereItIs] || panel == nil)
+		return;
+	NSString *saved = [[NSUserDefaults standardUserDefaults]
+		stringForKey:NekoStayPointKey];
+	if([saved length] == 0)
+		return;
+	[panel placeAt:NSPointFromString(saved)];
+}
+
 - (void)updatePauseItemTitle
 {
 	[pauseItem setTitle:[self isPaused] ? NekoLocalized(@"Resume Neko")
@@ -264,6 +313,7 @@ static const float NekoMaxStopRadius = 200.0f;
 - (void)setPanel:(MyPanel *)thePanel
 {
 	panel = thePanel;
+	[self restoreStayPoint];
 	/* Here rather than in -init: the advisor asks this controller whether it
 	   should be running, and during -init the shared instance does not exist
 	   yet — asking would build a second one, which would ask again. */
@@ -362,6 +412,21 @@ static const float NekoMaxStopRadius = 200.0f;
 		isEqualToString:@"roam"];
 }
 
+- (BOOL)fleesThePointer
+{
+	return [[[NSUserDefaults standardUserDefaults] stringForKey:NekoBehaviourKey]
+		isEqualToString:@"flee"];
+}
+
+/* Not a fifth behaviour: a cat asked to stay is still a cat that follows the
+   cursor, or lives on the Dock, or runs away — it is simply not going anywhere
+   about it. Which is why this is a menu item and not another line in the
+   pop-up, and why it survives changing the behaviour under it. */
+- (BOOL)staysWhereItIs
+{
+	return [[NSUserDefaults standardUserDefaults] boolForKey:NekoStayKey];
+}
+
 /* Deliberately an AND rather than the flag alone: a cat that follows the cursor
    and comments on your work at the same time is two features fighting for the
    bubble, and the suggestion was always meant to come from the one wandering
@@ -452,12 +517,14 @@ static const float NekoMaxStopRadius = 200.0f;
 {
 	if([self livesOnWindowEdges])
 		return 1;
-	return [self roamsOnItsOwn] ? 2 : 0;
+	if([self roamsOnItsOwn])
+		return 2;
+	return [self fleesThePointer] ? 3 : 0;
 }
 
 - (void)takeBehaviourFrom:(id)sender
 {
-	NSArray *names = [NSArray arrayWithObjects:@"follow", @"windows", @"roam", nil];
+	NSArray *names = [NSArray arrayWithObjects:@"follow", @"windows", @"roam", @"flee", nil];
 	NSUInteger index = (NSUInteger)[sender indexOfSelectedItem];
 	[[NSUserDefaults standardUserDefaults]
 		setObject:[names objectAtIndex:MIN(index, [names count] - 1)]
@@ -628,6 +695,7 @@ static const float NekoMaxStopRadius = 200.0f;
 	[behaviourPopUp addItemWithTitle:NekoLocalized(@"Follows the cursor")];
 	[behaviourPopUp addItemWithTitle:NekoLocalized(@"Lives on the Dock")];
 	[behaviourPopUp addItemWithTitle:NekoLocalized(@"Roams on its own")];
+	[behaviourPopUp addItemWithTitle:NekoLocalized(@"Runs from the cursor")];
 	[behaviourPopUp selectItemAtIndex:[self behaviourIndex]];
 	[behaviourPopUp setTarget:self];
 	[behaviourPopUp setAction:@selector(takeBehaviourFrom:)];

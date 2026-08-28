@@ -37,6 +37,7 @@ again afterwards.
 | `plugin.m` | what a plugin may be, what it is refused for, and the whole install path |
 | `verb.m` | a phrase a plugin asked to hear: refused ten ways, matched, read back, and dismissed |
 | `frame.m` | that the cat owns the sprite it is drawing, across a character swap |
+| `flee.m` | running from the cursor, staying put, and the gap between two screens |
 | `player.m` | the closed lists behind Music and Spotify, and a real volume moved and put back |
 | `tempo.m` | how long a short answer waits, and everything exempt from waiting |
 

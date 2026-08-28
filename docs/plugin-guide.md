@@ -176,7 +176,7 @@ are handed one string.
 
 A plugin can ship characters — the cat itself, or a dog, or whatever somebody
 drew. A character is a `.nekochar` folder: thirty-one PNGs or GIFs and a
-`character.plist`, exactly the format the app's own forty-three use. Copy one out
+`character.plist`, exactly the format the app's own forty-four use. Copy one out
 of `Neko.app/Contents/Resources/Characters` and look at it; that is the whole
 documentation of the format.
 

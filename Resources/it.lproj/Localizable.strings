@@ -458,3 +458,7 @@
 "So that “alza il volume”, “metti in pausa” and “prossima canzone” reach Music and Spotify themselves. Those two applications and no others, with a fixed list of commands Neko sends. macOS asks once for each of them." = "Così “alza il volume”, “metti in pausa” e “prossima canzone” arrivano a Musica e a Spotify direttamente. Quelle due applicazioni e nessun’altra, con un elenco fisso di comandi che Neko manda. macOS lo chiede una volta per ciascuna.";
 "Shortcuts you have not made yet: %@" = "Comandi rapidi che non hai ancora creato: %@";
 "You have no Shortcut called “%@”. The plugin says how to make it." = "Non hai nessun comando rapido che si chiama “%@”. Il plugin spiega come farlo.";
+
+/* 2.8: running away, and staying put */
+"Stay here" = "Stai lì";
+"Runs from the cursor" = "Scappa dal cursore";

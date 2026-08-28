@@ -21,7 +21,7 @@ Measured on this repository today:
 | **AppKit-bound** | **5 601** | the panel, the bubble, the typed line, the preferences (2 171 on their own), the desktop observer, the Carbon hotkey |
 | | **12 268** | across 34 implementation files |
 
-Plus 43 characters — 1 344 PNGs, 7.0 MB — which are just images and move as they
+Plus 44 characters — 1 376 PNGs, 7.4 MB — which are just images and move as they
 are. The Mac bundle is 69 MB, of which **55 MB is `neko-paint`**, the
 stable-diffusion command-line helper. That 55 MB is the first thing iOS takes
 away, and section 3 explains why.
@@ -239,7 +239,7 @@ question rather than confirming a hope.
 4. **Speech, on device, on a phone.** Time from tap to first words and to final
    for Italian and English, with `requiresOnDeviceRecognition`. The Mac numbers
    (1.5 s of patience, 15 s of limit) may need to change.
-5. **The sprite engine at 60 Hz in UIKit.** 43 characters, an 8×4 sheet, a
+5. **The sprite engine at 60 Hz in UIKit.** 44 characters, an 8×4 sheet, a
    `CALayer` with `contentsRect` rather than a view per frame. *Decides:* whether
    the cat can also live in a widget snapshot and a Live Activity, which are
    redrawn by the system rather than animated.

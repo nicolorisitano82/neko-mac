@@ -22,6 +22,9 @@
 	BOOL held;                   /* frozen mid-conversation */
 	BOOL windowsMode;            /* lives on window tops instead of chasing */
 	BOOL roamMode;               /* goes where it likes, the pointer means nothing */
+	BOOL fleeMode;               /* the pointer is something to get away from */
+	BOOL fleeing;                /* and it is doing that right now */
+	BOOL staying;                /* asked to stay where it is, whatever the mode */
 	
 	BOOL wanderEnabled;
 	BOOL wandering;
@@ -66,6 +69,15 @@
    busy speaking: whoever calls it is the reason it is about to speak. */
 - (unsigned)turnToward:(NSPoint)point;
 - (BOOL)isOnErrand;
+
+/* Put down at a remembered spot, kept on a screen that still exists. */
+- (void)placeAt:(NSPoint)origin;
+
+/* Where a sprite of this size belongs when the screens are these. Pure, and
+   separate from NSScreen, because the case worth testing is the one this Mac
+   does not have: two displays of different heights, and the empty rectangle the
+   bounding box invents between them. */
+NSPoint NekoOriginOnAScreen(NSPoint origin, float side, NSArray *visibleFrames);
 - (BOOL)isRoaming;
 
 - (void)holdWithState:(NekoState)state;
