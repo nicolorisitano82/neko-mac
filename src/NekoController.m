@@ -8,6 +8,7 @@
 #import "NekoFolderAccess.h"
 #import "NekoWakeWord.h"
 #import "NekoPermissions.h"
+#import "NekoPlayer.h"
 #import "NekoBrains.h"
 #import "NekoRate.h"
 #import "NekoWeb.h"
@@ -1072,6 +1073,15 @@ static const float NekoMaxStopRadius = 200.0f;
 	[[NSNotificationCenter defaultCenter] addObserver:self
 	                                        selector:@selector(buildPermissionsTab)
 	                                            name:NekoPlaceDidChangeNotification
+	                                          object:nil];
+	/* The same shape for the players: the answer arrives when somebody has read
+	   the system's prompt, which is long after this row was drawn. */
+	[[NSNotificationCenter defaultCenter] removeObserver:self
+	                                               name:NekoPlayerConsentDidChangeNotification
+	                                             object:nil];
+	[[NSNotificationCenter defaultCenter] addObserver:self
+	                                        selector:@selector(buildPermissionsTab)
+	                                            name:NekoPlayerConsentDidChangeNotification
 	                                          object:nil];
 
 	NSEnumerator *old = [[[[permissionsContent subviews] copy] autorelease] objectEnumerator];

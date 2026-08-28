@@ -13,6 +13,7 @@
 #import <CoreLocation/CoreLocation.h>
 #import "NekoWeb.h"
 #import "NekoPermissions.h"
+#import "NekoPlayer.h"
 
 /* Stands in for CLLocationManager and writes down what it is asked to do. */
 @interface Recorder : NSObject
@@ -71,6 +72,20 @@
 }
 - (NSArray *)told { return [(Recorder *)[self manager] told]; }
 @end
+
+/* Whether a piece of work answers at all, inside a bound. Everything about the
+   defect this guards is that the answer never comes, so nothing here may be
+   waited for without a stopwatch — including the check itself. */
+static BOOL answersWithin(NSTimeInterval seconds, void (^work)(void))
+{
+	dispatch_semaphore_t answered = dispatch_semaphore_create(0);
+	dispatch_async(dispatch_get_global_queue(QOS_CLASS_USER_INITIATED, 0), ^{
+		work();
+		dispatch_semaphore_signal(answered);
+	});
+	return dispatch_semaphore_wait(answered,
+		dispatch_time(DISPATCH_TIME_NOW, (int64_t)(seconds * NSEC_PER_SEC))) == 0;
+}
 
 int main(void)
 {
@@ -186,6 +201,45 @@ int main(void)
 	spin(0.2);
 	ok(heard, @"a notification goes out when the answer arrives", nil);
 	[[NSNotificationCenter defaultCenter] removeObserver:watcher];
+
+	printf("\n--- and no row may make the window wait for it ---\n");
+
+	/* 2.7 shipped a Permissions tab that froze the whole application the moment it
+	   was opened: one row preflighted the Automation consent with
+	   AEDeterminePermissionToAutomateTarget, which needs the run loop to deliver
+	   its reply and therefore never returns when it is called on the thread that
+	   services the run loop. Sampling the stuck process gave 1723 samples out of
+	   1723 in that one function.
+
+	   So every row is asked on another thread with a stopwatch on it. A row that
+	   deadlocks makes this fail rather than hanging the suite behind it, which is
+	   the whole point: the first version of this check would have hung here for as
+	   long as anybody let it. */
+	NSEnumerator *everyRow = [[NekoPermissions all] objectEnumerator];
+	NekoPermission *timed;
+	NSMutableArray *slow = [NSMutableArray array];
+	NSUInteger asked = 0;
+	while((timed = [everyRow nextObject]) != nil) {
+		NekoPermission *one = timed;
+		asked++;
+		/* Two seconds is generous on purpose: this is not a benchmark, it is the
+		   difference between answering and never answering. */
+		if(!answersWithin(2.0, ^{ (void)[one permissionState]; }))
+			[slow addObject:[one identifier]];
+	}
+	ok([slow count] == 0,
+		[NSString stringWithFormat:@"all %lu of them answer without being waited for",
+			(unsigned long)asked],
+		[slow componentsJoinedByString:@", "]);
+
+	/* And the one that did it, on its own. Bounded too: the version this replaces
+	   would have hung this line for as long as anybody let it, and a test that
+	   hangs reports nothing. */
+	ok(answersWithin(2.0, ^{
+			(void)[NekoPlayer consentFor:@"music"];
+			(void)[NekoPlayer consentFor:@"spotify"];
+		}),
+		@"and asking what the players are allowed answers at all", nil);
 
 	[defaults removeObjectForKey:NekoPlaceTownKey];
 	[defaults removeObjectForKey:NekoPlaceRegionKey];

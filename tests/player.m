@@ -62,6 +62,17 @@ static NSMutableDictionary *aVerb(void)
 		@"music", @"Player", @"volumeup", @"Command", nil];
 }
 
+static BOOL allowedHere(NSString *application)
+{
+	NSString *source = [NSString stringWithFormat:
+		@"tell application \"%@\" to return sound volume as text", application];
+	NSAppleScript *ask = [[[NSAppleScript alloc] initWithSource:source] autorelease];
+	NSDictionary *trouble = nil;
+	if([ask executeAndReturnError:&trouble] != nil)
+		return YES;
+	return [[trouble objectForKey:NSAppleScriptErrorNumber] integerValue] != -1743;
+}
+
 int main(void)
 {
 	[NSApplication sharedApplication];
@@ -126,16 +137,36 @@ int main(void)
 
 	printf("\n--- and what it actually does ---\n");
 
+	/* Asked by asking, which since 2.7.1 is the only way this is ever asked:
+	   consentFor: answers from what the last attempt found out, and a test binary
+	   that has never run a command would be told "never asked" and skip the part
+	   worth running. So the smallest harmless question is put to the application
+	   itself, and -1743 is the one answer that means somebody has to click
+	   something before this can be measured. */
+
 	if(![NekoPlayer isInstalled:@"music"]) {
 		notMeasured(@"there is no Music on this Mac");
 	} else if(!alreadyRunning(@"com.apple.Music")) {
 		notMeasured(@"Music is not running, and a test may not open it");
-	} else if(![NekoPlayer mayControl:@"music"]) {
-		notMeasured(@"macOS has not been asked to allow controlling Music here");
+	} else if(!allowedHere(@"Music")) {
+		notMeasured(@"macOS does not allow controlling Music from this binary");
 	} else {
 		NSAppleScript *read = [[[NSAppleScript alloc] initWithSource:
 			@"tell application \"Music\" to return sound volume as text"] autorelease];
 		int before = [[[read executeAndReturnError:NULL] stringValue] intValue];
+
+		/* Since 2.7.1 the Permissions tab has nothing to go on but this: a command
+		   that worked has to leave a record behind, or the row says "never asked"
+		   forever. Cleared first, so a record left by an earlier run cannot make
+		   this pass. */
+		[[NSUserDefaults standardUserDefaults]
+			removeObjectForKey:@"NekoPlayerConsent.music"];
+		__block BOOL toldSomebody = NO;
+		id listening = [[NSNotificationCenter defaultCenter]
+			addObserverForName:NekoPlayerConsentDidChangeNotification object:nil
+			             queue:nil
+			        usingBlock:^(NSNotification *note) { toldSomebody = YES; }];
+
 		NSString *problem = nil;
 		BOOL did = [NekoPlayer perform:@"volumedown" on:@"music"
 		                          with:nil saying:&problem];
@@ -151,6 +182,12 @@ int main(void)
 		ok(after == before - 10 || after == 0,
 			@"and it moves by ten, or stops at nothing",
 			[NSString stringWithFormat:@"%d → %d", before, after]);
+		ok([NekoPlayer consentFor:@"music"] == NekoPlayerConsentGiven,
+			@"a command that worked is what the tab is told about", nil);
+		ok(toldSomebody, @"and it is told the moment it happens, not at the next launch",
+			nil);
+		[[NSNotificationCenter defaultCenter] removeObserver:listening];
+
 		NSString *why = nil;
 		BOOL restored = [NekoPlayer perform:@"volumeup" on:@"music"
 		                               with:nil saying:&why];

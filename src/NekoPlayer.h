@@ -52,8 +52,9 @@ extern NSString * const NekoPlayerPlayNamed;   /* from your own library */
            with:(NSString *)argument
          saying:(NSString **)problem;
 
-/* What macOS has on file, asked without asking: reading this never brings a
-   prompt up. */
+/* What happened last time, which is the only thing that can be read without
+   risking anything: see the comment in NekoPlayer.m. Reading this never brings a
+   prompt up, never sends an Apple Event, and never blocks. */
 typedef enum {
 	NekoPlayerConsentUnknown = 0,   /* never asked; asking is possible */
 	NekoPlayerConsentGiven,
@@ -65,8 +66,15 @@ typedef enum {
 
 /* Whether macOS has been asked yet, and asking. Reading the volume is the
    smallest question either application answers, so it is what the Permissions tab
-   uses to bring the system's own prompt up at a moment somebody chose. */
+   uses to bring the system's own prompt up at a moment somebody chose.
+
+   askToControl: returns immediately and does the asking on another thread: the
+   prompt is the system's and it takes as long as somebody takes to read it, which
+   is not time the settings window may spend frozen. When it is answered, this
+   notification says so and the tab redraws itself. */
 + (BOOL)mayControl:(NSString *)player;
 + (void)askToControl:(NSString *)player;
+
+extern NSString * const NekoPlayerConsentDidChangeNotification;
 
 @end
