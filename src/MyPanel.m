@@ -148,7 +148,20 @@ static unsigned NekoIdleTicksFor(NekoState state)
 	if(staying) {
 		errandPhase = 0;
 		errandTicks = 0;
+		/* The spot it was asked to keep, taken up once: at the launch after the
+		   one where somebody asked. Here rather than in the controller because
+		   this is what knows how to keep a sprite on a screen, and the display
+		   it was standing on may not be there any more. */
+		if(!restoredStay) {
+			restoredStay = YES;
+			NSString *saved = [[NSUserDefaults standardUserDefaults]
+				stringForKey:NekoStayPointKey];
+			if([saved length] > 0)
+				[self placeAt:NSPointFromString(saved)];
+		}
 	}
+	else
+		restoredStay = NO;
 	wanderEnabled = [controller wandersWhenIdle];
 	if((!wanderEnabled && !windowsMode && !roamMode) || fleeMode || staying)
 		wandering = NO;

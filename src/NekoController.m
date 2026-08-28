@@ -263,20 +263,6 @@ static const float NekoMaxStopRadius = 200.0f;
 	                                         : NSControlStateValueOff];
 }
 
-/* At launch only, and only if it was left staying: the spot it was asked to
-   keep. Put back through the panel, which is what knows how to keep a sprite on
-   a screen — the display it was on may not be there any more. */
-- (void)restoreStayPoint
-{
-	if(![self staysWhereItIs] || panel == nil)
-		return;
-	NSString *saved = [[NSUserDefaults standardUserDefaults]
-		stringForKey:NekoStayPointKey];
-	if([saved length] == 0)
-		return;
-	[panel placeAt:NSPointFromString(saved)];
-}
-
 - (void)updatePauseItemTitle
 {
 	[pauseItem setTitle:[self isPaused] ? NekoLocalized(@"Resume Neko")
@@ -313,7 +299,6 @@ static const float NekoMaxStopRadius = 200.0f;
 - (void)setPanel:(MyPanel *)thePanel
 {
 	panel = thePanel;
-	[self restoreStayPoint];
 	/* Here rather than in -init: the advisor asks this controller whether it
 	   should be running, and during -init the shared instance does not exist
 	   yet — asking would build a second one, which would ask again. */

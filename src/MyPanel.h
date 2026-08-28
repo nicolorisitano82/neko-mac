@@ -25,6 +25,7 @@
 	BOOL fleeMode;               /* the pointer is something to get away from */
 	BOOL fleeing;                /* and it is doing that right now */
 	BOOL staying;                /* asked to stay where it is, whatever the mode */
+	BOOL restoredStay;           /* and the remembered spot has been taken up */
 	
 	BOOL wanderEnabled;
 	BOOL wandering;

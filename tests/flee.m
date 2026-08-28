@@ -191,14 +191,33 @@ int main(void)
 		[NSString stringWithFormat:@"moved %.1f points",
 			hypotf(freed.x - pinned.x, freed.y - pinned.y)]);
 
-	/* The spot is remembered by the menu item rather than by the panel, so what
-	   is checked here is the putting back. */
-	[panel placeAt:pinned];
-	ok(NSEqualPoints([panel frame].origin, pinned)
-	   || NSPointInRect([panel frame].origin, room),
-		@"a remembered spot is put back on a screen that exists",
+	/* The launch after the one where somebody asked: the spot is in the settings
+	   and the cat is somewhere else, and applying the settings takes it up. Once
+	   — a cat asked to stay does not spring back to the mark every time some
+	   unrelated setting changes. */
+	NSPoint mark = NSMakePoint(NSMinX(room) + 300.0f, NSMinY(room) + 200.0f);
+	[settings setObject:NSStringFromPoint(mark) forKey:NekoStayPointKey];
+	[settings setBool:YES forKey:NekoStayKey];
+	[panel setFrame:NSMakeRect(NSMinX(room) + 40.0f, NSMinY(room) + 40.0f,
+	                           32.0f, 32.0f) display:NO];
+	[panel applySettings];
+	onlyStagedTicks(panel);
+	NSPoint takenUp = [panel frame].origin;
+	ok(hypotf(takenUp.x - mark.x, takenUp.y - mark.y) < 2.0f,
+		@"the remembered spot is taken up when the settings are applied",
+		[NSString stringWithFormat:@"%.0f,%.0f wanted %.0f,%.0f",
+			takenUp.x, takenUp.y, mark.x, mark.y]);
+
+	[panel setFrame:NSMakeRect(NSMinX(room) + 40.0f, NSMinY(room) + 40.0f,
+	                           32.0f, 32.0f) display:NO];
+	[panel applySettings];
+	onlyStagedTicks(panel);
+	ok(hypotf([panel frame].origin.x - (NSMinX(room) + 40.0f),
+	          [panel frame].origin.y - (NSMinY(room) + 40.0f)) < 2.0f,
+		@"and only once, not at every settings change after it",
 		[NSString stringWithFormat:@"%.0f,%.0f",
 			[panel frame].origin.x, [panel frame].origin.y]);
+	[settings removeObjectForKey:NekoStayPointKey];
 
 	printf("\n--- and it beats roaming, which is where it first did not ---\n");
 
