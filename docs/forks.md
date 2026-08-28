@@ -127,18 +127,42 @@ reads `.nekochar` folders — half an hour, no code.
 | **Sprites replaced with a logo** (akshat-khare) | This is what `.nekochar` is for. Their fork is what a plugin would be here |
 | **Point-symmetry rendering, DMG, signing, login item** | All present, most of them better |
 
-## 4. In order, if any of it happens
+## 4. What was taken, in 2.8
 
-1. **The screen clamp** (2.3). A bug, small, and the only place a sibling is ahead.
-2. **Fading near the pointer** (2.1). One setting, and it finishes an argument this
-   app started in 2.2.
-3. **Flee** (2.2). A fourth behaviour, an afternoon, and the hysteresis copied
-   rather than rediscovered.
-4. **BSD and Buddy** (2.4). Free.
+Three of the four, and the fourth in this project's own idiom.
 
-And one that came from the same fork but does not fit as written: **placing the
-cat by dragging it**. `MyPanel` sets `setIgnoresMouseEvents:YES` on purpose — the
-cat is not a control, and clicking through it is why it can live on top of
-everything. The idea underneath is still good: *stay there*. In this app's own
-idiom that is a menu item, pinning it where it stands and remembering the spot,
-with no mouse handling at all.
+| | |
+| --- | --- |
+| **2.3 the screen clamp** | `NekoOriginOnAScreen` — a plain function taking the list of screens, so the arrangement this Mac does not have is the one the test stages |
+| **2.2 flee** | a fourth behaviour, *Runs from the cursor*, with the two radii expressed as multiples of the arm's length already in the preferences |
+| **2.4 the character** | `BSD Daemon`. **Buddy was left out**: opened and looked at, it is the Gray cat with the blue taken out of its eyes, and a list of characters is worth more when nothing in it is another thing in it |
+| **the drag, as "Stay here"** | a menu item with a tick, because the cat ignores the mouse on purpose |
+
+**2.1, the fade, was not taken yet.** It is still the right idea and it is still
+cheap; it wants its own afternoon and a measurement of `Copy` against
+`SourceOver` at four opacities, which is not something to slip into a release
+about something else.
+
+Two notes from doing it, both of which cost time:
+
+**A behaviour is not the same shape as a modifier.** "Stay here" was written and
+tested against the cat that follows the cursor, where it worked. In the real
+application — which was set to roam — the cat walked off anyway, twice, because a
+roamer is always either on a walk or about to start one, and staying was being
+asked *after* the walk rather than before it. The test now covers a roaming cat
+asked to stay, and a cat asked in the middle of a walk it was measurably
+already on.
+
+**Reading a fork is not the same as trusting it.** Both of ferlor-BSG's radii were
+taken, and its geometry-as-a-function idea, and neither of its numbers: 160 and
+176 points are a fixed sprite size, and here they are 3.5 and 4 times a setting
+somebody can change.
+
+## 5. In order, if any of the rest happens
+
+1. **Fading near the pointer** (2.1), which is the one thing on the list from
+   section 2 that has not been done. One setting, an afternoon, and the
+   compositing measured rather than assumed.
+
+Everything else here was either taken in 2.8 or is in section 3, which has not
+changed.

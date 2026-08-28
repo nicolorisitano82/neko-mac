@@ -1,5 +1,71 @@
 # Changelog
 
+## 2.8 — 2026-08-28
+
+Four things, and all four came from reading the other twenty-four forks of the
+2018 program this one grew out of. They are in [docs/forks.md](docs/forks.md),
+along with what was deliberately left there.
+
+### It can run away from the cursor
+
+A fourth behaviour beside following, living on the Dock and roaming: **Runs from
+the cursor**. Bring the pointer near and the cat moves off; leave it alone and it
+settles wherever it got to and goes about being a cat.
+
+The part worth having, and the reason this is somebody else's idea rather than a
+fresh one, is that there are **two radii**: it moves off when the pointer comes
+within three and a half arm's lengths, and stops when it is four away. With a
+single threshold a cat sitting exactly on the line steps out, finds itself
+outside, steps back in, and does that for ever. The numbers are multiples of the
+arm's length already in the preferences, so changing that setting moves both.
+
+Cornered, it sidles along the wall rather than pressing into the corner: each
+direction from straight-away outwards is tried, and taken only if it is both on a
+screen and further from the pointer than standing still. When none is, it stays —
+which is what a cornered animal does.
+
+### "Stay here"
+
+In the menu, above everything else, with a tick beside it: whatever the cat was
+doing, it does it **here**. It still blinks, washes, yawns, sleeps and talks; it
+simply does not travel. The spot is remembered across launches, and put back on a
+screen that still exists at the next one.
+
+The idea is ferlor-BSG's *Place Cat*, which is a drag. This is a menu item,
+because the cat ignores the mouse on purpose — that is how it can sit on top of
+everything without being in the way of a click — and because the moment somebody
+thinks *stay there* they are looking at the menu bar anyway.
+
+### The gap between two screens
+
+A bug, and the one place another fork was ahead. The room the cat walks in was
+the bounding box of every screen, and with two displays of different heights, or
+an L-shaped arrangement, that box contains a rectangle **where there is no screen
+at all**. A cat that walked into it sat somewhere nobody could see.
+
+A sprite that has come to rest entirely off every screen is now put back onto the
+nearest one. Only entirely: one halfway across the seam between two displays is
+doing the right thing and is left alone.
+
+`NekoOriginOnAScreen` is a plain function taking the list of screens, so the case
+this Mac does not have is the case the test stages: a 1000×800 display beside a
+800×400 one, and the empty rectangle their union invents above the short one.
+
+### A forty-fourth character
+
+**BSD Daemon** — the little red one with the horns and the trident, from
+andreaponza's fork, which is where the oneko sprite family keeps it.
+
+Their *Buddy* was left out after being looked at: it is the Gray cat with the
+blue taken out of its eyes, and a list of characters is worth more when nothing
+in it is another thing in it.
+
+### Also
+
+- `tests/flee.m`, 13 checks: the two radii, including the one that fails if a cat
+  parked between them ever twitches; staying put and being let go; and five
+  staged screen arrangements.
+
 ## 2.7.1 — 2026-08-28
 
 ### Opening the preferences froze the whole application

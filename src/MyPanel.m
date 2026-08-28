@@ -141,8 +141,16 @@ static unsigned NekoIdleTicksFor(NekoState state)
 	idleSleep = [controller idleSleep];
 	windowsMode = [controller livesOnWindowEdges];
 	roamMode = [controller roamsOnItsOwn];
+	fleeMode = [controller fleesThePointer];
+	staying = [controller staysWhereItIs];
+	if(!fleeMode)
+		fleeing = NO;
+	if(staying) {
+		errandPhase = 0;
+		errandTicks = 0;
+	}
 	wanderEnabled = [controller wandersWhenIdle];
-	if(!wanderEnabled && !windowsMode && !roamMode)
+	if((!wanderEnabled && !windowsMode && !roamMode) || fleeMode || staying)
 		wandering = NO;
 	if(!roamMode) {
 		roamTicks = 0;
@@ -218,6 +226,17 @@ static const unsigned NekoRoamMinRest = 8;       /* one second */
 static const unsigned NekoRoamRestSpread = 24;   /* up to four */
 static const unsigned NekoRoamBeforeNap = 2400;  /* five minutes */
 static const unsigned NekoRoamNap = 240;         /* half a minute asleep */
+
+/* How close the pointer may come before a fleeing cat moves off, and how far it
+   has to be before the cat settles again — as multiples of the arm's length it
+   already keeps in the other modes, so the two do not disagree when somebody
+   changes that setting. At the default 48 points that is 168 and 192.
+
+   Two different radii on purpose. With one, a cat sitting exactly on the
+   boundary steps out, finds itself outside, steps back in, and does that for
+   ever. The idea, and the reason for the gap, is ferlor-BSG's. */
+static const float NekoFleeNear = 3.5f;
+static const float NekoFleeFar  = 4.0f;
 
 #pragma mark Wandering
 
@@ -323,6 +342,8 @@ static const unsigned NekoRoamNap = 240;         /* half a minute asleep */
 {
 	if(wandering || [self isSpeaking])
 		return NO;
+	if(staying || fleeMode)
+		return NO;               /* it has somewhere to be, or nowhere to go */
 	if(roamMode) {
 		if(errandPhase != 0)
 			return NO;                 /* it is already going somewhere */
@@ -377,7 +398,7 @@ static const float NekoTurnStep = 30.0f;
 
 - (unsigned)turnToward:(NSPoint)point
 {
-	if(!roamMode || held)
+	if(!roamMode || staying || held)
 		return 0;
 
 	/* The same reference point the chasing code uses: the middle of the sprite
@@ -421,7 +442,7 @@ static const float NekoTurnStep = 30.0f;
 
 - (void)errandTo:(NSPoint)point thenState:(NekoState)state forTicks:(unsigned)ticks
 {
-	if(!roamMode || held || [self isSpeaking])
+	if(!roamMode || staying || held || [self isSpeaking])
 		return;
 	wanderTarget = point;
 	wanderMouse = [NSEvent mouseLocation];
@@ -447,12 +468,69 @@ static const float NekoTurnStep = 30.0f;
 }
 
 /* What the cat is walking towards: the pointer, or wherever it decided to go. */
+/* Away from the pointer, while it is close enough to be worth minding.
+
+   Straight away if there is room, and along the wall if there is not: a cat
+   backed into a corner sidles out sideways rather than pressing into the corner
+   until you move. Each direction is tried in turn and taken only if it is both
+   inside the room and further from the pointer than standing still — so when
+   nothing is, the cat stays put, which is what a cornered animal does. */
+- (NSPoint)escapeTarget
+{
+	NSRect frame = [self frame];
+	float side = frame.size.width;
+	NSPoint here = NSMakePoint(NSMidX(frame), NSMinY(frame));
+	NSPoint mouse = [NSEvent mouseLocation];
+	float dx = here.x - mouse.x, dy = here.y - mouse.y;
+	float distance = hypotf(dx, dy);
+
+	fleeing = fleeing ? (distance < stopRadius * NekoFleeFar)
+	                  : (distance < stopRadius * NekoFleeNear);
+	if(!fleeing)
+		return here;
+
+	/* Far enough to be out of range when it arrives, and never less than one
+	   step, so a cat already at the edge of the ring still moves. It stops
+	   stopRadius short of whatever it walks at, so the target carries that. */
+	float wanted = stopRadius * NekoFleeFar - distance;
+	float reach = stopRadius + MAX(wanted, speed);
+
+	double away = atan2(dy, dx);
+	if(distance < 1.0f || isnan(away))
+		away = (double)arc4random_uniform(360) * M_PI / 180.0;
+
+	NSRect bounds = [self nekoBounds];
+	static const float turns[] = { 0.0f, 45.0f, -45.0f, 90.0f, -90.0f,
+	                               135.0f, -135.0f, 180.0f };
+	unsigned i;
+	for(i = 0; i < sizeof(turns) / sizeof(turns[0]); i++) {
+		double angle = away + (double)turns[i] * M_PI / 180.0;
+		NSPoint target = NSMakePoint(here.x + (float)cos(angle) * reach,
+		                             here.y + (float)sin(angle) * reach);
+		if(target.x < NSMinX(bounds) + side / 2.0f
+		   || target.x > NSMaxX(bounds) - side / 2.0f
+		   || target.y < NSMinY(bounds)
+		   || target.y > NSMaxY(bounds) - side)
+			continue;
+		if(hypotf(target.x - mouse.x, target.y - mouse.y) <= distance)
+			continue;
+		return target;
+	}
+	return here;                   /* cornered, and nowhere better to be */
+}
+
 - (NSPoint)chaseTarget
 {
+	/* Before the wander, not after it: asked to stay in the middle of a walk
+	   across the desk, a roaming cat would otherwise finish the walk first. */
+	if(staying)
+		return NSMakePoint(NSMidX([self frame]), NSMinY([self frame]));
 	if(wandering)
 		return wanderTarget;
 	if(windowsMode || roamMode)
 		return NSMakePoint(NSMidX([self frame]), NSMinY([self frame]));  /* stay put */
+	if(fleeMode)
+		return [self escapeTarget];
 	return [NSEvent mouseLocation];
 }
 
@@ -572,6 +650,72 @@ static const float NekoTurnStep = 30.0f;
 	return floor;
 }
 
+/* The bounding box of every screen is the room the cat walks in, and with two
+   displays of the same size and the same top edge that box is exactly the two
+   screens. With displays of different heights, or an L, it is not: the box
+   contains rectangles where there is no screen at all, and a cat that walks into
+   one sits in a place nobody can see.
+
+   So a sprite that has come to rest entirely off every screen is put back onto
+   the nearest one. Only entirely: a cat halfway across the seam between two
+   displays is doing the right thing and is left alone. */
+NSPoint NekoOriginOnAScreen(NSPoint origin, float side, NSArray *visibleFrames)
+{
+	NSRect sprite = NSMakeRect(origin.x, origin.y, side, side);
+	NSPoint centre = NSMakePoint(NSMidX(sprite), NSMidY(sprite));
+	NSRect nearest = NSZeroRect;
+	float nearestDistance = 0.0f;
+
+	NSEnumerator *e = [visibleFrames objectEnumerator];
+	NSValue *value;
+	while((value = [e nextObject]) != nil) {
+		NSRect visible = [value rectValue];
+		if(NSIntersectsRect(sprite, visible))
+			return origin;             /* on a screen, or across two of them */
+
+		float dx = 0.0f, dy = 0.0f;
+		if(centre.x < NSMinX(visible))      dx = NSMinX(visible) - centre.x;
+		else if(centre.x > NSMaxX(visible)) dx = centre.x - NSMaxX(visible);
+		if(centre.y < NSMinY(visible))      dy = NSMinY(visible) - centre.y;
+		else if(centre.y > NSMaxY(visible)) dy = centre.y - NSMaxY(visible);
+		float distance = dx * dx + dy * dy;
+
+		if(NSIsEmptyRect(nearest) || distance < nearestDistance) {
+			nearest = visible;
+			nearestDistance = distance;
+		}
+	}
+	if(NSIsEmptyRect(nearest))
+		return origin;
+
+	return NSMakePoint(MIN(MAX(origin.x, NSMinX(nearest)), NSMaxX(nearest) - side),
+	                   MIN(MAX(origin.y, NSMinY(nearest)), NSMaxY(nearest) - side));
+}
+
+- (void)nudgeOntoAScreen:(float *)x Y:(float *)y side:(float)side
+{
+	NSMutableArray *frames = [NSMutableArray array];
+	NSEnumerator *e = [[NSScreen screens] objectEnumerator];
+	NSScreen *screen;
+	while((screen = [e nextObject]) != nil)
+		[frames addObject:[NSValue valueWithRect:[screen visibleFrame]]];
+
+	NSPoint put = NekoOriginOnAScreen(NSMakePoint(*x, *y), side, frames);
+	*x = put.x;
+	*y = put.y;
+}
+
+/* A spot somebody asked it to keep, from a launch that may have had a different
+   set of displays: clamped to the room and then onto a screen that is actually
+   there, rather than trusted as written. */
+- (void)placeAt:(NSPoint)origin
+{
+	float side = [self frame].size.width;
+	float x = origin.x, y = origin.y;
+	[self settleX:&x Y:&y from:y];
+	[self setFrameOrigin:NSMakePoint(x, y)];
+}
+
 /* Keeps the whole sprite on a screen, and standing on whatever is under it. */
 - (void)settleX:(float *)x Y:(float *)y from:(float)previousY
 {
@@ -579,6 +723,7 @@ static const float NekoTurnStep = 30.0f;
 	float side = [self frame].size.width;
 	*x = MIN(MAX(*x, NSMinX(bounds)), NSMaxX(bounds) - side);
 	*y = MIN(MAX(*y, NSMinY(bounds)), NSMaxY(bounds) - side);
+	[self nudgeOntoAScreen:x Y:y side:side];
 	*y = MAX(*y, [self floorUnderCentre:*x + side / 2.0f feet:previousY]);
 }
 
