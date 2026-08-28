@@ -16,6 +16,17 @@ NSString * const NekoPlayerPlayNamed  = @"playnamed";
    full, which is what somebody saying "alza il volume" twice expects. */
 static const int NekoVolumeStep = 10;
 
+NSString * const NekoPlayerConsentDidChangeNotification = @"NekoPlayerConsentDidChange";
+
+/* What the last attempt found out, per application. Nothing here is a guess about
+   what macOS would say; it is what macOS did say, the last time somebody asked it
+   something. */
+static NSString *NekoConsentKeyFor(NSString *player)
+{
+	return [NSString stringWithFormat:@"NekoPlayerConsent.%@",
+		[player lowercaseString]];
+}
+
 @implementation NekoPlayer
 
 + (NSArray *)players
@@ -194,6 +205,8 @@ static const int NekoVolumeStep = 10;
 
 	if(answer == nil) {
 		NSInteger code = [[trouble objectForKey:NSAppleScriptErrorNumber] integerValue];
+		if(code == -1743)
+			[self remember:NekoPlayerConsentRefused for:player];
 		if(problem != NULL) {
 			/* -1743 is macOS saying the person has not allowed this, and it is the
 			   only failure here they can do something about. */
@@ -208,6 +221,9 @@ static const int NekoVolumeStep = 10;
 		return NO;
 	}
 
+	/* It worked, so it is allowed — the only evidence worth keeping. */
+	[self remember:NekoPlayerConsentGiven for:player];
+
 	if([command isEqualToString:NekoPlayerPlayNamed]
 	   && [[answer stringValue] isEqualToString:@"none"]) {
 		if(problem != NULL)
@@ -220,38 +236,44 @@ static const int NekoVolumeStep = 10;
 
 #pragma mark Being allowed to
 
-/* Asked without asking. The obvious way to find out whether macOS will allow this
-   is to try something and see — and that is wrong here, because trying is what
-   brings the prompt up: merely opening the Permissions tab would have asked the
-   person to allow controlling Music, which is not a thing a window should do by
-   being looked at. (It also reached the run loop mid-build and drew the tab's
-   footer twice; the layout harness caught that.)
+/* This is the second design. The first one asked macOS directly —
+   AEDeterminePermissionToAutomateTarget with askUserIfNeeded NO, which is
+   documented as answering from the consent database without prompting — and the
+   Permissions tab froze the whole application the moment it was opened.
 
-   AEDeterminePermissionToAutomateTarget with askUserIfNeeded NO answers from the
-   database instead: allowed, refused, or never asked. */
+   Measured, not guessed: sampling the stuck process gave 1723 samples out of 1723
+   in the same place, the main thread inside
+   AEDeterminePermissionToAutomateTarget waiting on a dispatch semaphore. That
+   function needs the run loop to deliver the reply it is waiting for, and the main
+   thread is what services the run loop, so calling it there is a deadlock rather
+   than a slow call. No timeout would have helped: it never returns.
+
+   So nothing is preflighted at all. Neko finds out the same way a person does — by
+   trying, once, at a moment somebody chose — and remembers the answer. A recorded
+   yes came from a command that worked; a recorded no came from macOS answering
+   -1743. That is strictly more honest than a preflight: it cannot claim a
+   permission that would not actually work. */
++ (void)remember:(NekoPlayerConsent)consent for:(NSString *)player
+{
+	NSUserDefaults *settings = [NSUserDefaults standardUserDefaults];
+	NSString *key = NekoConsentKeyFor(player);
+	if((NekoPlayerConsent)[settings integerForKey:key] == consent)
+		return;
+	[settings setInteger:(NSInteger)consent forKey:key];
+	[[NSNotificationCenter defaultCenter]
+		postNotificationName:NekoPlayerConsentDidChangeNotification object:nil];
+}
+
 + (NekoPlayerConsent)consentFor:(NSString *)player
 {
-	NSString *identifier = [self bundleIdentifierFor:player];
-	if(identifier == nil || ![self isInstalled:player])
+	if([self bundleIdentifierFor:player] == nil || ![self isInstalled:player])
 		return NekoPlayerConsentImpossible;
 
-	AEAddressDesc target;
-	const char *bytes = [identifier UTF8String];
-	OSStatus made = AECreateDesc(typeApplicationBundleID, bytes,
-		strlen(bytes), &target);
-	if(made != noErr)
-		return NekoPlayerConsentUnknown;
-
-	OSStatus answer = AEDeterminePermissionToAutomateTarget(&target,
-		typeWildCard, typeWildCard, NO);
-	AEDisposeDesc(&target);
-
-	switch(answer) {
-		case noErr:                                return NekoPlayerConsentGiven;
-		case errAEEventNotPermitted:               return NekoPlayerConsentRefused;
-		case errAEEventWouldRequireUserConsent:    return NekoPlayerConsentUnknown;
-		default:                                   return NekoPlayerConsentUnknown;
-	}
+	NekoPlayerConsent remembered = (NekoPlayerConsent)
+		[[NSUserDefaults standardUserDefaults] integerForKey:NekoConsentKeyFor(player)];
+	if(remembered == NekoPlayerConsentGiven || remembered == NekoPlayerConsentRefused)
+		return remembered;
+	return NekoPlayerConsentUnknown;
 }
 
 + (BOOL)mayControl:(NSString *)player
@@ -263,14 +285,31 @@ static const int NekoVolumeStep = 10;
 {
 	/* Here, and only here, the prompt is wanted: somebody pressed a button for
 	   it. The smallest harmless question either application answers is what its
-	   volume is. */
+	   volume is — and it is asked on another thread, because the prompt stays up
+	   until it is read and a settings window may not wait for that. */
 	if(![self isInstalled:player])
 		return;
-	NSString *source = [NSString stringWithFormat:
-		@"tell application \"%@\" to return sound volume as text",
-		[self scriptingNameFor:player]];
-	NSAppleScript *script = [[[NSAppleScript alloc] initWithSource:source] autorelease];
-	(void)[script executeAndReturnError:NULL];
+	NSString *wanted = [[player copy] autorelease];
+	dispatch_async(dispatch_get_global_queue(QOS_CLASS_USER_INITIATED, 0), ^{
+		NSString *source = [NSString stringWithFormat:
+			@"tell application \"%@\" to return sound volume as text",
+			[self scriptingNameFor:wanted]];
+		NSDictionary *trouble = nil;
+		NSAppleScript *script = [[NSAppleScript alloc] initWithSource:source];
+		NSAppleEventDescriptor *answer = [script executeAndReturnError:&trouble];
+		NSInteger code = [[trouble objectForKey:NSAppleScriptErrorNumber] integerValue];
+		[script release];
+		dispatch_async(dispatch_get_main_queue(), ^{
+			if(answer != nil)
+				[self remember:NekoPlayerConsentGiven for:wanted];
+			else if(code == -1743)
+				[self remember:NekoPlayerConsentRefused for:wanted];
+			else
+				[[NSNotificationCenter defaultCenter]
+					postNotificationName:NekoPlayerConsentDidChangeNotification
+					              object:nil];
+		});
+	});
 }
 
 @end

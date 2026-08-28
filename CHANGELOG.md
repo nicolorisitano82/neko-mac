@@ -1,5 +1,48 @@
 # Changelog
 
+## 2.7.1 — 2026-08-28
+
+### Opening the preferences froze the whole application
+
+*"neko, se apro preferenze, si blocca e freeza."* It did, and this one is worth
+writing down properly because the mistake is subtle and the diagnosis was not a
+guess.
+
+2.7's Permissions tab has a row for controlling Music and Spotify, and it wanted to
+say whether macOS allows that yet **without** bringing a prompt up — a tab that
+asks for a permission by being looked at would be worse than no tab. The documented
+way to do exactly that is `AEDeterminePermissionToAutomateTarget` with
+`askUserIfNeeded` set to NO: it answers from the consent database, and it does not
+prompt. That part is true. What it does not say loudly enough is that the function
+waits for a reply delivered through the **run loop** — and the main thread is what
+services the run loop. Calling it there is not a slow call. It is a deadlock.
+
+Measured rather than reasoned about: a throwaway harness reproduced the freeze,
+and `sample` on the stuck process gave **1723 samples out of 1723** in one place —
+the main thread inside `AEDeterminePermissionToAutomateTarget`, waiting on a
+dispatch semaphore. No timeout would have helped; it never returns.
+
+So nothing is preflighted any more, and the row is honest in a better way: **Neko
+finds out the same way a person does — by trying once, at a moment somebody chose —
+and remembers what happened.** A recorded yes came from a command that actually
+worked. A recorded no came from macOS answering -1743. That cannot claim a
+permission that would turn out not to work, which the preflight could.
+
+Two smaller things fell out of it:
+
+- **The Ask button no longer holds the window.** The system's prompt stays up as
+  long as somebody takes to read it, so the asking happens off the main thread and
+  the row redraws itself when the answer lands, on the same notification shape the
+  location row already used.
+- **The record has a test of its own.** `tests/player.m` clears what it knows,
+  turns Music down, and asserts that the successful command left a yes behind and
+  said so at once — because the whole tab now rests on that, and a recording that
+  silently did not happen would leave the row saying "never asked" forever.
+- **`tests/place.m` now asks every permission row with a stopwatch on it**, from
+  another thread, and fails if one does not answer inside two seconds. Bounded on
+  purpose: the first version of that check hung instead of failing, which reports
+  nothing. Confirmed against the frozen build — it names `players` and finishes.
+
 ## 2.7 — 2026-08-27
 
 ### Music and Spotify, spoken to directly
