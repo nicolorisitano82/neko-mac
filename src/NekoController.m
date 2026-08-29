@@ -1016,8 +1016,14 @@ static const float NekoMaxStopRadius = 200.0f;
 
 - (void)chooseFolder:(id)sender
 {
-	[[NekoFolderAccess sharedAccess] requestAccessTo:[sender representedObject]];
+	NSString *why = nil;
+	[[NekoFolderAccess sharedAccess] requestAccessTo:[sender representedObject]
+	                                          saying:&why];
 	[self syncAskControls];
+	/* Through the cat, because this is a menu item and has no window to hang a
+	   sheet on — and because the cat is who was going to be given the folder. */
+	if([why length] > 0)
+		[[NekoAsk sharedAsk] sayUnprompted:why];
 }
 
 - (void)forgetFoldersPressed:(id)sender

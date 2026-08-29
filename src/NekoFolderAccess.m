@@ -95,8 +95,28 @@ static NSString *NekoBookmarkKeyFor(NSString *key)
 
 #pragma mark Asking
 
+- (NSString *)refusalForChoosing:(NSURL *)chosen insteadOf:(NSString *)key
+{
+	NSURL *folder = [self realFolderFor:key];
+	if(chosen == nil || folder == nil)
+		return NSLocalizedString(@"Nothing was chosen.", nil);
+	if([[[chosen path] lastPathComponent] isEqualToString:[[folder path] lastPathComponent]])
+		return nil;
+	return [NSString stringWithFormat:
+		NSLocalizedString(@"That is “%@”, and I asked for your %@ folder. I can only be given the one I asked for.", nil),
+		[[NSFileManager defaultManager] displayNameAtPath:[chosen path]],
+		[self displayNameFor:key]];
+}
+
 - (BOOL)requestAccessTo:(NSString *)key
 {
+	return [self requestAccessTo:key saying:NULL];
+}
+
+- (BOOL)requestAccessTo:(NSString *)key saying:(NSString **)problem
+{
+	if(problem != NULL)
+		*problem = nil;
 	if(![NekoFolderAccess isFolderKey:key])
 		return NO;
 	if([self hasAccessTo:key])
@@ -121,17 +141,29 @@ static NSString *NekoBookmarkKeyFor(NSString *key)
 	NSURL *chosen = [[panel URLs] firstObject];
 	/* The panel is where the sandbox hands over a folder, but it hands over
 	   whichever one was picked: a Documents bookmark stored under "desktop"
-	   would be a lie the rest of the code would believe. */
-	if(![[[chosen path] lastPathComponent] isEqualToString:[[folder path] lastPathComponent]])
+	   would be a lie the rest of the code would believe. Said out loud rather
+	   than refused quietly — from where somebody is standing, a folder chosen and
+	   then ignored is the application doing nothing. */
+	NSString *wrongOne = [self refusalForChoosing:chosen insteadOf:key];
+	if(wrongOne != nil) {
+		if(problem != NULL)
+			*problem = wrongOne;
 		return NO;
+	}
 
-	NSError *problem = nil;
+	NSError *failure = nil;
 	NSData *bookmark = [chosen bookmarkDataWithOptions:NSURLBookmarkCreationWithSecurityScope
 	            includingResourceValuesForKeys:nil
 	                             relativeToURL:nil
-	                                     error:&problem];
-	if(bookmark == nil)
+	                                     error:&failure];
+	if(bookmark == nil) {
+		if(problem != NULL)
+			*problem = [NSString stringWithFormat:
+				NSLocalizedString(@"macOS did not hand your %@ folder over: %@", nil),
+				[self displayNameFor:key],
+				[failure localizedDescription] ?: NSLocalizedString(@"no reason given", nil)];
 		return NO;
+	}
 	[[NSUserDefaults standardUserDefaults] setObject:bookmark
 	                                          forKey:NekoBookmarkKeyFor(key)];
 	return YES;

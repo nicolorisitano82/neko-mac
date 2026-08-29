@@ -1140,8 +1140,9 @@ static const NSTimeInterval NekoHoldToType = 0.5;
 		NSEnumerator *missing = [[action needsFolders] objectEnumerator];
 		NSString *key;
 		while((key = [missing nextObject]) != nil) {
-			if(![access requestAccessTo:key]) {
-				[self sayInCharacter:[NSString stringWithFormat:
+			NSString *why = nil;
+			if(![access requestAccessTo:key saying:&why]) {
+				[self sayInCharacter:why ?: [NSString stringWithFormat:
 					NekoAskLocalized(@"Without your %@ folder I cannot."),
 					[access displayNameFor:key]]];
 				return;

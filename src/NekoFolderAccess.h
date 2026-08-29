@@ -32,6 +32,17 @@
    thread: it puts up a panel. */
 - (BOOL)requestAccessTo:(NSString *)key;
 
+/* The same, and it says why when the answer is no — except when the answer is
+   somebody pressing Cancel, which is not a failure and gets no sentence. Picking
+   the wrong folder used to be refused in silence in all three places that ask,
+   which is indistinguishable from a button that does nothing. */
+- (BOOL)requestAccessTo:(NSString *)key saying:(NSString **)problem;
+
+/* Why a chosen folder is not the one that was asked for, or nil when it is. Its
+   own method so that the sentence can be measured without driving a panel the
+   system owns. */
+- (NSString *)refusalForChoosing:(NSURL *)chosen insteadOf:(NSString *)key;
+
 /* The folder, with access started. Balance every non-nil answer with
    -doneWith:, or the sandbox will run out of scoped resources. */
 - (NSURL *)beginUsing:(NSString *)key;

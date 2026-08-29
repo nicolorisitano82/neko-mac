@@ -243,7 +243,21 @@
 		   see -permissionPressed: in the controller. Reaching here means nobody
 		   asked, so the Desktop is the sensible default. */
 		[NSApp activateIgnoringOtherApps:YES];
-		[[NekoFolderAccess sharedAccess] requestAccessTo:@"desktop"];
+		NSString *why = nil;
+		[[NekoFolderAccess sharedAccess] requestAccessTo:@"desktop" saying:&why];
+		/* A row in a settings window that refuses in silence is the same complaint
+		   twice over, so it says what happened where it happened. */
+		if([why length] > 0) {
+			NSAlert *said = [[[NSAlert alloc] init] autorelease];
+			[said setMessageText:NekoPermissionLocalized(@"That folder was not the one I asked for.")];
+			[said setInformativeText:why];
+			NSWindow *host = [[NSApp keyWindow] attachedSheet] == nil
+				? [NSApp keyWindow] : nil;
+			if(host != nil)
+				[said beginSheetModalForWindow:host completionHandler:nil];
+			else
+				[said runModal];
+		}
 		return;
 	}
 }

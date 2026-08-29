@@ -462,3 +462,10 @@
 /* 2.8: running away, and staying put */
 "Stay here" = "Stai lì";
 "Runs from the cursor" = "Scappa dal cursore";
+
+/* the folder handover, when the answer is no */
+"Nothing was chosen." = "Non è stato scelto niente.";
+"That is “%@”, and I asked for your %@ folder. I can only be given the one I asked for." = "Quella è “%@”, e io ho chiesto la tua cartella %@. Posso ricevere solo quella che ho chiesto.";
+"macOS did not hand your %@ folder over: %@" = "macOS non mi ha consegnato la cartella %@: %@";
+"no reason given" = "senza dire perché";
+"That folder was not the one I asked for." = "Quella cartella non era quella che avevo chiesto.";

@@ -1,5 +1,44 @@
 # Changelog
 
+## 2.8.1 — 2026-08-29
+
+### Choosing the wrong folder did nothing, and said nothing
+
+The sandbox means Neko cannot read a folder by deciding to: somebody has to hand
+one over in a panel the system shows. Pick the folder it asked for and it works.
+Pick a different one — and it was refused by returning `NO` to three callers that
+all ignored the answer. A panel appeared, a folder was chosen, nothing was said,
+nothing was handed over. That is the *"does nothing"* that had been reported
+against this and never explained.
+
+It says which folder it got and which one it wanted now — *"Quella è «Documenti», e
+io ho chiesto la tua cartella Scrivania"* — in the bubble, from the menu, and in a
+sheet on the settings window. Pressing **Cancel** deliberately says nothing, because
+cancelling is not a fault.
+
+**The diagnosis that was written down first was wrong**, and it is worth recording
+why. This panel is opened app-modally, which is exactly the shape that made 2.5's
+Add button invisible, so it was written up as the same bug. Measured in the real
+bundle — the method called directly, and somebody pressing **Yes** in the bubble —
+the panel comes up visible, with the keyboard, on the desktop somebody is looking
+at, from an application that is frontmost. Two of the three *"the button does
+nothing"* reports in this application have now had a cause other than the first
+plausible one.
+
+`tests/handover.m`, 13 checks. Its first version measured nothing and said so
+rather than passing: a scheduled timer goes into the default run loop mode, and
+the run loop is not in the default mode while a modal panel is up.
+
+### Where this goes next
+
+[docs/next.md](docs/next.md) — a ranking rather than a wish list, with what each
+item would cost and how it would be measured. Its first section is the one that
+matters: the intelligence of this application has never been in the engine, and a
+bigger model with a longer prompt is measured as the wrong direction. What the two
+real levers are — recalling the diary by relevance instead of by recency, and
+growing the closed list of questions answered in code — is written down there,
+along with the two open weaknesses in the test suite.
+
 ## 2.8 — 2026-08-28
 
 Four things, and all four came from reading the other twenty-four forks of the
