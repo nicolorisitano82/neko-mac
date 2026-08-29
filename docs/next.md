@@ -126,7 +126,7 @@ necessarily sends part of what somebody said to whoever owns that address. It is
 disclosed in the plugins window, with the host named, from the manifest rather
 than from anything the plugin claims about itself.
 
-## 4. Perceiving without reading
+## 4. Perceiving without reading ✅ *first slice shipped after 2.9*
 
 The rule stands and is not up for negotiation: **nothing read from the screen ever
 becomes something the Mac does**, and remote engines never see the screen, the
@@ -139,8 +139,32 @@ day. `NekoDesktop` already uses some of it for the seams. More of it makes the
 is the whole difference between an animal that seems attentive and one that seems
 intrusive.
 
-**Cost**: small. **Risk**: the temptation to creep from "which application" toward
-"what is in it". The line is in the code and in `tests/screen.m`; it does not move.
+**What went in**: three more flags, each a counter or a boolean and none of them
+content — the microphone being open somewhere, the screen being locked or
+somebody else being at the console, and the display being asleep. All three are
+readable from inside the sandbox, none prompts for anything, and two hundred
+samples of two of them cost 0.02 ms each.
+
+Two things worth recording:
+
+- **A signal that is always "no" is not a signal.** The microphone flag was
+  watched going cold, hot while a tap was open on the input, and cold again.
+  `tests/senses.m` still does that, every run.
+- **The cat's own microphone had to be excluded.** The wake word holds the input
+  open for as long as it is switched on, so without that exception the flag would
+  have been stuck at *"somebody is talking"* whenever Neko was listening for its
+  name — silencing the cat permanently, and looking like a different bug
+  entirely.
+
+And one thing it changed elsewhere: **nobody being there is not a bad moment, it
+is no moment.** A bad moment passes in seconds and is worth sitting out for eight;
+a locked screen does not pass at all, so a timer that lands against one waits for
+somebody to come back — for an hour, after which what it was going to say is no
+longer news. Saying it to an empty room and counting it as said is the one way a
+timer can fail silently.
+
+**Risk**: the temptation to creep from "which application" toward "what is in it".
+The line is in the code and in `tests/screen.m`; it does not move.
 
 ## 5. Latency, which is felt as intelligence
 

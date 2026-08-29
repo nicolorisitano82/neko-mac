@@ -491,3 +491,9 @@
 "1 question it goes and looks up" = "1 domanda che va a cercare";
 "%lu questions it goes and looks up" = "%lu domande che va a cercare";
 "sends part of what you say to %@" = "manda un pezzo di quello che dici a %@";
+
+/* more of what it can tell without reading anything */
+"the screen is locked" = "lo schermo è bloccato";
+"somebody else is using this Mac" = "questo Mac lo sta usando qualcun altro";
+"the display is asleep" = "lo schermo è spento";
+"the microphone is open, so you are probably talking" = "il microfono è aperto, quindi probabilmente stai parlando";

@@ -1,4 +1,7 @@
 #import "NekoDesktop.h"
+#import "NekoWakeWord.h"
+#import "NekoAsk.h"
+#import <CoreAudio/CoreAudio.h>
 #import <ApplicationServices/ApplicationServices.h>
 #import <Carbon/Carbon.h>
 
@@ -255,12 +258,76 @@ static const NSTimeInterval NekoBreakpointWindow = 12.0;
 	return fills;
 }
 
+/* One flag, from the audio device rather than from any application: is the
+   default input running somewhere. It says nothing about who opened it or what
+   is being said, and reading it asks for nothing. */
+- (BOOL)microphoneInUse
+{
+	AudioObjectPropertyAddress which = {
+		kAudioHardwarePropertyDefaultInputDevice,
+		kAudioObjectPropertyScopeGlobal, kAudioObjectPropertyElementMain };
+	AudioDeviceID device = 0;
+	UInt32 size = sizeof(device);
+	if(AudioObjectGetPropertyData(kAudioObjectSystemObject, &which, 0, NULL,
+	                              &size, &device) != noErr || device == 0)
+		return NO;
+
+	AudioObjectPropertyAddress running = {
+		kAudioDevicePropertyDeviceIsRunningSomewhere,
+		kAudioObjectPropertyScopeGlobal, kAudioObjectPropertyElementMain };
+	UInt32 hot = 0;
+	size = sizeof(hot);
+	if(AudioObjectGetPropertyData(device, &running, 0, NULL, &size, &hot) != noErr)
+		return NO;
+
+	/* Unless it is this application's own microphone. The wake word holds the
+	   input open for as long as it is switched on, and a flag that is stuck at
+	   "somebody is talking" whenever Neko is listening for its name would be
+	   worse than no flag: it would silence the cat permanently and look like a
+	   different bug entirely. */
+	if(hot && ([[NekoWakeWord sharedWakeWord] isListening]
+	           || [[NekoAsk sharedAsk] isBusy]))
+		return NO;
+	return hot != 0;
+}
+
+- (NSString *)whyNobodyIsThere
+{
+	NSDictionary *session = (NSDictionary *)CGSessionCopyCurrentDictionary();
+	BOOL locked = NO, away = NO;
+	if(session != nil) {
+		locked = [[session objectForKey:@"CGSSessionScreenIsLocked"] boolValue];
+		/* Somebody else is logged in and looking at their own desktop. */
+		away = ![[session objectForKey:@"kCGSSessionOnConsoleKey"] boolValue];
+		[session release];
+	}
+	if(locked)
+		return NSLocalizedString(@"the screen is locked", nil);
+	if(away)
+		return NSLocalizedString(@"somebody else is using this Mac", nil);
+	if(CGDisplayIsAsleep(CGMainDisplayID()))
+		return NSLocalizedString(@"the display is asleep", nil);
+	return nil;
+}
+
+- (BOOL)nobodyIsThere
+{
+	return [self whyNobodyIsThere] != nil;
+}
+
 - (NSString *)whyBusyElsewhere
 {
 	if(IsSecureEventInputEnabled())
 		return NSLocalizedString(@"you are typing a password", nil);
 	if([self frontWindowFillsAScreen])
 		return NSLocalizedString(@"something is filling the screen", nil);
+	/* The plainest sign of all, and the one this could see all along without
+	   asking anybody for anything. */
+	if([self microphoneInUse])
+		return NSLocalizedString(@"the microphone is open, so you are probably talking", nil);
+	NSString *nobody = [self whyNobodyIsThere];
+	if(nobody != nil)
+		return nobody;
 	return nil;
 }
 
