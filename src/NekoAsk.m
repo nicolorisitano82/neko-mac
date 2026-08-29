@@ -824,7 +824,7 @@ static const NSTimeInterval NekoHoldToType = 0.5;
 	   question answered by ChatGPT is answered without it: better a cat that
 	   forgot than a promise that only held on some days. */
 	if([NekoBrains staysOnThisMac:[self provider]]) {
-		NSString *memory = [[NekoMemory sharedMemory] contextForPrompt];
+		NSString *memory = [[NekoMemory sharedMemory] contextForPrompt:askingAbout];
 		if([memory length] > 0)
 			instructions = [instructions stringByAppendingFormat:
 				@"\n\nWHAT YOU REMEMBER. Older than the list above and just as true. "

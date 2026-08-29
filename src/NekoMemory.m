@@ -1,4 +1,5 @@
 #import "NekoMemory.h"
+#import "NekoRecall.h"
 #import "NekoBrains.h"
 #import "NekoAnswerProvider.h"
 #import <NaturalLanguage/NaturalLanguage.h>
@@ -265,7 +266,73 @@ static BOOL NekoMemoryWorthKeeping(NSString *word)
    sections simply ran on until the cap, which meant that adding the standing
    tier pushed today's notes out of the block entirely — and today is the half a
    follow-up actually needs. */
+#pragma mark Recall
+
+/* Every older day, one line each, newest day last. Today is left out on purpose:
+   it is already in the block below, whole. */
+- (NSArray *)olderLines
+{
+	NSString *todaysName = [[[self fileForDay:[NSDate date]] path] lastPathComponent];
+	NSMutableArray *lines = [NSMutableArray array];
+	NSEnumerator *e = [[self dayFiles] objectEnumerator];
+	NSString *name;
+	while((name = [e nextObject]) != nil) {
+		if([name isEqualToString:todaysName])
+			continue;
+		NSURL *file = [[self directory] URLByAppendingPathComponent:name];
+		NSEnumerator *l = [[self linesOfFile:file] objectEnumerator];
+		NSString *line;
+		while((line = [l nextObject]) != nil)
+			[lines addObject:line];
+	}
+	return lines;
+}
+
+/* Kept between questions, and thrown away when any day file has been written to
+   since it was built. Rebuilding costs a quarter of a second; doing it on every
+   question would be a quarter of a second somebody waits for nothing. */
+- (void)buildRecallIfStale
+{
+	NSDate *newest = nil;
+	NSFileManager *files = [NSFileManager defaultManager];
+	NSEnumerator *e = [[self dayFiles] objectEnumerator];
+	NSString *name;
+	while((name = [e nextObject]) != nil) {
+		NSString *path = [[[self directory] path] stringByAppendingPathComponent:name];
+		NSDate *changed = [[files attributesOfItemAtPath:path error:NULL]
+			objectForKey:NSFileModificationDate];
+		if(changed != nil && (newest == nil || [changed compare:newest] == NSOrderedDescending))
+			newest = changed;
+	}
+	if(recallLines != nil && recallBuiltAt != nil
+	   && (newest == nil || [newest compare:recallBuiltAt] != NSOrderedDescending))
+		return;
+
+	[recallLines release];
+	[recallWords release];
+	[recallRarity release];
+	[recallBuiltAt release];
+	recallLines = [[self olderLines] retain];
+	recallWords = [[NekoRecall wordSetsFor:recallLines] retain];
+	recallRarity = [[NekoRecall rarityAcross:recallLines] retain];
+	recallBuiltAt = [[NSDate date] retain];
+}
+
+- (NSArray *)linesAbout:(NSString *)question limit:(NSUInteger)limit
+{
+	if([question length] == 0)
+		return [NSArray array];
+	[self buildRecallIfStale];
+	return [NekoRecall linesIn:recallLines words:recallWords about:question
+	                     limit:limit rarity:recallRarity];
+}
+
 - (NSString *)contextForPrompt
+{
+	return [self contextForPrompt:nil];
+}
+
+- (NSString *)contextForPrompt:(NSString *)question
 {
 	NSUInteger forStanding = NekoMemoryPromptChars / 4;
 	NSUInteger forDurable = NekoMemoryPromptChars / 4;
@@ -300,6 +367,25 @@ static BOOL NekoMemoryWorthKeeping(NSString *word)
 				break;
 			[part appendFormat:@"- %@\n", line];
 		}
+		[block appendString:part];
+	}
+
+	/* The handful of older lines that bear on what was asked. After the durable
+	   ones because those are already a summary of everything, and before today
+	   because today is the thing a follow-up is about and must not be squeezed. */
+	NSArray *recalled = [self linesAbout:question limit:3];
+	if([recalled count] > 0) {
+		NSMutableString *part = [NSMutableString stringWithString:
+			@"From earlier, and about what they just asked:\n"];
+		NSUInteger forRecall = NekoMemoryPromptChars / 4;
+		NSEnumerator *r = [recalled objectEnumerator];
+		NSString *line;
+		while((line = [r nextObject]) != nil) {
+			if([part length] > forRecall)
+				break;
+			[part appendFormat:@"- %@\n", line];
+		}
+		[block appendString:@"\n"];
 		[block appendString:part];
 	}
 

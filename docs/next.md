@@ -155,7 +155,10 @@ may speak; this is about when it *starts*.
    as reported, and nothing to do with the panel being modal. It says which folder
    it got and which it wanted now, in the bubble, in the menu and in the settings
    window.
-2. **`tests/persona.m` has one check that can fail without a defect.** *"And still
+2. ~~**`tests/persona.m` has one check that can fail without a defect.**~~ Fixed
+   while building §1: it asserts the trimming, which is ours and deterministic,
+   and reports how often the engine needed trimming as information rather than as
+   a verdict. What follows is what it used to say. *"And still
    opens with the answer"* counts replies that began with flattery — which is a
    thing the engine does or does not do on the day, not a thing this code decides.
    It failed once during 2.9 and passed on the next run with nothing changed. A
