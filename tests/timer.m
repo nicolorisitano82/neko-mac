@@ -14,6 +14,13 @@
 #import "support.h"
 #import "NekoWhen.h"
 #import "NekoTimer.h"
+#import "NekoAsk.h"
+#import "NekoBubble.h"
+#import <objc/runtime.h>
+
+@interface NekoAsk (TestOnly)
+- (void)cancelEverything;
+@end
 
 int main(void)
 {
@@ -138,6 +145,31 @@ int main(void)
 		[NSString stringWithFormat:@"asked for 2 s, went off after %.1f s", took]);
 	ok(took < 12.0, @"and never waits longer than its patience",
 		[NSString stringWithFormat:@"%.1f s", took]);
+
+	printf("\n--- and through the door a question comes in by ---\n");
+
+	/* The harness above tests the class. This tests that a question reaches it —
+	   before any engine, which is the whole point of recognising it in code. */
+	NekoAsk *ask = [NekoAsk sharedAsk];
+	Ivar found = class_getInstanceVariable([NekoAsk class], "bubble");
+	NekoBubble *bubble = (NekoBubble *)object_getIvar(ask, found);
+	[timer cancel];
+	[ask cancelEverything];
+	[ask askAfterPlugins:@"metti un timer di 10 minuti"];
+	spin(0.6);
+
+	NSMutableString *shown = [NSMutableString string];
+	NSEnumerator *views = [[[bubble contentView] subviews] objectEnumerator];
+	NSView *view;
+	while((view = [views nextObject]) != nil)
+		if([view isKindOfClass:[NSTextField class]])
+			[shown appendFormat:@"%@ ", [(NSTextField *)view stringValue]];
+
+	ok([timer isRunning], @"a typed question starts it", nil);
+	ok([shown rangeOfString:[NekoWhen clockTimeIn:600.0]].location != NSNotFound,
+		@"and the cat answers with the time it will land", shown);
+	[timer cancel];
+	[ask cancelEverything];
 
 	int result = NekoTestResult();
 	[pool release];
