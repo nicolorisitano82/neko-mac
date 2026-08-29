@@ -617,3 +617,17 @@ notarise it:
 xcrun notarytool submit dist/Neko-1.7.1.dmg --apple-id ... --team-id ... --wait
 xcrun stapler staple dist/Neko-1.7.1.dmg
 ```
+
+## Where this goes next
+
+[docs/next.md](docs/next.md) is the ranking: what the leverage actually is, what
+each item costs, and how it would be measured. Its first claim is the one worth
+repeating here — the intelligence of this application has never been in the
+engine, and the two things that would change it are **recalling the diary by
+relevance rather than by recency** and **growing the closed list of questions it
+answers in code instead of guessing**.
+
+The other studies, each written before the thing it describes was built:
+[ask-neko.md](docs/ask-neko.md), [natural.md](docs/natural.md),
+[truelife.md](docs/truelife.md), [utilities.md](docs/utilities.md),
+[plugins.md](docs/plugins.md) and [forks.md](docs/forks.md).
