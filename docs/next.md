@@ -212,7 +212,23 @@ different feature with a different risk. This is about when the words appear.
 
 ## The open bug, and the one that turned out to be elsewhere
 
-1. **The folder handover refused in silence** — fixed in 2.9, and worth recording
+1. **Synonyms in the diary recall** — still open, and now with two measured dead
+   ends written down so nobody spends the afternoon on either. `NLEmbedding`'s
+   word neighbours: no threshold exists, because *gatto↔cane* (0.660) is closer
+   than *versione↔release* (0.922) — distributional similarity is not synonymy.
+   The system dictionary: reachable from inside the sandbox, which is worth
+   knowing, but it answers with definitions, and the Italian entry for
+   *impostazione* opens on its architectural sense. The table is in
+   `NekoRecall.h`.
+
+   The idea worth trying next is **the person's own diary as the source**: words
+   that turn up in the same lines are related in their vocabulary, and an
+   expansion drawn from what somebody actually wrote cannot import a concept from
+   outside it. It needs a real month of diary to measure, and measuring it against
+   a corpus written for the purpose would prove nothing — that is the shape of
+   passing for the wrong reason this project keeps catching itself in.
+
+2. **The folder handover refused in silence** — fixed in 2.9, and worth recording
    because the diagnosis in section 0 was wrong and the measurement found the real
    thing next door. Choosing a folder that is not the one asked for was refused by
    returning `NO`, and all three callers ignored the answer. Nothing appeared,
@@ -220,7 +236,7 @@ different feature with a different risk. This is about when the words appear.
    as reported, and nothing to do with the panel being modal. It says which folder
    it got and which it wanted now, in the bubble, in the menu and in the settings
    window.
-2. ~~**`tests/persona.m` has one check that can fail without a defect.**~~ Fixed
+3. ~~**`tests/persona.m` has one check that can fail without a defect.**~~ Fixed
    while building §1: it asserts the trimming, which is ours and deterministic,
    and reports how often the engine needed trimming as information rather than as
    a verdict. What follows is what it used to say. *"And still
@@ -230,7 +246,7 @@ different feature with a different risk. This is about when the words appear.
    check that fails for reasons that are not defects teaches people to ignore the
    suite, and this one should either assert the **trimming** (which is ours and
    deterministic) or be marked as not measured.
-3. ~~**The plugins window is not covered by `tests/layout.m`.**~~ Covered now, and
+4. ~~**The plugins window is not covered by `tests/layout.m`.**~~ Covered now, and
    it found three clipped paragraphs the first time it ran — one of them the
    sentence saying what a plugin sends off this Mac, cut off after a line and a
    half. Rows measure their own text now instead of being a fixed height, and the

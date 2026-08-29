@@ -135,9 +135,15 @@ int main(void)
 	printf("\n--- what it cannot do, said rather than hidden ---\n");
 
 	/* Synonyms. Asked about "impostazioni" it does not find "preferenze", and the
-	   embedding this replaced ranked that line fifth of twenty — which would not
-	   have reached a prompt with room for three either. Recorded here so that the
-	   day somebody fixes it, this line is what they delete. */
+	   sentence embedding this replaced ranked that line fifth of twenty — which
+	   would not have reached a prompt with room for three either.
+
+	   Widening the question with NLEmbedding's *word* neighbours was tried after
+	   2.9 and measured: there is no threshold that admits versione↔release (0.922)
+	   while rejecting gatto↔cane (0.660), because distributional similarity is not
+	   synonymy. The table is in NekoRecall.h. Recorded here so that the day
+	   somebody fixes it, this line is what they delete — and so that they do not
+	   spend the afternoon on the same idea. */
 	NSArray *synonym = [NekoRecall linesIn:diary
 		about:@"che problema avevo con le impostazioni?" limit:3 rarity:rarity];
 	notMeasured([NSString stringWithFormat:

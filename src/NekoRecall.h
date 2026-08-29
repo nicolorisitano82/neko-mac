@@ -46,8 +46,49 @@
 
    What it cannot do is synonyms: asked about *"impostazioni"* it does not find
    *"preferenze"*. That is measured, it is in `tests/recall.m` as a known miss
-   rather than hidden, and it is the one thing an embedding was better at — fifth
-   of twenty, which would still not have reached the prompt. */
+   rather than hidden, and it is the one thing a sentence embedding was better at —
+   fifth of twenty, which would still not have reached a prompt with room for
+   three.
+
+   **The obvious fix was tried and does not work**, and it is written down here so
+   that the next person tries something else. `NLEmbedding` also has *word*
+   vectors, with a neighbours call, which is the natural way to widen a question:
+   take each word somebody asked about and add what is nearest to it. Measured on
+   this Mac, Italian, 49,620 words:
+
+   | pair | distance | wanted |
+   | --- | --- | --- |
+   | gatto ↔ cane | **0.660** | out — a different animal |
+   | gatto ↔ coniglio | 0.659 | out |
+   | caffè ↔ tè | 0.865 | out |
+   | riunione ↔ assemblea | 0.859 | in |
+   | problema ↔ difetto | 0.898 | in |
+   | **versione ↔ release** | **0.922** | **in — the same thing, two words** |
+   | riunione ↔ votazione | 0.971 | out |
+   | treno ↔ aereo | 1.106 | out |
+   | impostazioni ↔ preferenze | 1.157 | in |
+
+   There is no threshold. The pairs that should widen a search span 0.70 to 1.16
+   and the pairs that must not span 0.66 to 1.11, and two different animals sit
+   closer together than two words for the same thing. That is not a flaw in the
+   vectors: distributional similarity means "turns up in the same sort of
+   sentence", which is exactly why a cat and a dog are neighbours, and it is not
+   what synonymy means. Apple's Italian vectors also read *preferenze* in its
+   voting sense — its neighbours are *voto, votante, consenso* — so the pair that
+   started all this would have missed anyway.
+
+   The system dictionary was tried next and is a dead end for a different reason.
+   `DCSCopyTextDefinition` **is** reachable from inside the sandbox, which is
+   worth knowing on its own — but it answers with a definition, not a list of
+   synonyms, and an Italian dictionary opens *impostazione* on its architectural
+   sense and never mentions *preferenze* at all. Parsing lexicographic prose to
+   find a synonym is a larger and worse idea than the problem.
+
+   What has not been tried, and is the better idea: **the person's own diary as
+   the source.** Words that turn up in the same lines are related for them, in
+   their vocabulary, and an expansion drawn from what somebody actually wrote
+   cannot import a concept from outside it. It needs a real month of diary to
+   measure honestly, which is why it is not in here on a hunch. */
 @interface NekoRecall : NSObject
 
 /* The words of a line, lemmatised and folded, with the short ones dropped. */
