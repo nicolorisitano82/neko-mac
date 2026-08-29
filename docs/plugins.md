@@ -129,32 +129,46 @@ should be a route (3.3) instead.
 
 ### 3.3 Routing — the part the web feature invented
 
-`NekoWeb wantedFor:` decides in code, before any engine is consulted, whether a
-question is about the news or the weather. That mechanism exists because the
-measured alternative was a model inventing headlines. It generalises exactly:
+**Shipped in 2.9.** `NekoWeb wantedFor:` decides in code, before any engine is
+consulted, whether a question is about the news or the weather. That mechanism
+exists because the measured alternative was a model inventing headlines. It
+generalises — and what shipped is a good deal narrower than what was sketched
+here first, which is the interesting part:
 
 ```
 Extends.Routes = (
-  { Match = { Words = ("borsa", "titoli", "mercato"); Language = "it"; };
-    Do = { Feed = "com.example.markets/prices"; };
-    Verbatim = true; },
-  { Match = { Words = ("traduci", "translate"); };
-    Do = { Command = "translate"; };
-    Answer = "through-model"; }
+  { Identifier = "trains";
+    Phrases = ( "quando parte il treno per", "treno per" );
+    Says = "Trenitalia";
+    Url = "https://example.com/trains?to=%@"; }
 )
 ```
 
-A route claims a question by matching words in it. What it may then do:
+The sketch had a `Match` with `Words` and a `Language`, and a `Do` with three
+choices behind it. What shipped has **phrases and one https address**, and the
+reasons are the ones the rest of this application already lives by:
 
-- **`Feed`** — fetch one of its own declared feeds (needs `network`), and either
-  show the lines verbatim or hand them to the engine as quoted context.
-- **`Shortcut`** — run a named Shortcut and use its output the same way.
-- **`Command`** — run its executable with the question on stdin (needs
-  `executable`).
+- **A plugin does not write a rule.** No pattern, no language switch, no intent
+  handed over. It lists words, and the application matches them exactly the way it
+  matches a verb — whole words, longest phrase first, the rest of the sentence
+  becoming the argument. That matcher is one piece of code (`NekoPhrase`) with one
+  set of measurements behind it.
+- **`Says` is required**, and it is the name on the quotation. What comes back is
+  put in front of a model as *somebody else's words*, and a route that will not say
+  whose words they are is refused.
+- **One door, not three.** `Shortcut` and `Command` are gone: a Shortcut is what
+  `Extends.Text` and `Extends.Verbs` are for, and a program of its own is
+  Interface 2, which is specified and not built. A `Program` key inside a route is
+  refused rather than ignored.
+- **The address is in the manifest and it is https.** The plugin cannot name one
+  at fetch time, and nothing that comes back can change where the next request
+  goes — the rule that keeps a headline from sending the cat somewhere.
+- **What comes back cannot act.** It arrives with `fromTheWeb` set, which is what
+  stops an answer built on it from performing anything. `tests/route.m` stages a
+  reply containing `ACTION: open-app Terminal` and counts Terminals.
 
-Conflicts are resolved by specificity then by order in the plugin list, and a
-route can never claim a question the app's own routes claim: the built-in ones
-win, and the Plugins tab says so.
+The built-in routes still win: a plugin cannot claim "che notizie ci sono", because
+the application looks at its own words first.
 
 ### 3.4 Instructions — `NekoAnswerProvider`
 

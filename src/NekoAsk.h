@@ -114,6 +114,9 @@ extern NSString * const NekoLastUnpromptedKey;
 /* A plugin's verb, read back before anything happens. */
 - (void)proposeVerb:(NSDictionary *)verb;
 
+/* What a plugin's route fetched, quoted to a model as somebody else's words. */
+- (void)followRoute:(NSDictionary *)route;
+
 /* The two halves either side of a plugin having a look at the words: the second
    is what actually asks, and what actually says. */
 - (void)askAfterPlugins:(NSString *)question;

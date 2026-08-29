@@ -475,3 +475,19 @@
 "%@: I will tell you at %@." = "%@ : je vous le dis à %@.";
 "The %@ are up." = "Les %@ sont écoulées.";
 "Timer — %@ left" = "Minuteur — il reste %@";
+
+/* routes: questions a plugin asked to go and look up */
+"Its Routes section is not a list." = "Sa section Routes n’est pas une liste.";
+"One of its routes is not a dictionary." = "Une de ses routes n’est pas un dictionnaire.";
+"Each of its routes needs its own Identifier." = "Chacune de ses routes a besoin de son propre Identifier.";
+"The route “%@” lists no Phrases to listen for." = "La route « %@ » ne liste aucune phrase à écouter.";
+"The route “%@” has a phrase too short to match on; three letters at least." = "La route « %@ » a une phrase trop courte pour être reconnue ; trois lettres au moins.";
+"One of its routes carries one of Neko’s own markers in a phrase." = "Une de ses routes porte dans une phrase l’un des marqueurs de Neko.";
+"The route “%@” does not say whose words it fetches." = "La route « %@ » ne dit pas de qui sont les mots qu’elle va chercher.";
+"One of its routes carries one of Neko’s own markers in what it says about itself." = "Une de ses routes porte l’un des marqueurs de Neko dans ce qu’elle dit d’elle-même.";
+"One of its routes wants to run a program of its own, which this version does not allow." = "Une de ses routes veut lancer un programme à elle, ce que cette version n’autorise pas.";
+"The route “%@” needs an https address to fetch." = "La route « %@ » a besoin d’une adresse https à charger.";
+"It adds routes without asking for the network, so nothing could be fetched." = "Elle ajoute des routes sans demander le réseau, donc rien ne pourrait être chargé.";
+"1 question it goes and looks up" = "1 question qu’il va chercher";
+"%lu questions it goes and looks up" = "%lu questions qu’il va chercher";
+"sends part of what you say to %@" = "envoie une partie de ce que vous dites à %@";

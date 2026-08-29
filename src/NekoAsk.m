@@ -6,6 +6,7 @@
 #import "NekoRate.h"
 #import "NekoWeb.h"
 #import "NekoTimer.h"
+#import "NekoPluginRoutes.h"
 #import "NekoPluginText.h"
 #import "NekoPluginVerbs.h"
 #import "NekoVoice.h"
@@ -910,6 +911,16 @@ static const NSTimeInterval NekoHoldToType = 0.5;
 		return;
 	}
 
+	/* A route a plugin asked for, in the same place and for the same reason as
+	   the news — and gated on looking things up, because that is what it is. */
+	if([[NekoWeb sharedWeb] isEnabled] && [NekoPluginRoutes anythingListens]) {
+		NSDictionary *route = [NekoPluginRoutes matchFor:question];
+		if(route != nil) {
+			[self followRoute:route];
+			return;
+		}
+	}
+
 	/* And a phrase a plugin asked to hear, recognised in the same place and for
 	   the same reason. Only when doing things is switched on: a verb is the app
 	   opening something, and that consent already has a home. */
@@ -982,6 +993,50 @@ static const NSTimeInterval NekoHoldToType = 0.5;
    Two passes: the model names one of the sources, the app fetches it, and the
    model answers with the lines in front of it. The app does the naming of
    addresses, always — see NekoWeb for why that is the whole of the safety. */
+/* What a plugin's route fetched, handed to a model the way a feed is: quoted
+   under the name of whoever wrote it, and with fromTheWeb set, which is what
+   stops an answer built on it from performing anything. A route is the only way
+   a plugin can put words in front of a model, and they arrive as somebody
+   else's. */
+- (void)followRoute:(NSDictionary *)route
+{
+	NSString *asked = [[askingAbout copy] autorelease];
+	NSString *says = [route objectForKey:@"Says"] ?: @"";
+
+	phase = NekoPhaseAnswering;
+	[[self panel] holdWithState:NekoStateKaki];
+	[self startDrawingAbout:NekoAskLocalized(@"One moment, I will look.")];
+
+	[NekoPluginRoutes fetch:route completion:^(NSArray *lines, NSError *error) {
+		[self stopThinking];
+		if([lines count] == 0) {
+			[self sayInCharacter:NekoAskLocalized(@"I could not reach it.")];
+			return;
+		}
+
+		fromTheWeb = YES;
+		id<NekoAnswerProvider> provider = [self provider];
+		if(![provider isConfigured]) {
+			[self answer:[lines componentsJoinedByString:@"\n"]];
+			return;
+		}
+
+		phase = NekoPhaseThinking;
+		[self startThinkingAbout:asked ?: says];
+		NSString *instructions = [[self instructionsForAsking]
+			stringByAppendingString:[NekoWeb blockFrom:says lines:lines]];
+		[provider askQuestion:(asked ?: says)
+		         instructions:instructions
+		           completion:^(NSString *answer, NSError *whyNot) {
+			[self stopThinking];
+			if([answer length] > 0)
+				[self answer:answer];
+			else
+				[self failed:whyNot];
+		}];
+	}];
+}
+
 - (void)lookUp:(NSString *)wanted
 {
 	[self lookUp:wanted verbatim:NO];

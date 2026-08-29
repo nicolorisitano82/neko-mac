@@ -220,6 +220,14 @@ Two slices: plugins in 2.5, verbs in 2.6.
   away — it never blocks the conversation, it sees the words and nothing around
   them, and the diary keeps what was actually said rather than the rewording.
 
+- **Routes** — the half that answers. A plugin lists phrases and one https address
+  it declared in its manifest; when a phrase is heard, the application fetches it —
+  one GET, eight seconds, no cookies, nothing about the question in the request —
+  and hands what comes back to the engine quoted under the name the route gave for
+  it. What arrives is marked as text from outside, which is what stops an answer
+  built on it from opening, copying or moving anything. A plugin never names an
+  address at fetch time, never writes a pattern, and never beats the application's
+  own words: a question about the news is claimed before any plugin is asked.
 - **Verbs** — a plugin lists phrases and, for each, one door of three: an address
   from a closed list of schemes, one of the user's own Shortcuts, or (2.7) a
   command sent straight to Music or Spotify. The app matches the
@@ -251,10 +259,9 @@ the next slice rather than this one because an image has two more things to sett
 that text does not: what happens when it comes back enormous, and whether it
 replaces the local painter or sits beside it.
 
-**Then routes**, which is where the interface stops being about data. Verbs
-shipped in 2.6 and are described in section 8; a route is the harder half, because
-a route decides what a question *is* and a verb only decides that one phrase was
-in it.
+Verbs shipped in 2.6 and routes in 2.9, both described in section 8. What is left
+of the original four steps is the one that was always conditional: **the
+executable protocol, if the first three have found somebody who needs it.**
 
 Four steps, each shippable alone, in the order that keeps the app defensible at
 every point:

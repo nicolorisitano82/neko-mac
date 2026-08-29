@@ -143,7 +143,7 @@ static NSString * const NekoPluginMarkers[] = { @"ACTION:", @"IMAGE:", @"LOOK:",
 	}
 
 	NSArray *known = [NSArray arrayWithObjects:@"Feeds", @"Text", @"Characters",
-		@"Verbs", nil];
+		@"Verbs", @"Routes", nil];
 	NSEnumerator *e = [extends keyEnumerator];
 	NSString *key;
 	while((key = [e nextObject]) != nil)
@@ -157,6 +157,7 @@ static NSString * const NekoPluginMarkers[] = { @"ACTION:", @"IMAGE:", @"LOOK:",
 	[self checkText:[extends objectForKey:@"Text"]];
 	[self checkCharacters:[extends objectForKey:@"Characters"]];
 	[self checkVerbs:[extends objectForKey:@"Verbs"]];
+	[self checkRoutes:[extends objectForKey:@"Routes"]];
 	[self checkStrings];
 }
 
@@ -213,6 +214,93 @@ static NSString * const NekoPluginMarkers[] = { @"ACTION:", @"IMAGE:", @"LOOK:",
 {
 	return [NSArray arrayWithObjects:@"https:", @"spotify:", @"music:", @"itms:",
 		@"itmss:", @"mailto:", nil];
+}
+
+/* Phrases the plugin wants to hear, and what it wants fetched when it hears one.
+
+   A route is the one thing here that decides what a question is *about*, which is
+   the judgement this application has always kept for itself — so the shape is
+   deliberately narrow. A closed list of phrases, one https address, and what comes
+   back is quoted to a model as somebody else's words and can never become an
+   action. A plugin does not get to write a pattern, a regular expression, or a
+   rule; it gets to say which words it would like to be told about. */
+- (void)checkRoutes:(NSArray *)routes
+{
+	if(routes == nil)
+		return;
+	if(![routes isKindOfClass:[NSArray class]]) {
+		[self refuse:NekoPluginLocalized(@"Its Routes section is not a list.")];
+		return;
+	}
+
+	NSMutableSet *taken = [NSMutableSet set];
+	NSEnumerator *e = [routes objectEnumerator];
+	NSDictionary *route;
+	while((route = [e nextObject]) != nil) {
+		if(![route isKindOfClass:[NSDictionary class]]) {
+			[self refuse:NekoPluginLocalized(@"One of its routes is not a dictionary.")];
+			return;
+		}
+		NSString *word = [route objectForKey:@"Identifier"];
+		if([word length] == 0 || [taken containsObject:word]) {
+			[self refuse:NekoPluginLocalized(@"Each of its routes needs its own Identifier.")];
+			return;
+		}
+		[taken addObject:word];
+
+		NSArray *phrases = [route objectForKey:@"Phrases"];
+		if(![phrases isKindOfClass:[NSArray class]] || [phrases count] == 0) {
+			[self refuse:[NSString stringWithFormat:
+				NekoPluginLocalized(@"The route “%@” lists no Phrases to listen for."), word]];
+			return;
+		}
+		NSEnumerator *p = [phrases objectEnumerator];
+		NSString *phrase;
+		while((phrase = [p nextObject]) != nil) {
+			if(![phrase isKindOfClass:[NSString class]] || [phrase length] < 3) {
+				[self refuse:[NSString stringWithFormat:
+					NekoPluginLocalized(@"The route “%@” has a phrase too short to match on; three letters at least."), word]];
+				return;
+			}
+			if([self carriesAMarker:phrase]) {
+				[self refuse:NekoPluginLocalized(@"One of its routes carries one of Neko’s own markers in a phrase.")];
+				return;
+			}
+		}
+
+		/* Whose words these are. It is shown to the person and given to the model
+		   as the name on the quotation, so a route without one is a route whose
+		   answer nobody can weigh. */
+		NSString *says = [route objectForKey:@"Says"];
+		if([says length] == 0) {
+			[self refuse:[NSString stringWithFormat:
+				NekoPluginLocalized(@"The route “%@” does not say whose words it fetches."), word]];
+			return;
+		}
+		if([self carriesAMarker:says] || [self carriesAMarker:
+		        ([route objectForKey:@"Summary"] ?: @"")]) {
+			[self refuse:NekoPluginLocalized(@"One of its routes carries one of Neko’s own markers in what it says about itself.")];
+			return;
+		}
+
+		if([route objectForKey:@"Program"] != nil) {
+			[self refuse:NekoPluginLocalized(@"One of its routes wants to run a program of its own, which this version does not allow.")];
+			return;
+		}
+
+		NSString *address = [route objectForKey:@"Url"];
+		if([address length] == 0
+		   || ![[address lowercaseString] hasPrefix:@"https://"]) {
+			[self refuse:[NSString stringWithFormat:
+				NekoPluginLocalized(@"The route “%@” needs an https address to fetch."), word]];
+			return;
+		}
+	}
+
+	if([routes count] > 0 && ![self wantsNetwork]) {
+		[self refuse:NekoPluginLocalized(@"It adds routes without asking for the network, so nothing could be fetched.")];
+		return;
+	}
 }
 
 /* Phrases the plugin wants to hear, and what it wants done. */
@@ -481,6 +569,31 @@ static NSString * const NekoPluginMarkers[] = { @"ACTION:", @"IMAGE:", @"LOOK:",
 	return localized;
 }
 
+- (NSArray *)routes
+{
+	if(![self isUsable])
+		return [NSArray array];
+	NSArray *routes = [[manifest objectForKey:@"Extends"] objectForKey:@"Routes"];
+	if(![routes isKindOfClass:[NSArray class]])
+		return [NSArray array];
+
+	NSMutableArray *localized = [NSMutableArray array];
+	NSEnumerator *e = [routes objectEnumerator];
+	NSDictionary *route;
+	while((route = [e nextObject]) != nil) {
+		NSMutableDictionary *one = [NSMutableDictionary dictionaryWithDictionary:route];
+		NSString *says = [route objectForKey:@"Says"];
+		if([says length] > 0)
+			[one setObject:[self localized:says] forKey:@"Says"];
+		NSString *summary = [route objectForKey:@"Summary"];
+		if([summary length] > 0)
+			[one setObject:[self localized:summary] forKey:@"Summary"];
+		[one setObject:[self identifier] forKey:@"Plugin"];
+		[localized addObject:one];
+	}
+	return localized;
+}
+
 - (NSArray *)verbs
 {
 	if(![self isUsable])
@@ -625,6 +738,37 @@ static NSString * const NekoPluginMarkers[] = { @"ACTION:", @"IMAGE:", @"LOOK:",
 	else if(verbs > 1)
 		[parts addObject:[NSString stringWithFormat:
 			NekoPluginLocalized(@"%lu phrases it listens for"), (unsigned long)verbs]];
+
+	NSUInteger routes = [[self routes] count];
+	if(routes == 1)
+		[parts addObject:NekoPluginLocalized(@"1 question it goes and looks up")];
+	else if(routes > 1)
+		[parts addObject:[NSString stringWithFormat:
+			NekoPluginLocalized(@"%lu questions it goes and looks up"),
+			(unsigned long)routes]];
+
+	/* The one thing about a route that a feed never does. The application's own
+	   requests carry no question at all; a route with a %@ in its address carries
+	   part of what somebody said to whoever owns that address, because that is
+	   what looking something up is. It is said here, in the window where somebody
+	   decides whether to trust the folder they just added. */
+	NSMutableSet *hosts = [NSMutableSet set];
+	NSEnumerator *r = [[self routes] objectEnumerator];
+	NSDictionary *route;
+	while((route = [r nextObject]) != nil) {
+		NSString *address = [route objectForKey:@"Url"];
+		if([address rangeOfString:@"%@"].location == NSNotFound)
+			continue;
+		NSString *host = [[NSURL URLWithString:
+			[address stringByReplacingOccurrencesOfString:@"%@" withString:@"x"]] host];
+		if([host length] > 0)
+			[hosts addObject:host];
+	}
+	if([hosts count] > 0)
+		[parts addObject:[NSString stringWithFormat:
+			NekoPluginLocalized(@"sends part of what you say to %@"),
+			[[[hosts allObjects] sortedArrayUsingSelector:@selector(compare:)]
+				componentsJoinedByString:@", "]]];
 
 	if([self text] != nil) {
 		NSString *which = [self processesTextGoing:YES]

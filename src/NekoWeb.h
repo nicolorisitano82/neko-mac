@@ -89,6 +89,13 @@ extern NSString * const NekoWebEnabledKey;
 - (void)weatherFor:(NSString *)place
         completion:(void (^)(NSString *summary, NSError *error))done;
 
+/* The fetching itself, shared with the routes a plugin adds: the same ephemeral
+   session, the same eight seconds, the same request that carries nothing. A
+   plugin never gets either of these — it declares an address in its manifest and
+   the application does the asking. */
+- (void)get:(NSURL *)url completion:(void (^)(NSData *body, NSError *error))done;
+- (NSArray *)headlinesInFeed:(NSData *)body;
+
 /* What goes into the second prompt: the lines, marked as somebody else's
    writing. */
 + (NSString *)blockFrom:(NSString *)what lines:(NSArray *)lines;

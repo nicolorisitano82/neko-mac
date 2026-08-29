@@ -19,7 +19,8 @@ a **separate process** that speaks JSON over a pipe and knows nothing about the
 inside of the app.
 
 Everything in sections 1 to 5 works in Neko 2.5 and later, except verbs
-(section 4c), which need 2.6, and the player door, which needs 2.7. Section 6 is a specification, not a description: a
+(section 4c), which need 2.6, the player door, which needs 2.7, and routes
+(section 4d), which need 2.9. Section 6 is a specification, not a description: a
 manifest that declares it is refused today, with the sentence that says so.
 
 ## 1. The shape of one
@@ -387,6 +388,96 @@ They ship switched off and outside the seeded folder, which is the honest place
 for an example: something to read and copy, not something that starts answering
 for you.
 
+## 4d. Routes — questions you go and look up
+
+A verb does something. A route **answers**: you list phrases, and when one of them
+is heard the application fetches an address you declared and hands what comes back
+to the engine as somebody else's words.
+
+```xml
+<key>Extends</key>
+<dict>
+    <key>Routes</key>
+    <array>
+        <dict>
+            <key>Identifier</key> <string>trains</string>
+            <key>Phrases</key>
+            <array>
+                <string>quando parte il treno per</string>
+                <string>treno per</string>
+            </array>
+            <key>Says</key>       <string>Trenitalia</string>
+            <key>Summary</key>    <string>departures, from the railway's own page</string>
+            <key>Url</key>        <string>https://example.com/trains?to=%@</string>
+        </dict>
+    </array>
+</dict>
+<key>Wants</key>
+<array><string>network</string></array>
+```
+
+### The keys
+
+| key | required | what it is |
+| --- | --- | --- |
+| `Identifier` | yes | one plain word, unique inside your plugin |
+| `Phrases` | yes | the words to listen for, three letters at least each |
+| `Says` | yes | **whose words come back** — the name on the quotation |
+| `Url` | yes | an `https` address; a `%@` in it is filled with the rest of the sentence, percent-encoded |
+| `Summary` | no | one line, shown in the plugins window |
+
+`Says` and `Summary` go through your `*.lproj/plugin.strings` like everything else.
+
+### How it hears, and what it fetches
+
+The matching is the verbs' matching, exactly: whole words, longest phrase first,
+case ignored, and the argument is whatever follows — cut from what was actually
+said, so a station keeps its capital letter. A `Url` with a `%@` in it does not
+match a sentence with nothing after the phrase; one without a `%@` does, which is
+how a question like *"is there a strike on?"* works.
+
+The request is the one the feeds make: one `GET`, eight seconds, an ephemeral
+session, no cookies, no account, and nothing about the question in it. Your server
+sees that somebody fetched a public address.
+
+### What comes back
+
+Parsed as a feed if it is one — RSS or Atom, titles and summaries, up to eight
+lines. Otherwise the text with its tags removed, up to eight lines and 1200
+characters. Nothing here tries to be clever about JSON: **a route that wants to be
+understood publishes something a person could read.**
+
+Then it is quoted to the model under your `Says` name, and the answer is built on
+it. If no engine is configured the lines are simply shown.
+
+### What a route may never do
+
+- **Name an address at fetch time.** It is in your manifest or it does not happen,
+  and nothing that comes back can change where the next request goes.
+- **Cause an action.** What you fetch arrives marked as text from outside, and an
+  answer built on it may not open, copy or move anything, whatever it says. There
+  is a test that stages a reply containing `ACTION: open-app Terminal`.
+- **Run a program.** A `Program` key inside a route is refused, not ignored. That
+  is Interface 2, in section 6, and it is a specification.
+- **Beat the application's own words.** A question about the news is claimed
+  before any plugin is asked.
+
+### Getting it wrong
+
+| what you did | what the panel says |
+| --- | --- |
+| `Routes` not a list | *Its Routes section is not a list.* |
+| a route that is not a dict | *One of its routes is not a dictionary.* |
+| no `Identifier`, or one repeated | *Each of its routes needs its own Identifier.* |
+| no `Phrases` | *The route "trains" lists no Phrases to listen for.* |
+| a phrase of one or two letters | *The route "trains" has a phrase too short to match on; three letters at least.* |
+| a marker in a phrase | *One of its routes carries one of Neko's own markers in a phrase.* |
+| no `Says` | *The route "trains" does not say whose words it fetches.* |
+| a marker in `Says` or `Summary` | *One of its routes carries one of Neko's own markers in what it says about itself.* |
+| a `Program` key | *One of its routes wants to run a program of its own, which this version does not allow.* |
+| no `Url`, or one that is not https | *The route "trains" needs an https address to fetch.* |
+| routes without `Wants = network` | *It adds routes without asking for the network, so nothing could be fetched.* |
+
 ## 5. Getting it wrong: every refusal, and its sentence
 
 The app refuses in sentences rather than codes, and a refused plugin stays in the
@@ -721,6 +812,9 @@ Not a limitation of this version — the design:
 - **the microphone**, the camera, or where the Mac is;
 - **the ability to make the cat speak on its own**, which belongs to the pacing
   the app spent a release getting right;
+- **a rule of its own about what a question means.** A route says which words it
+  would like to hear; the application still decides, in code, and its own words
+  come first.
 - **an action taken on text**, ever — not on text it produced, not on text it
   fetched, not on text the screen contained. That rule has a test that fails if it
   is broken, and the test's staged feed contains `ACTION: open-app Terminal` as a
