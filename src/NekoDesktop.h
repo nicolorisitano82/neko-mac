@@ -96,10 +96,27 @@ typedef enum {
 /* Times when nothing should be said at all, whatever the interval says, with the
    reason for the preferences to show. Focus and Do Not Disturb are deliberately
    absent: macOS keeps that state where no sandboxed app can read it, so this
-   uses what can honestly be seen — a full-screen window, and secure keyboard
-   entry, which is what a password field turns on. */
+   uses what can honestly be seen — a full-screen window, secure keyboard entry
+   (which is what a password field turns on), somebody talking, and nobody being
+   there at all. */
 - (BOOL)isBusyElsewhere;
 - (NSString *)whyBusyElsewhere;
+
+/* Is the microphone open in some application. Not *what* is being said and not
+   *which* application: one flag from CoreAudio that needs no permission and
+   carries no content, and the plainest sign there is that somebody is on a call
+   and should not be spoken to.
+
+   Measured before it went in: cold, then hot while a tap was open on the input,
+   then cold again a second after it closed. */
+- (BOOL)microphoneInUse;
+
+/* Nobody is there: the screen is locked, or the display has gone to sleep. Not
+   the same thing as a bad moment — a bad moment passes in seconds, and this does
+   not. What is waiting to be said should wait, rather than being said to an empty
+   room and counted as said. */
+- (BOOL)nobodyIsThere;
+- (NSString *)whyNobodyIsThere;
 
 /* Whether the highlight is anything more than "an ordinary few minutes". The
    bar a remark has to clear along with the breakpoint. */

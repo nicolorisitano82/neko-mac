@@ -1,4 +1,5 @@
 #import "NekoModelProvider.h"
+#import "NekoStream.h"
 #import "NekoKeychain.h"
 
 static NSString * const NekoModelKey = @"NekoAskModel";
@@ -116,6 +117,69 @@ static const NSTimeInterval NekoModelTimeout = 8.0;
 	[task resume];
 }
 
+/* The same question, a few words at a time. Claude sends one event per delta and
+   the text sits at delta.text; the rest of reading a stream is in NekoStream and
+   is shared with ChatGPT, whose events put it somewhere else entirely. */
+- (void)askQuestion:(NSString *)question
+       instructions:(NSString *)instructions
+            partial:(void (^)(NSString *sofar))partial
+         completion:(void (^)(NSString *answer, NSError *error))completion
+{
+	[self cancel];
+
+	NSString *key = [self apiKey];
+	if([key length] == 0) {
+		completion(nil, [NSError errorWithDomain:NekoAskErrorDomain
+		                                    code:NekoAskErrorNotConfigured
+		                                userInfo:nil]);
+		return;
+	}
+
+	NSDictionary *body = [NSDictionary dictionaryWithObjectsAndKeys:
+		[self model], @"model",
+		[NSNumber numberWithInt:400], @"max_tokens",
+		instructions, @"system",
+		[NSDictionary dictionaryWithObjectsAndKeys:@"low", @"effort", nil], @"output_config",
+		@"default", @"fallbacks",
+		[NSNumber numberWithBool:YES], @"stream",
+		[NSArray arrayWithObject:
+			[NSDictionary dictionaryWithObjectsAndKeys:
+				@"user", @"role", question, @"content", nil]], @"messages",
+		nil];
+
+	NSData *payload = [NSJSONSerialization dataWithJSONObject:body options:0 error:NULL];
+	if(payload == nil) {
+		[self askQuestion:question instructions:instructions completion:completion];
+		return;
+	}
+
+	NSMutableURLRequest *request = [NSMutableURLRequest requestWithURL:
+		[NSURL URLWithString:@"https://api.anthropic.com/v1/messages"]];
+	[request setHTTPMethod:@"POST"];
+	[request setValue:@"application/json" forHTTPHeaderField:@"content-type"];
+	[request setValue:@"text/event-stream" forHTTPHeaderField:@"accept"];
+	[request setValue:key forHTTPHeaderField:@"x-api-key"];
+	[request setValue:@"2023-06-01" forHTTPHeaderField:@"anthropic-version"];
+	[request setValue:@"server-side-fallback-2026-07-01" forHTTPHeaderField:@"anthropic-beta"];
+	[request setHTTPBody:payload];
+
+	stream = [[NekoStream alloc] initWithRequest:request
+	                                     timeout:NekoModelTimeout
+	                                        text:^NSString *(NSDictionary *event) {
+		NSDictionary *delta = [event objectForKey:@"delta"];
+		if(![delta isKindOfClass:[NSDictionary class]])
+			return nil;
+		return [delta objectForKey:@"text"];
+	}
+	                                     partial:partial
+	                                  completion:^(NSString *answer, NSError *error) {
+		[stream release];
+		stream = nil;
+		completion(answer, error);
+	}];
+	[stream start];
+}
+
 - (void)handleData:(NSData *)data response:(NSURLResponse *)response error:(NSError *)error
 {
 	void (^completion)(NSString *, NSError *) = pending;
@@ -176,6 +240,9 @@ static const NSTimeInterval NekoModelTimeout = 8.0;
 
 - (void)cancel
 {
+	[stream cancel];
+	[stream release];
+	stream = nil;
 	[task cancel];
 	[task release];
 	task = nil;

@@ -105,8 +105,11 @@ static const float NekoRowHeight = 86.0f;
 
 	/* The sentence somebody needs while deciding whether to trust a folder they
 	   downloaded, in the place where they are deciding. */
+	/* Forty-eight, not forty. At forty the last line of it was two points short
+	   of fitting, which tests/layout.m had been printing and nobody had been
+	   failing on. */
 	NSTextField *footer = [[[NSTextField alloc] initWithFrame:
-		NSMakeRect(16.0f, 10.0f, NekoPanelWidth - 32.0f, 40.0f)] autorelease];
+		NSMakeRect(16.0f, 6.0f, NekoPanelWidth - 32.0f, 48.0f)] autorelease];
 	[footer setStringValue:NekoPanelLocalized(@"Plugins live in Neko’s own folder in Application Support. Nothing here runs inside Neko, and nothing here can see your diary, your screen, your files or where you are — or make the cat speak on its own.")];
 	[footer setBezeled:NO];
 	[footer setDrawsBackground:NO];
@@ -147,6 +150,24 @@ static const float NekoRowHeight = 86.0f;
 	return label;
 }
 
+/* How tall the sentence under a plugin's name comes out at this width. The same
+   text the row will show, measured with the same font, because a row sized from
+   a guess is a row that clips somebody's summary on the day they write a long
+   one. */
+- (float)heightOfDetailFor:(NekoPlugin *)plugin width:(float)width
+{
+	NSString *what = [plugin isUsable]
+		? [NSString stringWithFormat:@"%@ — %@", [plugin describeWhatItAdds],
+			[[plugin summary] length] > 0 ? [plugin summary]
+				: NekoPanelLocalized(@"no summary")]
+		: [plugin refusal];
+	NSTextField *ruler = [self labelAt:NSMakeRect(0.0f, 0.0f, width, 32.0f)
+	                              text:what small:YES];
+	NSSize needed = [[ruler cell] cellSizeForBounds:
+		NSMakeRect(0.0f, 0.0f, width, 10000.0f)];
+	return MAX(32.0f, needed.height + 1.0f);
+}
+
 - (void)refresh
 {
 	NSEnumerator *old = [[[[rows subviews] copy] autorelease] objectEnumerator];
@@ -157,7 +178,23 @@ static const float NekoRowHeight = 86.0f;
 	NekoPlugins *registry = [NekoPlugins sharedPlugins];
 	NSArray *all = [registry all];
 	float width = NSWidth([rows frame]);
-	float height = MAX((float)[all count] * NekoRowHeight, NSHeight([scroll frame]));
+
+	/* Each row is as tall as its own sentence needs, measured before anything is
+	   drawn. It used to be a fixed height with the detail given 32 points of it,
+	   which was enough for two lines — and a plugin that adds a route says what
+	   it sends off this Mac, which is three. That sentence was being cut in half
+	   by the layout, which is a poor place for a disclosure to end. */
+	NSMutableArray *heights = [NSMutableArray array];
+	float height = 0.0f;
+	NSEnumerator *measuring = [all objectEnumerator];
+	NekoPlugin *measured;
+	while((measured = [measuring nextObject]) != nil) {
+		float needed = [self heightOfDetailFor:measured width:width - 150.0f];
+		float row = MAX(NekoRowHeight, 52.0f + needed + 16.0f);
+		[heights addObject:[NSNumber numberWithFloat:row]];
+		height += row;
+	}
+	height = MAX(height, NSHeight([scroll frame]));
 	[rows setFrame:NSMakeRect(0.0f, 0.0f, width, height)];
 
 	if([all count] == 0) {
@@ -168,10 +205,14 @@ static const float NekoRowHeight = 86.0f;
 	}
 
 	NSUInteger index = 0;
+	float spent = 0.0f;
 	NSEnumerator *e = [all objectEnumerator];
 	NekoPlugin *plugin;
 	while((plugin = [e nextObject]) != nil) {
-		float top = height - (float)index * NekoRowHeight;
+		float top = height - spent;
+		float rowHeight = index < [heights count]
+			? [[heights objectAtIndex:index] floatValue] : NekoRowHeight;
+		spent += rowHeight;
 		index++;
 
 		NSTextField *title = [self labelAt:NSMakeRect(8.0f, top - 22.0f, width - 150.0f, 18.0f)
@@ -190,7 +231,9 @@ static const float NekoRowHeight = 86.0f;
 				[[plugin summary] length] > 0 ? [plugin summary]
 					: NekoPanelLocalized(@"no summary")]
 			: [plugin refusal];
-		NSTextField *detail = [self labelAt:NSMakeRect(8.0f, top - 74.0f, width - 150.0f, 32.0f)
+		float detailHeight = [self heightOfDetailFor:plugin width:width - 150.0f];
+		NSTextField *detail = [self labelAt:
+			NSMakeRect(8.0f, top - 42.0f - detailHeight, width - 150.0f, detailHeight)
 		                               text:what small:YES];
 		if(![plugin isUsable])
 			[detail setTextColor:[NSColor systemRedColor]];

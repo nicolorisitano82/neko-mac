@@ -126,7 +126,7 @@ necessarily sends part of what somebody said to whoever owns that address. It is
 disclosed in the plugins window, with the host named, from the manifest rather
 than from anything the plugin claims about itself.
 
-## 4. Perceiving without reading
+## 4. Perceiving without reading ✅ *first slice shipped after 2.9*
 
 The rule stands and is not up for negotiation: **nothing read from the screen ever
 becomes something the Mac does**, and remote engines never see the screen, the
@@ -139,15 +139,66 @@ day. `NekoDesktop` already uses some of it for the seams. More of it makes the
 is the whole difference between an animal that seems attentive and one that seems
 intrusive.
 
-**Cost**: small. **Risk**: the temptation to creep from "which application" toward
-"what is in it". The line is in the code and in `tests/screen.m`; it does not move.
+**What went in**: three more flags, each a counter or a boolean and none of them
+content — the microphone being open somewhere, the screen being locked or
+somebody else being at the console, and the display being asleep. All three are
+readable from inside the sandbox, none prompts for anything, and two hundred
+samples of two of them cost 0.02 ms each.
 
-## 5. Latency, which is felt as intelligence
+Two things worth recording:
 
-The answer arrives all at once. Streaming it into the bubble as it comes changes
-how clever the thing feels more than any change of model would, and it costs
-nothing but plumbing. The pacing work of 2.1 and 2.2 already decided how fast it
-may speak; this is about when it *starts*.
+- **A signal that is always "no" is not a signal.** The microphone flag was
+  watched going cold, hot while a tap was open on the input, and cold again.
+  `tests/senses.m` still does that, every run.
+- **The cat's own microphone had to be excluded.** The wake word holds the input
+  open for as long as it is switched on, so without that exception the flag would
+  have been stuck at *"somebody is talking"* whenever Neko was listening for its
+  name — silencing the cat permanently, and looking like a different bug
+  entirely.
+
+And one thing it changed elsewhere: **nobody being there is not a bad moment, it
+is no moment.** A bad moment passes in seconds and is worth sitting out for eight;
+a locked screen does not pass at all, so a timer that lands against one waits for
+somebody to come back — for an hour, after which what it was going to say is no
+longer news. Saying it to an empty room and counting it as said is the one way a
+timer can fail silently.
+
+**Risk**: the temptation to creep from "which application" toward "what is in it".
+The line is in the code and in `tests/screen.m`; it does not move.
+
+## 5. Latency, which is felt as intelligence ✅ *shipped after 2.9 — and half of it already existed*
+
+This section said the answer arrives all at once. **For the two local engines it
+did not**: `NekoAsk` had streamed since the optional method went into the provider
+protocol, and Apple's model and the local GGUF both implemented it. Reading the
+code before writing any is what found that, and it is the second time in this
+document that a section described the application as it was imagined rather than
+as it is.
+
+What was actually missing was the half where it matters most:
+
+- **The two remote engines did not stream at all.** ChatGPT and Claude are the two
+  that go over a network — the two where somebody waits — and they were the two
+  that made you wait for the whole answer. Both speak server-sent events; the
+  formats differ only in where the text sits inside each event, so the reading is
+  one shared piece (`NekoStream`) and the difference is one block each.
+- **Two of the three paths did not stream either**, and they were the slow ones: a
+  question answered after fetching the news, and one answered after a plugin's
+  route. Both fetch first and only then start thinking, so they are exactly where
+  the first words landing early is worth the most. There is one method now and all
+  three doors go through it.
+
+**How it was measured.** Not by calling either service: an API call costs the
+person running the suite money and would tie the harness to somebody else's
+uptime. `tests/stream.m` feeds bytes instead — split mid-word, split between the
+two bytes of an accented character, with keep-alives and rubbish in between, and
+with an error body instead of a stream — and checks that all-at-once and
+one-byte-at-a-time end in the same sentence. Those are the things that actually go
+wrong when reading one of these.
+
+**What was left alone**: when the cat starts *speaking*. The pacing of 2.1 and 2.2
+is measured and delicate, and starting the voice on a half-finished sentence is a
+different feature with a different risk. This is about when the words appear.
 
 ## What not to do
 
@@ -161,7 +212,23 @@ may speak; this is about when it *starts*.
 
 ## The open bug, and the one that turned out to be elsewhere
 
-1. **The folder handover refused in silence** — fixed in 2.9, and worth recording
+1. **Synonyms in the diary recall** — still open, and now with two measured dead
+   ends written down so nobody spends the afternoon on either. `NLEmbedding`'s
+   word neighbours: no threshold exists, because *gatto↔cane* (0.660) is closer
+   than *versione↔release* (0.922) — distributional similarity is not synonymy.
+   The system dictionary: reachable from inside the sandbox, which is worth
+   knowing, but it answers with definitions, and the Italian entry for
+   *impostazione* opens on its architectural sense. The table is in
+   `NekoRecall.h`.
+
+   The idea worth trying next is **the person's own diary as the source**: words
+   that turn up in the same lines are related in their vocabulary, and an
+   expansion drawn from what somebody actually wrote cannot import a concept from
+   outside it. It needs a real month of diary to measure, and measuring it against
+   a corpus written for the purpose would prove nothing — that is the shape of
+   passing for the wrong reason this project keeps catching itself in.
+
+2. **The folder handover refused in silence** — fixed in 2.9, and worth recording
    because the diagnosis in section 0 was wrong and the measurement found the real
    thing next door. Choosing a folder that is not the one asked for was refused by
    returning `NO`, and all three callers ignored the answer. Nothing appeared,
@@ -169,7 +236,7 @@ may speak; this is about when it *starts*.
    as reported, and nothing to do with the panel being modal. It says which folder
    it got and which it wanted now, in the bubble, in the menu and in the settings
    window.
-2. ~~**`tests/persona.m` has one check that can fail without a defect.**~~ Fixed
+3. ~~**`tests/persona.m` has one check that can fail without a defect.**~~ Fixed
    while building §1: it asserts the trimming, which is ours and deterministic,
    and reports how often the engine needed trimming as information rather than as
    a verdict. What follows is what it used to say. *"And still
@@ -179,9 +246,13 @@ may speak; this is about when it *starts*.
    check that fails for reasons that are not defects teaches people to ignore the
    suite, and this one should either assert the **trimming** (which is ours and
    deterministic) or be marked as not measured.
-3. **The plugins window is not covered by `tests/layout.m`**, which is the harness
-   that opens every tab and checks every pair of controls. It was left out
-   deliberately when the window was new; it is not new any more.
+4. ~~**The plugins window is not covered by `tests/layout.m`.**~~ Covered now, and
+   it found three clipped paragraphs the first time it ran — one of them the
+   sentence saying what a plugin sends off this Mac, cut off after a line and a
+   half. Rows measure their own text now instead of being a fixed height, and the
+   harness **counts** a clipped paragraph instead of printing one: it had been
+   printing that complaint about the Permissions tab for some time, and a
+   complaint nobody fails on is a comment.
 
 The lesson is the one this project keeps relearning and keeps writing down: a
 defect that is obvious from reading the code is a hypothesis, and the measurement

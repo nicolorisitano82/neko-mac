@@ -2,6 +2,7 @@
 #import "NekoWhen.h"
 #import "NekoAsk.h"
 #import "NekoMemory.h"
+#import "NekoDesktop.h"
 
 NSString * const NekoTimerDidChangeNotification = @"NekoTimerDidChange";
 
@@ -17,6 +18,10 @@ NSString * const NekoTimerDidChangeNotification = @"NekoTimerDidChange";
    what most bad moments are, and short enough that nobody is misled. */
 static const NSTimeInterval NekoTimerPatience = 8.0;
 static const NSTimeInterval NekoTimerRetry = 2.0;
+
+/* And how long it will wait for somebody to come back to a locked screen. An
+   hour, after which what it was going to say is no longer news. */
+static const NSTimeInterval NekoTimerWaitsForYou = 3600.0;
 
 /* The words that turn a duration into a request. Without one of these "ho dormito
    otto ore" would set a timer for eight hours. */
@@ -97,19 +102,36 @@ static BOOL NekoAsksForATimer(NSString *question)
 		[NekoWhen describe:seconds], [NekoWhen clockTimeIn:seconds]];
 }
 
+/* Come back in a moment and see whether it is a better one. */
+- (void)scheduleAnotherLook
+{
+	[ticking release];
+	ticking = [[NSTimer scheduledTimerWithTimeInterval:NekoTimerRetry
+	                                           target:self
+	                                         selector:@selector(landed:)
+	                                         userInfo:nil
+	                                          repeats:NO] retain];
+	[[NSRunLoop currentRunLoop] addTimer:ticking forMode:NSRunLoopCommonModes];
+}
+
 - (void)landed:(NSTimer *)which
 {
 	/* A bad moment is worth waiting through, and not worth waiting through for
 	   ever: somebody asked to be told. */
+	/* Nobody there is not a bad moment; it is no moment. A bad moment passes in
+	   seconds and is worth sitting out for eight; a locked screen does not pass at
+	   all, and saying it to an empty room and counting it as said is the one way
+	   a timer can fail silently. So it waits — for an hour, after which the thing
+	   it was going to say is no longer news. */
+	if([[NekoDesktop sharedDesktop] nobodyIsThere]
+	   && -[landsAt timeIntervalSinceNow] < NekoTimerWaitsForYou) {
+		[self scheduleAnotherLook];
+		return;
+	}
+
 	if(![NekoAsk mayInterruptNow] && putOff * NekoTimerRetry < NekoTimerPatience) {
 		putOff++;
-		[ticking release];
-		ticking = [[NSTimer scheduledTimerWithTimeInterval:NekoTimerRetry
-		                                           target:self
-		                                         selector:@selector(landed:)
-		                                         userInfo:nil
-		                                          repeats:NO] retain];
-		[[NSRunLoop currentRunLoop] addTimer:ticking forMode:NSRunLoopCommonModes];
+		[self scheduleAnotherLook];
 		return;
 	}
 

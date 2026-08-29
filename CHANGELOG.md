@@ -1,5 +1,96 @@
 # Changelog
 
+## 2.10 — 2026-08-29
+
+### It can tell more about your day, still without reading any of it
+
+Three more signals, each a counter or a flag rather than anything anybody wrote:
+**the microphone is open somewhere**, **the screen is locked** or somebody else is
+at the console, and **the display is asleep**. All three are readable from inside
+the sandbox, none of them prompts for anything, and two hundred samples of two of
+them cost 0.02 ms each.
+
+The microphone one is the plainest sign there is that somebody is on a call, and
+it is one CoreAudio flag on the device — not what is being said, and not by which
+application.
+
+Two things the measuring decided:
+
+- **A signal that is always "no" is not a signal.** The flag was watched going
+  cold, hot while a tap was open on the input, and cold again. `tests/senses.m`
+  does that on every run rather than trusting it once.
+- **The cat's own microphone had to be excluded.** The wake word holds the input
+  open for as long as it is switched on, so without that exception the flag would
+  have been stuck at *somebody is talking* whenever Neko was listening for its
+  name — silencing it permanently, and looking like a different bug entirely.
+
+And a consequence elsewhere: **nobody being there is not a bad moment, it is no
+moment.** A bad moment passes in seconds and is worth sitting out for eight; a
+locked screen does not pass at all. A timer that lands against one now waits for
+somebody to come back — for an hour, after which what it was going to say is no
+longer news. Saying it to an empty room and counting it as said is the one way a
+timer can fail silently.
+
+### The answer arrives while it is being written
+
+ChatGPT and Claude are the two engines that go over a network, so they are the two
+where somebody waits — and they were the two that made you wait for the whole
+answer before showing any of it. Both speak server-sent events now. The local
+engines had been streaming all along.
+
+Two of the three paths through the asking did not stream either, and they were the
+slowest ones: a question answered after fetching the news, and one answered after
+a plugin's route. Both fetch something first and only then start thinking, which is
+exactly where the first words landing early are worth the most. There is one
+method now and all three doors go through it.
+
+Measured without calling either service — an API call costs the person running the
+suite money and would tie the harness to somebody else's uptime. `tests/stream.m`
+feeds bytes instead: split mid-word, split between the two bytes of an accented
+character, with keep-alives and rubbish in between, and with an error body instead
+of a stream. It also checks that all-at-once and one-byte-at-a-time end in the same
+sentence, which is the whole promise.
+
+When the cat starts *speaking* is deliberately unchanged: the pacing of 2.1 and
+2.2 is measured and delicate, and starting the voice on a half-finished sentence is
+a different feature with a different risk.
+
+### The plugins window was clipping the sentence about what a plugin sends out
+
+`tests/layout.m` covers that window now. It was left out when the window was new in
+2.5 and has not been new for some time, and it found three clipped paragraphs the
+first time it ran.
+
+The one that matters: a plugin with a route says what it adds and then names the
+host it sends part of what you say to — and that sentence was being cut off after a
+line and a half, because a row was a fixed 86 points with 32 of them given to the
+detail. A disclosure is a poor thing to end mid-word. Rows measure their own text
+now, at the width they will be drawn at, in one method that both the sizing and the
+drawing call so they cannot drift apart.
+
+And the harness was wrong in the way that matters most here: it **printed** a
+clipped paragraph and did not **count** it, so it had been reporting one about the
+Permissions tab for some time while exiting zero. A complaint nobody fails on is a
+comment.
+
+### Synonyms in the diary recall: two dead ends, written down
+
+Nothing shipped, which is the point. Asked about *impostazioni* the recall still
+does not find *preferenze*, and the two obvious fixes were measured rather than
+argued about:
+
+- **`NLEmbedding`'s word neighbours.** There is no threshold: *gatto ↔ cane* is
+  0.660 and *versione ↔ release* is 0.922, so two different animals sit closer
+  together than two words for the same thing. Distributional similarity means
+  "turns up in the same sort of sentence", which is why, and it is not synonymy.
+- **The system dictionary.** `DCSCopyTextDefinition` is reachable from inside the
+  sandbox — worth knowing on its own — but it answers with a definition, and the
+  Italian entry for *impostazione* opens on its architectural sense.
+
+Both tables are in `NekoRecall.h` so the next person tries something else. The idea
+left is the person's own diary as the source, which needs a real month to measure
+and is not in here on a hunch.
+
 ## 2.9 — 2026-08-29
 
 ### The diary is searched by what a question is about

@@ -12,6 +12,7 @@
 {
 	NSURLSessionDataTask *task;
 	void (^pending)(NSString *, NSError *);
+	id stream;                   /* a NekoStream while one is in flight */
 }
 
 /* Stored in the Keychain. Pass nil to forget it. */

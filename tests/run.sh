@@ -64,8 +64,16 @@ for HARNESS in tests/*.m; do
 		-framework Cocoa -framework ServiceManagement -framework Carbon \
 		-framework Security -framework AVFoundation -framework NaturalLanguage \
 		-framework IOKit -framework CoreLocation -framework FoundationModels \
+		-framework CoreAudio \
 		-Xlinker -weak_framework -Xlinker Speech \
-		-o "$APP/Contents/MacOS/neko-test" 2>/dev/null
+		-o "$APP/Contents/MacOS/neko-test" || {
+		# Not 2>/dev/null. A link error used to disappear here and the script
+		# simply stopped, printing nothing after "compiling" — which reads as a
+		# hang rather than as the missing framework it was.
+		echo "could not link $NAME — see the error above" >&2
+		FAILED="$FAILED $NAME"
+		continue
+	}
 	codesign --sign - --force "$APP/Contents/MacOS/neko-test" 2>/dev/null
 
 	echo ""
