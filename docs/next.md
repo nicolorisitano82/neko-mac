@@ -7,11 +7,14 @@ list: what the leverage is, what it costs, and how each one would be measured.
 Two things were checked before any of it was written down, because a plan built on
 a guess about your own code is worth nothing:
 
-- **`NekoFolderAccess` still opens its panel app-modally** (`runModal`,
-  [`NekoFolderAccess.m`](../src/NekoFolderAccess.m)). That is the shape that made
-  2.5's Add button appear to do nothing — an app-modal panel from an application
-  with no Dock icon opens behind whatever somebody is looking at. There is an old
-  *"does nothing"* report against the folder handover that was never closed.
+- **`NekoFolderAccess` opens its panel app-modally** (`runModal`,
+  [`NekoFolderAccess.m`](../src/NekoFolderAccess.m)) — which is the shape that made
+  2.5's Add button appear to do nothing, so it was written down here as a bug.
+  **It is not one.** Measured immediately afterwards, in the real bundle and on
+  both paths — the method called directly, and somebody pressing Yes in the bubble
+  — the panel comes up visible, key, on the active space, with the application
+  frontmost. The `activateIgnoringOtherApps:` that precedes it is doing its job.
+  What *was* broken is in the next line.
 - **The diary is recalled by recency, not by relevance.** `contextForPrompt`,
   `durableLines`, `standingLines`. There is nothing that answers *"what did I say
   about X"*.
@@ -142,10 +145,29 @@ may speak; this is about when it *starts*.
   is the one line this application has never crossed, and it is why the rest of it
   is allowed to be this close to somebody's day.
 
-## The two open bugs, which come before any of it
+## The open bug, and the one that turned out to be elsewhere
 
-1. **The folder handover panel** — section 0. Promised as *measured, then fixed*,
-   twice, and still `runModal`.
-2. **The plugins window is not covered by `tests/layout.m`**, which is the harness
+1. **The folder handover refused in silence** — fixed in 2.9, and worth recording
+   because the diagnosis in section 0 was wrong and the measurement found the real
+   thing next door. Choosing a folder that is not the one asked for was refused by
+   returning `NO`, and all three callers ignored the answer. Nothing appeared,
+   nothing was said, and the folder was not handed over: *"does nothing"*, exactly
+   as reported, and nothing to do with the panel being modal. It says which folder
+   it got and which it wanted now, in the bubble, in the menu and in the settings
+   window.
+2. **`tests/persona.m` has one check that can fail without a defect.** *"And still
+   opens with the answer"* counts replies that began with flattery — which is a
+   thing the engine does or does not do on the day, not a thing this code decides.
+   It failed once during 2.9 and passed on the next run with nothing changed. A
+   check that fails for reasons that are not defects teaches people to ignore the
+   suite, and this one should either assert the **trimming** (which is ours and
+   deterministic) or be marked as not measured.
+3. **The plugins window is not covered by `tests/layout.m`**, which is the harness
    that opens every tab and checks every pair of controls. It was left out
    deliberately when the window was new; it is not new any more.
+
+The lesson is the one this project keeps relearning and keeps writing down: a
+defect that is obvious from reading the code is a hypothesis, and the measurement
+is what says whether it is the one somebody is actually hitting. Two of the three
+"the button does nothing" reports in this application had a cause other than the
+first plausible one.
