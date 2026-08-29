@@ -958,12 +958,26 @@ static const NSTimeInterval NekoHoldToType = 0.5;
 			[self failed:error];
 	};
 
+	[self ask:question of:provider with:instructions then:finished];
+}
+
+/* Every question goes through here, whichever door it came in by, so that a
+   question answered after a look at the news or at a plugin's route reads as
+   quickly as one answered straight away. Those two used to wait for the whole
+   answer — which is precisely backwards, since they are the slowest paths in the
+   application: they fetch something first and only then start thinking. */
+- (void)ask:(NSString *)question
+         of:(id<NekoAnswerProvider>)provider
+       with:(NSString *)instructions
+       then:(void (^)(NSString *answer, NSError *error))finished
+{
 	/* Streaming when the provider can: the first words land in about half a
 	   second, which reads as quick even though the whole answer takes longer.
 	   The bubble is only redrawn ten times a second — the model produces
 	   snapshots far faster than that, and resizing a window on every one of
 	   them looks like a stutter. */
 	if([provider respondsToSelector:@selector(askQuestion:instructions:partial:completion:)]) {
+		[lastDrawn release];
 		lastDrawn = nil;
 		[provider askQuestion:question
 		        instructions:instructions
@@ -1025,9 +1039,8 @@ static const NSTimeInterval NekoHoldToType = 0.5;
 		[self startThinkingAbout:asked ?: says];
 		NSString *instructions = [[self instructionsForAsking]
 			stringByAppendingString:[NekoWeb blockFrom:says lines:lines]];
-		[provider askQuestion:(asked ?: says)
-		         instructions:instructions
-		           completion:^(NSString *answer, NSError *whyNot) {
+		[self ask:(asked ?: says) of:provider with:instructions
+		     then:^(NSString *answer, NSError *whyNot) {
 			[self stopThinking];
 			if([answer length] > 0)
 				[self answer:answer];
@@ -1106,9 +1119,8 @@ static const NSTimeInterval NekoHoldToType = 0.5;
 		[self startThinkingAbout:asked ?: [source name]];
 		NSString *instructions = [[self instructionsForAsking]
 			stringByAppendingString:[NekoWeb blockFrom:[source name] lines:headlines]];
-		[provider askQuestion:(asked ?: [source name])
-		         instructions:instructions
-		           completion:^(NSString *answer, NSError *whyNot) {
+		[self ask:(asked ?: [source name]) of:provider with:instructions
+		     then:^(NSString *answer, NSError *whyNot) {
 			[self stopThinking];
 			if([answer length] > 0)
 				[self answer:answer];

@@ -166,12 +166,39 @@ timer can fail silently.
 **Risk**: the temptation to creep from "which application" toward "what is in it".
 The line is in the code and in `tests/screen.m`; it does not move.
 
-## 5. Latency, which is felt as intelligence
+## 5. Latency, which is felt as intelligence ✅ *shipped after 2.9 — and half of it already existed*
 
-The answer arrives all at once. Streaming it into the bubble as it comes changes
-how clever the thing feels more than any change of model would, and it costs
-nothing but plumbing. The pacing work of 2.1 and 2.2 already decided how fast it
-may speak; this is about when it *starts*.
+This section said the answer arrives all at once. **For the two local engines it
+did not**: `NekoAsk` had streamed since the optional method went into the provider
+protocol, and Apple's model and the local GGUF both implemented it. Reading the
+code before writing any is what found that, and it is the second time in this
+document that a section described the application as it was imagined rather than
+as it is.
+
+What was actually missing was the half where it matters most:
+
+- **The two remote engines did not stream at all.** ChatGPT and Claude are the two
+  that go over a network — the two where somebody waits — and they were the two
+  that made you wait for the whole answer. Both speak server-sent events; the
+  formats differ only in where the text sits inside each event, so the reading is
+  one shared piece (`NekoStream`) and the difference is one block each.
+- **Two of the three paths did not stream either**, and they were the slow ones: a
+  question answered after fetching the news, and one answered after a plugin's
+  route. Both fetch first and only then start thinking, so they are exactly where
+  the first words landing early is worth the most. There is one method now and all
+  three doors go through it.
+
+**How it was measured.** Not by calling either service: an API call costs the
+person running the suite money and would tie the harness to somebody else's
+uptime. `tests/stream.m` feeds bytes instead — split mid-word, split between the
+two bytes of an accented character, with keep-alives and rubbish in between, and
+with an error body instead of a stream — and checks that all-at-once and
+one-byte-at-a-time end in the same sentence. Those are the things that actually go
+wrong when reading one of these.
+
+**What was left alone**: when the cat starts *speaking*. The pacing of 2.1 and 2.2
+is measured and delicate, and starting the voice on a half-finished sentence is a
+different feature with a different risk. This is about when the words appear.
 
 ## What not to do
 

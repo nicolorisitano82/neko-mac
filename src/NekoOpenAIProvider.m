@@ -1,4 +1,5 @@
 #import "NekoOpenAIProvider.h"
+#import "NekoStream.h"
 #import "NekoKeychain.h"
 
 static NSString * const NekoOpenAIModelKey = @"NekoAskOpenAIModel";
@@ -104,6 +105,63 @@ static const NSTimeInterval NekoOpenAITimeout = 8.0;
 	[task resume];
 }
 
+/* The same question, answered a few words at a time. ChatGPT sends
+   {"choices":[{"delta":{"content":"..."}}]} per event and closes with [DONE];
+   everything else about reading that is in NekoStream and is shared with Claude. */
+- (void)askQuestion:(NSString *)question
+       instructions:(NSString *)instructions
+            partial:(void (^)(NSString *sofar))partial
+         completion:(void (^)(NSString *answer, NSError *error))completion
+{
+	[self cancel];
+
+	NSString *key = [NekoKeychain secretForAccount:NekoOpenAIAccount];
+	if([key length] == 0) {
+		completion(nil, [NSError errorWithDomain:NekoAskErrorDomain
+		                                    code:NekoAskErrorNotConfigured
+		                                userInfo:nil]);
+		return;
+	}
+
+	NSArray *messages = [NSArray arrayWithObjects:
+		[NSDictionary dictionaryWithObjectsAndKeys:
+			@"system", @"role", instructions, @"content", nil],
+		[NSDictionary dictionaryWithObjectsAndKeys:
+			@"user", @"role", question, @"content", nil], nil];
+	NSDictionary *body = [NSDictionary dictionaryWithObjectsAndKeys:
+		[self model], @"model", messages, @"messages",
+		[NSNumber numberWithBool:YES], @"stream", nil];
+
+	NSData *payload = [NSJSONSerialization dataWithJSONObject:body options:0 error:NULL];
+	if(payload == nil) {
+		[self askQuestion:question instructions:instructions completion:completion];
+		return;
+	}
+
+	NSMutableURLRequest *request = [NSMutableURLRequest requestWithURL:
+		[NSURL URLWithString:@"https://api.openai.com/v1/chat/completions"]];
+	[request setHTTPMethod:@"POST"];
+	[request setValue:@"application/json" forHTTPHeaderField:@"content-type"];
+	[request setValue:@"text/event-stream" forHTTPHeaderField:@"accept"];
+	[request setValue:[NSString stringWithFormat:@"Bearer %@", key]
+	   forHTTPHeaderField:@"authorization"];
+	[request setHTTPBody:payload];
+
+	stream = [[NekoStream alloc] initWithRequest:request
+	                                     timeout:NekoOpenAITimeout
+	                                        text:^NSString *(NSDictionary *event) {
+		return [[[[event objectForKey:@"choices"] lastObject]
+			objectForKey:@"delta"] objectForKey:@"content"];
+	}
+	                                     partial:partial
+	                                  completion:^(NSString *answer, NSError *error) {
+		[stream release];
+		stream = nil;
+		completion(answer, error);
+	}];
+	[stream start];
+}
+
 - (void)handleData:(NSData *)data response:(NSURLResponse *)response error:(NSError *)error
 {
 	void (^completion)(NSString *, NSError *) = pending;
@@ -146,6 +204,9 @@ static const NSTimeInterval NekoOpenAITimeout = 8.0;
 
 - (void)cancel
 {
+	[stream cancel];
+	[stream release];
+	stream = nil;
 	[task cancel];
 	[task release];
 	task = nil;
