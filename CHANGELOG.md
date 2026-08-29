@@ -1,6 +1,6 @@
 # Changelog
 
-## 2.10 — 2026-08-29
+## 2.10 — 2026-08-30
 
 ### It can tell more about your day, still without reading any of it
 
