@@ -64,6 +64,10 @@ extern const NSInteger NekoPluginInterface;
    in this app is read back before it happens. */
 - (NSArray *)verbs;
 
+/* Phrases it would like to be told about, each with one https address to fetch
+   and the name of whoever wrote what comes back. */
+- (NSArray *)routes;
+
 /* Character folders the plugin ships, as absolute paths. A character is images
    and a manifest, so this needs nothing but disk. */
 - (NSArray *)characterPaths;

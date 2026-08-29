@@ -469,3 +469,25 @@
 "macOS did not hand your %@ folder over: %@" = "macOS no me entregó tu carpeta %@: %@";
 "no reason given" = "sin decir por qué";
 "That folder was not the one I asked for." = "Esa carpeta no era la que pedí.";
+
+/* the timer */
+"Timer off." = "Temporizador quitado.";
+"%@: I will tell you at %@." = "%@: te aviso a las %@.";
+"The %@ are up." = "Han pasado %@.";
+"Timer — %@ left" = "Temporizador — quedan %@";
+
+/* routes: questions a plugin asked to go and look up */
+"Its Routes section is not a list." = "Su sección Routes no es una lista.";
+"One of its routes is not a dictionary." = "Una de sus rutas no es un diccionario.";
+"Each of its routes needs its own Identifier." = "Cada una de sus rutas necesita su propio Identifier.";
+"The route “%@” lists no Phrases to listen for." = "La ruta «%@» no enumera ninguna frase que escuchar.";
+"The route “%@” has a phrase too short to match on; three letters at least." = "La ruta «%@» tiene una frase demasiado corta para reconocerla; tres letras al menos.";
+"One of its routes carries one of Neko’s own markers in a phrase." = "Una de sus rutas lleva en una frase uno de los marcadores de Neko.";
+"The route “%@” does not say whose words it fetches." = "La ruta «%@» no dice de quién son las palabras que descarga.";
+"One of its routes carries one of Neko’s own markers in what it says about itself." = "Una de sus rutas lleva uno de los marcadores de Neko en lo que dice de sí misma.";
+"One of its routes wants to run a program of its own, which this version does not allow." = "Una de sus rutas quiere ejecutar un programa propio, y esta versión no lo permite.";
+"The route “%@” needs an https address to fetch." = "La ruta «%@» necesita una dirección https que descargar.";
+"It adds routes without asking for the network, so nothing could be fetched." = "Añade rutas sin pedir la red, así que no se podría descargar nada.";
+"1 question it goes and looks up" = "1 pregunta que va a buscar";
+"%lu questions it goes and looks up" = "%lu preguntas que va a buscar";
+"sends part of what you say to %@" = "envía parte de lo que dices a %@";

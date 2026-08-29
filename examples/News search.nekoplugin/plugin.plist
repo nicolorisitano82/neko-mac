@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>Author</key>
+	<string>an example, shipped with Neko</string>
+	<key>Extends</key>
+	<dict>
+		<key>Routes</key>
+		<array>
+			<dict>
+				<key>Identifier</key>
+				<string>search</string>
+				<key>Phrases</key>
+				<array>
+					<string>notizie su</string>
+					<string>cerca notizie su</string>
+					<string>che si dice di</string>
+					<string>news about</string>
+					<string>search news for</string>
+					<string>nouvelles sur</string>
+					<string>noticias sobre</string>
+				</array>
+				<key>Says</key>
+				<string>Google News</string>
+				<key>Summary</key>
+				<string>headlines about whatever you named</string>
+				<key>Url</key>
+				<string>https://news.google.com/rss/search?q=%@&amp;hl=it&amp;gl=IT&amp;ceid=IT:it</string>
+			</dict>
+		</array>
+	</dict>
+	<key>Identifier</key>
+	<string>com.example.newssearch</string>
+	<key>Interface</key>
+	<integer>1</integer>
+	<key>License</key>
+	<string>public domain</string>
+	<key>MinimumApp</key>
+	<string>2.9</string>
+	<key>Name</key>
+	<string>News search</string>
+	<key>Summary</key>
+	<string>Asks Google News for headlines about whatever you named. Unlike Neko's own feeds, a search carries your words to Google — that is what searching is, and the plugins window says so.</string>
+	<key>Version</key>
+	<string>1.0</string>
+	<key>Wants</key>
+	<array>
+		<string>network</string>
+	</array>
+</dict>
+</plist>

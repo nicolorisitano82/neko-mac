@@ -36,7 +36,7 @@ intelligence is not in the engine.**
 So a bigger model and a longer prompt are not the road. The two things that are:
 **knowing about the person**, and **never having to guess**.
 
-## 1. Memory that recalls by relevance
+## 1. Memory that recalls by relevance ✅ *shipped in 2.9 — and the plan here was wrong*
 
 **The biggest lever, and the one most in character.**
 
@@ -44,11 +44,15 @@ Today the diary reaches the prompt by recency. A question about something decide
 three weeks ago does not find it, however well it was written down. Distillation
 keeps the month from growing without bound, and that is not the same as recall.
 
-What to build: an embedding per diary line, and a recall that returns *the lines
-that bear on this question* instead of *the last N*. `NLEmbedding` is on the
-machine already — on-device, no network, no permission, no download. The diary
-never leaves the Mac, which is the rule that makes this feature allowed to exist at
-all.
+What was built is the second half of that: a recall that returns *the lines that
+bear on this question* instead of *the last N*.
+
+**Not the first half.** This section said to use `NLEmbedding`, and measuring it
+first — which is the only reason anybody found out — put it at 5 of 10 against 8
+of 10 for counting lemmas, at twenty times the cost and 3.7 MB on disk. The table
+is in `NekoRecall.h` and in 2.9's changelog. What does the work is lemmas, word
+class and rarity, all from `NLTagger`, in four languages, with nothing stored
+beside the diary.
 
 The distinction worth drawing at the same time, because it is what makes an
 assistant feel like it knows somebody:
@@ -74,7 +78,7 @@ of confidently wrong answer.
 
 What belongs on it, in order:
 
-1. **A timer.** Studied in [utilities.md](utilities.md) and never built. It is the
+1. ~~**A timer.**~~ **Shipped in 2.9.** Studied in [utilities.md](utilities.md) and, until then, never built. It is the
    one utility on that list where this application is genuinely **better than the
    system**: a bubble that follows you across Spaces, from something that walks
    over and sits down to tell you. No permission, no framework, and the
@@ -93,7 +97,7 @@ missed timer; it is a timer nobody asked for.
 **Cost**: the timer is half a day. **Risk**: low, and it is the item somebody
 notices the same afternoon.
 
-## 3. Routes — the missing half of the plugin interface
+## 3. Routes — the missing half of the plugin interface ✅ *shipped in 2.9*
 
 A plugin can *be* things (feeds, characters, translations, a text filter) and, since
 2.6, *do* things (verbs). It cannot **answer**.
@@ -109,8 +113,18 @@ that a phrase was said. A route decides what a question is about.** That is the
 judgement this application has always kept for itself, so the shape has to be
 narrow — a closed pattern, not a plugin-supplied guess.
 
-**Cost**: the largest item here. **Risk**: the design risk of the whole plugin
-system in one slice.
+**What it cost, now that it is built**: less than this section feared, because
+the shape got narrower rather than wider. The sketch in plugins.md had a `Match`
+with words and a language and a `Do` with three choices; what shipped has phrases
+and one https address, and the matcher is the verbs' matcher, extracted rather
+than rewritten.
+
+**And one thing this section did not foresee**, which turned out to be the most
+important sentence in the feature: *a route carries your words*. The application's
+own feed requests carry no question at all; a route with a `%@` in its address
+necessarily sends part of what somebody said to whoever owns that address. It is
+disclosed in the plugins window, with the host named, from the manifest rather
+than from anything the plugin claims about itself.
 
 ## 4. Perceiving without reading
 
@@ -155,7 +169,10 @@ may speak; this is about when it *starts*.
    as reported, and nothing to do with the panel being modal. It says which folder
    it got and which it wanted now, in the bubble, in the menu and in the settings
    window.
-2. **`tests/persona.m` has one check that can fail without a defect.** *"And still
+2. ~~**`tests/persona.m` has one check that can fail without a defect.**~~ Fixed
+   while building §1: it asserts the trimming, which is ours and deterministic,
+   and reports how often the engine needed trimming as information rather than as
+   a verdict. What follows is what it used to say. *"And still
    opens with the answer"* counts replies that began with flattery — which is a
    thing the engine does or does not do on the day, not a thing this code decides.
    It failed once during 2.9 and passed on the next run with nothing changed. A

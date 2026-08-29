@@ -38,6 +38,14 @@
 	NSDate *reflectedAt;
 	BOOL reflecting;
 	BOOL distilling;
+
+	/* A month of older days, lemmatised once and kept until the diary changes
+	   under it. 267 ms for a busy month, which is affordable once and not on
+	   every question. */
+	NSArray *recallLines;
+	NSArray *recallWords;
+	NSDictionary *recallRarity;
+	NSDate *recallBuiltAt;
 }
 
 + (NekoMemory *)sharedMemory;
@@ -57,6 +65,18 @@
    them crashed the engine before the decode was batched. Empty string when there
    is nothing worth saying. */
 - (NSString *)contextForPrompt;
+
+/* The same block, with room made for the handful of older lines that bear on
+   what was asked. Without a question this is exactly -contextForPrompt: the
+   diary is read by recency when there is nothing to be relevant to.
+
+   The lines come from the days before today — today is already in the block, in
+   full and in order — and there are never more than three of them, because the
+   whole block is a thousand characters and a small model gets worse as it grows. */
+- (NSString *)contextForPrompt:(NSString *)question;
+
+/* Older days that bear on the question, best first. Empty when none do. */
+- (NSArray *)linesAbout:(NSString *)question limit:(NSUInteger)limit;
 
 /* Reduces yesterday to a few durable lines, once a day, using the best on-device
    engine. Returns immediately; the work happens on a queue. */

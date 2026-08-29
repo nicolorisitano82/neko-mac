@@ -469,3 +469,25 @@
 "macOS did not hand your %@ folder over: %@" = "macOS non mi ha consegnato la cartella %@: %@";
 "no reason given" = "senza dire perché";
 "That folder was not the one I asked for." = "Quella cartella non era quella che avevo chiesto.";
+
+/* the timer */
+"Timer off." = "Timer tolto.";
+"%@: I will tell you at %@." = "%@: te lo dico alle %@.";
+"The %@ are up." = "Sono passati %@.";
+"Timer — %@ left" = "Timer — mancano %@";
+
+/* routes: questions a plugin asked to go and look up */
+"Its Routes section is not a list." = "La sua sezione Routes non è un elenco.";
+"One of its routes is not a dictionary." = "Una delle sue rotte non è un dizionario.";
+"Each of its routes needs its own Identifier." = "Ogni sua rotta ha bisogno di un Identifier suo.";
+"The route “%@” lists no Phrases to listen for." = "La rotta “%@” non elenca nessuna frase da ascoltare.";
+"The route “%@” has a phrase too short to match on; three letters at least." = "La rotta “%@” ha una frase troppo corta per riconoscerla; tre lettere almeno.";
+"One of its routes carries one of Neko’s own markers in a phrase." = "Una delle sue rotte porta in una frase uno dei marcatori di Neko.";
+"The route “%@” does not say whose words it fetches." = "La rotta “%@” non dice di chi sono le parole che scarica.";
+"One of its routes carries one of Neko’s own markers in what it says about itself." = "Una delle sue rotte porta uno dei marcatori di Neko in quello che dice di sé.";
+"One of its routes wants to run a program of its own, which this version does not allow." = "Una delle sue rotte vuole eseguire un programma suo, e questa versione non lo permette.";
+"The route “%@” needs an https address to fetch." = "La rotta “%@” ha bisogno di un indirizzo https da scaricare.";
+"It adds routes without asking for the network, so nothing could be fetched." = "Aggiunge rotte senza chiedere la rete, quindi non si potrebbe scaricare niente.";
+"1 question it goes and looks up" = "1 domanda che va a cercare";
+"%lu questions it goes and looks up" = "%lu domande che va a cercare";
+"sends part of what you say to %@" = "manda un pezzo di quello che dici a %@";

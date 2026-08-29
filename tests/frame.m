@@ -34,6 +34,20 @@
 - (void)setStateTo:(NekoState)state;
 @end
 
+/* The panel runs a timer of its own at eight frames a second, and a real tick
+   arriving between two staged lines changes what this measures — found the honest
+   way: this harness passed alone and failed inside the full suite, where
+   everything is slower and more ticks land. */
+static void onlyStagedTicks(MyPanel *panel)
+{
+	Ivar found = class_getInstanceVariable([MyPanel class], "myTimer");
+	if(found == NULL)
+		return;
+	NSTimer *ticking = (NSTimer *)object_getIvar(panel, found);
+	[ticking invalidate];
+	object_setIvar(panel, found, nil);
+}
+
 static id ivarOf(id object, Class where, const char *name)
 {
 	Ivar found = class_getInstanceVariable(where, name);
@@ -73,6 +87,8 @@ int main(void)
 		spin(0.1);
 	}
 
+	onlyStagedTicks(panel);
+
 	printf("\n--- the view owns what it draws ---\n");
 
 	/* The defect itself, measured directly rather than through its symptom: an
@@ -111,6 +127,7 @@ int main(void)
 	[NekoCharacter forgetTheList];
 	[[NekoController sharedController] buildCharacterMenu];
 	[panel applySettings];
+	onlyStagedTicks(panel);
 	NekoCharacter *after = (NekoCharacter *)ivarOf(panel, [MyPanel class], "character");
 	ok(before != after,
 		@"forgetting the list really does hand the panel a different object",

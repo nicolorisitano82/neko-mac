@@ -1,5 +1,111 @@
 # Changelog
 
+## 2.9 — 2026-08-29
+
+### The diary is searched by what a question is about
+
+Until now it reached a model by recency — the newest lines, whatever was asked.
+Right for a follow-up, wrong for everything else: something written down three
+weeks ago was written down and then never found again.
+
+The plan said to embed every line with `NLEmbedding`, which is on the machine and
+needs no permission. Measured before building, on a staged Italian diary of twenty
+lines and ten questions:
+
+| | top-1 | top-3 | a month costs | on disk |
+| --- | --- | --- | --- | --- |
+| NLEmbedding, cosine | 5/10 | 5/10 | 5.5 s | 3.7 MB |
+| bare shared words | 8/10 | — | — | — |
+| **lemmas + word class + rarity** | **8/10** | **8/10** | **311 ms** | **nothing** |
+| the two fused by rank | 6/10 | 9/10 | 5.5 s | 3.7 MB |
+
+The embedding lost to counting words. Fusing them bought one question in ten on
+top-3 — inside the noise of a ten-question sample — for twenty times the time and
+3.7 MB of vectors sitting beside a file whose whole promise is that it is plain
+text somebody can read. So there is no embedding, and that table is in
+`NekoRecall.h` so a later change has to beat it rather than argue with it.
+
+Two things the measuring changed, both of them the negative half:
+
+- Six of eight questions about things **not** in the diary came back with a line,
+  and five shared exactly one word — a verb like *fare* or *essere*. A line is
+  about a question only if it shares a word the question is not merely carried
+  with.
+- Requiring a noun for that then cost three of the ten true hits, because there
+  the distinctive verb *was* the topic. So it is a list of the carrying words in
+  four languages, not a rule about word class. Rarity cannot do that job: in a
+  diary of three days *essere* is a rare word, and three days is what somebody has
+  on their first Wednesday.
+
+Now 10 of 10 first and 7 of 8 silent. Synonyms are the known limit, recorded in
+`tests/recall.m` as a miss rather than hidden.
+
+### A timer
+
+The one utility on the list in `docs/utilities.md` where this application is
+better than the system it runs on: a bubble that follows you across Spaces, from
+something that walks over and sits down to say it.
+
+*"Metti un timer di dieci minuti"*, *"ricordamelo fra un'ora e mezza"*,
+*"remind me in 20 minutes"*, *"dans un quart d'heure"*, *"en media hora"* — 22
+phrases in four languages, all to the second. `NSDataDetector` parses *"domani
+alle 15"* for nothing and parses **none** of those, which is why there is a table.
+
+It answers rather than asking. Every other deed here is read back and waits for a
+yes; this one says what it understood and when it will land — *"10 minuti: te lo
+dico alle 17:26"* — which is the same information a confirmation carries, arriving
+sooner, in the one place somebody is in a hurry. One at a time, in the menu while
+it runs, cancelled in one click, and it does not outlive the application, which is
+honest: a desktop pet that is not running cannot remind anybody of anything.
+
+Two things measuring changed here too: a unit with no number in front of it used
+to count as one, which read *"che ore sono"* as a timer for an hour; and a
+duration is not a request, since *"ho dormito otto ore"* parses perfectly and asks
+for nothing.
+
+### Routes: the half of the plugin interface that answers
+
+A plugin could *be* things — feeds, characters, translations, a text filter — and
+since 2.6 *do* things, through a verb. It could not **answer**.
+
+A route is a list of phrases, one https address written in the manifest, and the
+name of whoever wrote what comes back. Say something a route listens for and Neko
+fetches it, then answers from it, quoting it under that name.
+
+What shipped is narrower than what `docs/plugins.md` sketched in 2.5, and that is
+the point:
+
+- **A plugin does not write a rule.** No pattern, no language switch, no intent
+  handed over — it lists words, and the application matches them the way it
+  matches a verb. That matcher is now one piece of code with one set of
+  measurements behind it, shared by both.
+- **`Says` is required.** What comes back is put in front of a model as somebody
+  else's words, and a route that will not say whose words they are is refused.
+- **One door, not three.** `Shortcut` and `Command` are gone; a `Program` key
+  inside a route is refused rather than ignored.
+- **What comes back cannot act.** It arrives marked as text from outside, which is
+  what stops an answer built on it from opening, copying or moving anything.
+  `tests/route.m` stages a reply containing `ACTION: open-app Terminal` and counts
+  Terminals.
+
+**And the thing a route does that a feed never does: it carries your words.** The
+application's own requests carry no question at all — ANSA sees only that somebody
+fetched a public feed. A route with a `%@` in its address sends part of what you
+said to whoever owns that address, because that is what looking something up is.
+The plugins window says so on the row, with the host named, and that sentence is
+generated from the manifest rather than written by the plugin: a plugin cannot
+promise something its own address does not.
+
+`examples/News search.nekoplugin` is the smallest useful one — *"notizie su
+Bologna"* — and its README leads with that trade rather than burying it.
+
+### Also
+
+- The folder handover's own harness, and the persona check that could fail without
+  a defect, both from 2.8.1, are in here as well.
+- 29 test harnesses. New: `recall.m`, `timer.m`, `route.m`.
+- Every new sentence in four languages. Apple silicon only.
+
 ## 2.8.1 — 2026-08-29
 
 ### Choosing the wrong folder did nothing, and said nothing

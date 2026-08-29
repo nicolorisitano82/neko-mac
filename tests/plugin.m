@@ -103,14 +103,17 @@ int main(void)
 		@"feeds without asking for the network are refused",
 		[readPlugin(@"nonet", sneaky) refusal]);
 
-	/* Verbs used to be the example here, and shipped in 2.6. Routes are the next
-	   thing this file will have to change. */
+	/* Verbs used to be the example here and shipped in 2.6; routes were next and
+	   shipped after them. Instructions are what is left, and this comment is the
+	   standing note that this line changes every time the interface grows — which
+	   is the point of refusing an unknown extension point rather than ignoring it. */
 	NSMutableDictionary *unknown = good();
-	[unknown setObject:[NSDictionary dictionaryWithObject:[NSArray array] forKey:@"Routes"]
+	[unknown setObject:[NSDictionary dictionaryWithObject:[NSArray array]
+	                                              forKey:@"Instructions"]
 	            forKey:@"Extends"];
-	ok(![readPlugin(@"routes", unknown) isUsable],
+	ok(![readPlugin(@"instructions", unknown) isUsable],
 		@"and extending something this version does not offer is refused, not ignored",
-		[readPlugin(@"routes", unknown) refusal]);
+		[readPlugin(@"instructions", unknown) refusal]);
 
 	NSMutableDictionary *http = good();
 	NSMutableDictionary *plain = [NSMutableDictionary dictionaryWithDictionary:
