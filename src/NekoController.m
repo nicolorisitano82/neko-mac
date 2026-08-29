@@ -1,4 +1,5 @@
 #import "NekoController.h"
+#import "NekoTimer.h"
 #import "NekoAdvisor.h"
 #import "NekoAntics.h"
 #import "NekoDesktop.h"
@@ -135,6 +136,9 @@ static const float NekoMaxStopRadius = 200.0f;
 		statusItemWithLength:NSSquareStatusItemLength] retain];
 
 	NSMenu *menu = [[NSMenu alloc] initWithTitle:@"Neko"];
+	/* So the minutes left are worked out when somebody looks, rather than being
+	   written once and going stale in the closed menu. */
+	[menu setDelegate:self];
 	pauseItem = [menu addItemWithTitle:NekoLocalized(@"Pause Neko")
 	                           action:@selector(togglePause:)
 	                    keyEquivalent:@""];
@@ -149,6 +153,17 @@ static const float NekoMaxStopRadius = 200.0f;
 	                    keyEquivalent:@""];
 	[stayItem setTarget:self];
 	[self updateStayItem];
+
+	/* Only there while one is running, which is the whole of the interface a
+	   single timer needs: it says how long is left, and clicking it stops. */
+	timerItem = [menu addItemWithTitle:@"" action:@selector(cancelTimer:)
+	                     keyEquivalent:@""];
+	[timerItem setTarget:self];
+	[self updateTimerItem];
+	[[NSNotificationCenter defaultCenter] addObserver:self
+	                                         selector:@selector(updateTimerItem)
+	                                             name:NekoTimerDidChangeNotification
+	                                           object:nil];
 
 	[menu addItem:[NSMenuItem separatorItem]];
 
@@ -243,6 +258,27 @@ static const float NekoMaxStopRadius = 200.0f;
 /* On: remember where it is standing now. Off: forget it. The point is only ever
    written at the moment somebody asks for it, so a cat that wandered off while
    staying was switched off does not quietly move the mark. */
+/* Redrawn when a timer starts or stops, and again every time the menu is about
+   to open — the minutes left change on their own, and a title written once would
+   be wrong by the time anybody read it. */
+- (void)updateTimerItem
+{
+	NSString *title = [[NekoTimer sharedTimer] menuTitle];
+	[timerItem setHidden:title == nil];
+	[timerItem setTitle:title ?: @""];
+}
+
+- (void)menuWillOpen:(NSMenu *)which
+{
+	[self updateTimerItem];
+}
+
+- (void)cancelTimer:(id)sender
+{
+	[[NekoTimer sharedTimer] cancel];
+	[[NekoAsk sharedAsk] sayUnprompted:NekoLocalized(@"Timer off.")];
+}
+
 - (void)toggleStay:(id)sender
 {
 	NSUserDefaults *settings = [NSUserDefaults standardUserDefaults];

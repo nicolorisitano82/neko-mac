@@ -5,6 +5,7 @@
 #import "NekoBrains.h"
 #import "NekoRate.h"
 #import "NekoWeb.h"
+#import "NekoTimer.h"
 #import "NekoPluginText.h"
 #import "NekoPluginVerbs.h"
 #import "NekoVoice.h"
@@ -896,6 +897,16 @@ static const NSTimeInterval NekoHoldToType = 0.5;
 		? [NekoWeb wantedFor:question] : nil;
 	if([straightThere length] > 0) {
 		[self lookUp:straightThere verbatim:YES];
+		return;
+	}
+
+	/* A timer, before any engine and for the same reason as the news: a model
+	   asked how long ten minutes is answers with a plausible number. It is not
+	   read back and waited on — see NekoTimer.h — it answers with the time it will
+	   land, which says more and arrives sooner. */
+	NSTimeInterval timer = [NekoTimer wantedFor:question];
+	if(timer > 0.0) {
+		[self sayInCharacter:[[NekoTimer sharedTimer] startFor:timer]];
 		return;
 	}
 

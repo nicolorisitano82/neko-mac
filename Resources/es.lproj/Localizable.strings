@@ -469,3 +469,9 @@
 "macOS did not hand your %@ folder over: %@" = "macOS no me entregó tu carpeta %@: %@";
 "no reason given" = "sin decir por qué";
 "That folder was not the one I asked for." = "Esa carpeta no era la que pedí.";
+
+/* the timer */
+"Timer off." = "Temporizador quitado.";
+"%@: I will tell you at %@." = "%@: te aviso a las %@.";
+"The %@ are up." = "Han pasado %@.";
+"Timer — %@ left" = "Temporizador — quedan %@";

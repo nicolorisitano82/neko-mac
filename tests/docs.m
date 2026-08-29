@@ -44,7 +44,7 @@ static NSArray *keysIn(NSString *source)
 		@"NekoPanelLocalized(@\"", @"NekoAskLocalized(@\"", @"NekoLocalized(@\"",
 		@"NekoAdvisorLocalized(@\"", @"NekoAnticsLocalized(@\"",
 		@"NekoPermissionLocalized(@\"", @"NekoVoiceLocalized(@\"",
-		@"NekoVerbsLocalized(@\"", nil];
+		@"NekoVerbsLocalized(@\"", @"NekoTimerLocalized(@\"", nil];
 	NSEnumerator *m = [macros objectEnumerator];
 	NSString *macro;
 	while((macro = [m nextObject]) != nil) {

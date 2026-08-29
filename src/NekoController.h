@@ -23,12 +23,13 @@ extern NSString * const NekoPausedKey;     /* BOOL, cat hidden and frozen */
 /* Posted whenever a setting changes. */
 extern NSString * const NekoSettingsDidChangeNotification;
 
-@interface NekoController : NSObject
+@interface NekoController : NSObject <NSMenuDelegate>
 {
 	MyPanel *panel;              /* not retained, owned by the nib */
 	NSStatusItem *statusItem;
 	NSMenuItem *pauseItem;
 	NSMenuItem *stayItem;
+	NSMenuItem *timerItem;
 	NSMenuItem *askItem;
 	NSTabView *prefsTabs;
 	NSMenu *characterMenu;
