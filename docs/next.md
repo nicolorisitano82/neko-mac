@@ -230,9 +230,13 @@ different feature with a different risk. This is about when the words appear.
    check that fails for reasons that are not defects teaches people to ignore the
    suite, and this one should either assert the **trimming** (which is ours and
    deterministic) or be marked as not measured.
-3. **The plugins window is not covered by `tests/layout.m`**, which is the harness
-   that opens every tab and checks every pair of controls. It was left out
-   deliberately when the window was new; it is not new any more.
+3. ~~**The plugins window is not covered by `tests/layout.m`.**~~ Covered now, and
+   it found three clipped paragraphs the first time it ran — one of them the
+   sentence saying what a plugin sends off this Mac, cut off after a line and a
+   half. Rows measure their own text now instead of being a fixed height, and the
+   harness **counts** a clipped paragraph instead of printing one: it had been
+   printing that complaint about the Permissions tab for some time, and a
+   complaint nobody fails on is a comment.
 
 The lesson is the one this project keeps relearning and keeps writing down: a
 defect that is obvious from reading the code is a hypothesis, and the measurement
