@@ -510,3 +510,4 @@
 "Something asked me: “%@”. Shall I answer it?" = "Algo me ha preguntado: «%@». ¿Respondo?";
 "There was no text to ask about." = "No había texto sobre el que preguntar.";
 "Ask Neko about this" = "Preguntar a Neko";
+"the characters %@, in the Character menu" = "los personajes %@, en el menú Personaje";
