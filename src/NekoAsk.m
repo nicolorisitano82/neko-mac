@@ -6,6 +6,7 @@
 #import "NekoRate.h"
 #import "NekoWeb.h"
 #import "NekoTimer.h"
+#import "NekoFact.h"
 #import "NekoPluginRoutes.h"
 #import "NekoPluginText.h"
 #import "NekoPluginVerbs.h"
@@ -898,6 +899,16 @@ static const NSTimeInterval NekoHoldToType = 0.5;
 		? [NekoWeb wantedFor:question] : nil;
 	if([straightThere length] > 0) {
 		[self lookUp:straightThere verbatim:YES];
+		return;
+	}
+
+	/* Told to remember something, or to forget it. Before the timer, because
+	   "ricordati che" and "ricordami di" are a fact and an errand and only one
+	   letter apart, and before any engine because a model asked to remember
+	   something says that it has and has not. */
+	NSDictionary *fact = [NekoFact wantedFor:question];
+	if(fact != nil) {
+		[self sayInCharacter:[NekoFact act:fact]];
 		return;
 	}
 

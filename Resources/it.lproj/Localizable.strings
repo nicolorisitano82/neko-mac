@@ -497,3 +497,11 @@
 "somebody else is using this Mac" = "questo Mac lo sta usando qualcun altro";
 "the display is asleep" = "lo schermo è spento";
 "the microphone is open, so you are probably talking" = "il microfono è aperto, quindi probabilmente stai parlando";
+
+/* things it was told to remember */
+"I will remember that." = "Me lo ricordo.";
+"Forgotten: %@" = "Dimenticato: %@";
+"I was not remembering that." = "Non me ne stavo ricordando.";
+"they are called %@" = "si chiama %@";
+"Hello, %@." = "Ciao, %@.";
+"%lu day(s) of notes, %lu line(s) it had kept, and %lu thing(s) you asked it to remember. This cannot be undone." = "%lu giorno/i di appunti, %lu riga/righe che aveva tenuto, e %lu cosa/e che gli hai chiesto di ricordare. Non si torna indietro.";

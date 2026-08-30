@@ -1,5 +1,6 @@
 #import "NekoController.h"
 #import "NekoTimer.h"
+#import "NekoFact.h"
 #import "NekoAdvisor.h"
 #import "NekoAntics.h"
 #import "NekoDesktop.h"
@@ -1740,14 +1741,19 @@ static const float NekoMaxStopRadius = 200.0f;
 - (void)forgetMemoryPressed:(id)sender
 {
 	NekoMemory *memory = [NekoMemory sharedMemory];
-	if([memory dayCount] == 0 && [[memory durableLines] count] == 0)
+	if([memory dayCount] == 0 && [[memory durableLines] count] == 0
+	   && [[NekoFact all] count] == 0)
 		return;
 
 	NSAlert *alert = [[[NSAlert alloc] init] autorelease];
 	[alert setMessageText:NekoLocalized(@"Forget everything Neko remembers?")];
+	/* The things somebody asked it to remember are counted separately, because
+	   they are the ones a person will actually miss: the rest it worked out on
+	   its own, and these it was told. */
 	[alert setInformativeText:[NSString stringWithFormat:
-		NekoLocalized(@"%lu day(s) of notes and %lu line(s) it had kept. This cannot be undone."),
-		(unsigned long)[memory dayCount], (unsigned long)[[memory durableLines] count]]];
+		NekoLocalized(@"%lu day(s) of notes, %lu line(s) it had kept, and %lu thing(s) you asked it to remember. This cannot be undone."),
+		(unsigned long)[memory dayCount], (unsigned long)[[memory durableLines] count],
+		(unsigned long)[[NekoFact all] count]]];
 	[alert addButtonWithTitle:NekoLocalized(@"Forget")];
 	[alert addButtonWithTitle:NekoLocalized(@"Cancel")];
 	[NSApp activateIgnoringOtherApps:YES];

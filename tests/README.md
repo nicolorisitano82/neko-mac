@@ -43,6 +43,7 @@ again afterwards.
 | `route.m` | what a plugin may fetch, what it must say about it, and that it can never act |
 | `senses.m` | the three things it can tell without reading anything, and that the flag moves |
 | `stream.m` | that an answer arriving in pieces is read back as the answer it was |
+| `fact.m` | the line between “ricordati che” (a fact) and “ricordami di” (an errand) |
 | `flee.m` | running from the cursor, staying put, and the gap between two screens |
 | `player.m` | the closed lists behind Music and Spotify, and a real volume moved and put back |
 | `tempo.m` | how long a short answer waits, and everything exempt from waiting |
