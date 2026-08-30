@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>Author</key>
+	<string>sprites by the NekoAI community, converted</string>
+	<key>Extends</key>
+	<dict>
+		<key>Characters</key>
+		<array>
+			<string>Ember.nekochar</string>
+			<string>Ghost.nekochar</string>
+			<string>Pingu.nekochar</string>
+		</array>
+	</dict>
+	<key>Identifier</key>
+	<string>com.example.nekoaicharacters</string>
+	<key>Interface</key>
+	<integer>1</integer>
+	<key>License</key>
+	<string>MIT — see README.md</string>
+	<key>MinimumApp</key>
+	<string>2.5</string>
+	<key>Name</key>
+	<string>NekoAI characters</string>
+	<key>Summary</key>
+	<string>Ember, Ghost, Pingu from nucket/NekoAI, converted to Neko's own eighteen states. Sprites only: a character cannot ask for anything, reach anything or do anything.</string>
+	<key>Version</key>
+	<string>1.0</string>
+	<key>Wants</key>
+	<array/>
+</dict>
+</plist>
