@@ -87,7 +87,14 @@ Reminders through a Shortcut rather than pretend to own it.
 **Cost:** a day. **Risk:** the failure that matters is an appointment nobody asked
 for, and §7 of that document already says how to measure it.
 
-### 3. The voice is whatever the system happened to pick
+### 3. The voice is whatever the system happened to pick — *and the advice below was wrong*
+
+> Corrected in [others-2.md §3](others-2.md) after 2.11. This section assumed that
+> "macOS ships the better ones as downloads that many people already have".
+> Measured: **180 voices installed on this Mac and not one of them enhanced or
+> premium**, in any of the four languages. Picking the best installed voice would
+> have picked the one it already uses. The assumption was doing all the work.
+
 
 **Checked:** `-speak:` builds an `AVSpeechUtterance`, sets a pitch multiplier of
 1.25 — *"a cat, not a newsreader"* — and speaks it. **No voice is ever chosen.**

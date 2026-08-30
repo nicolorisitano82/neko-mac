@@ -627,6 +627,10 @@ engine, and the two things that would change it are **recalling the diary by
 relevance rather than by recency** and **growing the closed list of questions it
 answers in code instead of guessing**.
 
+[docs/others-2.md](docs/others-2.md) is the second look, after 2.11: what closed,
+what the field offers when its own pages are read rather than remembered, and the
+one paragraph of the first study that measurement turned out to contradict.
+
 [docs/others.md](docs/others.md) is the same question asked from outside: what
 this does that the rest of the field does not, what the rest of the field does
 that this cannot, and what to do about the difference — with the code checked
