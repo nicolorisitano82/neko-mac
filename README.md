@@ -636,6 +636,9 @@ this does that the rest of the field does not, what the rest of the field does
 that this cannot, and what to do about the difference — with the code checked
 rather than remembered.
 
+[docs/one-look.md](docs/one-look.md) designs the one idea worth taking from the
+rest of the field: reading the screen granted for a moment rather than for ever.
+
 The other studies, each written before the thing it describes was built:
 [ask-neko.md](docs/ask-neko.md), [natural.md](docs/natural.md),
 [truelife.md](docs/truelife.md), [utilities.md](docs/utilities.md),
