@@ -107,7 +107,12 @@ it would let somebody use the feature who will never turn the switch on. It is
 also the smaller promise: the sentence in the preferences stops being *"it can read
 the text you are working on"* and becomes *"it reads it when you ask, once".*
 
-That is the recommendation of this study.
+That is the recommendation of this study, and it is designed in
+[one-look.md](one-look.md) — including the thing the design found that this
+section had missed: the standing switch does not grant *a read*. What it unlocks
+is appended to the desktop summary, and the summary is what the **advisor** reads
+— so it grants a read on the advisor's own schedule, for as long as it is on, and
+with a remote engine chosen that text follows the engine.
 
 ## 5. What is still missing, ranked, after that
 
