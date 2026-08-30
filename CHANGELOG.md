@@ -1,5 +1,113 @@
 # Changelog
 
+## 2.11 — 2026-08-30
+
+### It remembers what you tell it to remember, the moment you say it
+
+*"Ricordati che il venerdì stacco prima."* *"Mi chiamo Nicolò."* *"Dimentica il
+venerdì."* Recognised in code before any engine, in four languages, and kept in
+`facts.txt` beside the diary — plain text, in the folder the preferences already
+open in the Finder.
+
+The gap this closes was checked rather than assumed. Durable lines come from a
+reflection over yesterday, once a day, written by whatever engine is best on this
+Mac — so a fact said this morning was invisible until tomorrow, and on a Mac with
+no local engine and no Apple Intelligence it was invisible **for ever**, because
+that reflection returns early when there is nothing to think with.
+
+What it deliberately does **not** do is infer. A pet that decides for itself what
+about you is worth writing down is a different and worse thing than one that
+writes down what it was told, and the difference is visible from outside:
+everything in that file can be traced to a sentence somebody said on purpose.
+
+The line that took the care is *"ricordati **che**"* against *"ricordami **di**"* —
+a fact against an errand, one letter apart, and the errand belongs to the timer.
+Ten ordinary sentences are in the harness, three carrying the word for
+remembering, and none is written down.
+
+### The rest of the Mac can reach the cat
+
+Until now this had exactly one door, its own hotkey, which made it the only thing
+on the Mac that could not be reached the way everything else is. Neko ran your
+Shortcuts; nothing could run Neko.
+
+- **"Ask Neko about this"** is in the Services menu and the right-click menu of
+  selected text in every application.
+- **`neko://ask?q=…`**, which Shortcuts, a script or a terminal can open.
+
+The URL has a rule attached: **it does not ask**. A URL can be on a web page, and
+a web page is the one place this application has never taken instructions from, so
+what arrives through it is read back in the bubble and waits for a yes, exactly
+like a deed.
+
+**App Intents is what Apple would suggest, and it cannot be built here.** The
+metadata a Shortcuts action is discovered through comes from
+`appintentsmetadataprocessor`, which ships inside Xcode and not in the Command
+Line Tools this project builds with. Swift declaring an intent would compile and
+nothing would ever find it. That is a toolchain fact, written down rather than
+worked around.
+
+### Something for the calendar
+
+*"Metti in calendario la riunione con Marco venerdì alle 9:30."* The route with no
+permission, which `docs/utilities.md` ranked first and nobody built: the event is
+written as an `.ics` in this application's own container and handed to whatever
+opens those. Calendar shows the whole thing with its own Add button, so the last
+word belongs to somebody looking at it where it is going.
+
+Three measurements shaped it. A sandboxed application **can** write the file and
+`CalendarFileHandler.app` is what opens it. `NSDataDetector` parses the date in all
+four languages and hands back the range of the words it used, which is how the rest
+of the sentence becomes the title. And **"svegliami alle 7", said in the afternoon,
+comes back as seven this morning** — so a bare time that has gone by today means
+tomorrow, and the harness builds that sentence from the clock so it asserts the
+same thing at nine in the morning and at midnight. A real date that has passed is
+refused out loud instead: *"il 3 settembre"* in December is a day somebody got
+wrong, and moving it a year would be inventing something they did not say.
+
+A date in a sentence is not a request — *"la riunione è durata due ore"* has one —
+so an explicit calendar phrase is required as well. Read back in full before
+anything is written, unlike the timer, because this one lands in a calendar where a
+wrong entry outlives the misunderstanding.
+
+### A Wikipedia plugin, and two defects it found
+
+*"Chi è Alan Turing"* fetches the opening of the article and answers from it,
+quoted as Wikipedia's words. Writing it found two real faults in the routes that
+shipped in 2.9, both by measuring what actually reaches the model:
+
+- **A body one line longer than the budget came back as nothing.** Wikipedia's
+  summary is 1,948 bytes on a single line, so the route looked unreachable while
+  answering perfectly. A long line is cut now, not dropped.
+- **Routes could not read JSON**, which is what most things that answer a question
+  answer in. The guide said a route should publish something a person could read,
+  and that was deciding the world is simpler than it is. Routes read JSON by a
+  closed list of field names now — the same shape as every other rule here, a list
+  somebody can check rather than cleverness — and leave the image URLs and pixel
+  widths where they are.
+
+### Characters from somebody else's cat
+
+`tools/import-nekoai.py` converts pets from `nucket/NekoAI`, whose sprites map onto
+this application's eighteen states almost exactly. The interesting half is what it
+**refuses**: that repository is MIT, and its own per-pet manifests say who holds
+each one — two of them answer *"Namco"* and *"Lucasfilm"*. Those are not that
+repository's to relicense, and this one goes out in a signed disk image anybody can
+download, so the converter takes only pets whose manifest claims them for the
+project and prints the author of each one it keeps. The rule is in code rather than
+in a comment.
+
+Three come through — Ember, Ghost and Pingu — as a plugin rather than files dropped
+into the bundle, with the licence and attribution beside them.
+
+### Also
+
+- **The plugins window named its characters instead of counting them**, reported an
+  hour after that plugin existed: they were all there, in a menu of forty-seven,
+  and the row said *"3 characters"*, which is true and no help at all.
+- 35 test harnesses. New: `fact.m`, `doors.m`, `calendar.m`.
+- Every new sentence in four languages. Apple silicon only.
+
 ## 2.10 — 2026-08-30
 
 ### It can tell more about your day, still without reading any of it
