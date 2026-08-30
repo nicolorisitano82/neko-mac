@@ -6,6 +6,8 @@
 #import "NekoRate.h"
 #import "NekoWeb.h"
 #import "NekoTimer.h"
+#import "NekoFact.h"
+#import "NekoAppointment.h"
 #import "NekoPluginRoutes.h"
 #import "NekoPluginText.h"
 #import "NekoPluginVerbs.h"
@@ -901,6 +903,16 @@ static const NSTimeInterval NekoHoldToType = 0.5;
 		return;
 	}
 
+	/* Told to remember something, or to forget it. Before the timer, because
+	   "ricordati che" and "ricordami di" are a fact and an errand and only one
+	   letter apart, and before any engine because a model asked to remember
+	   something says that it has and has not. */
+	NSDictionary *fact = [NekoFact wantedFor:question];
+	if(fact != nil) {
+		[self sayInCharacter:[NekoFact act:fact]];
+		return;
+	}
+
 	/* A timer, before any engine and for the same reason as the news: a model
 	   asked how long ten minutes is answers with a plausible number. It is not
 	   read back and waited on — see NekoTimer.h — it answers with the time it will
@@ -908,6 +920,15 @@ static const NSTimeInterval NekoHoldToType = 0.5;
 	NSTimeInterval timer = [NekoTimer wantedFor:question];
 	if(timer > 0.0) {
 		[self sayInCharacter:[[NekoTimer sharedTimer] startFor:timer]];
+		return;
+	}
+
+	/* Something for the calendar, before any engine and for the reason the whole
+	   of this list exists: a model asked what day Friday is answers with a day.
+	   NSDataDetector answers with the right one, in four languages, for nothing. */
+	NSDictionary *appointment = [NekoAppointment wantedFor:question];
+	if(appointment != nil) {
+		[self proposeAppointment:appointment];
 		return;
 	}
 
@@ -1195,6 +1216,52 @@ static const NSTimeInterval NekoHoldToType = 0.5;
 		else
 			[self sayInCharacter:problem
 				?: NekoAskLocalized(@"That did not work.")];
+	}];
+}
+
+/* An appointment, read back in full before anything is written: the day in words,
+   the hours, and the title it worked out from what was left of the sentence. This
+   one is read back rather than simply done — unlike the timer — because it lands
+   in somebody's calendar, where a wrong entry outlives the misunderstanding. */
+- (void)proposeAppointment:(NSDictionary *)appointment
+{
+	NSString *sentence = [appointment objectForKey:@"Sentence"];
+	if([appointment objectForKey:@"Problem"] != nil) {
+		/* A date that has already gone. Said, not silently moved a year. */
+		[self sayInCharacter:sentence];
+		return;
+	}
+
+	phase = NekoPhaseAnswering;
+	[[self panel] holdWithState:NekoStateAwake];
+	[bubble askText:sentence nearRect:[[self panel] frame]
+	        decided:^(BOOL yes) {
+		if(!yes) {
+			[self sayInCharacter:NekoAskLocalized(@"All right, I will not.")];
+			return;
+		}
+		[self sayInCharacter:[NekoAppointment make:appointment]];
+	}];
+}
+
+/* A question somebody else's program opened a URL to ask. Shown before it is
+   asked, because the sentence did not come from this room. */
+- (void)proposeQuestion:(NSString *)question
+{
+	if([question length] == 0)
+		return;
+	[self cancelEverything];
+	phase = NekoPhaseAnswering;
+	[[self panel] holdWithState:NekoStateAwake];
+	[bubble askText:[NSString stringWithFormat:
+		NekoAskLocalized(@"Something asked me: “%@”. Shall I answer it?"), question]
+	       nearRect:[[self panel] frame]
+	        decided:^(BOOL yes) {
+		if(!yes) {
+			[self sayInCharacter:NekoAskLocalized(@"All right, I will not.")];
+			return;
+		}
+		[self ask:question];
 	}];
 }
 

@@ -257,7 +257,7 @@ int main(void)
 	   is that somebody who downloaded the disk image has something to point Add…
 	   at, and that it is not switched on behind their back. */
 	NSArray *examples = [[NekoPlugins sharedPlugins] examples];
-	ok([examples count] >= 2, @"they are in the bundle, where Add… can reach them",
+	ok([examples count] >= 4, @"they are in the bundle, where Add… can reach them",
 		[NSString stringWithFormat:@"%lu", (unsigned long)[examples count]]);
 	NSEnumerator *e = [examples objectEnumerator];
 	NSURL *folder;

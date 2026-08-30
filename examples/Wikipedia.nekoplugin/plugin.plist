@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>Author</key>
+	<string>an example, shipped with Neko</string>
+	<key>Extends</key>
+	<dict>
+		<key>Routes</key>
+		<array>
+			<dict>
+				<key>Identifier</key>
+				<string>wikipedia</string>
+				<key>Phrases</key>
+				<array>
+					<string>chi è</string>
+					<string>chi era</string>
+					<string>che cos'è</string>
+					<string>che cosa è</string>
+					<string>cos’è</string>
+					<string>cosa sono</string>
+					<string>parlami di</string>
+					<string>cerca su wikipedia</string>
+					<string>wikipedia</string>
+					<string>who is</string>
+					<string>who was</string>
+					<string>what is</string>
+					<string>what are</string>
+					<string>tell me about</string>
+					<string>qui est</string>
+					<string>qu'est-ce que</string>
+					<string>parle-moi de</string>
+					<string>quién es</string>
+					<string>qué es</string>
+					<string>háblame de</string>
+				</array>
+				<key>Says</key>
+				<string>Wikipedia</string>
+				<key>Summary</key>
+				<string>the opening of a Wikipedia article</string>
+				<key>Url</key>
+				<string>https://it.wikipedia.org/api/rest_v1/page/summary/%@</string>
+			</dict>
+		</array>
+	</dict>
+	<key>Identifier</key>
+	<string>com.example.wikipedia</string>
+	<key>Interface</key>
+	<integer>1</integer>
+	<key>License</key>
+	<string>public domain</string>
+	<key>MinimumApp</key>
+	<string>2.9</string>
+	<key>Name</key>
+	<string>Wikipedia</string>
+	<key>Summary</key>
+	<string>Looks a thing up in Wikipedia and answers from the opening of the article. Like any search, it carries what you named to Wikipedia — the plugins window says so, with the host.</string>
+	<key>Version</key>
+	<string>1.0</string>
+	<key>Wants</key>
+	<array>
+		<string>network</string>
+	</array>
+</dict>
+</plist>

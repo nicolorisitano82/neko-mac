@@ -497,3 +497,23 @@
 "somebody else is using this Mac" = "quelqu’un d’autre utilise ce Mac";
 "the display is asleep" = "l’écran est en veille";
 "the microphone is open, so you are probably talking" = "le micro est ouvert, vous êtes sans doute en train de parler";
+
+/* things it was told to remember */
+"I will remember that." = "Je m’en souviendrai.";
+"Forgotten: %@" = "Oublié : %@";
+"I was not remembering that." = "Je ne m’en souvenais pas.";
+"they are called %@" = "il ou elle s’appelle %@";
+"Hello, %@." = "Bonjour, %@.";
+"%lu day(s) of notes, %lu line(s) it had kept, and %lu thing(s) you asked it to remember. This cannot be undone." = "%lu jour(s) de notes, %lu ligne(s) qu’il avait gardées, et %lu chose(s) que vous lui avez demandé de retenir. C’est sans retour.";
+
+/* the ways in, from the rest of the Mac */
+"Something asked me: “%@”. Shall I answer it?" = "Quelque chose m’a demandé : « %@ ». Je réponds ?";
+"There was no text to ask about." = "Il n’y avait pas de texte à propos duquel demander.";
+"Ask Neko about this" = "Demander à Neko";
+"the characters %@, in the Character menu" = "les personnages %@, dans le menu Personnage";
+
+/* something for the calendar */
+"That was already yesterday — say a day that is still coming." = "C’était déjà hier — dites un jour encore à venir.";
+"Appointment" = "Rendez-vous";
+"%@ to %@ — “%@”. Shall I put it in your calendar?" = "%@ jusqu’à %@ — « %@ ». Je le mets dans votre calendrier ?";
+"It is in front of your calendar — press Add there." = "C’est devant votre calendrier — appuyez sur Ajouter là.";

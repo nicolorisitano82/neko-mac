@@ -70,11 +70,66 @@ static const NSUInteger NekoRouteMostCharacters = 1200;
    of these will be — and otherwise the text with its tags taken out, capped.
    Nothing here tries to be clever about JSON: a route that wants to be understood
    publishes something a person could read. */
+/* The field names a JSON answer is read out of. A closed list rather than
+   cleverness: an API that wants to be understood puts its prose under one of
+   these, and anything else is left alone rather than guessed at.
+
+   Measured on Wikipedia's own summary, which is one 1,948-byte line of JSON and
+   the shape most public APIs answer in — with this it comes out as three
+   readable lines and without it as nothing at all. */
+static NSSet *NekoRouteFieldsWorthReading(void)
+{
+	static NSSet *fields = nil;
+	if(fields == nil)
+		fields = [[NSSet setWithArray:[NSArray arrayWithObjects:
+			@"title", @"name", @"description", @"summary", @"extract",
+			@"abstract", @"text", @"content", @"answer", @"value", nil]] retain];
+	return fields;
+}
+
+static void NekoReadJSON(id thing, NSMutableArray *into, NSUInteger depth)
+{
+	if(depth > 4 || [into count] >= NekoRouteMostLines)
+		return;
+	if([thing isKindOfClass:[NSDictionary class]]) {
+		NSEnumerator *k = [thing keyEnumerator];
+		NSString *key;
+		while((key = [k nextObject]) != nil) {
+			id value = [thing objectForKey:key];
+			if([value isKindOfClass:[NSString class]]
+			   && [NekoRouteFieldsWorthReading() containsObject:[key lowercaseString]]) {
+				NSString *said = [value stringByTrimmingCharactersInSet:
+					[NSCharacterSet whitespaceAndNewlineCharacterSet]];
+				if([said length] > 0 && [into count] < NekoRouteMostLines)
+					[into addObject:[NSString stringWithFormat:@"%@: %@", key, said]];
+			}
+			else if([value isKindOfClass:[NSDictionary class]]
+			        || [value isKindOfClass:[NSArray class]])
+				NekoReadJSON(value, into, depth + 1);
+		}
+	}
+	else if([thing isKindOfClass:[NSArray class]]) {
+		NSEnumerator *e = [thing objectEnumerator];
+		id one;
+		while((one = [e nextObject]) != nil)
+			NekoReadJSON(one, into, depth + 1);
+	}
+}
+
 + (NSArray *)linesIn:(NSData *)body
 {
 	NSArray *headlines = [[NekoWeb sharedWeb] headlinesInFeed:body];
 	if([headlines count] > 0)
 		return headlines;
+
+	/* Then JSON, which is what most things that answer a question answer in. */
+	id parsed = [NSJSONSerialization JSONObjectWithData:body options:0 error:NULL];
+	if(parsed != nil) {
+		NSMutableArray *said = [NSMutableArray array];
+		NekoReadJSON(parsed, said, 0);
+		if([said count] > 0)
+			return said;
+	}
 
 	NSString *text = [[[NSString alloc] initWithData:body
 	                                        encoding:NSUTF8StringEncoding] autorelease];
@@ -109,8 +164,16 @@ static const NSUInteger NekoRouteMostCharacters = 1200;
 			[NSCharacterSet whitespaceAndNewlineCharacterSet]];
 		if([trimmed length] == 0)
 			continue;
-		if(spent + [trimmed length] > NekoRouteMostCharacters)
+		if(spent + [trimmed length] > NekoRouteMostCharacters) {
+			/* Cut rather than dropped. A body that is one line longer than the
+			   whole budget used to come back as nothing at all, which is how a
+			   route that answers in a single long line looked unreachable. */
+			NSUInteger room = NekoRouteMostCharacters > spent
+				? NekoRouteMostCharacters - spent : 0;
+			if(room > 40)
+				[lines addObject:[trimmed substringToIndex:room]];
 			break;
+		}
 		[lines addObject:trimmed];
 		spent += [trimmed length];
 	}

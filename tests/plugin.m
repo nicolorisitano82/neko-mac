@@ -298,6 +298,15 @@ int main(void)
 			@"by name, out of the plugin's folder",
 			[[NekoCharacter characterWithIdentifier:@"borrowed"] name]);
 
+		/* And the window says which one, rather than how many. Reported the first
+		   time somebody installed a plugin full of characters: they were all
+		   there, in a menu of forty-seven, and the row said "3 characters" —
+		   which is true and no help at all. */
+		ok([[installed describeWhatItAdds] rangeOfString:@"Borrowed"].location
+		       != NSNotFound,
+			@"and the row names it instead of counting it",
+			[installed describeWhatItAdds]);
+
 		/* And the collision rule: renamed back to one the app already ships, it
 		   is simply not reachable. */
 		[its setObject:@"neko" forKey:@"Identifier"];

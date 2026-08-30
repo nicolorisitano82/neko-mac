@@ -725,12 +725,34 @@ static NSString * const NekoPluginMarkers[] = { @"ACTION:", @"IMAGE:", @"LOOK:",
 		[parts addObject:[NSString stringWithFormat:
 			NekoPluginLocalized(@"%lu feeds"), (unsigned long)feeds]];
 
+	/* Named, not counted. Somebody who switches on a plugin that ships characters
+	   is then looking for them in a menu of forty-seven, and "3 characters" does
+	   not help with that — which is exactly what happened the first time one was
+	   installed. */
+	NSMutableArray *characterNames = [NSMutableArray array];
+	NSEnumerator *where = [[self characterPaths] objectEnumerator];
+	NSString *path;
+	while((path = [where nextObject]) != nil) {
+		NSDictionary *its = [NSDictionary dictionaryWithContentsOfFile:
+			[path stringByAppendingPathComponent:@"character.plist"]];
+		NSString *called = [its objectForKey:@"Name"];
+		if([called length] > 0)
+			[characterNames addObject:called];
+	}
+	if([characterNames count] > 0 && [characterNames count] <= 6) {
+		[parts addObject:[NSString stringWithFormat:
+			NekoPluginLocalized(@"the characters %@, in the Character menu"),
+			[characterNames componentsJoinedByString:@", "]]];
+	}
+	else {
+
 	NSUInteger characters = [[self characterPaths] count];
 	if(characters == 1)
 		[parts addObject:NekoPluginLocalized(@"1 character")];
 	else if(characters > 1)
 		[parts addObject:[NSString stringWithFormat:
 			NekoPluginLocalized(@"%lu characters"), (unsigned long)characters]];
+	}
 
 	NSUInteger verbs = [[self verbs] count];
 	if(verbs == 1)

@@ -1,5 +1,6 @@
 #import "NekoMemory.h"
 #import "NekoRecall.h"
+#import "NekoFact.h"
 #import "NekoBrains.h"
 #import "NekoAnswerProvider.h"
 #import <NaturalLanguage/NaturalLanguage.h>
@@ -338,6 +339,24 @@ static BOOL NekoMemoryWorthKeeping(NSString *word)
 	NSUInteger forDurable = NekoMemoryPromptChars / 4;
 
 	NSMutableString *block = [NSMutableString string];
+
+	/* What somebody said in so many words, which outranks anything a reflection
+	   worked out about them: they told the cat this on purpose. */
+	NSArray *told = [NekoFact all];
+	if([told count] > 0) {
+		NSMutableString *part = [NSMutableString stringWithString:
+			@"What they told you to remember:\n"];
+		NSUInteger forTold = NekoMemoryPromptChars / 4;
+		NSEnumerator *t = [told reverseObjectEnumerator];   /* newest first */
+		NSString *one;
+		while((one = [t nextObject]) != nil) {
+			if([part length] > forTold)
+				break;
+			[part appendFormat:@"- %@\n", one];
+		}
+		[block appendString:part];
+		[block appendString:@"\n"];
+	}
 
 	/* Months rather than days: the most compressed thing here, so it goes first
 	   and costs least. */
