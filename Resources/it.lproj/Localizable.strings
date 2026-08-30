@@ -511,3 +511,9 @@
 "There was no text to ask about." = "Non c’era testo su cui chiedere.";
 "Ask Neko about this" = "Chiedi a Neko";
 "the characters %@, in the Character menu" = "i personaggi %@, nel menu Personaggio";
+
+/* something for the calendar */
+"That was already yesterday — say a day that is still coming." = "Quello è già passato — dimmi un giorno che deve ancora venire.";
+"Appointment" = "Appuntamento";
+"%@ to %@ — “%@”. Shall I put it in your calendar?" = "%@ fino alle %@ — “%@”. Lo metto in calendario?";
+"It is in front of your calendar — press Add there." = "È davanti al tuo calendario — premi Aggiungi lì.";

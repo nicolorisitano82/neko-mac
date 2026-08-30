@@ -45,6 +45,7 @@ again afterwards.
 | `stream.m` | that an answer arriving in pieces is read back as the answer it was |
 | `fact.m` | the line between “ricordati che” (a fact) and “ricordami di” (an errand) |
 | `doors.m` | the Services entry and the neko:// URL, and what the URL refuses to carry |
+| `calendar.m` | that “alle 7” said in the afternoon is tomorrow, and nine remarks are not appointments |
 | `flee.m` | running from the cursor, staying put, and the gap between two screens |
 | `player.m` | the closed lists behind Music and Spotify, and a real volume moved and put back |
 | `tempo.m` | how long a short answer waits, and everything exempt from waiting |

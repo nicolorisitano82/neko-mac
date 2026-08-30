@@ -7,6 +7,7 @@
 #import "NekoWeb.h"
 #import "NekoTimer.h"
 #import "NekoFact.h"
+#import "NekoAppointment.h"
 #import "NekoPluginRoutes.h"
 #import "NekoPluginText.h"
 #import "NekoPluginVerbs.h"
@@ -922,6 +923,15 @@ static const NSTimeInterval NekoHoldToType = 0.5;
 		return;
 	}
 
+	/* Something for the calendar, before any engine and for the reason the whole
+	   of this list exists: a model asked what day Friday is answers with a day.
+	   NSDataDetector answers with the right one, in four languages, for nothing. */
+	NSDictionary *appointment = [NekoAppointment wantedFor:question];
+	if(appointment != nil) {
+		[self proposeAppointment:appointment];
+		return;
+	}
+
 	/* A route a plugin asked for, in the same place and for the same reason as
 	   the news — and gated on looking things up, because that is what it is. */
 	if([[NekoWeb sharedWeb] isEnabled] && [NekoPluginRoutes anythingListens]) {
@@ -1206,6 +1216,31 @@ static const NSTimeInterval NekoHoldToType = 0.5;
 		else
 			[self sayInCharacter:problem
 				?: NekoAskLocalized(@"That did not work.")];
+	}];
+}
+
+/* An appointment, read back in full before anything is written: the day in words,
+   the hours, and the title it worked out from what was left of the sentence. This
+   one is read back rather than simply done — unlike the timer — because it lands
+   in somebody's calendar, where a wrong entry outlives the misunderstanding. */
+- (void)proposeAppointment:(NSDictionary *)appointment
+{
+	NSString *sentence = [appointment objectForKey:@"Sentence"];
+	if([appointment objectForKey:@"Problem"] != nil) {
+		/* A date that has already gone. Said, not silently moved a year. */
+		[self sayInCharacter:sentence];
+		return;
+	}
+
+	phase = NekoPhaseAnswering;
+	[[self panel] holdWithState:NekoStateAwake];
+	[bubble askText:sentence nearRect:[[self panel] frame]
+	        decided:^(BOOL yes) {
+		if(!yes) {
+			[self sayInCharacter:NekoAskLocalized(@"All right, I will not.")];
+			return;
+		}
+		[self sayInCharacter:[NekoAppointment make:appointment]];
 	}];
 }
 

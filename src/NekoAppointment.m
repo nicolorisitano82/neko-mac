@@ -98,7 +98,15 @@ static NSArray *NekoCalendarOpenings(void)
 	/* What is left of the sentence once the date and the asking are out of it. */
 	NSMutableString *title = [NSMutableString stringWithString:question];
 	[title deleteCharactersInRange:[hit range]];
-	NSEnumerator *e = [NekoCalendarOpenings() objectEnumerator];
+	/* Longest first. Taken in the order they are listed, "añade al calendario"
+	   lost its "al calendario" to the shorter phrase and left "añade" sitting in
+	   front of the title. */
+	NSArray *byLength = [NekoCalendarOpenings() sortedArrayUsingComparator:
+		^NSComparisonResult(NSString *a, NSString *b) {
+		if([a length] == [b length]) return NSOrderedSame;
+		return [a length] > [b length] ? NSOrderedAscending : NSOrderedDescending;
+	}];
+	NSEnumerator *e = [byLength objectEnumerator];
 	NSString *opening;
 	while((opening = [e nextObject]) != nil) {
 		NSRange where = [title rangeOfString:opening options:NSCaseInsensitiveSearch];

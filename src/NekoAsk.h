@@ -127,6 +127,11 @@ extern NSString * const NekoLastUnpromptedKey;
    is the one place this application has never taken instructions from. */
 - (void)proposeQuestion:(NSString *)question;
 
+/* An appointment, read back in full — the day in words, the hours, the title —
+   before anything is written. Read back and not simply done, unlike the timer:
+   this one lands in a calendar, where a wrong entry outlives the mistake. */
+- (void)proposeAppointment:(NSDictionary *)appointment;
+
 /* The two halves either side of a plugin having a look at the words: the second
    is what actually asks, and what actually says. */
 - (void)askAfterPlugins:(NSString *)question;
