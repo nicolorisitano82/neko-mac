@@ -1209,6 +1209,27 @@ static const NSTimeInterval NekoHoldToType = 0.5;
 	}];
 }
 
+/* A question somebody else's program opened a URL to ask. Shown before it is
+   asked, because the sentence did not come from this room. */
+- (void)proposeQuestion:(NSString *)question
+{
+	if([question length] == 0)
+		return;
+	[self cancelEverything];
+	phase = NekoPhaseAnswering;
+	[[self panel] holdWithState:NekoStateAwake];
+	[bubble askText:[NSString stringWithFormat:
+		NekoAskLocalized(@"Something asked me: “%@”. Shall I answer it?"), question]
+	       nearRect:[[self panel] frame]
+	        decided:^(BOOL yes) {
+		if(!yes) {
+			[self sayInCharacter:NekoAskLocalized(@"All right, I will not.")];
+			return;
+		}
+		[self ask:question];
+	}];
+}
+
 /* Nothing is done on the strength of a model's sentence alone: the deed is read
    back in the bubble and waits for a yes. A dismissed bubble, or one that timed
    out, is a no. */

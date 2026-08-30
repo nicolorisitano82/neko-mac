@@ -22,25 +22,59 @@
 	<string>2.10</string>
 	<key>CFBundleSignature</key>
 	<string>????</string>
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleTypeRole</key>
+			<string>Viewer</string>
+			<key>CFBundleURLName</key>
+			<string>Ask Neko</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>neko</string>
+			</array>
+		</dict>
+	</array>
 	<key>CFBundleVersion</key>
 	<string>2.10</string>
+	<key>NSAppleEventsUsageDescription</key>
+	<string>So that “alza il volume”, “metti in pausa” and “prossima canzone” reach Music and Spotify directly. Neko speaks to those two applications and to no others, with a fixed list of commands it can send.</string>
 	<key>NSHumanReadableCopyright</key>
 	<string>Public domain</string>
+	<key>NSLocationUsageDescription</key>
+	<string>So that “what is the weather” and “what is happening here” need no town named. Neko keeps the name of the town and of the region, never the coordinates.</string>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>So that “what is the weather” and “what is happening here” need no town named. Neko keeps the name of the town and of the region, never the coordinates.</string>
 	<key>NSMainNibFile</key>
 	<string>MainMenu</string>
 	<key>NSMicrophoneUsageDescription</key>
 	<string>Neko listens only while you are asking it a question, from the keystroke until you stop talking. Nothing is recorded.</string>
 	<key>NSPrincipalClass</key>
 	<string>NSApplication</string>
+	<key>NSServices</key>
+	<array>
+		<dict>
+			<key>NSMenuItem</key>
+			<dict>
+				<key>default</key>
+				<string>Ask Neko about this</string>
+			</dict>
+			<key>NSMessage</key>
+			<string>askAboutSelection</string>
+			<key>NSPortName</key>
+			<string>Neko</string>
+			<key>NSRequiredContext</key>
+			<dict/>
+			<key>NSSendTypes</key>
+			<array>
+				<string>NSStringPboardType</string>
+				<string>public.utf8-plain-text</string>
+			</array>
+		</dict>
+	</array>
 	<key>NSSpeechRecognitionUsageDescription</key>
 	<string>What you ask Neko is turned into text so that it can be answered. Recognition stays on this Mac when the language allows it.</string>
 	<key>NSUIElement</key>
 	<string>1</string>
-	<key>NSLocationUsageDescription</key>
-	<string>So that “what is the weather” and “what is happening here” need no town named. Neko keeps the name of the town and of the region, never the coordinates.</string>
-	<key>NSLocationWhenInUseUsageDescription</key>
-	<string>So that “what is the weather” and “what is happening here” need no town named. Neko keeps the name of the town and of the region, never the coordinates.</string>
-	<key>NSAppleEventsUsageDescription</key>
-	<string>So that “alza il volume”, “metti in pausa” and “prossima canzone” reach Music and Spotify directly. Neko speaks to those two applications and to no others, with a fixed list of commands it can send.</string>
 </dict>
 </plist>

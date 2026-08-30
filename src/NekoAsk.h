@@ -117,6 +117,16 @@ extern NSString * const NekoLastUnpromptedKey;
 /* What a plugin's route fetched, quoted to a model as somebody else's words. */
 - (void)followRoute:(NSDictionary *)route;
 
+/* The whole of asking, from a question that is already text: what the typed line
+   and the microphone both end in, and what the Services entry uses. */
+- (void)ask:(NSString *)question;
+
+/* A question that arrived from somewhere other than this application — a URL
+   another program opened. It is read back and waits for a yes, like every other
+   thing here that came from outside: a URL can be on a web page, and a web page
+   is the one place this application has never taken instructions from. */
+- (void)proposeQuestion:(NSString *)question;
+
 /* The two halves either side of a plugin having a look at the words: the second
    is what actually asks, and what actually says. */
 - (void)askAfterPlugins:(NSString *)question;

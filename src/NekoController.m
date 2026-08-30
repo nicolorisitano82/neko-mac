@@ -1,6 +1,7 @@
 #import "NekoController.h"
 #import "NekoTimer.h"
 #import "NekoFact.h"
+#import "NekoDoors.h"
 #import "NekoAdvisor.h"
 #import "NekoAntics.h"
 #import "NekoDesktop.h"
@@ -355,6 +356,11 @@ static const float NekoMaxStopRadius = 200.0f;
 	                                            name:NekoPluginsDidChangeNotification
 	                                          object:nil];
 	[[NekoPlugins sharedPlugins] seedFromBundle];
+
+	/* And the ways in from the rest of the Mac: the Services entry that puts
+	   "Ask Neko about this" in every application's right-click menu, and the
+	   neko:// URL that Shortcuts and scripts can open. */
+	[NekoDoors open];
 
 	/* Once a day, yesterday becomes a few durable lines. Costs nothing on the
 	   days there is nothing to reduce. */

@@ -505,3 +505,8 @@
 "they are called %@" = "se llama %@";
 "Hello, %@." = "Hola, %@.";
 "%lu day(s) of notes, %lu line(s) it had kept, and %lu thing(s) you asked it to remember. This cannot be undone." = "%lu día(s) de notas, %lu línea(s) que había guardado, y %lu cosa(s) que le pediste recordar. No se puede deshacer.";
+
+/* the ways in, from the rest of the Mac */
+"Something asked me: “%@”. Shall I answer it?" = "Algo me ha preguntado: «%@». ¿Respondo?";
+"There was no text to ask about." = "No había texto sobre el que preguntar.";
+"Ask Neko about this" = "Preguntar a Neko";
