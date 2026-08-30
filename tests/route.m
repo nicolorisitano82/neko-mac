@@ -218,6 +218,36 @@ int main(void)
 	   && [joined rangeOfString:@"ritardo"].location != NSNotFound,
 		@"and the words left in", joined);
 
+	/* JSON, which is what most things that answer a question answer in. Read by a
+	   closed list of field names rather than by cleverness: Wikipedia's own
+	   summary is one 1,948-byte line, and before this it came back as nothing. */
+	NSString *json = @"{\"type\":\"standard\",\"title\":\"Felis silvestris catus\","
+		@"\"description\":\"mammifero della famiglia dei felidi\","
+		@"\"thumbnail\":{\"source\":\"https://example.invalid/x.jpg\",\"width\":320},"
+		@"\"extract\":\"Il gatto domestico è un mammifero carnivoro.\"}";
+	NSArray *fromJSON = [NekoPluginRoutes linesIn:
+		[json dataUsingEncoding:NSUTF8StringEncoding]];
+	NSString *asRead = [fromJSON componentsJoinedByString:@" | "];
+	ok([asRead rangeOfString:@"mammifero carnivoro"].location != NSNotFound,
+		@"the prose comes out of a JSON answer", asRead);
+	ok([asRead rangeOfString:@"example.invalid"].location == NSNotFound
+	   && [asRead rangeOfString:@"320"].location == NSNotFound,
+		@"and the plumbing around it does not", asRead);
+
+	/* And the shape that used to defeat it entirely. */
+	NSMutableString *oneLongLine = [NSMutableString string];
+	NSUInteger c;
+	for(c = 0; c < 3000; c++)
+		[oneLongLine appendString:@"a"];
+	NSArray *cut = [NekoPluginRoutes linesIn:
+		[oneLongLine dataUsingEncoding:NSUTF8StringEncoding]];
+	ok([cut count] == 1 && [[cut objectAtIndex:0] length] <= 1200
+	   && [[cut objectAtIndex:0] length] > 40,
+		@"a single line longer than the whole budget is cut, not dropped",
+		[NSString stringWithFormat:@"%lu line(s), %lu characters",
+			(unsigned long)[cut count],
+			(unsigned long)[[cut firstObject] length]]);
+
 	NSMutableString *huge = [NSMutableString string];
 	NSUInteger n;
 	for(n = 0; n < 400; n++)
