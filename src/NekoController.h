@@ -31,6 +31,7 @@ extern NSString * const NekoSettingsDidChangeNotification;
 	NSMenuItem *stayItem;
 	NSMenuItem *timerItem;
 	NSMenuItem *glanceItem;
+	id permissions;              /* NekoPermissionsTab, which owns that tab */
 	NSMenuItem *askItem;
 	NSTabView *prefsTabs;
 	NSMenu *characterMenu;
@@ -121,6 +122,11 @@ extern NSString * const NekoSettingsDidChangeNotification;
 - (BOOL)canOpenAtLogin;
 
 - (void)showPreferences:(id)sender;
+
+/* The menu that asks which folder, shared with the Permissions tab: the folders
+   row there is not one permission but six, and the menu belongs where the folders
+   are chosen rather than where the row is drawn. */
+- (void)showFolderPressed:(id)sender;
 - (void)togglePause:(id)sender;
 - (void)showAbout:(id)sender;
 - (void)quit:(id)sender;

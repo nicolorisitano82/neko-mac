@@ -117,18 +117,26 @@ with a remote engine chosen that text follows the engine.
 ## 5. What is still missing, ranked, after that
 
 1. **The one-shot look**, above.
-2. **A conversation two or three turns deep.** Still 180 seconds and one turn. The
-   last study said to find out from the diary how often a third turn is attempted
-   before changing anything; that measurement has still not been made, and it is an
-   afternoon.
+2. ~~**A conversation two or three turns deep.**~~ **Done, and the measurement
+   came first.** Counted from this Mac's own diary, timestamps only and never the
+   words: of fourteen runs of questions inside three minutes of each other, **six
+   reached a third turn** and two reached a fifth. So three turns instead of one,
+   bounded three ways — a count, the same 180-second clock, and 600 characters
+   spent newest first — because the reason for the old rule, that a long prompt
+   makes a small model worse, has not gone away. The diary counted here contains
+   this session's own harness traffic, which inflates long runs; the number is
+   enough to act on and not enough to quote.
 3. **A notification when the timer lands and nobody is there.** 2.10 taught the
    timer to wait for a locked screen, for an hour. A local notification is the
    honest fallback for the hour after that, and `utilities.md` said so before any
    of this was built: only if the person has already granted it for something else.
-4. **`NekoController`.** 2,337 lines and 118 methods, and now the biggest thing in
-   the project by a factor of two. The pattern that has worked five times — take
-   one coherent job out, with a header comment saying why it exists — has not been
-   applied to it once.
+4. **`NekoController`.** **Started.** The Permissions tab is `NekoPermissionsTab`
+   now — 2,377 lines and 118 methods down to 2,175 and 116, with 238 lines moved.
+   It went first because it was the easiest to move honestly: 206 lines touching
+   exactly **two** of the controller's instance variables, against 182 mentions for
+   the local-model tab. Four preference tabs left, and `tests/layout.m` — which
+   opens every tab and counts every control — is what proved the move faithful:
+   the same five controls and thirty rows, no complaints.
 5. **The hot key has no harness**, and it is the application's only front door.
 
 ## 6. What not to do, unchanged and now better evidenced

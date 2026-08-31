@@ -196,8 +196,19 @@ int main(int argc, const char *argv[])
 		@"and it is in what the model is told", nil);
 
 	[ask rememberQuestion:nil answer:@"Xcode has been open a while."];
-	ok([[ask threadForPrompt] hasPrefix:@"You said, without being asked:"],
-		@"a remark nobody asked for is a turn too", nil);
+	/* It used to be the whole thread, because the thread was one turn. Since the
+	   diary said a third turn is common — six runs of fourteen — the thread is up
+	   to three, so an unprompted remark is now the *last* line of it rather than
+	   the only one. Which is what this asserts: it is a turn, and it is the
+	   newest. */
+	NSString *after = [ask threadForPrompt];
+	NSRange remark = [after rangeOfString:@"You said, without being asked: Xcode"];
+	ok(remark.location != NSNotFound,
+		@"a remark nobody asked for is a turn too", after);
+	ok(remark.location != NSNotFound
+	   && [after rangeOfString:@"Tolkien" options:0
+	                     range:NSMakeRange(0, remark.location)].location != NSNotFound,
+		@"and it comes after the question that went before it", nil);
 
 	[ask rememberQuestion:nil answer:nil];
 	ok([[ask threadForPrompt] length] == 0, @"and it can be emptied", nil);

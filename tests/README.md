@@ -48,6 +48,7 @@ again afterwards.
 | `calendar.m` | that “alle 7” said in the afternoon is tomorrow, and nine remarks are not appointments |
 | `glance.m` | whether reading the screen improves the remarks — and the prompt that was forbidding it |
 | `look.m` | that a look stops on its own, measured where it reads and not in the menu |
+| `thread.m` | how much of a conversation it still has in hand, and the three bounds on it |
 | `flee.m` | running from the cursor, staying put, and the gap between two screens |
 | `player.m` | the closed lists behind Music and Spotify, and a real volume moved and put back |
 | `tempo.m` | how long a short answer waits, and everything exempt from waiting |
