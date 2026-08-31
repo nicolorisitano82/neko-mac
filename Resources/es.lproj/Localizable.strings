@@ -539,3 +539,7 @@
 "That is tomorrow." = "Es mañana.";
 "%ld days, on %@." = "%ld días, el %@.";
 "%@, at %@." = "%@, a las %@.";
+
+/* The downloadable models. */
+"2.3 GB — follows a brief better than anything above it" = "2,3 GB — cumple el encargo mejor que todos los de arriba";
+"2.7 GB — the most recent, and the largest worth keeping on a laptop" = "2,7 GB — el más reciente, y el mayor que merece la pena en un portátil";

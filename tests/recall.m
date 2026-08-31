@@ -134,21 +134,23 @@ int main(void)
 
 	printf("\n--- what it cannot do, said rather than hidden ---\n");
 
-	/* Synonyms. Asked about "impostazioni" it does not find "preferenze", and the
-	   sentence embedding this replaced ranked that line fifth of twenty — which
-	   would not have reached a prompt with room for three either.
+	/* Synonyms. This used to be the known miss: asked about "impostazioni" it did
+	   not find "preferenze", and the sentence embedding it replaced ranked that
+	   line fifth of twenty, which would not have reached a prompt with room for
+	   three either. Widening the question with NLEmbedding's *word* neighbours was
+	   tried after 2.9 and measured — there is no threshold that admits
+	   versione↔release (0.922) while rejecting gatto↔cane (0.660) — and the system
+	   dictionary answers with definitions.
 
-	   Widening the question with NLEmbedding's *word* neighbours was tried after
-	   2.9 and measured: there is no threshold that admits versione↔release (0.922)
-	   while rejecting gatto↔cane (0.660), because distributional similarity is not
-	   synonymy. The table is in NekoRecall.h. Recorded here so that the day
-	   somebody fixes it, this line is what they delete — and so that they do not
-	   spend the afternoon on the same idea. */
+	   It is fixed now, and not here: `NekoWords` learns the pair from the diary's
+	   own vocabulary and hands it in, and `tests/words.m` measures both halves.
+	   What stays in this harness is the guarantee that recall on its own is
+	   unchanged — no table, no synonyms, same answer as before. */
 	NSArray *synonym = [NekoRecall linesIn:diary
 		about:@"che problema avevo con le impostazioni?" limit:3 rarity:rarity];
-	notMeasured([NSString stringWithFormat:
-		@"synonyms: “impostazioni” does not find “preferenze” (%lu lines came back)",
-		(unsigned long)[synonym count]]);
+	ok([synonym count] == 0,
+		@"“impostazioni” still finds nothing on its own — the widening is NekoWords'",
+		[NSString stringWithFormat:@"%lu lines came back", (unsigned long)[synonym count]]);
 
 	printf("\n--- and it is fast enough to do on a question ---\n");
 

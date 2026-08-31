@@ -1,5 +1,6 @@
 #import "NekoMemory.h"
 #import "NekoRecall.h"
+#import "NekoWords.h"
 #import "NekoFact.h"
 #import "NekoBrains.h"
 #import "NekoAnswerProvider.h"
@@ -312,6 +313,8 @@ static BOOL NekoMemoryWorthKeeping(NSString *word)
 	[recallLines release];
 	[recallWords release];
 	[recallRarity release];
+	[recallVocabulary release];
+	recallVocabulary = nil;
 	[recallBuiltAt release];
 	recallLines = [[self olderLines] retain];
 	recallWords = [[NekoRecall wordSetsFor:recallLines] retain];
@@ -324,8 +327,45 @@ static BOOL NekoMemoryWorthKeeping(NSString *word)
 	if([question length] == 0)
 		return [NSArray array];
 	[self buildRecallIfStale];
-	return [NekoRecall linesIn:recallLines words:recallWords about:question
-	                     limit:limit rarity:recallRarity];
+	NSArray *found = [NekoRecall linesIn:recallLines words:recallWords
+	                               about:question limit:limit rarity:recallRarity
+	                            synonyms:[[NekoWords sharedWords] table]];
+	/* A question the diary had nothing for is the only time it is worth asking
+	   what its words might mean here — and it is asked later, when the engine is
+	   free, because the answer somebody is waiting for comes first. */
+	if([found count] == 0)
+		[[NekoWords sharedWords] missedOn:question];
+	return found;
+}
+
+/* Merged over the lines with the same tagger a question is read with, so that
+   "preferenze" and "le preferenze" are one word on both sides of the match. */
+- (NSArray *)vocabularyOfSubstance
+{
+	[self buildRecallIfStale];
+	if(recallVocabulary != nil)
+		return recallVocabulary;
+
+	NSMutableSet *substance = [NSMutableSet set];
+	NSEnumerator *e = [recallLines objectEnumerator];
+	NSString *line;
+	while((line = [e nextObject]) != nil) {
+		NSDictionary *words = [NekoRecall askedIn:line];
+		NSEnumerator *w = [words keyEnumerator];
+		NSString *word;
+		while((word = [w nextObject]) != nil)
+			if([[words objectForKey:word] doubleValue] >= 0.8 && [word length] >= 4)
+				[substance addObject:word];
+	}
+	NSMutableArray *order = [NSMutableArray arrayWithArray:[substance allObjects]];
+	[order sortUsingComparator:^NSComparisonResult(NSString *a, NSString *b) {
+		NSNumber *left = [recallRarity objectForKey:a];
+		NSNumber *right = [recallRarity objectForKey:b];
+		return [(right ?: [NSNumber numberWithDouble:0.0])
+			compare:(left ?: [NSNumber numberWithDouble:0.0])];
+	}];
+	recallVocabulary = [order copy];
+	return recallVocabulary;
 }
 
 - (NSString *)contextForPrompt
@@ -844,6 +884,8 @@ static BOOL NekoMemoryWorthKeeping(NSString *word)
 		[files removeItemAtPath:[[[self directory] path]
 			stringByAppendingPathComponent:name] error:NULL];
 	[[NSUserDefaults standardUserDefaults] removeObjectForKey:NekoMemoryReflectedKey];
+	/* The words learned from it go with it: they are made of it. */
+	[[NekoWords sharedWords] forgetEverything];
 }
 
 @end

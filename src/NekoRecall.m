@@ -115,6 +115,32 @@ static double NekoWeightForClass(NLTag tag)
 	return asked;
 }
 
+/* What a word borrowed from somebody's own vocabulary is worth against the word
+   they actually used. Below one, always: a line with the real word in it must
+   never lose to a line with its synonym. */
+static const double NekoRecallBorrowed = 0.7;
+
++ (NSDictionary *)askedIn:(NSString *)question widenedBy:(NSDictionary *)synonyms
+{
+	NSDictionary *asked = [self askedIn:question];
+	if([synonyms count] == 0 || [asked count] == 0)
+		return asked;
+	NSMutableDictionary *wider = [NSMutableDictionary dictionaryWithDictionary:asked];
+	NSEnumerator *e = [asked keyEnumerator];
+	NSString *word;
+	while((word = [e nextObject]) != nil) {
+		NSEnumerator *means = [[synonyms objectForKey:word] objectEnumerator];
+		NSString *other;
+		while((other = [means nextObject]) != nil) {
+			double borrowed = [[asked objectForKey:word] doubleValue] * NekoRecallBorrowed;
+			/* Never over the word somebody actually said, if they said both. */
+			if([[wider objectForKey:other] doubleValue] < borrowed)
+				[wider setObject:[NSNumber numberWithDouble:borrowed] forKey:other];
+		}
+	}
+	return wider;
+}
+
 + (NSDictionary *)rarityAcross:(NSArray *)lines
 {
 	NSMutableDictionary *seenIn = [NSMutableDictionary dictionary];
@@ -196,7 +222,18 @@ static double NekoWeightForClass(NLTag tag)
                limit:(NSUInteger)limit
               rarity:(NSDictionary *)rarity
 {
-	NSDictionary *asked = [self askedIn:question];
+	return [self linesIn:lines words:sets about:question limit:limit
+	              rarity:rarity synonyms:nil];
+}
+
++ (NSArray *)linesIn:(NSArray *)lines
+               words:(NSArray *)sets
+               about:(NSString *)question
+               limit:(NSUInteger)limit
+              rarity:(NSDictionary *)rarity
+            synonyms:(NSDictionary *)synonyms
+{
+	NSDictionary *asked = [self askedIn:question widenedBy:synonyms];
 	if([asked count] == 0 || limit == 0 || [sets count] != [lines count])
 		return [NSArray array];
 

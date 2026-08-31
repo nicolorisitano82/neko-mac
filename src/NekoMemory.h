@@ -45,6 +45,7 @@
 	NSArray *recallLines;
 	NSArray *recallWords;
 	NSDictionary *recallRarity;
+	NSArray *recallVocabulary;
 	NSDate *recallBuiltAt;
 }
 
@@ -77,6 +78,14 @@
 
 /* Older days that bear on the question, best first. Empty when none do. */
 - (NSArray *)linesAbout:(NSString *)question limit:(NSUInteger)limit;
+
+/* The diary's own words of substance, rarest first: the nouns and adjectives
+   somebody actually wrote, without the verbs a line is carried by and without
+   the three-letter markers the file itself uses. This is what NekoWords offers a
+   model to choose among, and it is worked out on demand rather than with the
+   rest of the recall, because it is only ever wanted after a question found
+   nothing. */
+- (NSArray *)vocabularyOfSubstance;
 
 /* Reduces yesterday to a few durable lines, once a day, using the best on-device
    engine. Returns immediately; the work happens on a queue. */
