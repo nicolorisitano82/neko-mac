@@ -36,6 +36,42 @@ intelligence is not in the engine.**
 So a bigger model and a longer prompt are not the road. The two things that are:
 **knowing about the person**, and **never having to guess**.
 
+### The same argument, one floor down
+
+That principle was written here from measurements on this Mac. It turns out to be
+the same claim a 2026 paper from Peking University and DeepSeek-AI makes about the
+inside of a model — *Conditional Memory via Scalable Lookup* (arXiv 2601.07372),
+whose module is confusingly also called Engram and is unrelated to the Go tool of
+that name.
+
+Its argument: language modelling is **two different jobs** — compositional
+reasoning, which wants deep computation, and knowledge retrieval, which is static
+and stereotyped — and a plain transformer is forced to *simulate* the lookup with
+computation it should not have to spend. So they give it a real one: constant-time
+hashed access into embedding tables, beside the Mixture-of-Experts rather than
+instead of it. Against an iso-parameter baseline they report MMLU +3.4, BBH +5.0,
+and a long-context needle test at 97.0 against 84.2, with the best split around
+80% experts and 20% lookup.
+
+**That is this document's §0, one floor down.** What the paper does inside the
+model — stop making it simulate a lookup, give it one — is what this application
+does around it: the news, the weather, the timer, the verbs, the routes and the
+diary recall are all lookups done in code, and the model is left to compose a
+sentence. The reason found here was a 4B inventing a headline; the reason found
+there is a benchmark. Same shape.
+
+**What it does not mean is that anything here changes.** This project does not
+train models; it uses Apple's, a local GGUF, or somebody's API. There is nothing
+to build from this paper.
+
+There is one thing worth watching, and it is falsifiable. If lookup modules of
+this kind reach the small local models, the weakest engine on this list gets
+better at precisely what it is worst at — and the measurement that justified the
+application's own routing (`tests/web.m`, a 4B inventing *"Oggi a Milano è stato
+annunciato…"*) should be **re-run rather than quoted** when the local models
+change. The routing would still be right for the safety reason; it might stop
+being right for the accuracy one.
+
 ## 1. Memory that recalls by relevance ✅ *shipped in 2.9 — and the plan here was wrong*
 
 **The biggest lever, and the one most in character.**
