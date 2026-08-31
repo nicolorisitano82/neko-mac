@@ -638,6 +638,10 @@ rather than remembered.
 
 [docs/one-look.md](docs/one-look.md) designs the one idea worth taking from the
 rest of the field: reading the screen granted for a moment rather than for ever.
+[docs/one-look-roadmap.md](docs/one-look-roadmap.md) then asks whether it is worth
+building at all, finds that a mechanism shipped in 2.11 already covers the useful
+half at no permission cost, and proposes running the experiment nobody has run —
+does the screen text improve the remarks? — before writing any of it.
 
 The other studies, each written before the thing it describes was built:
 [ask-neko.md](docs/ask-neko.md), [natural.md](docs/natural.md),

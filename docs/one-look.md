@@ -156,6 +156,16 @@ The negative half is the half that matters, as usual:
 
 ## 5. What this costs, and what it is worth
 
+> **Read [one-look-roadmap.md](one-look-roadmap.md) before building any of this.**
+> The analysis there contradicts this section's ordering: §2.1, called "most of the
+> value" above, has the *least* marginal value, because "Ask Neko about this"
+> shipped in 2.11 and covers the same want with **no permission at all** and
+> perfect precision about what is read. And it names an experiment that comes
+> before all three pieces — whether the screen text improves the remarks at all —
+> whose likeliest useful outcome is deleting the capability rather than reshaping
+> it.
+
+
 Half a day for §2.1, an hour for §2.2, half a day for §2.3 on top of `NekoTimer`'s
 machinery, and a harness of about the size of `tests/timer.m`.
 
