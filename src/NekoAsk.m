@@ -8,6 +8,7 @@
 #import "NekoTimer.h"
 #import "NekoFact.h"
 #import "NekoAppointment.h"
+#import "NekoGlance.h"
 #import "NekoPluginRoutes.h"
 #import "NekoPluginText.h"
 #import "NekoPluginVerbs.h"
@@ -910,6 +911,15 @@ static const NSTimeInterval NekoHoldToType = 0.5;
 	NSDictionary *fact = [NekoFact wantedFor:question];
 	if(fact != nil) {
 		[self sayInCharacter:[NekoFact act:fact]];
+		return;
+	}
+
+	/* Asked to look at the screen for a while. Before the timer, because "guarda
+	   per dieci minuti" carries a duration and only the trigger words tell the two
+	   apart. */
+	NSTimeInterval looking = [NekoGlance wantedFor:question];
+	if(looking > 0.0) {
+		[self sayInCharacter:[[NekoGlance sharedGlance] lookFor:looking]];
 		return;
 	}
 

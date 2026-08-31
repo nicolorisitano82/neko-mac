@@ -30,6 +30,7 @@ extern NSString * const NekoSettingsDidChangeNotification;
 	NSMenuItem *pauseItem;
 	NSMenuItem *stayItem;
 	NSMenuItem *timerItem;
+	NSMenuItem *glanceItem;
 	NSMenuItem *askItem;
 	NSTabView *prefsTabs;
 	NSMenu *characterMenu;

@@ -2,6 +2,7 @@
 #import "NekoTimer.h"
 #import "NekoFact.h"
 #import "NekoDoors.h"
+#import "NekoGlance.h"
 #import "NekoAdvisor.h"
 #import "NekoAntics.h"
 #import "NekoDesktop.h"
@@ -162,6 +163,18 @@ static const float NekoMaxStopRadius = 200.0f;
 	                     keyEquivalent:@""];
 	[timerItem setTarget:self];
 	[self updateTimerItem];
+
+	/* And the same shape for the look: there only while it is running, saying how
+	   long is left, and one click stops it. A permission with a visible clock on
+	   it is one somebody can reason about. */
+	glanceItem = [menu addItemWithTitle:@"" action:@selector(stopGlance:)
+	                      keyEquivalent:@""];
+	[glanceItem setTarget:self];
+	[self updateGlanceItem];
+	[[NSNotificationCenter defaultCenter] addObserver:self
+	                                         selector:@selector(updateGlanceItem)
+	                                             name:NekoGlanceDidChangeNotification
+	                                           object:nil];
 	[[NSNotificationCenter defaultCenter] addObserver:self
 	                                         selector:@selector(updateTimerItem)
 	                                             name:NekoTimerDidChangeNotification
@@ -273,6 +286,20 @@ static const float NekoMaxStopRadius = 200.0f;
 - (void)menuWillOpen:(NSMenu *)which
 {
 	[self updateTimerItem];
+	[self updateGlanceItem];
+}
+
+- (void)updateGlanceItem
+{
+	NSString *title = [[NekoGlance sharedGlance] menuTitle];
+	[glanceItem setHidden:title == nil];
+	[glanceItem setTitle:title ?: @""];
+}
+
+- (void)stopGlance:(id)sender
+{
+	[[NekoGlance sharedGlance] stop];
+	[[NekoAsk sharedAsk] sayUnprompted:NekoLocalized(@"I have stopped looking.")];
 }
 
 - (void)cancelTimer:(id)sender
@@ -1599,9 +1626,13 @@ static const float NekoMaxStopRadius = 200.0f;
 	[content addSubview:suggestCheck];
 	[suggestCheck release];
 
-	readTextCheck = [[NSButton alloc] initWithFrame:NSMakeRect(20.0f, 354.0f, 556.0f, 18.0f)];
-	[readTextCheck setButtonType:NSButtonTypeSwitch];
-	[readTextCheck setTitle:NekoLocalized(@"Let it read the text I am working on")];
+	/* Was a switch, on until somebody remembered it; is a stretch of ten minutes
+	   now, with the time left in the menu and one click to end it. The switch was
+	   the one standing grant in an application that asks per use everywhere else.
+	   See NekoGlance.h. */
+	readTextCheck = [[NSButton alloc] initWithFrame:NSMakeRect(20.0f, 350.0f, 300.0f, 24.0f)];
+	[readTextCheck setBezelStyle:NSBezelStyleRounded];
+	[readTextCheck setTitle:NekoLocalized(@"Let it look for ten minutes")];
 	[readTextCheck setTarget:self];
 	[readTextCheck setAction:@selector(takeReadTextFrom:)];
 	[content addSubview:readTextCheck];
@@ -1700,10 +1731,13 @@ static const float NekoMaxStopRadius = 200.0f;
    and the paragraph underneath says whether it is actually working. */
 - (void)takeReadTextFrom:(id)sender
 {
-	BOOL wanted = ([sender state] == NSControlStateValueOn);
-	[[NSUserDefaults standardUserDefaults] setBool:wanted forKey:NekoReadTextKey];
-	if(wanted)
-		[NekoDesktop requestAccessibility];
+	/* The permission first, because a stretch that cannot read anything is a
+	   countdown that means nothing. */
+	[NekoDesktop requestAccessibility];
+	NSString *said = [[NekoGlance sharedGlance]
+		lookFor:[NekoGlance defaultStretch]];
+	if([said length] > 0)
+		[[NekoAsk sharedAsk] sayUnprompted:said];
 	[self syncSuggestControls];
 }
 
@@ -1800,8 +1834,8 @@ static const float NekoMaxStopRadius = 200.0f;
 		: NekoLocalized(@"Only in the “Roams on its own” behaviour")];
 	[suggestEveryPopUp setEnabled:roaming && on];
 	[suggestNowButton setEnabled:roaming && on];
-	[readTextCheck setState:[defaults boolForKey:NekoReadTextKey]
-		? NSControlStateValueOn : NSControlStateValueOff];
+	/* A button rather than a switch now: nothing to reflect, only whether it
+	   can be pressed at all. */
 	[readTextCheck setEnabled:roaming];
 
 	NSArray *choices = [self suggestIntervalChoices];
@@ -1860,13 +1894,13 @@ static const float NekoMaxStopRadius = 200.0f;
 	   callers and fails if a third one ever forgets. */
 	[line appendString:NekoLocalized(@"Window titles are included only if this Mac has already granted Neko screen recording; that permission is never asked for. None of this ever leaves the Mac: what the cat notices is read by a model on this Mac or not at all, whichever engine you chose for answering questions.")];
 
-	if([[NSUserDefaults standardUserDefaults] boolForKey:NekoReadTextKey]) {
-		[line appendString:@"\n\n"];
-		if([NekoDesktop accessibilityGranted])
-			[line appendString:NekoLocalized(@"Reading the text is on: what is in the field you are typing in, or under the pointer, is included above and goes wherever the rest of it goes. Password fields are refused, nothing at all is read while macOS has secure keyboard entry on, and only the last few hundred characters are taken.")];
-		else
-			[line appendString:NekoLocalized(@"Reading the text is switched on but Neko has no Accessibility permission, so nothing is being read. Open System Settings, Privacy & Security, Accessibility, and allow Neko.")];
-	}
+	[line appendString:@"\n\n"];
+	if([[NekoGlance sharedGlance] isLooking])
+		[line appendString:NekoLocalized(@"It is looking right now — what is in the field you are typing in, or under the pointer, is included above. It stops on its own, the time left is in the cat's menu, and one click there ends it. Password fields are refused, nothing at all is read while macOS has secure keyboard entry on, and only the last few hundred characters are taken.")];
+	else if([NekoDesktop accessibilityGranted])
+		[line appendString:NekoLocalized(@"It is not looking. Ask it to — “guarda cosa sto facendo”, or the button above — and it reads the text you are working on for ten minutes and then stops by itself. There is no way to leave this on: a permission you have to remember to revoke is one nobody should have to remember.")];
+	else
+		[line appendString:NekoLocalized(@"It is not looking, and it has no Accessibility permission either, so it could not. The button above asks for both at once; the permission is in System Settings, Privacy & Security, Accessibility.")];
 	return line;
 }
 
