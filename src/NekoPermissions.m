@@ -1,4 +1,5 @@
 #import "NekoPermissions.h"
+#import "NekoGlance.h"
 #import "NekoPlace.h"
 #import "NekoPlayer.h"
 #import "NekoPluginVerbs.h"
@@ -156,8 +157,14 @@
 	BOOL asking = [[NekoAsk sharedAsk] isEnabled];
 	if([identifier isEqualToString:@"microphone"] || [identifier isEqualToString:@"speech"])
 		return asking;
+	/* Wanted by looking at the screen, which is no longer a switch somebody
+	   leaves on: it is a stretch of time they ask for. So the row is wanted while
+	   one is running and while the permission is already granted — and, once it
+	   has been granted, it stays wanted so that somebody can see and revoke it
+	   rather than having it disappear from the list the moment the look ends. */
 	if([identifier isEqualToString:@"accessibility"])
-		return [defaults boolForKey:NekoReadTextKey];
+		return [[NekoGlance sharedGlance] isLooking]
+		    || [NekoDesktop accessibilityGranted];
 	if([identifier isEqualToString:@"folders"])
 		return asking && [defaults boolForKey:@"NekoActionsEnabled"];
 	/* Wanted only by looking things up, and not even needed for that: without it

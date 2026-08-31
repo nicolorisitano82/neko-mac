@@ -6,7 +6,6 @@
 #import <ApplicationServices/ApplicationServices.h>
 #import <Carbon/Carbon.h>
 
-NSString * const NekoReadTextKey = @"NekoReadText";
 
 /* Enough to know what you are working on, short enough that it cannot become a
    transcript of your afternoon. */

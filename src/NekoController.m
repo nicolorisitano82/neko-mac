@@ -1630,13 +1630,13 @@ static const float NekoMaxStopRadius = 200.0f;
 	   now, with the time left in the menu and one click to end it. The switch was
 	   the one standing grant in an application that asks per use everywhere else.
 	   See NekoGlance.h. */
-	readTextCheck = [[NSButton alloc] initWithFrame:NSMakeRect(20.0f, 350.0f, 300.0f, 24.0f)];
-	[readTextCheck setBezelStyle:NSBezelStyleRounded];
-	[readTextCheck setTitle:NekoLocalized(@"Let it look for ten minutes")];
-	[readTextCheck setTarget:self];
-	[readTextCheck setAction:@selector(takeReadTextFrom:)];
-	[content addSubview:readTextCheck];
-	[readTextCheck release];
+	lookButton = [[NSButton alloc] initWithFrame:NSMakeRect(20.0f, 350.0f, 300.0f, 24.0f)];
+	[lookButton setBezelStyle:NSBezelStyleRounded];
+	[lookButton setTitle:NekoLocalized(@"Let it look for ten minutes")];
+	[lookButton setTarget:self];
+	[lookButton setAction:@selector(takeReadTextFrom:)];
+	[content addSubview:lookButton];
+	[lookButton release];
 
 	[content addSubview:[self labelWithString:NekoLocalized(@"Speaks at most every:")
 	                                    frame:NSMakeRect(20.0f, 320.0f, 125.0f, 17.0f)]];
@@ -1836,7 +1836,7 @@ static const float NekoMaxStopRadius = 200.0f;
 	[suggestNowButton setEnabled:roaming && on];
 	/* A button rather than a switch now: nothing to reflect, only whether it
 	   can be pressed at all. */
-	[readTextCheck setEnabled:roaming];
+	[lookButton setEnabled:roaming];
 
 	NSArray *choices = [self suggestIntervalChoices];
 	NSUInteger index = [choices indexOfObject:

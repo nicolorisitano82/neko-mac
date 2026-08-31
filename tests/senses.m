@@ -57,6 +57,17 @@ int main(void)
 	/* A flag that is always no is not a flag. Nothing is recorded, kept or looked
 	   at: a tap is installed on the input and every buffer is dropped. */
 	BOOL cold = [desktop microphoneInUse];
+	if(cold) {
+		/* Something else on this Mac has the input open — a call, a recorder, or
+		   this application's own wake word in another process. The transition
+		   cannot be observed from inside that, and pretending otherwise would
+		   fail for a reason that is nothing to do with the flag. */
+		notMeasured(@"the microphone was already in use by something else, so going "
+			@"from cold to hot could not be watched here");
+		int early = NekoTestResult();
+		[pool release];
+		return early;
+	}
 	AVAudioEngine *engine = [[[AVAudioEngine alloc] init] autorelease];
 	AVAudioInputNode *input = [engine inputNode];
 	[input installTapOnBus:0 bufferSize:1024

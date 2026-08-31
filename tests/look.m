@@ -134,6 +134,10 @@ int main(void)
 		@"reading is gated on the stretch", nil);
 	ok([body rangeOfString:@"NekoReadTextKey"].location == NSNotFound,
 		@"and no longer on a switch that stays on", nil);
+	/* And the key itself is gone rather than left declared and unread, which is
+	   the state somebody would have to work out was dead. */
+	ok([desktop rangeOfString:@"NekoReadTextKey"].location == NSNotFound,
+		@"and the setting it used does not exist any more at all", nil);
 
 	[glance stop];
 	int result = NekoTestResult();
