@@ -314,6 +314,33 @@ Measured, in Italian, through Apple's on-device model:
 The last one is the point: a fact that is not on the list is refused rather than
 guessed. Adding another fact is a few lines in `NekoFactsNow`.
 
+### Having the facts is not the same as being able to use them
+
+That table settles the time and leaves something open, and 2.12 measured it.
+Three models on this Mac — Qwen2.5 1.5B, Gemma 3 4B, Qwen3 4B — were asked date
+and arithmetic questions **with that block in front of them**, on a Monday:
+
+| asked | true | answered |
+| --- | --- | --- |
+| how many days to Friday | 4 | 2 · 2 · 1 |
+| how long to 25 December | 116 | "due settimane" · 31 · 170 |
+| 47 × 23 | 1081 | 1081 · "Quindici" · "circa 2.04" |
+| 2 gallons in litres | 7,57 | 4,54 · 0,845 · 7,5 |
+
+**One of nine date questions right.** It has the date and cannot subtract it, and
+every wrong answer arrived as a whole confident sentence. The conversions fail in
+the worse way: 4,54 is a real number — the litres in an *imperial* gallon.
+
+So neither is asked of a model any more. `NekoClock` counts the days with
+`NSCalendar` and `NekoSums` converts with `NSMeasurement`, both before any engine
+is consulted, both instant, and both silent far more often than they answer —
+twenty-four sentences that must **not** be treated as a sum or a date are in the
+two harnesses, *"quanto fa male"* and *"che giorno è meglio per uscire"* among
+them.
+
+Not `NSExpression`, which was tried and measured: it answers `7/2` with **3** and
+`1/0` with **0**, both without complaining.
+
 ## Saying its name
 
 There is a second way to start a question, off unless switched on: **Answer when
