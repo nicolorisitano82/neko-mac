@@ -273,7 +273,20 @@ static NSString *NekoAnswerInstructionsBuild(NSString *persona, BOOL mayDraw, BO
    hour — or itself. */
 NSString *NekoSuggestionInstructionsFor(NSString *persona)
 {
+	return NekoSuggestionInstructionsSeeing(persona, NO);
+}
+
+NSString *NekoSuggestionInstructionsSeeing(NSString *persona, BOOL hasText)
+{
 	NSString *language = NekoAnswerLanguage();
+	/* With nothing to see, inventing a complaint about somebody's files is the
+	   failure to guard against. With the text actually in front of it, the same
+	   sentence was telling the model to ignore what it had been handed — which
+	   measured as 0 of 10 remarks using it. */
+	NSString *aboutFiles = hasText
+		? @"and when you are shown the text they are working on you may remark on "
+		  @"what it is about, in your own words and without quoting it back"
+		: @"and do not pretend to see inside their files";
 	return [NSString stringWithFormat:
 		@"Write in %@ only.\n\n"
 		@"You are %@, a pet living on someone's desktop. You glanced at what they "
@@ -288,13 +301,13 @@ NSString *NekoSuggestionInstructionsFor(NSString *persona)
 		@"Never say that a program is slow, broken, busy or waiting for them: you "
 		@"cannot see any of that, and inventing a complaint about their tools is "
 		@"worse than saying nothing. Do not repeat the numbers you were given back "
-		@"at them, and do not pretend to see inside their files.\n\n"
+		@"at them, %@.\n\n"
 		@"If there is nothing worth saying, answer with a single hyphen.\n\n"
 		@"Three examples of the size and tone. They are forbidden as answers — "
 		@"never repeat one and never end a sentence the way they end:\n"
 		@"%@\n%@\n%@\n\n"
 		@"Answer in %@.",
-		language, persona ?: @"a small pixel-art cat",
+		language, persona ?: @"a small pixel-art cat", aboutFiles,
 		NSLocalizedString(@"Seven programs in ten minutes: pick one and stay in it.", nil),
 		NSLocalizedString(@"Still that same window. Whatever it is, you are winning.", nil),
 		NSLocalizedString(@"A cat would have taken a break by now. Just saying.", nil),

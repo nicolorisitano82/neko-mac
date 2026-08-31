@@ -190,7 +190,15 @@ static const NSTimeInterval NekoAdvisorTyping = 3.0;
 	}
 
 	NekoCharacter *character = [[NekoController sharedController] character];
-	NSString *instructions = NekoSuggestionInstructionsFor([character persona]);
+	/* Told whether there is anything to see, so that the sentence forbidding it
+	   from pretending to see inside files is there when nothing was read and gone
+	   when something was. Measured in tests/glance.m: without this the model was
+	   handed the text and told to ignore it, 0 of 10 times. */
+	NSString *seen = [[NekoDesktop sharedDesktop] summary];
+	BOOL hasText = [seen rangeOfString:@"The text I am working on"].location
+		!= NSNotFound;
+	NSString *instructions = NekoSuggestionInstructionsSeeing([character persona],
+	                                                          hasText);
 	NSString *subject = [[[[NekoDesktop sharedDesktop] frontApp] copy] autorelease];
 
 	/* What is going on, plus what the cat remembers. The engine here is always

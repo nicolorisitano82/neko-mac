@@ -1852,7 +1852,13 @@ static const float NekoMaxStopRadius = 200.0f;
 	[line appendString:[[NekoRate sharedRate] describeToday]];
 
 	[line appendString:@"\n\n"];
-	[line appendString:NekoLocalized(@"Window titles are included only if this Mac has already granted Neko screen recording; that permission is never asked for. With Apple Intelligence or a model on this Mac, none of it leaves the Mac; with ChatGPT, Claude or a Shortcut, it is sent to that service like any other question.")];
+	/* This sentence used to end "with ChatGPT, Claude or a Shortcut, it is sent
+	   to that service like any other question", which was false — and false in
+	   the direction of frightening somebody. Everything that reads the desktop
+	   summary asks NekoBrains for the best engine that stays on this Mac, and
+	   there is no path from here to a remote one. tests/screen.m reads both
+	   callers and fails if a third one ever forgets. */
+	[line appendString:NekoLocalized(@"Window titles are included only if this Mac has already granted Neko screen recording; that permission is never asked for. None of this ever leaves the Mac: what the cat notices is read by a model on this Mac or not at all, whichever engine you chose for answering questions.")];
 
 	if([[NSUserDefaults standardUserDefaults] boolForKey:NekoReadTextKey]) {
 		[line appendString:@"\n\n"];

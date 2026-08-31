@@ -85,6 +85,54 @@ and one paragraph of text tends to talk about the facts.
 
 If they are better with it, the design is worth building and §4 says in what order.
 
+## 3b. Stage 0, run — and it invalidated itself first
+
+**The answer, before the answer.** The experiment was built, run over ten staged
+desktops, and scored **0 of 10**: not one remark used what was read — not the git
+error, not the dentist, not Battisti. The conclusion sitting there ready to be
+drawn was §4's stage 2: delete the capability.
+
+Then the instructions were read. `NekoSuggestionInstructionsFor` says *"talk about
+the one thing that stands out"* — which is computed from minutes and switching —
+and then, in so many words:
+
+> *"and do not pretend to see inside their files"*
+
+**The experiment had measured the prompt, not the capability.** The model was being
+handed the text and told to ignore it, so 0 of 10 said nothing at all about whether
+reading the screen is worth doing. Banking that number would have deleted a feature
+on the strength of a sentence written elsewhere for a different reason.
+
+Re-run with a third arm, the same question asked with that sentence replaced by one
+that permits remarking on what the text is about:
+
+| | used what it read |
+| --- | --- |
+| as the prompt stood | **0 of 10** |
+| with the sentence replaced | **1–2 of 10**, across runs |
+
+Two in ten is a modest return. What makes it worth having is *which* two: the only
+remarks in the whole run that no amount of knowing the minutes could have produced.
+
+> Safari, 22 minutes, reading a guide to growing tomatoes in pots:
+> **"Ventidue minuti su Safari, ma il balcone è ancora vuoto."**
+>
+> Preview, 18 minutes, a rental contract:
+> **"…ora sei qui con quel contratto."**
+
+Everything else in both arms is a sentence about an application name and a number
+of minutes.
+
+**So neither stage 2 nor stage 3 was the answer.** The defect was that the
+preferences offered a capability the prompt forbade — one line, two features
+disagreeing, and nothing in the suite noticing. The sentence is conditional now:
+forbidden when there is nothing to see, which is what it was for, and permitted
+when the text is actually in front of it.
+
+`tests/glance.m` keeps both arms and prints all of them, and says in its own
+`notMeasured` line that counting words is not the same as knowing whether a
+sentence was worth hearing. That judgement is still a person's.
+
 ## 4. The three pieces, ranked by what they buy
 
 The design listed them in the order they occurred to it. Ranked by value per day of
@@ -131,9 +179,9 @@ Four stages, each shippable on its own, each with the thing that would stop it.
 
 | stage | work | ship when | stop if |
 | --- | --- | --- | --- |
-| **0. Does it help?** | `tests/glance.m`: twenty staged contexts, with and without the text, counting remarks that use it | never — it is a harness | — |
-| **1. It stays here** | one condition in `NekoAdvisor`, one sentence in four languages | immediately | — |
-| **2. Or it goes** | if stage 0 says the remarks are no better: delete `nearbyText`, the switch, the paragraph, the Accessibility request | immediately | stage 0 says they are better |
+| **0. Does it help?** ✅ | `tests/glance.m`, ten staged contexts asked three ways — and it invalidated itself before it answered; see §3b | done | — |
+| **1. It stays here** ✅ | it already did: both readers of the summary ask `bestOnDeviceProvider`, so screen text has never been able to reach ChatGPT, Claude or a Shortcut. What was wrong was the **sentence in the preferences**, which said the opposite — false, and in the direction of frightening people. Corrected, and pinned by a source-reading check in `tests/screen.m` so a third reader cannot quietly break it | done | — |
+| **2. Or it goes** | ~~delete the capability~~ — **not reached.** Stage 0's zero was the prompt's, not the capability's | — | stage 0, §3b |
 | **3. The time box** | `NekoGlance`, on `NekoTimer`'s pattern: a stretch, the menu item with a countdown, auto-revoke, the switch retired | after stages 0–2 | stage 2 happened |
 | **4. The one-shot** | the phrase table, the refusals, the four sentences | when somebody asks | nobody does |
 

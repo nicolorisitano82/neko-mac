@@ -84,6 +84,21 @@ extern NSString * const NekoImageMarker;
    Shorter, humbler and allowed to say nothing at all. */
 extern NSString *NekoSuggestionInstructionsFor(NSString *persona);
 
+/* The same, told whether the text somebody is working on is in front of it.
+
+   These two sentences used to contradict each other and one of them was in the
+   preferences. The instructions said "do not pretend to see inside their files",
+   which is right when there is nothing to see and wrong when somebody has
+   switched reading on: the model was being handed the text and told to ignore it.
+
+   Measured in tests/glance.m, ten staged desktops asked three ways: as the prompt
+   stood, **0 of 10** remarks used what was read; with that one sentence replaced,
+   2 of 10 — and those two were the only remarks in the run that no amount of
+   knowing the minutes could have produced. Two in ten is a modest return and it is
+   not nothing, and it was zero because of a sentence rather than because of the
+   capability. */
+extern NSString *NekoSuggestionInstructionsSeeing(NSString *persona, BOOL hasText);
+
 /* The voice for coming over and being nosy: a question about what you are doing,
    shorter than a suggestion and with no advice in it at all. */
 extern NSString *NekoCuriosityInstructionsFor(NSString *persona);

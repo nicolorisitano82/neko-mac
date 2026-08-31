@@ -207,6 +207,38 @@ int main(void)
 	   && [advisor rangeOfString:@"propose:"].location == NSNotFound,
 		@"and the advisor cannot reach NekoAction", nil);
 
+	/* And the direction the preferences used to get wrong. Everything that reads
+	   the desktop summary — which is where the screen text goes — must ask an
+	   engine that stays on this Mac. Read from the source, because the rule is
+	   about every future caller and not only today's two: a third one added
+	   without this line would send somebody's screen to a service, and nothing
+	   else would notice.
+
+	   Measured when this check was written: NekoAdvisor and NekoAntics are the
+	   only callers, and both take bestOnDeviceProvider. The paragraph in the
+	   Suggestions tab said the opposite — that with ChatGPT chosen it goes to
+	   ChatGPT — which was false in the direction of frightening people. */
+	NSString *antics = sourceOf(@"src/NekoAntics.m");
+	ok([antics length] > 0, @"NekoAntics is where the test expects it", nil);
+	NSArray *readsTheSummary = [NSArray arrayWithObjects:advisor, antics, nil];
+	NSArray *theirNames = [NSArray arrayWithObjects:@"NekoAdvisor", @"NekoAntics", nil];
+	NSUInteger which;
+	for(which = 0; which < [readsTheSummary count]; which++) {
+		NSString *body = [readsTheSummary objectAtIndex:which];
+		NSString *called = [theirNames objectAtIndex:which];
+		if([body rangeOfString:@"sharedDesktop] summary"].location == NSNotFound)
+			continue;                /* does not read it; nothing to promise */
+		ok([body rangeOfString:@"bestOnDeviceProvider"].location != NSNotFound,
+			[NSString stringWithFormat:
+				@"%@ reads the desktop summary and asks an engine that stays here",
+				called], nil);
+		ok([body rangeOfString:@"openaiProvider"].location == NSNotFound
+		   && [body rangeOfString:@"modelProvider"].location == NSNotFound
+		   && [body rangeOfString:@"NekoShortcutProvider"].location == NSNotFound,
+			[NSString stringWithFormat:@"and %@ can reach no engine that does not",
+				called], nil);
+	}
+
 	/* The text plugin path may ask NekoAction whether something looks like a
 	   deed — that is how it refuses one — and must never build or perform one. */
 	ok([plugins rangeOfString:@"actionFromLine"].location == NSNotFound

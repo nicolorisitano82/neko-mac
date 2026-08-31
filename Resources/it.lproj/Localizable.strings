@@ -517,3 +517,4 @@
 "Appointment" = "Appuntamento";
 "%@ to %@ — “%@”. Shall I put it in your calendar?" = "%@ fino alle %@ — “%@”. Lo metto in calendario?";
 "It is in front of your calendar — press Add there." = "È davanti al tuo calendario — premi Aggiungi lì.";
+"Window titles are included only if this Mac has already granted Neko screen recording; that permission is never asked for. None of this ever leaves the Mac: what the cat notices is read by a model on this Mac or not at all, whichever engine you chose for answering questions." = "I titoli delle finestre entrano solo se questo Mac ha già concesso a Neko la registrazione dello schermo; quel permesso non viene mai chiesto. Niente di tutto questo esce dal Mac: quello che il gatto nota lo legge un modello su questo Mac o non lo legge nessuno, qualunque motore tu abbia scelto per le domande.";
