@@ -1,0 +1,286 @@
+#import "NekoClock.h"
+#import "NekoWhen.h"
+
+#define NekoClockLocalized(key) NSLocalizedStringFromTable(key, @"Localizable", nil)
+
+/* The application's own language, which is what it answers in. */
+static NSLocale *NekoClockLocale(void)
+{
+	NSString *code = [[[NSBundle mainBundle] preferredLocalizations] firstObject];
+	return [NSLocale localeWithLocaleIdentifier:code ?: @"en"];
+}
+
+/* Whichever of these the sentence starts with, and what is left after it. Longest
+   first, so that "quanti giorni mancano a" is tried before "quanto manca a". */
+static NSString *NekoTailAfterAny(NSString *lowered, NSArray *triggers)
+{
+	NSEnumerator *e = [triggers objectEnumerator];
+	NSString *trigger;
+	while((trigger = [e nextObject]) != nil) {
+		NSRange found = [lowered rangeOfString:trigger];
+		if(found.location == NSNotFound)
+			continue;
+		return [[lowered substringFromIndex:NSMaxRange(found)]
+			stringByTrimmingCharactersInSet:
+				[NSCharacterSet whitespaceAndNewlineCharacterSet]];
+	}
+	return nil;
+}
+
+/* The words in front of a date that stop NSDataDetector reading it. Measured:
+   "al 3 marzo" comes back as today at noon and claims to have used the whole
+   phrase; "3 marzo" comes back as the third of March. */
+static NSString *NekoWithoutLeadingWords(NSString *tail)
+{
+	static NSArray *words = nil;
+	if(words == nil)
+		words = [[NSArray alloc] initWithObjects:
+			/* Italian */
+			@"al", @"alla", @"allo", @"agli", @"alle", @"ai", @"all'", @"a",
+			@"il", @"lo", @"la", @"i", @"gli", @"le", @"l'", @"del", @"di",
+			/* English */
+			@"until", @"till", @"to", @"the", @"for",
+			/* French */
+			@"jusqu'au", @"jusqu'à", @"au", @"aux", @"le", @"la", @"les",
+			/* Spanish */
+			@"hasta", @"para", @"el", @"los", @"las", nil];
+
+	NSString *text = tail;
+	BOOL cut = YES;
+	while(cut) {
+		cut = NO;
+		NSEnumerator *e = [words objectEnumerator];
+		NSString *word;
+		while((word = [e nextObject]) != nil) {
+			/* An apostrophe is not a word boundary the way a space is, so the
+			   two shapes are asked for separately. */
+			NSString *withSpace = [word stringByAppendingString:@" "];
+			if([word hasSuffix:@"'"] && [text hasPrefix:word]) {
+				text = [text substringFromIndex:[word length]];
+				cut = YES;
+				break;
+			}
+			if([text hasPrefix:withSpace]) {
+				text = [[text substringFromIndex:[withSpace length]]
+					stringByTrimmingCharactersInSet:
+						[NSCharacterSet whitespaceCharacterSet]];
+				cut = YES;
+				break;
+			}
+		}
+	}
+	return text;
+}
+
+/* Nothing but punctuation left. The guard that keeps "che giorno è meglio per
+   uscire" from being answered with a date. */
+static BOOL NekoNothingLeft(NSString *tail)
+{
+	NSCharacterSet *letters = [NSCharacterSet alphanumericCharacterSet];
+	return [tail rangeOfCharacterFromSet:letters].location == NSNotFound;
+}
+
+/* How many days a sentence means by "domani". nil when it names no day at all. */
+static NSNumber *NekoDayOffset(NSString *tail)
+{
+	static NSDictionary *offsets = nil;
+	if(offsets == nil)
+		offsets = [[NSDictionary dictionaryWithObjectsAndKeys:
+			@0, @"oggi", @0, @"today", @0, @"aujourd'hui", @0, @"hoy",
+			@1, @"domani", @1, @"tomorrow", @1, @"demain", @1, @"mañana",
+			@2, @"dopodomani", @2, @"dopo domani", @2, @"après-demain",
+			@2, @"apres-demain", @2, @"pasado mañana",
+			@2, @"the day after tomorrow", @2, @"day after tomorrow",
+			@-1, @"ieri", @-1, @"yesterday", @-1, @"hier", @-1, @"ayer",
+			nil] retain];
+
+	if(NekoNothingLeft(tail))
+		return [NSNumber numberWithInt:0];        /* "che giorno è" — today */
+
+	/* Longest first: "dopo domani" must beat "domani". */
+	NSArray *keys = [[offsets allKeys] sortedArrayUsingComparator:
+		^NSComparisonResult(NSString *a, NSString *b) {
+			return [b length] - [a length] > 0 ? NSOrderedAscending
+			     : ([b length] == [a length] ? NSOrderedSame : NSOrderedDescending);
+		}];
+	NSEnumerator *e = [keys objectEnumerator];
+	NSString *word;
+	while((word = [e nextObject]) != nil) {
+		NSRange found = [tail rangeOfString:word];
+		if(found.location == NSNotFound)
+			continue;
+		/* And nothing else in the tail, so that "che giorno è domani il mercato"
+		   is left to somebody who can answer it. */
+		NSString *rest = [[tail stringByReplacingCharactersInRange:found
+		                                               withString:@""]
+			stringByTrimmingCharactersInSet:
+				[NSCharacterSet whitespaceAndNewlineCharacterSet]];
+		if(NekoNothingLeft(rest))
+			return [offsets objectForKey:word];
+	}
+	return nil;
+}
+
+static NSString *NekoDateWritten(NSDate *when)
+{
+	NSDateFormatter *formatter = [[[NSDateFormatter alloc] init] autorelease];
+	[formatter setLocale:NekoClockLocale()];
+	[formatter setDateStyle:NSDateFormatterFullStyle];
+	[formatter setTimeStyle:NSDateFormatterNoStyle];
+	return [formatter stringFromDate:when];
+}
+
+static NSString *NekoTimeWritten(NSDate *when)
+{
+	NSDateFormatter *formatter = [[[NSDateFormatter alloc] init] autorelease];
+	[formatter setLocale:NekoClockLocale()];
+	[formatter setDateStyle:NSDateFormatterNoStyle];
+	[formatter setTimeStyle:NSDateFormatterShortStyle];
+	return [formatter stringFromDate:when];
+}
+
+@implementation NekoClock
+
+#pragma mark What time it is
+
++ (NSString *)timeIfAsked:(NSString *)lowered
+{
+	NSArray *triggers = [NSArray arrayWithObjects:
+		@"che ore sono", @"che ora è", @"che ora e'", @"che ore fa",
+		@"what time is it", @"what's the time", @"what is the time",
+		@"quelle heure est-il", @"quelle heure il est", @"il est quelle heure",
+		@"qué hora es", @"que hora es", nil];
+	NSString *tail = NekoTailAfterAny(lowered, triggers);
+	if(tail == nil || !NekoNothingLeft(tail))
+		return nil;
+	return [NSString stringWithFormat:NekoClockLocalized(@"It is %@."),
+		NekoTimeWritten([NSDate date])];
+}
+
+#pragma mark What day it is
+
++ (NSString *)dayIfAsked:(NSString *)lowered
+{
+	NSArray *triggers = [NSArray arrayWithObjects:
+		@"che giorno della settimana è", @"che giorno è", @"che giorno e'",
+		@"che giorno siamo", @"in che giorno siamo", @"che giorno era",
+		@"che data è",
+		@"che data e'", @"quanti ne abbiamo",
+		@"what day of the week is it", @"what day is it", @"what day is",
+		@"what's the date", @"what is the date", @"what's today's date",
+		@"quel jour sommes-nous", @"quel jour est-ce", @"quel jour est",
+		@"quelle est la date", @"on est quel jour",
+		@"qué día es", @"que dia es", @"qué fecha es", @"en qué fecha estamos",
+		nil];
+	NSString *tail = NekoTailAfterAny(lowered, triggers);
+	if(tail == nil)
+		return nil;
+	NSNumber *offset = NekoDayOffset(tail);
+	if(offset == nil)
+		return nil;                  /* "che giorno è meglio per uscire" */
+
+	NSCalendar *calendar = [NSCalendar currentCalendar];
+	NSDate *when = [calendar dateByAddingUnit:NSCalendarUnitDay
+	                                    value:[offset intValue]
+	                                   toDate:[NSDate date]
+	                                  options:0];
+	NSString *written = NekoDateWritten(when);
+	switch([offset intValue]) {
+		case 1:  return [NSString stringWithFormat:
+			NekoClockLocalized(@"Tomorrow is %@."), written];
+		case 2:  return [NSString stringWithFormat:
+			NekoClockLocalized(@"The day after tomorrow is %@."), written];
+		case -1: return [NSString stringWithFormat:
+			NekoClockLocalized(@"Yesterday was %@."), written];
+		default: return [NSString stringWithFormat:
+			NekoClockLocalized(@"Today is %@."), written];
+	}
+}
+
+#pragma mark How long until something
+
+/* The detector's own way of saying it was given no time of day: noon. Anything
+   landing exactly there is a day rather than a moment, and is counted in days. */
+static BOOL NekoIsNoon(NSDate *when)
+{
+	NSDateComponents *parts = [[NSCalendar currentCalendar]
+		components:NSCalendarUnitHour | NSCalendarUnitMinute | NSCalendarUnitSecond
+		  fromDate:when];
+	return [parts hour] == 12 && [parts minute] == 0 && [parts second] == 0;
+}
+
++ (NSString *)untilIfAsked:(NSString *)lowered
+{
+	NSArray *triggers = [NSArray arrayWithObjects:
+		/* Italian — the longer ones first, since one contains the other. */
+		@"quanti giorni mancano", @"quanti giorni ci sono", @"quanti giorni",
+		@"quante settimane mancano", @"quanto tempo manca", @"quanto manca",
+		/* English */
+		@"how many days until", @"how many days till", @"how many days to",
+		@"how many weeks until", @"how long until", @"how long till",
+		@"how long to", @"days until", @"days till",
+		/* French */
+		@"combien de jours avant", @"combien de jours jusqu",
+		@"combien de temps avant", @"combien de temps jusqu",
+		@"dans combien de temps",
+		/* Spanish */
+		@"cuántos días faltan", @"cuantos dias faltan", @"cuántos días",
+		@"cuantos dias", @"cuánto falta", @"cuanto falta",
+		@"cuánto tiempo falta", @"cuanto tiempo falta", nil];
+	NSString *tail = NekoTailAfterAny(lowered, triggers);
+	if([tail length] == 0)
+		return nil;
+	tail = NekoWithoutLeadingWords(tail);
+	if([tail length] == 0)
+		return nil;
+
+	NSDataDetector *detector = [NSDataDetector
+		dataDetectorWithTypes:NSTextCheckingTypeDate error:NULL];
+	NSTextCheckingResult *found = [detector firstMatchInString:tail options:0
+	                                                     range:NSMakeRange(0, [tail length])];
+	NSDate *target = [found date];
+	if(target == nil)
+		return nil;                  /* "quanto manca al lancio del prodotto" */
+
+	NSDate *now = [NSDate date];
+	if([target timeIntervalSinceDate:now] <= 0.0)
+		return nil;                  /* the detector's other way of failing */
+
+	NSCalendar *calendar = [NSCalendar currentCalendar];
+	if(NekoIsNoon(target)) {
+		/* No hour was said, so this is a number of days and not a stretch of
+		   hours: counted from midnight to midnight, which is how somebody
+		   counts them. */
+		NSDate *from = nil, *to = nil;
+		[calendar rangeOfUnit:NSCalendarUnitDay startDate:&from interval:NULL forDate:now];
+		[calendar rangeOfUnit:NSCalendarUnitDay startDate:&to interval:NULL forDate:target];
+		NSInteger days = [[calendar components:NSCalendarUnitDay fromDate:from toDate:to
+		                               options:0] day];
+		if(days <= 0)
+			return NekoClockLocalized(@"That is today.");
+		if(days == 1)
+			return NekoClockLocalized(@"That is tomorrow.");
+		return [NSString stringWithFormat:
+			NekoClockLocalized(@"%ld days, on %@."), (long)days, NekoDateWritten(target)];
+	}
+
+	NSTimeInterval away = [target timeIntervalSinceDate:now];
+	return [NSString stringWithFormat:NekoClockLocalized(@"%@, at %@."),
+		[NekoWhen describe:away], NekoTimeWritten(target)];
+}
+
+#pragma mark
+
++ (NSString *)wantedFor:(NSString *)question
+{
+	NSString *lowered = [question lowercaseString];
+	NSString *answer = [self timeIfAsked:lowered];
+	if(answer != nil)
+		return answer;
+	answer = [self untilIfAsked:lowered];
+	if(answer != nil)
+		return answer;
+	return [self dayIfAsked:lowered];
+}
+
+@end

@@ -113,6 +113,11 @@ static BOOL NekoSaysAndAHalf(NSString *rest)
 
 @implementation NekoWhen
 
++ (NSDictionary *)writtenNumbers
+{
+	return NekoWrittenNumbers();
+}
+
 + (NSTimeInterval)secondsIn:(NSString *)said
 {
 	if([said length] == 0)

@@ -6,6 +6,8 @@
 #import "NekoRate.h"
 #import "NekoWeb.h"
 #import "NekoTimer.h"
+#import "NekoClock.h"
+#import "NekoSums.h"
 #import "NekoFact.h"
 #import "NekoAppointment.h"
 #import "NekoGlance.h"
@@ -963,6 +965,27 @@ static const NSTimeInterval NekoHoldToType = 0.5;
 	NSDictionary *fact = [NekoFact wantedFor:question];
 	if(fact != nil) {
 		[self sayInCharacter:[NekoFact act:fact]];
+		return;
+	}
+
+	/* A sum, and then a date. Both are here rather than in front of a model for
+	   the reason measured in tests/sums.m: asked the same ten questions with the
+	   facts block they already get, three models on this Mac answered **one of
+	   nine date questions right** — two days to Friday when it was four, a
+	   hundred and seventy to Christmas when it was a hundred and sixteen — and
+	   invented conversion factors that are real numbers for the wrong unit.
+
+	   The sum goes first: "quanti giorni sono 48 ore" is a conversion, and the
+	   words it starts with are the words a question about a date starts with. */
+	NSString *sum = [NekoSums wantedFor:question];
+	if(sum != nil) {
+		[self sayInCharacter:sum];
+		return;
+	}
+
+	NSString *clock = [NekoClock wantedFor:question];
+	if(clock != nil) {
+		[self sayInCharacter:clock];
 		return;
 	}
 

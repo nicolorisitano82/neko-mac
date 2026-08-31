@@ -528,3 +528,14 @@
 "I would need the Accessibility permission to read anything. It is in System Settings, Privacy & Security, Accessibility." = "Mi servirebbe il permesso di Accessibilità per leggere qualcosa. È in Impostazioni di Sistema, Privacy e Sicurezza, Accessibilità.";
 "I will look for %@, and then stop." = "Guardo per %@, poi smetto.";
 "Looking — %@ left" = "Sto guardando — mancano %@";
+
+/* The clock and the calendar, answered without a model. */
+"It is %@." = "Sono le %@.";
+"Today is %@." = "Oggi è %@.";
+"Tomorrow is %@." = "Domani è %@.";
+"The day after tomorrow is %@." = "Dopodomani è %@.";
+"Yesterday was %@." = "Ieri era %@.";
+"That is today." = "È oggi.";
+"That is tomorrow." = "È domani.";
+"%ld days, on %@." = "%ld giorni, %@.";
+"%@, at %@." = "%@, alle %@.";
