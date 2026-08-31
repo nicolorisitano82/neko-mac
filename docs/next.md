@@ -64,6 +64,37 @@ there is a benchmark. Same shape.
 train models; it uses Apple's, a local GGUF, or somebody's API. There is nothing
 to build from this paper.
 
+**And measuring it one floor up changed something.** `tests/lookup.m` asks a small
+on-device model ten factual questions with one checkable word for an answer, twice
+each: from its weights, and with the opening of the Wikipedia article quoted the
+way a route quotes it.
+
+| | with the REST summary | with `prop=extracts` |
+| --- | --- | --- |
+| right from its weights | 8/10 | 8/10 |
+| right with the article in front of it | 8/10 | **10/10** |
+| the article actually contained the answer | 4/10 | **8/10** |
+| and it used the answer when it was there | 4/4 | **8/8** |
+
+The first column is why the control matters. Handed the summary endpoint, the
+lookup bought **nothing** — and the obvious reading, that the model ignores what it
+is given, is wrong. It used the answer every single time the answer was there. What
+was failing was the **retrieval**: Wikipedia's summary endpoint answers *"Italo
+Calvino è stato uno scrittore e paroliere italiano"* and stops, 57 characters, no
+birthplace. `prop=extracts&exintro` gives 1,719 and the facts are in it.
+
+So `examples/Wikipedia.nekoplugin` fetches that instead, and the same ten questions
+go from 8 to 10. The one that shows it plainest: asked where vaporetti run, the
+model says **Milano** from its weights and **Venezia** with the article.
+
+Two things the harness caught about itself, both worth keeping. Its expected answer
+for Calvino was *"Cuba"*, and the Italian article says *"Santiago de Las Vegas de La
+Habana"* and never names the country — the harness was wrong, not the model. And
+with an article that did **not** contain the answer, the model answered wrongly
+*and cited Wikipedia for it*: **"secondo quanto riportato da Wikipedia"**. A quoted
+source makes a wrong answer more confident, not less, which is worth knowing before
+widening the list of things this application looks up.
+
 There is one thing worth watching, and it is falsifiable. If lookup modules of
 this kind reach the small local models, the weakest engine on this list gets
 better at precisely what it is worst at — and the measurement that justified the
