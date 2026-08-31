@@ -2,6 +2,8 @@
 #import "NekoTimer.h"
 #import "NekoFact.h"
 #import "NekoDoors.h"
+#import "NekoGlance.h"
+#import "NekoPermissionsTab.h"
 #import "NekoAdvisor.h"
 #import "NekoAntics.h"
 #import "NekoDesktop.h"
@@ -162,6 +164,18 @@ static const float NekoMaxStopRadius = 200.0f;
 	                     keyEquivalent:@""];
 	[timerItem setTarget:self];
 	[self updateTimerItem];
+
+	/* And the same shape for the look: there only while it is running, saying how
+	   long is left, and one click stops it. A permission with a visible clock on
+	   it is one somebody can reason about. */
+	glanceItem = [menu addItemWithTitle:@"" action:@selector(stopGlance:)
+	                      keyEquivalent:@""];
+	[glanceItem setTarget:self];
+	[self updateGlanceItem];
+	[[NSNotificationCenter defaultCenter] addObserver:self
+	                                         selector:@selector(updateGlanceItem)
+	                                             name:NekoGlanceDidChangeNotification
+	                                           object:nil];
 	[[NSNotificationCenter defaultCenter] addObserver:self
 	                                         selector:@selector(updateTimerItem)
 	                                             name:NekoTimerDidChangeNotification
@@ -273,6 +287,20 @@ static const float NekoMaxStopRadius = 200.0f;
 - (void)menuWillOpen:(NSMenu *)which
 {
 	[self updateTimerItem];
+	[self updateGlanceItem];
+}
+
+- (void)updateGlanceItem
+{
+	NSString *title = [[NekoGlance sharedGlance] menuTitle];
+	[glanceItem setHidden:title == nil];
+	[glanceItem setTitle:title ?: @""];
+}
+
+- (void)stopGlance:(id)sender
+{
+	[[NekoGlance sharedGlance] stop];
+	[[NekoAsk sharedAsk] sayUnprompted:NekoLocalized(@"I have stopped looking.")];
 }
 
 - (void)cancelTimer:(id)sender
@@ -711,7 +739,10 @@ static const float NekoMaxStopRadius = 200.0f;
 	[permissionsTab setLabel:NekoLocalized(@"Permissions")];
 	[permissionsTab setView:permissionsContent];
 	[tabs addTabViewItem:permissionsTab];
-	[self buildPermissionsTab];
+	/* Its own class since 2.12 — see NekoPermissionsTab.h for why this one moved
+	   first out of the five. */
+	permissions = [[NekoPermissionsTab alloc] init];
+	[permissions buildInView:permissionsContent];
 	[tabs release];
 
 	/* Behaviour */
@@ -1164,212 +1195,6 @@ static const float NekoMaxStopRadius = 200.0f;
    and offering the only move that is still available — asking, or opening the
    pane where a previous no can be undone. Rebuilt every time the window is
    shown, since all five can change behind the app's back. */
-- (void)buildPermissionsTab
-{
-	/* Told rather than polled: the answer to a location dialog arrives whole
-	   seconds after the button was pressed, and a tab rebuilt on a timer shows
-	   the state from before the person answered. */
-	[[NSNotificationCenter defaultCenter] removeObserver:self
-	                                               name:NekoPlaceDidChangeNotification
-	                                             object:nil];
-	[[NSNotificationCenter defaultCenter] addObserver:self
-	                                        selector:@selector(buildPermissionsTab)
-	                                            name:NekoPlaceDidChangeNotification
-	                                          object:nil];
-	/* The same shape for the players: the answer arrives when somebody has read
-	   the system's prompt, which is long after this row was drawn. */
-	[[NSNotificationCenter defaultCenter] removeObserver:self
-	                                               name:NekoPlayerConsentDidChangeNotification
-	                                             object:nil];
-	[[NSNotificationCenter defaultCenter] addObserver:self
-	                                        selector:@selector(buildPermissionsTab)
-	                                            name:NekoPlayerConsentDidChangeNotification
-	                                          object:nil];
-
-	NSEnumerator *old = [[[[permissionsContent subviews] copy] autorelease] objectEnumerator];
-	NSView *view;
-	while((view = [old nextObject]) != nil)
-		[view removeFromSuperview];
-
-	/* Two lines' worth: this line names whichever permissions are missing, and
-	   in Italian two names already do not fit on one. It cannot be any wider —
-	   the two buttons start at 316. */
-	permissionsSummary = [self labelWithString:@""
-	                                     frame:NSMakeRect(20.0f, 372.0f, 288.0f, 32.0f)];
-	[permissionsSummary setAlignment:NSTextAlignmentLeft];
-	[permissionsContent addSubview:permissionsSummary];
-
-	/* Six rows now, and a seventh would not fit either: the list scrolls rather
-	   than being squeezed until the explanations are cut off. Which is what
-	   happened when the location row was added — the last row's paragraph ended
-	   up nine points below the bottom of the tab. */
-	float rowHeight = 88.0f;
-	NSArray *permissions = [NekoPermissions all];
-	float documentHeight = MAX((float)[permissions count] * rowHeight, 300.0f);
-	NSScrollView *scroll = [[NSScrollView alloc]
-		initWithFrame:NSMakeRect(16.0f, 60.0f, 568.0f, 300.0f)];
-	[scroll setHasVerticalScroller:YES];
-	[scroll setDrawsBackground:NO];
-	[scroll setBorderType:NSNoBorder];
-	NSView *rows = [[[NSView alloc]
-		initWithFrame:NSMakeRect(0.0f, 0.0f, 548.0f, documentHeight)] autorelease];
-	[scroll setDocumentView:rows];
-	[permissionsContent addSubview:scroll];
-	[scroll release];
-
-	NSUInteger index = 0;
-	NSEnumerator *e = [permissions objectEnumerator];
-	NekoPermission *permission;
-	while((permission = [e nextObject]) != nil) {
-		/* Measured down from the top of the list, which is where somebody reads
-		   from. */
-		float top = documentHeight - (float)index * rowHeight;
-		index++;
-
-		NekoPermissionState state = [permission permissionState];
-		NSString *mark = state == NekoPermissionGranted ? @"●"
-			: (state == NekoPermissionDenied ? @"✕"
-			: (state == NekoPermissionUnavailable ? @"–" : @"○"));
-		NSTextField *dot = [self labelWithString:mark
-		                                   frame:NSMakeRect(4.0f, top - 17.0f, 16.0f, 17.0f)];
-		[dot setTextColor:state == NekoPermissionGranted ? [NSColor systemGreenColor]
-			: (state == NekoPermissionDenied ? [NSColor systemRedColor]
-			                                 : [NSColor secondaryLabelColor])];
-		[rows addSubview:dot];
-
-		NSTextField *title = [self labelWithString:[permission name]
-		                                     frame:NSMakeRect(26.0f, top - 17.0f, 320.0f, 17.0f)];
-		[title setAlignment:NSTextAlignmentLeft];
-		[title setFont:[NSFont boldSystemFontOfSize:[NSFont systemFontSize]]];
-		[rows addSubview:title];
-
-		NSString *word = state == NekoPermissionGranted ? NekoLocalized(@"allowed")
-			: (state == NekoPermissionDenied ? NekoLocalized(@"refused")
-			: (state == NekoPermissionUnavailable ? NekoLocalized(@"not on this Mac")
-			                                      : NekoLocalized(@"not asked yet")));
-		if([permission isNeeded] && state != NekoPermissionGranted)
-			word = [word stringByAppendingString:NekoLocalized(@" — needed for what is switched on")];
-		NSTextField *status = [self labelWithString:word
-		                                      frame:NSMakeRect(26.0f, top - 34.0f, 420.0f, 15.0f)];
-		[status setAlignment:NSTextAlignmentLeft];
-		[status setFont:[NSFont systemFontOfSize:11.0f]];
-		[status setTextColor:[NSColor secondaryLabelColor]];
-		[rows addSubview:status];
-
-		NSTextField *why = [self labelWithString:[permission explanation]
-		                                   frame:NSMakeRect(26.0f, top - 82.0f, 420.0f, 46.0f)];
-		[why setAlignment:NSTextAlignmentLeft];
-		[why setFont:[NSFont systemFontOfSize:11.0f]];
-		[[why cell] setWraps:YES];
-		[rows addSubview:why];
-
-		if(state != NekoPermissionGranted && state != NekoPermissionUnavailable) {
-			NSButton *button = [[NSButton alloc]
-				initWithFrame:NSMakeRect(452.0f, top - 28.0f, 92.0f, 28.0f)];
-			[button setBezelStyle:NSBezelStyleRounded];
-			[button setControlSize:NSControlSizeSmall];
-			[button setTitle:[permission canRequest] ? NekoLocalized(@"Ask")
-			                                         : NekoLocalized(@"Settings…")];
-			[button setTarget:self];
-			[button setAction:@selector(permissionPressed:)];
-			[button setTag:(NSInteger)[permissions indexOfObject:permission]];
-			[button setIdentifier:[permission identifier]];
-			[rows addSubview:button];
-			[button release];
-		}
-	}
-	/* The top of the list, not the bottom of it. */
-	[rows scrollRectToVisible:NSMakeRect(0.0f, documentHeight - 1.0f, 548.0f, 1.0f)];
-
-	NSTextField *note = [self labelWithString:
-		NekoLocalized(@"macOS applies a change to screen recording only after Neko is restarted. And because this build is signed ad hoc, every rebuild of the app is a different app as far as the system is concerned: permissions granted to the previous one have to be granted again.")
-	                                    frame:NSMakeRect(20.0f, 10.0f, 556.0f, 44.0f)];
-	[note setAlignment:NSTextAlignmentLeft];
-	[note setFont:[NSFont systemFontOfSize:11.0f]];
-	[[note cell] setWraps:YES];
-	[note setTextColor:[NSColor secondaryLabelColor]];
-	[permissionsContent addSubview:note];
-
-	NSButton *relaunch = [[NSButton alloc] initWithFrame:NSMakeRect(452.0f, 378.0f, 130.0f, 28.0f)];
-	[relaunch setBezelStyle:NSBezelStyleRounded];
-	[relaunch setTitle:NekoLocalized(@"Restart Neko")];
-	[relaunch setTarget:self];
-	[relaunch setAction:@selector(relaunchPressed:)];
-	[permissionsContent addSubview:relaunch];
-	[relaunch release];
-
-	NSButton *refresh = [[NSButton alloc] initWithFrame:NSMakeRect(316.0f, 378.0f, 130.0f, 28.0f)];
-	[refresh setBezelStyle:NSBezelStyleRounded];
-	[refresh setTitle:NekoLocalized(@"Check again")];
-	[refresh setTarget:self];
-	[refresh setAction:@selector(buildPermissionsTab)];
-	[permissionsContent addSubview:refresh];
-	[refresh release];
-
-	[self syncPermissionsSummary];
-}
-
-/* Screen recording, and one or two of the others, only take effect on a fresh
-   launch: rather than explaining that, the app can do it. */
-- (void)relaunchPressed:(id)sender
-{
-	NSURL *me = [[NSBundle mainBundle] bundleURL];
-	NSTask *task = [[[NSTask alloc] init] autorelease];
-	[task setLaunchPath:@"/usr/bin/open"];
-	[task setArguments:[NSArray arrayWithObjects:@"-n", [me path], nil]];
-	NS_DURING
-		[task launch];
-	NS_HANDLER
-		return;
-	NS_ENDHANDLER
-	[NSApp terminate:nil];
-}
-
-- (void)syncPermissionsSummary
-{
-	NSArray *missing = [NekoPermissions missing];
-	if([missing count] == 0) {
-		[permissionsSummary setStringValue:
-			NekoLocalized(@"Everything switched on has what it needs.")];
-		[permissionsSummary setTextColor:[NSColor labelColor]];
-		return;
-	}
-	NSMutableArray *names = [NSMutableArray array];
-	NSEnumerator *e = [missing objectEnumerator];
-	NekoPermission *permission;
-	while((permission = [e nextObject]) != nil)
-		[names addObject:[permission name]];
-	[permissionsSummary setStringValue:[NSString stringWithFormat:
-		NekoLocalized(@"Switched on but not allowed: %@."),
-		[names componentsJoinedByString:@", "]]];
-	[permissionsSummary setTextColor:[NSColor systemRedColor]];
-}
-
-/* Asking is asynchronous and the answer arrives in a system dialogue, so the
-   row is redrawn a moment later rather than immediately. */
-- (void)permissionPressed:(id)sender
-{
-	NSString *key = [sender identifier];
-	/* Folders are not one permission but six, so the button asks which — the
-	   same menu the Ask Neko tab uses. */
-	if([key isEqualToString:@"folders"]) {
-		[self showFolderPressed:sender];
-		[self performSelector:@selector(buildPermissionsTab) withObject:nil afterDelay:0.5];
-		return;
-	}
-	NSEnumerator *e = [[NekoPermissions all] objectEnumerator];
-	NekoPermission *permission;
-	while((permission = [e nextObject]) != nil) {
-		if(![[permission identifier] isEqualToString:key])
-			continue;
-		if([permission canRequest])
-			[permission request];
-		else
-			[permission openSettings];
-		break;
-	}
-	[self performSelector:@selector(buildPermissionsTab) withObject:nil afterDelay:1.5];
-}
 
 - (void)buildDrawTabInView:(NSView *)content
 {
@@ -1599,13 +1424,17 @@ static const float NekoMaxStopRadius = 200.0f;
 	[content addSubview:suggestCheck];
 	[suggestCheck release];
 
-	readTextCheck = [[NSButton alloc] initWithFrame:NSMakeRect(20.0f, 354.0f, 556.0f, 18.0f)];
-	[readTextCheck setButtonType:NSButtonTypeSwitch];
-	[readTextCheck setTitle:NekoLocalized(@"Let it read the text I am working on")];
-	[readTextCheck setTarget:self];
-	[readTextCheck setAction:@selector(takeReadTextFrom:)];
-	[content addSubview:readTextCheck];
-	[readTextCheck release];
+	/* Was a switch, on until somebody remembered it; is a stretch of ten minutes
+	   now, with the time left in the menu and one click to end it. The switch was
+	   the one standing grant in an application that asks per use everywhere else.
+	   See NekoGlance.h. */
+	lookButton = [[NSButton alloc] initWithFrame:NSMakeRect(20.0f, 350.0f, 300.0f, 24.0f)];
+	[lookButton setBezelStyle:NSBezelStyleRounded];
+	[lookButton setTitle:NekoLocalized(@"Let it look for ten minutes")];
+	[lookButton setTarget:self];
+	[lookButton setAction:@selector(takeReadTextFrom:)];
+	[content addSubview:lookButton];
+	[lookButton release];
 
 	[content addSubview:[self labelWithString:NekoLocalized(@"Speaks at most every:")
 	                                    frame:NSMakeRect(20.0f, 320.0f, 125.0f, 17.0f)]];
@@ -1700,10 +1529,13 @@ static const float NekoMaxStopRadius = 200.0f;
    and the paragraph underneath says whether it is actually working. */
 - (void)takeReadTextFrom:(id)sender
 {
-	BOOL wanted = ([sender state] == NSControlStateValueOn);
-	[[NSUserDefaults standardUserDefaults] setBool:wanted forKey:NekoReadTextKey];
-	if(wanted)
-		[NekoDesktop requestAccessibility];
+	/* The permission first, because a stretch that cannot read anything is a
+	   countdown that means nothing. */
+	[NekoDesktop requestAccessibility];
+	NSString *said = [[NekoGlance sharedGlance]
+		lookFor:[NekoGlance defaultStretch]];
+	if([said length] > 0)
+		[[NekoAsk sharedAsk] sayUnprompted:said];
 	[self syncSuggestControls];
 }
 
@@ -1800,9 +1632,9 @@ static const float NekoMaxStopRadius = 200.0f;
 		: NekoLocalized(@"Only in the “Roams on its own” behaviour")];
 	[suggestEveryPopUp setEnabled:roaming && on];
 	[suggestNowButton setEnabled:roaming && on];
-	[readTextCheck setState:[defaults boolForKey:NekoReadTextKey]
-		? NSControlStateValueOn : NSControlStateValueOff];
-	[readTextCheck setEnabled:roaming];
+	/* A button rather than a switch now: nothing to reflect, only whether it
+	   can be pressed at all. */
+	[lookButton setEnabled:roaming];
 
 	NSArray *choices = [self suggestIntervalChoices];
 	NSUInteger index = [choices indexOfObject:
@@ -1860,13 +1692,13 @@ static const float NekoMaxStopRadius = 200.0f;
 	   callers and fails if a third one ever forgets. */
 	[line appendString:NekoLocalized(@"Window titles are included only if this Mac has already granted Neko screen recording; that permission is never asked for. None of this ever leaves the Mac: what the cat notices is read by a model on this Mac or not at all, whichever engine you chose for answering questions.")];
 
-	if([[NSUserDefaults standardUserDefaults] boolForKey:NekoReadTextKey]) {
-		[line appendString:@"\n\n"];
-		if([NekoDesktop accessibilityGranted])
-			[line appendString:NekoLocalized(@"Reading the text is on: what is in the field you are typing in, or under the pointer, is included above and goes wherever the rest of it goes. Password fields are refused, nothing at all is read while macOS has secure keyboard entry on, and only the last few hundred characters are taken.")];
-		else
-			[line appendString:NekoLocalized(@"Reading the text is switched on but Neko has no Accessibility permission, so nothing is being read. Open System Settings, Privacy & Security, Accessibility, and allow Neko.")];
-	}
+	[line appendString:@"\n\n"];
+	if([[NekoGlance sharedGlance] isLooking])
+		[line appendString:NekoLocalized(@"It is looking right now — what is in the field you are typing in, or under the pointer, is included above. It stops on its own, the time left is in the cat's menu, and one click there ends it. Password fields are refused, nothing at all is read while macOS has secure keyboard entry on, and only the last few hundred characters are taken.")];
+	else if([NekoDesktop accessibilityGranted])
+		[line appendString:NekoLocalized(@"It is not looking. Ask it to — “guarda cosa sto facendo”, or the button above — and it reads the text you are working on for ten minutes and then stops by itself. There is no way to leave this on: a permission you have to remember to revoke is one nobody should have to remember.")];
+	else
+		[line appendString:NekoLocalized(@"It is not looking, and it has no Accessibility permission either, so it could not. The button above asks for both at once; the permission is in System Settings, Privacy & Security, Accessibility.")];
 	return line;
 }
 
@@ -2276,7 +2108,7 @@ static const float NekoMaxStopRadius = 200.0f;
 		[self buildPreferencesPanel];
 	else {
 		[self syncPreferencesControls];
-		[self buildPermissionsTab];   /* all five can change outside the app */
+		[permissions rebuild];        /* all five can change outside the app */
 	}
 	[NSApp activateIgnoringOtherApps:YES];
 	[prefsPanel makeKeyAndOrderFront:sender];

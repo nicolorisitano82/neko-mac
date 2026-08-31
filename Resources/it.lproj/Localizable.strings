@@ -518,3 +518,28 @@
 "%@ to %@ — “%@”. Shall I put it in your calendar?" = "%@ fino alle %@ — “%@”. Lo metto in calendario?";
 "It is in front of your calendar — press Add there." = "È davanti al tuo calendario — premi Aggiungi lì.";
 "Window titles are included only if this Mac has already granted Neko screen recording; that permission is never asked for. None of this ever leaves the Mac: what the cat notices is read by a model on this Mac or not at all, whichever engine you chose for answering questions." = "I titoli delle finestre entrano solo se questo Mac ha già concesso a Neko la registrazione dello schermo; quel permesso non viene mai chiesto. Niente di tutto questo esce dal Mac: quello che il gatto nota lo legge un modello su questo Mac o non lo legge nessuno, qualunque motore tu abbia scelto per le domande.";
+
+/* looking, for a stretch of time rather than for ever */
+"I have stopped looking." = "Ho smesso di guardare.";
+"Let it look for ten minutes" = "Fagli guardare per dieci minuti";
+"It is looking right now — what is in the field you are typing in, or under the pointer, is included above. It stops on its own, the time left is in the cat's menu, and one click there ends it. Password fields are refused, nothing at all is read while macOS has secure keyboard entry on, and only the last few hundred characters are taken." = "Sta guardando adesso — quello che c'è nel campo in cui stai scrivendo, o sotto il puntatore, entra qui sopra. Smette da solo, il tempo che manca è nel menu del gatto, e un click lì lo ferma. I campi password sono rifiutati, mentre macOS ha l'inserimento sicuro non legge assolutamente niente, e vengono presi solo gli ultimi qualche centinaio di caratteri.";
+"It is not looking. Ask it to — “guarda cosa sto facendo”, or the button above — and it reads the text you are working on for ten minutes and then stops by itself. There is no way to leave this on: a permission you have to remember to revoke is one nobody should have to remember." = "Non sta guardando. Chiediglielo — “guarda cosa sto facendo”, o il pulsante qui sopra — e legge il testo su cui stai lavorando per dieci minuti, poi smette da solo. Non c'è modo di lasciarlo acceso: un permesso che devi ricordarti di revocare è un permesso che nessuno dovrebbe doversi ricordare.";
+"It is not looking, and it has no Accessibility permission either, so it could not. The button above asks for both at once; the permission is in System Settings, Privacy & Security, Accessibility." = "Non sta guardando, e non ha nemmeno il permesso di Accessibilità, quindi non potrebbe. Il pulsante qui sopra chiede tutti e due insieme; il permesso è in Impostazioni di Sistema, Privacy e Sicurezza, Accessibilità.";
+"I would need the Accessibility permission to read anything. It is in System Settings, Privacy & Security, Accessibility." = "Mi servirebbe il permesso di Accessibilità per leggere qualcosa. È in Impostazioni di Sistema, Privacy e Sicurezza, Accessibilità.";
+"I will look for %@, and then stop." = "Guardo per %@, poi smetto.";
+"Looking — %@ left" = "Sto guardando — mancano %@";
+
+/* The clock and the calendar, answered without a model. */
+"It is %@." = "Sono le %@.";
+"Today is %@." = "Oggi è %@.";
+"Tomorrow is %@." = "Domani è %@.";
+"The day after tomorrow is %@." = "Dopodomani è %@.";
+"Yesterday was %@." = "Ieri era %@.";
+"That is today." = "È oggi.";
+"That is tomorrow." = "È domani.";
+"%ld days, on %@." = "%ld giorni, %@.";
+"%@, at %@." = "%@, alle %@.";
+
+/* The downloadable models. */
+"2.3 GB — follows a brief better than anything above it" = "2,3 GB — sta alle consegne meglio di tutti quelli sopra";
+"2.7 GB — the most recent, and the largest worth keeping on a laptop" = "2,7 GB — il più recente, e il più grande che valga la pena tenere su un portatile";

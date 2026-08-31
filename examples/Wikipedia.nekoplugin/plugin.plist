@@ -39,7 +39,7 @@
 				<key>Summary</key>
 				<string>the opening of a Wikipedia article</string>
 				<key>Url</key>
-				<string>https://it.wikipedia.org/api/rest_v1/page/summary/%@</string>
+				<string>https://it.wikipedia.org/w/api.php?action=query&amp;prop=extracts&amp;exintro&amp;explaintext&amp;redirects=1&amp;exchars=1200&amp;format=json&amp;titles=%@</string>
 			</dict>
 		</array>
 	</dict>
@@ -56,7 +56,7 @@
 	<key>Summary</key>
 	<string>Looks a thing up in Wikipedia and answers from the opening of the article. Like any search, it carries what you named to Wikipedia — the plugins window says so, with the host.</string>
 	<key>Version</key>
-	<string>1.0</string>
+	<string>1.1</string>
 	<key>Wants</key>
 	<array>
 		<string>network</string>

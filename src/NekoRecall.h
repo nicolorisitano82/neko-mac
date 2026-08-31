@@ -84,11 +84,16 @@
    sense and never mentions *preferenze* at all. Parsing lexicographic prose to
    find a synonym is a larger and worse idea than the problem.
 
-   What has not been tried, and is the better idea: **the person's own diary as
-   the source.** Words that turn up in the same lines are related for them, in
-   their vocabulary, and an expansion drawn from what somebody actually wrote
-   cannot import a concept from outside it. It needs a real month of diary to
-   measure honestly, which is why it is not in here on a hunch. */
+   **What was tried next, and works: `NekoWords`.** The diary's own vocabulary is
+   put in front of the on-device model and it is asked which of *those* words mean
+   the same as the one somebody asked with — recognition rather than generation,
+   which is the only one of the three shapes that answered *impostazioni* with
+   *preferenze*. That header has the table. This one takes the result as data:
+   a dictionary of word to words, passed in, so that recall stays a pure function
+   of a question and a corpus and a test can stage a table that was never learned.
+
+   A word arrived at that way is worth **0.7** of the word actually asked, so a
+   line that shares the real word always beats a line that shares its synonym. */
 @interface NekoRecall : NSObject
 
 /* The words of a line, lemmatised and folded, with the short ones dropped. */
@@ -96,6 +101,10 @@
 
 /* The words of a question, each with what its word class is worth. */
 + (NSDictionary *)askedIn:(NSString *)question;
+
+/* The same, with what somebody's diary calls those words added at a discount.
+   `synonyms` maps a word to the words that mean it; nil is the plain version. */
++ (NSDictionary *)askedIn:(NSString *)question widenedBy:(NSDictionary *)synonyms;
 
 /* How rare each word is across a body of lines. Pass it back to -linesIn:… so a
    month is only measured once. */
@@ -120,6 +129,14 @@
                about:(NSString *)question
                limit:(NSUInteger)limit
               rarity:(NSDictionary *)rarity;
+
+/* And the same again, widened by what this Mac has learned the words mean. */
++ (NSArray *)linesIn:(NSArray *)lines
+               words:(NSArray *)sets
+               about:(NSString *)question
+               limit:(NSUInteger)limit
+              rarity:(NSDictionary *)rarity
+            synonyms:(NSDictionary *)synonyms;
 
 /* What a line scored, exposed so a test can say why rather than only whether. */
 + (double)scoreOf:(NSString *)line asked:(NSDictionary *)asked

@@ -2,9 +2,12 @@
 
 #import <Cocoa/Cocoa.h>
 
-/* BOOL: read the text being worked on, which needs the Accessibility
-   permission. Off until asked for, and worth nothing without the permission. */
-extern NSString * const NekoReadTextKey;
+/* There is no setting for reading the text any more. It was NekoReadTextKey, a
+   switch that stayed on until somebody remembered it, and it is a stretch of time
+   somebody asks for — see NekoGlance.h, and docs/one-look-roadmap.md for why the
+   shape mattered more than the capability. The key is gone rather than left
+   declared: a defaults key nothing reads is a thing the next person has to work
+   out is dead. */
 
 /* How good a moment this is to say something.
 

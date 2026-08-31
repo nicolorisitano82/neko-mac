@@ -32,4 +32,9 @@
 /* When a timer set now would land, as somebody would read it off a clock. */
 + (NSString *)clockTimeIn:(NSTimeInterval)seconds;
 
+/* The numbers written out, in the four languages. Shared with NekoSums so that
+   "quanto fa sette per otto" and "fra sette minuti" read the same list rather
+   than two lists that drift apart. */
++ (NSDictionary *)writtenNumbers;
+
 @end

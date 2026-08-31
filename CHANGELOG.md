@@ -1,5 +1,125 @@
 # Changelog
 
+## 2.12 — 2026-09-01
+
+### The screen is read for a stretch somebody asked for, not until they remember
+
+Reading the text you are working on used to be a switch: on until you thought
+about it again. Everything else here asks per use — a folder is handed over in a
+panel, a deed is read back and waits for a yes — and the most sensitive thing the
+cat can touch was the one place with a standing grant.
+
+It is a stretch of time now. *"Guarda cosa sto facendo"*, *"guarda per cinque
+minuti"*, or a button in the Suggestions tab that starts ten minutes and asks for
+the Accessibility permission in the same breath. While it runs the time left is
+in the menu and one click ends it; it stops on its own and says so once; it does
+not survive a quit. The old switch is **retired**, not kept beside it: two ways
+to grant the same thing, one of them permanent, is how somebody grants the
+permanent one by accident.
+
+The idea is not ours — it is the Convai desktop pet's — and the work that went in
+front of it is the part worth reading. An experiment was built to ask whether
+screen text improves the remarks at all, it scored **zero out of ten**, and the
+conclusion sitting there ready was to delete the feature. Then the prompt was
+read: it said, in so many words, *"do not pretend to see inside their files"*.
+The experiment had measured the instruction, not the capability. Re-run with that
+sentence made conditional, one or two remarks in ten used what was read — and
+those were the only remarks in the whole run that no amount of knowing the
+minutes could have produced.
+
+### Three turns of a conversation, after counting how often a third turn happens
+
+A conversation was one turn long, on a three-minute clock. Whether that was a
+defect or the character was a real question, so it was counted from this Mac's
+own diary — timestamps only, never the words: of fourteen runs of questions
+inside three minutes of each other, **six reached a third turn**.
+
+So three, bounded three ways: a count, the same 180-second clock, and 600
+characters spent newest first — because the reason for the old rule, that a long
+prompt makes a small model worse, has not gone away.
+
+### It counts days and does sums itself, having been shown that it must
+
+A model here has never had to invent the date: the time, the day and the date
+have been handed to every engine since 2.4. What was never checked is what it
+does with them. Three models on this Mac, the same questions, that block in
+front of them:
+
+| asked | true | answered |
+| --- | --- | --- |
+| how many days to Friday | 4 | 2 · 2 · 1 |
+| how long to 25 December | 116 | "due settimane" · 31 · 170 |
+| 47 × 23 | 1081 | 1081 · "Quindici" · "circa 2.04" |
+| 2 gallons in litres | 7,57 | 4,54 · 0,845 · 7,5 |
+
+One of nine date questions right, and every wrong one said as a whole confident
+sentence. The conversions fail in the worse way, because 4,54 is a real number —
+the litres in an imperial gallon.
+
+`NSCalendar` counts the days now and `NSMeasurement` does the conversions, both
+before any engine and both instant. Not `NSExpression`, which was tried and
+measured: it answers `7/2` with **3** and `1/0` with **0**, silently.
+
+The work, as usual, is the refusing. Twenty-four sentences that must **not** be
+read as a sum or a date are in the harnesses — *"quanto fa male"*, *"che giorno è
+meglio per uscire"*, *"quanto manca al lancio del prodotto"*. And one trap is
+written down where the next person will find it: `NSDataDetector` handed *"al 3
+marzo"* answers **today at noon** and reports that it used the whole phrase.
+
+### It learns that two words are the same word, from your diary
+
+The diary is found by lemma, word class and rarity, and it had a known miss:
+asked about *impostazioni* it did not find *preferenze*. Two ways out were
+already measured and dead — word vectors have no threshold that admits
+*versione↔release* (0.922) while rejecting *gatto↔cane* (0.660), and the system
+dictionary answers with definitions.
+
+The third way was measured before it was built. The on-device model cannot
+*generate* the word that matters — asked for synonyms of *impostazioni* it offers
+*configurazione, parametri, opzioni*, never *preferenze*. Shown your diary's own
+words and asked which of **those** mean the same thing, it picks the right one:
+nine of nine on a staged diary, in under a second each.
+
+So it learns afterwards, never while you are waiting: a question the diary had
+nothing for leaves the question behind, and twenty seconds later, if the cat is
+idle, one word is asked about once and written to `synonyms.txt` beside the
+diary — plain text you can open, read, and delete a line from. This makes the
+**second** asking work, not the first, and that is said out loud rather than
+implied.
+
+The model can only pick from the list it is shown, so a word it invents cannot
+get in; the list is diary content, so it never goes anywhere but an engine on
+this Mac; and a borrowed word weighs 0.7 of the word you actually wrote.
+
+### Wikipedia, and a paper about small models
+
+The Wikipedia plugin asks a different endpoint. Measured on ten factual
+questions: with the old one the answers were 8 of 10, with the new one **10 of
+10**, and the model never changed. Retrieval was the bottleneck, not the size of
+what reads it — which is a paper's claim, checked here rather than repeated.
+
+The route reader also learned to read JSON by a closed list of fields, and stopped
+dropping a body that arrived as one long line.
+
+### The newest Qwen that fits, and the one that does not
+
+*Qwen3.5 4B* joins the download list — 2.7 GB, Apache-2.0, the most recent thing
+that fits on a laptop. *Qwen3.8-Flash-Next* was asked for and is not here, and
+the reason is in a comment rather than in silence: its four-bit build is 111 GB
+across four pieces, and nothing here downloads a model in pieces.
+
+### Smaller
+
+- The Permissions tab is its own file. `NekoController` is 2,175 lines from
+  2,377, and `tests/layout.m` — which opens every tab and counts every control —
+  is what proved the move faithful.
+- The Accessibility row in the permissions list was reading a setting that no
+  longer exists and would have answered "not wanted" for ever.
+- The preferences said screen text follows the chosen engine to ChatGPT. It never
+  could: both readers of the desktop summary ask for an on-device engine. The
+  sentence was false in the direction of frightening people, and a source-reading
+  check now fails if a third reader appears.
+
 ## 2.11 — 2026-08-30
 
 ### It remembers what you tell it to remember, the moment you say it

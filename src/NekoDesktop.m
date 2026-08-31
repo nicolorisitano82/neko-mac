@@ -1,11 +1,11 @@
 #import "NekoDesktop.h"
+#import "NekoGlance.h"
 #import "NekoWakeWord.h"
 #import "NekoAsk.h"
 #import <CoreAudio/CoreAudio.h>
 #import <ApplicationServices/ApplicationServices.h>
 #import <Carbon/Carbon.h>
 
-NSString * const NekoReadTextKey = @"NekoReadText";
 
 /* Enough to know what you are working on, short enough that it cannot become a
    transcript of your afternoon. */
@@ -396,7 +396,12 @@ static const NSTimeInterval NekoBreakpointWindow = 12.0;
 
 - (BOOL)readsText
 {
-	return [[NSUserDefaults standardUserDefaults] boolForKey:NekoReadTextKey]
+	/* A stretch of time somebody asked for, not a switch they left on. The switch
+	   was the one standing grant in an application that asks per use everywhere
+	   else, and a permission you must remember to revoke is one careful people
+	   decline for ever — which left this off for exactly the people it is for.
+	   See NekoGlance.h and docs/one-look-roadmap.md. */
+	return [[NekoGlance sharedGlance] isLooking]
 		&& [NekoDesktop accessibilityGranted];
 }
 

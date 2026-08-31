@@ -49,6 +49,12 @@ extern NSString * const NekoLastUnpromptedKey;
 	NSString *lastQuestion;      /* the turn before this one, so "it" resolves */
 	NSString *lastAnswer;
 	NSDate *lastTurn;
+	/* And the two before that, because a third turn is not rare. Counted from
+	   this Mac's own diary, timestamps only: of fourteen runs of questions inside
+	   three minutes of each other, six reached a third turn and two reached a
+	   fifth. Carrying one turn meant the first thing somebody said was gone by
+	   the time they had said three. */
+	NSMutableArray *turns;
 	NekoShortcutProvider *shortcutProvider;
 	NekoModelProvider *modelProvider;
 	NekoAppleProvider *appleProvider;

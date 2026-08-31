@@ -6,8 +6,11 @@
 #import "NekoRate.h"
 #import "NekoWeb.h"
 #import "NekoTimer.h"
+#import "NekoClock.h"
+#import "NekoSums.h"
 #import "NekoFact.h"
 #import "NekoAppointment.h"
+#import "NekoGlance.h"
 #import "NekoPluginRoutes.h"
 #import "NekoPluginText.h"
 #import "NekoPluginVerbs.h"
@@ -48,6 +51,13 @@ static const NSTimeInterval NekoBeatPatience = 6.0;
 /* How long the previous turn is worth pointing back at. Say something ten
    minutes later and it is a new conversation, not a follow-up. */
 static const NSTimeInterval NekoThreadLife = 180.0;
+
+/* How many turns back it can see, and how much of them a model is given. Three
+   because the diary says a third turn is common and a fourth is not; six hundred
+   characters because the whole instruction block is about a thousand and the
+   character, the rules and the diary have to fit beside this. */
+static const NSUInteger NekoThreadTurns = 3;
+static const NSUInteger NekoThreadChars = 600;
 
 /* A remark nobody asked for is worth something only if it is possible to tell
    how it landed. Answered moves the pace up, let go moves it down, clicked away
@@ -699,21 +709,66 @@ static const NSTimeInterval NekoHoldToType = 0.5;
 	lastAnswer = [answer length] > 0 ? [shorten(answer) copy] : nil;
 	[lastTurn release];
 	lastTurn = [[NSDate date] retain];
+
+	/* Kept as a short list as well, oldest first, so that a third question can
+	   still see the first. Three is the whole of it: the budget below is what
+	   actually decides how much reaches a model, and a small one gets worse as
+	   the prompt grows. */
+	if(turns == nil)
+		turns = [[NSMutableArray alloc] init];
+	[turns addObject:[NSDictionary dictionaryWithObjectsAndKeys:
+		lastTurn, @"When",
+		lastQuestion ?: @"", @"Asked",
+		lastAnswer ?: @"", @"Answered", nil]];
+	while([turns count] > NekoThreadTurns)
+		[turns removeObjectAtIndex:0];
 }
 
-/* Only the turn just before, and only for a few minutes. Any more history than
-   that costs the small local models more than it buys them, and a conversation
-   nobody has continued is over. */
+/* The last few minutes of the conversation, newest last, and never more than a
+   few hundred characters of it.
+
+   It used to be the one turn just before, on the grounds that more history costs a
+   small local model more than it buys it. Half of that is still true and is why
+   the budget exists; the other half was an assumption, and this Mac's own diary
+   contradicts it — of fourteen runs of questions inside three minutes of each
+   other, six reached a third turn. Carrying one turn meant that by the third
+   question the first thing somebody said had gone.
+
+   Still bounded three ways, because the reason for the old rule has not gone
+   away: three turns at most, nothing older than NekoThreadLife, and a hard cap on
+   the characters, spent newest first so that what is dropped is the oldest rather
+   than the most recent. */
 - (NSString *)threadForPrompt
 {
 	if(lastTurn == nil || [lastAnswer length] == 0)
 		return @"";
 	if(-[lastTurn timeIntervalSinceNow] > NekoThreadLife)
 		return @"";
-	if([lastQuestion length] > 0)
-		return [NSString stringWithFormat:@"They asked: %@\nYou answered: %@",
-			lastQuestion, lastAnswer];
-	return [NSString stringWithFormat:@"You said, without being asked: %@", lastAnswer];
+
+	NSMutableArray *lines = [NSMutableArray array];
+	NSUInteger spent = 0;
+	NSInteger i;
+	for(i = (NSInteger)[turns count] - 1; i >= 0; i--) {
+		NSDictionary *turn = [turns objectAtIndex:(NSUInteger)i];
+		if(-[[turn objectForKey:@"When"] timeIntervalSinceNow] > NekoThreadLife)
+			break;                 /* older than this one is older still */
+		NSString *asked = [turn objectForKey:@"Asked"];
+		NSString *answered = [turn objectForKey:@"Answered"];
+		if([answered length] == 0)
+			continue;
+		NSString *said = [asked length] > 0
+			? [NSString stringWithFormat:@"They asked: %@\nYou answered: %@",
+				asked, answered]
+			: [NSString stringWithFormat:@"You said, without being asked: %@",
+				answered];
+		if(spent + [said length] > NekoThreadChars)
+			break;
+		[lines insertObject:said atIndex:0];       /* oldest first, once kept */
+		spent += [said length];
+	}
+	if([lines count] == 0)
+		return @"";
+	return [lines componentsJoinedByString:@"\n"];
 }
 
 #pragma mark Waiting, visibly
@@ -910,6 +965,36 @@ static const NSTimeInterval NekoHoldToType = 0.5;
 	NSDictionary *fact = [NekoFact wantedFor:question];
 	if(fact != nil) {
 		[self sayInCharacter:[NekoFact act:fact]];
+		return;
+	}
+
+	/* A sum, and then a date. Both are here rather than in front of a model for
+	   the reason measured in tests/sums.m: asked the same ten questions with the
+	   facts block they already get, three models on this Mac answered **one of
+	   nine date questions right** — two days to Friday when it was four, a
+	   hundred and seventy to Christmas when it was a hundred and sixteen — and
+	   invented conversion factors that are real numbers for the wrong unit.
+
+	   The sum goes first: "quanti giorni sono 48 ore" is a conversion, and the
+	   words it starts with are the words a question about a date starts with. */
+	NSString *sum = [NekoSums wantedFor:question];
+	if(sum != nil) {
+		[self sayInCharacter:sum];
+		return;
+	}
+
+	NSString *clock = [NekoClock wantedFor:question];
+	if(clock != nil) {
+		[self sayInCharacter:clock];
+		return;
+	}
+
+	/* Asked to look at the screen for a while. Before the timer, because "guarda
+	   per dieci minuti" carries a duration and only the trigger words tell the two
+	   apart. */
+	NSTimeInterval looking = [NekoGlance wantedFor:question];
+	if(looking > 0.0) {
+		[self sayInCharacter:[[NekoGlance sharedGlance] lookFor:looking]];
 		return;
 	}
 

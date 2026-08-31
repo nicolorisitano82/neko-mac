@@ -74,7 +74,15 @@
 	   asked for the capital of Italy and answered "Italie, la capitale d'Italia,
 	   è Roma", which is the sort of thing worth warning about rather than
 	   dressing up. Sizes are the published ones, used to show progress before
-	   the server says how long the file is. */
+	   the server says how long the file is.
+
+	   **Why the list stops at four billion parameters.** The newest Qwen is
+	   `Qwen3.8-Flash-Next`, and it was asked for rather than guessed at. Its
+	   own files answer: the four-bit build is 111 GB across four pieces, and
+	   the smallest one-bit build is 72 GB across three. Nothing here can
+	   download a model in pieces, and nothing sold as a laptop can hold one.
+	   So the most recent thing that fits is Qwen3.5 4B, which is the last
+	   entry, and the big one is left out rather than listed and unusable. */
 	cached = [[NSArray alloc] initWithObjects:
 		[[[NekoLocalModel alloc]
 			initWithIdentifier:@"qwen2.5-0.5b-instruct-q4"
@@ -115,9 +123,15 @@
 		[[[NekoLocalModel alloc]
 			initWithIdentifier:@"qwen3-4b-instruct-q4"
 			              name:@"Qwen3 4B Instruct"
-			            detail:NSLocalizedString(@"2.3 GB — the most recent, and the one that follows a brief best", nil)
+			            detail:NSLocalizedString(@"2.3 GB — follows a brief better than anything above it", nil)
 			               url:[NSURL URLWithString:@"https://huggingface.co/unsloth/Qwen3-4B-Instruct-2507-GGUF/resolve/main/Qwen3-4B-Instruct-2507-Q4_K_M.gguf"]
 			             bytes:2497281120LL] autorelease],
+		[[[NekoLocalModel alloc]
+			initWithIdentifier:@"qwen3.5-4b-q4"
+			              name:@"Qwen3.5 4B"
+			            detail:NSLocalizedString(@"2.7 GB — the most recent, and the largest worth keeping on a laptop", nil)
+			               url:[NSURL URLWithString:@"https://huggingface.co/unsloth/Qwen3.5-4B-GGUF/resolve/main/Qwen3.5-4B-Q4_K_M.gguf"]
+			             bytes:2740937888LL] autorelease],
 		nil];
 	return cached;
 }
