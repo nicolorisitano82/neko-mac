@@ -78,8 +78,15 @@ int main(void)
 		@"a “sed” line is dropped before the model sees the day", nil);
 	ok([body rangeOfString:@"two kinds"].location != NSNotFound,
 		@"and the instructions say two kinds of note, not three", nil);
-	ok([body rangeOfString:@"saysTheSameAsAnyOf:saidBefore"].location != NSNotFound,
+	/* Pinned to the method rather than to a variable inside it: the first version
+	   of this check named a local, and moving that code into -durable:after: —
+	   where it could be measured without an engine — broke a test that was still
+	   true. */
+	ok([body rangeOfString:@"durable:[self durableLines] after:"].location != NSNotFound,
 		@"and a durable line that repeats one is not written twice", nil);
+	ok([source rangeOfString:@"- (NSArray *)durable:(NSArray *)existing after:"].location
+	   != NSNotFound,
+		@"by a merge that can be measured on its own", nil);
 
 	printf("\n--- and the report that found all this still runs ---\n");
 

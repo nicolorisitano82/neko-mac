@@ -586,3 +586,34 @@
 "Downloading Neko" = "Téléchargement de Neko";
 "reasons before answering" = "réfléchit avant de répondre";
 "2.7 GB — the most recent, and it reasons at such length that it often never reaches the answer" = "2,7 Go — le plus récent, et il réfléchit si longuement qu’il n’atteint souvent pas la réponse";
+
+/* What the cat knows about itself: where it is, and since when. */
+"bottom left" = "en bas à gauche";
+"at the bottom" = "en bas";
+"bottom right" = "en bas à droite";
+"on the left" = "à gauche";
+"in the middle" = "au milieu";
+"on the right" = "à droite";
+"top left" = "en haut à gauche";
+"at the top" = "en haut";
+"top right" = "en haut à droite";
+"I am %@ of your screen." = "Je suis %@ de ton écran.";
+"I am %@ of screen %ld." = "Je suis %@ de l’écran %ld.";
+"Since today." = "Depuis aujourd’hui.";
+"Since yesterday, %@." = "Depuis hier, le %@.";
+"%ld days, since %@." = "%ld jours, depuis le %@.";
+"A moment ago." = "À l’instant.";
+"%@ ago." = "Il y a %@.";
+"This is the first thing you have asked me." = "C’est la première chose que tu me demandes.";
+"I am %@." = "Je suis %@.";
+"I am %@, on screen %ld." = "Je suis %@, sur l’écran %ld.";
+
+/* And where the Mac itself is. */
+"The Mac is in %@." = "Le Mac est à %@.";
+"The Mac is somewhere in %@." = "Le Mac est quelque part en %@.";
+
+/* When, rather than what. */
+"Today." = "Aujourd’hui.";
+"Yesterday." = "Hier.";
+"On %@, %ld days ago." = "Le %@, il y a %ld jours.";
+"I have not said anything yet." = "Je n’ai encore rien dit.";

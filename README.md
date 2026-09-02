@@ -379,6 +379,61 @@ Colosseo non è a Roma. È a Roma, ma non è qui."* A model can be told to agree
 to disagree. It cannot be given something to check against; a line somebody wrote
 can.
 
+And **when** is a different question from **what**, answered from the same diary:
+
+> — *quando te l'ho detto?*
+> — **Il 30 agosto, 4 giorni fa.**
+
+Quoting the line back would be answering the other one, so this does not. Today
+and yesterday are said as words, because *"0 giorni fa"* is not how anybody says
+it. The elapsed part is the point: a date is a fact about the calendar, and *four
+days ago* is a fact about the two of you.
+
+### What it knows about itself
+
+> — *dove sei?*
+> — **Sto in alto a destra. Il Mac è a Vicenza.**
+
+*Where are you* is two questions. Where the cat sits is a rectangle on a screen —
+nine parts of it, worked out from the cat's own middle, not the pointer's and not
+the front window's. Where the **Mac** stands is the other half, and it has two
+tiers that the wording keeps apart:
+
+| | |
+| --- | --- |
+| a town, when somebody granted the location permission | *"Il Mac è **a** Vicenza."* |
+| otherwise the country the **time zone** implies | *"Il Mac è **da qualche parte in** Italia."* |
+
+The second costs no permission at all and is the honest half of the pair: a time
+zone gives a country and nothing finer, so the sentence does not name a place. A
+cat that said *"sono a Roma"* to everyone in Italy would be wrong about almost all
+of them. Nothing leaves the machine either way — only the name of a town is ever
+kept, never a coordinate.
+
+Three more, all of them subtractions:
+
+> — *da quanto ci conosciamo?* — **43 giorni, dal 22 luglio.**
+> — *da quanto non ci parliamo?* — **3 giorni fa.**
+> — *quando hai parlato l'ultima volta?* — **2 giorni fa.**
+
+The first is a stamp written once and kept, not a count of diary files: an
+installation whose old days have been pruned would otherwise say *thirty* for
+ever. The last two are mirrors of each other — one is about you, one is about it
+— and the harness checks they do not answer each other.
+
+**None of it is in the prompt**, deliberately. The block a model is given is
+already a thousand characters, and the factor analysis behind
+[docs/personality.md](docs/personality.md) has *egocentric* among the top
+descriptors of its second dimension: a cat handed its own biography before every
+answer is a cat that talks about itself. A check reads the source and fails if
+that ever changes.
+
+And what it may never do is claim to feel any of it. A self-model is buildable
+and testable; whether anything is experienced is not currently answerable by
+anybody, and `NekoSense` already throws away a remark that claims *"mi sento
+solo"* — refused as a feeling it does not have. See [docs/self.md](docs/self.md)
+for why that rule, written for taste, is worth keeping for a reason.
+
 ### Having the facts is not the same as being able to use them
 
 The table above settles the time and leaves something open, and 2.12 measured it.
@@ -770,6 +825,34 @@ repeating here — the intelligence of this application has never been in the
 engine, and the two things that would change it are **recalling the diary by
 relevance rather than by recency** and **growing the closed list of questions it
 answers in code instead of guessing**.
+
+[docs/self.md](docs/self.md) asks what it would take to give the cat a sense of
+where it is, of what happened to it, and of what time it is — read from the
+literature in September 2026, and it finds that the field's "self-awareness" is
+the **wrong** self for a character: the careful instrument in that area, a
+13,000-question benchmark over sixteen models, measures whether a model knows it
+is a language model, whether it is being tested, and whether it wrote a given
+text. A pixel cat should not know any of that. What it should know — where it
+lives, what happened before, what time it is — turns out to be unstudied as
+*self*, and the constructive finding is the opposite of what the phrase suggests:
+**a sense of time is achievable precisely because it must be computed rather than
+reasoned.** Timeline ordering sits below 30% across 24 models on the largest
+temporal benchmark, and this application's own measurement put three models at
+one of nine with the date already in the prompt. The document also handles the
+question of existence once, and puts it down: a self-model is buildable and
+testable, whether anything is experienced is not currently answerable by anybody,
+and so the cat may know things about itself and may never claim to feel them.
+The first three things it proposes are built — see **What it knows about itself**
+above. And [docs/self-2.md](docs/self-2.md) is the second, deeper pass: one
+ninety-page survey read properly rather than a dozen abstracts, which turns out to
+be about exactly this kind of program — *"systems whose future behaviour depends on
+durable state accumulated across earlier interactions"* — and which supplies six
+named axes for judging a diary, a published finding that a continuously
+consolidated memory **falls below the no-memory baseline** as it accumulates, and
+a falsifiable bar this application does not clear: *adaptation is net-positive only
+when the system can identify, de-authorise and revert the state update that later
+caused a regression.* The 2.12.1 fixes stopped the poisoning; none of them is a
+return arc.
 
 [docs/personality.md](docs/personality.md) is what the research literature
 actually shows about building an assistant with a personality — read in September

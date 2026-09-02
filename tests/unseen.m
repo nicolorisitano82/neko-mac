@@ -122,8 +122,9 @@ int main(void)
 		ok(file != nil,
 			@"with no folder granted, it says it cannot see inside files", file);
 		notMeasured(@"the other half of that — standing aside once a folder is "
-		            @"handed over — needs a security-scoped bookmark this harness "
-		            @"cannot make without a panel and a person");
+		            @"handed over — is measured in tests/edge.m, by swapping the "
+		            @"method that answers the question rather than by putting a "
+		            @"panel on somebody's screen");
 	}
 
 	printf("\n--- and the news path wins every weather question it can answer ---\n");

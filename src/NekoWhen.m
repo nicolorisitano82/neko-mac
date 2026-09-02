@@ -222,8 +222,12 @@ static BOOL NekoSaysAndAHalf(NSString *rest)
 	NSDateComponentsFormatter *spell = [[[NSDateComponentsFormatter alloc] init]
 		autorelease];
 	[spell setUnitsStyle:NSDateComponentsFormatterUnitsStyleFull];
-	[spell setAllowedUnits:NSCalendarUnitHour | NSCalendarUnitMinute
-	                       | NSCalendarUnitSecond];
+	/* Days as well. Nothing this file *parses* is longer than a day — see
+	   -secondsIn:, which refuses anything past twenty-four hours — but NekoSelf
+	   asks it to describe how long since somebody last said anything, and three
+	   days came back as "72 ore". */
+	[spell setAllowedUnits:NSCalendarUnitDay | NSCalendarUnitHour
+	                       | NSCalendarUnitMinute | NSCalendarUnitSecond];
 	[spell setZeroFormattingBehavior:NSDateComponentsFormatterZeroFormattingBehaviorDropAll];
 	return [spell stringFromTimeInterval:seconds] ?: @"";
 }

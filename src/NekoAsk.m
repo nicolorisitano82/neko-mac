@@ -8,6 +8,7 @@
 #import "NekoTimer.h"
 #import "NekoClock.h"
 #import "NekoRecord.h"
+#import "NekoSelf.h"
 #import "NekoUnseen.h"
 #import "NekoSums.h"
 #import "NekoFact.h"
@@ -1004,6 +1005,18 @@ static const NSTimeInterval NekoHoldToType = 0.5;
 	   it. */
 	if([turns count] == 0 && [NekoRecord wantedFor:question]) {
 		[self sayInCharacter:[NekoRecord answerFor:question]];
+		return;
+	}
+
+	/* And what it knows about itself: where it is, how long it has been here, how
+	   long since you last asked it anything. In code and not in the prompt, for
+	   the reason docs/self.md ends on — the largest temporal benchmark has 24
+	   models below 30% at putting events in order, and this application measured
+	   three of its own at one of nine with the date already in front of them.
+	   Every fact here is a subtraction over a timestamp or a rectangle. */
+	NSString *itself = [NekoSelf wantedFor:question];
+	if(itself != nil) {
+		[self sayInCharacter:itself];
 		return;
 	}
 

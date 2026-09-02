@@ -135,6 +135,41 @@ extern NSString * const NekoMemoryDirectoryKey;
 
 /* Housekeeping, all of it available from the preferences. */
 - (NSUInteger)dayCount;
+
+/* The day the two of you met, and the last time they said anything.
+
+   Both are stamps rather than scans. The first is written once, the first time
+   this is ever asked, and never again — which means an installation that has
+   been running for months and has had its old day files pruned still knows how
+   long it has been here, where counting the diary's files would say thirty. On
+   an installation that predates the stamp the oldest day file is the fallback,
+   and it is the best answer available.
+
+   Nothing here is a fact about the person. It is what the cat knows about its
+   own situation, which is the subject of docs/self.md. */
+/* Yesterday's durable lines and today's, merged with **the newer winning**: a
+   line that says what an older one says takes its place rather than being
+   dropped, so a correction is not mistaken for a repetition. Its own method
+   because it can then be measured without an engine, which is how the defect it
+   fixes was found. */
+- (NSArray *)durable:(NSArray *)existing after:(NSArray *)fresh;
+
+/* A durable line without its citation — the day and the lesson, which is all a
+   model should be given. The times are for a person and for tools/diary.py. */
+- (NSString *)durableForPrompt:(NSString *)line;
+
+- (NSDate *)metOn;
+- (NSDate *)lastHeard;
+
+/* The time they said something **before** the thing being handled now.
+
+   Which sounds like a nicety and is the difference between a working answer and
+   a useless one. -noteHeard: is called by -ask: before the question reaches any
+   recogniser, so by the time "da quanto non ci parliamo?" is answered, the most
+   recent thing said is that very question, and the answer was always "un attimo
+   fa". The harness had set the stamp by hand and never gone through -ask:, so it
+   passed while the feature did not work at all. */
+- (NSDate *)heardBefore;
 - (long long)bytesOnDisk;
 - (void)pruneOldDays;
 - (BOOL)forgetLinesContaining:(NSString *)text;

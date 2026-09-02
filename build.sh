@@ -60,6 +60,7 @@ SOURCES="src/main.m src/MyView.m src/MyPanel.m src/NekoCharacter.m src/NekoContr
 src/NekoRecord.m
 src/NekoUnseen.m
 src/NekoUpdate.m
+src/NekoSelf.m
 src/NekoWords.m src/NekoWhen.m
 src/NekoClock.m
 src/NekoSums.m src/NekoTimer.m src/NekoPhrase.m src/NekoPluginRoutes.m src/NekoStream.m src/NekoFact.m src/NekoDoors.m src/NekoAppointment.m src/NekoGlance.m src/NekoPermissionsTab.m"

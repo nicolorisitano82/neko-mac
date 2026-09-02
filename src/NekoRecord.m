@@ -69,10 +69,68 @@ static NSString *NekoRecordDay(NSString *stamp)
 	return [said stringFromDate:when];
 }
 
+/* The phrases that ask *when* rather than *what*. Checked before the others,
+   because "quando ti ho detto" contains "ti ho detto". */
+static NSArray *NekoRecordAskingWhen(void)
+{
+	static NSArray *asking = nil;
+	if(asking != nil)
+		return asking;
+	asking = [[NSArray alloc] initWithObjects:
+		/* Italian */
+		@"quando te l'ho detto", @"quando te l'avevo detto",
+		@"quando ne abbiamo parlato", @"quando ne ho parlato",
+		@"quando l'ho detto", @"quando l'avevo detto",
+		@"quando ti ho parlato di", @"quando ti ho detto",
+		@"l'ultima volta che ne abbiamo parlato", @"quand'è che ne abbiamo parlato",
+		/* English */
+		@"when did i tell you", @"when did we talk about",
+		@"when did i mention", @"when did i say", @"when was the last time i",
+		/* French */
+		@"quand est-ce que je t'ai dit", @"quand en avons-nous parlé",
+		@"quand t'ai-je dit",
+		/* Spanish */
+		@"cuándo te lo dije", @"cuando te lo dije", @"cuándo hablamos de",
+		@"cuando hablamos de", nil];
+	return asking;
+}
+
+/* How many days ago that day was, counted midnight to midnight the way somebody
+   counts them. */
+static NSInteger NekoRecordDaysAgo(NSString *stamp)
+{
+	NSDateFormatter *stored = [[[NSDateFormatter alloc] init] autorelease];
+	[stored setLocale:[NSLocale localeWithLocaleIdentifier:@"en_US_POSIX"]];
+	[stored setDateFormat:@"yyyy-MM-dd"];
+	NSDate *when = [stored dateFromString:stamp];
+	if(when == nil)
+		return -1;
+	NSCalendar *calendar = [NSCalendar currentCalendar];
+	NSDate *from = nil, *to = nil;
+	[calendar rangeOfUnit:NSCalendarUnitDay startDate:&from interval:NULL forDate:when];
+	[calendar rangeOfUnit:NSCalendarUnitDay startDate:&to interval:NULL
+	              forDate:[NSDate date]];
+	return [[calendar components:NSCalendarUnitDay fromDate:from toDate:to
+	                     options:0] day];
+}
+
 @implementation NekoRecord
+
++ (BOOL)asksWhen:(NSString *)question
+{
+	NSString *text = [question lowercaseString];
+	NSEnumerator *e = [NekoRecordAskingWhen() objectEnumerator];
+	NSString *phrase;
+	while((phrase = [e nextObject]) != nil)
+		if([text rangeOfString:phrase].location != NSNotFound)
+			return YES;
+	return NO;
+}
 
 + (BOOL)wantedFor:(NSString *)question
 {
+	if([self asksWhen:question])
+		return YES;
 	NSString *text = [question lowercaseString];
 	NSEnumerator *e = [NekoRecordAsking() objectEnumerator];
 	NSString *phrase;
@@ -88,6 +146,33 @@ static NSString *NekoRecordDay(NSString *stamp)
 	                                                  limit:NekoRecordMost];
 	if([found count] == 0)
 		return NekoRecordLocalized(@"I have nothing written down about that.");
+
+	/* Asked *when*, the day and how long ago is the whole answer: quoting the
+	   line back would be answering a different question. */
+	if([self asksWhen:question]) {
+		/* The **most recent** mention, not the best-scoring one. -recordAbout:
+		   ranks by how much a line is about the question, which is right for
+		   "cosa avevo detto" and wrong here: "quando te l'ho detto" asks when it
+		   was last said. Measured before this line existed — two mentions of the
+		   same meeting, nine days back and two, and it answered nine. */
+		NSDictionary *first = [found objectAtIndex:0];
+		NSUInteger n;
+		for(n = 1; n < [found count]; n++)
+			if([[[found objectAtIndex:n] objectForKey:@"Day"]
+					compare:[first objectForKey:@"Day"]] == NSOrderedDescending)
+				first = [found objectAtIndex:n];
+		NSString *stamp = [first objectForKey:@"Day"];
+		NSInteger ago = NekoRecordDaysAgo(stamp);
+		if(ago == 0)
+			return NekoRecordLocalized(@"Today.");
+		if(ago == 1)
+			return NekoRecordLocalized(@"Yesterday.");
+		if(ago < 0)
+			return NekoRecordDay(stamp);
+		return [NSString stringWithFormat:
+			NekoRecordLocalized(@"On %@, %ld days ago."),
+			NekoRecordDay(stamp), (long)ago];
+	}
 
 	NSMutableArray *sentences = [NSMutableArray array];
 	NSEnumerator *e = [found objectEnumerator];
