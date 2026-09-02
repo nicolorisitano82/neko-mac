@@ -655,18 +655,23 @@ relevance rather than by recency** and **growing the closed list of questions it
 answers in code instead of guessing**.
 
 [docs/personality.md](docs/personality.md) is what the research literature
-actually shows about building an assistant with a personality, read in September
-2026 rather than recalled. Four findings that matter here: the Big Five **does
-not** describe agents — the one study that built a model from scratch, from 744
-people's own adjectives, got ten dimensions and **six of them are failure
-modes**, one of them called *Artificial* with *intrusive* and *annoying* among
-its top words; personality expression follows an **inverted U**, where medium
-beat both low and high; matching the user's personality, the field's most-cited
-advice, **keeps failing to replicate**; and warmth has a **measured price in
-correctness** — across five model families, training for warmth raised errors by
-7.4 points and made a model roughly 40% more likely to affirm a false belief the
-user had stated, with no loss of capability on MMLU or GSM8K. That last one is
-the one this application has never measured on itself, and the document says so.
+actually shows about building an assistant with a personality — read in September
+2026 rather than recalled, and deliberately excluding the embodied-agent and
+facial-expression work, which measures a channel this kind of software does not
+have. The finding that reframes the question: **a persona is a trade, not a win.**
+Tested on 162 personas across 9 models and 2,410 MMLU questions, adding one to the
+system prompt improved accuracy over having none **not at all** — and the paper
+that explains why puts numbers on both halves: writing, roleplay and refusals get
+better (a safety persona took jailbreak refusals from 53.2% to 70.9%) while
+knowledge and reasoning get worse (MMLU 71.6% → 68.0%, coding −0.65). Warmth is
+the same trade with a bigger bill: across five model families, training for warmth
+raised errors 7.4 points and made a model ~40% more likely to affirm a false
+belief the user had stated, with MMLU and GSM8K untouched. Then: the Big Five does
+**not** describe agents — 744 people's own adjectives give ten dimensions, six of
+them failure modes, one called *Artificial* with *intrusive* and *annoying* in it;
+expression follows an **inverted U**; and matching the user's personality, the
+field's most-cited advice, keeps failing to replicate. The document ends with the
+experiment this application has never run on itself.
 
 [docs/others-2.md](docs/others-2.md) is the second look, after 2.11: what closed,
 what the field offers when its own pages are read rather than remembered, and the
