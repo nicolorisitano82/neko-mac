@@ -243,7 +243,14 @@ static BOOL NekoMemoryWorthKeeping(NSString *word)
    noticed, "sed" is what the cat said, "you" is what the person said. */
 - (void)noteNoticed:(NSString *)observation { [self append:@"saw" text:observation]; }
 - (void)noteSaid:(NSString *)line           { [self append:@"sed" text:line]; }
-- (void)noteHeard:(NSString *)line          { [self append:@"you" text:line]; }
+- (void)noteHeard:(NSString *)line
+{
+	/* Stamped as well as written down, so that "how long since you asked me
+	   anything" is a subtraction and not a walk back through a month of files. */
+	[[NSUserDefaults standardUserDefaults] setObject:[NSDate date]
+	                                         forKey:@"NekoMemoryLastHeard"];
+	[self append:@"you" text:line];
+}
 
 #pragma mark Reading it back
 
@@ -943,6 +950,39 @@ static BOOL NekoMemoryWorthKeeping(NSString *word)
 		   && ![name isEqualToString:@"standing.txt"])
 			[days addObject:name];
 	return [days sortedArrayUsingSelector:@selector(compare:)];
+}
+
+- (NSDate *)metOn
+{
+	NSUserDefaults *settings = [NSUserDefaults standardUserDefaults];
+	NSDate *stamped = [settings objectForKey:@"NekoMemoryMetOn"];
+	if([stamped isKindOfClass:[NSDate class]])
+		return stamped;
+
+	/* No stamp: either this is the first time, or this installation predates the
+	   stamp. The oldest day file answers the second case, and today the first. */
+	NSDate *oldest = nil;
+	NSDateFormatter *day = [[[NSDateFormatter alloc] init] autorelease];
+	[day setLocale:[NSLocale localeWithLocaleIdentifier:@"en_US_POSIX"]];
+	[day setDateFormat:@"yyyy-MM-dd"];
+	NSEnumerator *e = [[self dayFiles] objectEnumerator];
+	NSString *name;
+	while((name = [e nextObject]) != nil) {
+		NSDate *when = [day dateFromString:[name stringByDeletingPathExtension]];
+		if(when != nil && (oldest == nil || [when compare:oldest] == NSOrderedAscending))
+			oldest = when;
+	}
+	if(oldest == nil)
+		oldest = [NSDate date];
+	[settings setObject:oldest forKey:@"NekoMemoryMetOn"];
+	return oldest;
+}
+
+- (NSDate *)lastHeard
+{
+	NSDate *stamped = [[NSUserDefaults standardUserDefaults]
+		objectForKey:@"NekoMemoryLastHeard"];
+	return [stamped isKindOfClass:[NSDate class]] ? stamped : nil;
 }
 
 - (NSUInteger)dayCount

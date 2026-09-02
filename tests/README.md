@@ -59,6 +59,7 @@ again afterwards.
 | `loop.m` | that the cat cannot end up talking to itself — which it did, for a week |
 | `price.m` | what the character costs: accuracy, and agreeing with something that is not so |
 | `thin.m` | a remark that reads the clock back, blames, or explains something it never saw |
+| `itself.m` | what the cat knows about its own situation — where on the screen, since when, and how long you have been quiet |
 | `update.m` | which version is newer, which asset to fetch, and the one step in that sequence a harness cannot settle |
 | `think.m` | that a reasoning model's scratchpad never reaches the bubble, and that every catalogue entry says whether it has one |
 | `quit.m` | that ⌘Q does not take the cat with it — including from the menu nobody can see |

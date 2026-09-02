@@ -586,3 +586,24 @@
 "Downloading Neko" = "Scaricamento di Neko";
 "reasons before answering" = "ragiona prima di rispondere";
 "2.7 GB — the most recent, and it reasons at such length that it often never reaches the answer" = "2,7 GB — il più recente, e ragiona così a lungo che spesso non arriva alla risposta";
+
+/* What the cat knows about itself: where it is, and since when. */
+"bottom left" = "in basso a sinistra";
+"at the bottom" = "in basso";
+"bottom right" = "in basso a destra";
+"on the left" = "a sinistra";
+"in the middle" = "in mezzo";
+"on the right" = "a destra";
+"top left" = "in alto a sinistra";
+"at the top" = "in alto";
+"top right" = "in alto a destra";
+"I am %@ of your screen." = "Sto %@ del tuo schermo.";
+"I am %@ of screen %ld." = "Sto %@ dello schermo %ld.";
+"Since today." = "Da oggi.";
+"Since yesterday, %@." = "Da ieri, %@.";
+"%ld days, since %@." = "%ld giorni, dal %@.";
+"A moment ago." = "Un attimo fa.";
+"%@ ago." = "%@ fa.";
+"This is the first thing you have asked me." = "È la prima cosa che mi chiedi.";
+"I am %@." = "Sto %@.";
+"I am %@, on screen %ld." = "Sto %@, sullo schermo %ld.";

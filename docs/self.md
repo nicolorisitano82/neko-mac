@@ -227,7 +227,17 @@ the reason to keep it.
 
 ## 6. What to build, ranked, and what not to
 
-**First — the cat's own situation, said in the first person.** Everything needed
+**First — the cat's own situation, said in the first person.** ✅ *Built:
+`NekoSelf`, `tests/itself.m`. Four questions answered in code — where on the
+screen it is, how long it has lived here, how long since you last said anything,
+and how long you have known each other. Nothing is in the prompt, deliberately:
+the block is already a thousand characters and Völkel's second factor has
+**egocentric** in its top twenty, so a cat handed its own biography before every
+answer is a cat that talks about itself. Twelve sentences that must not be read
+as being about it are in the harness, including "dove sono le mie cartelle?" and
+"da quanto è acceso il mac?".*
+
+ Everything needed
 is already held and none of it is phrased as being about the cat: which screen it
 is on and where on it, what window it is sitting beside, **how many days it has
 lived on this Mac** (the diary's oldest file), how long since it last spoke, how

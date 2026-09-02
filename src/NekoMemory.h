@@ -135,6 +135,20 @@ extern NSString * const NekoMemoryDirectoryKey;
 
 /* Housekeeping, all of it available from the preferences. */
 - (NSUInteger)dayCount;
+
+/* The day the two of you met, and the last time they said anything.
+
+   Both are stamps rather than scans. The first is written once, the first time
+   this is ever asked, and never again — which means an installation that has
+   been running for months and has had its old day files pruned still knows how
+   long it has been here, where counting the diary's files would say thirty. On
+   an installation that predates the stamp the oldest day file is the fallback,
+   and it is the best answer available.
+
+   Nothing here is a fact about the person. It is what the cat knows about its
+   own situation, which is the subject of docs/self.md. */
+- (NSDate *)metOn;
+- (NSDate *)lastHeard;
 - (long long)bytesOnDisk;
 - (void)pruneOldDays;
 - (BOOL)forgetLinesContaining:(NSString *)text;
