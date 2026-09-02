@@ -311,12 +311,77 @@ Measured, in Italian, through Apple's on-device model:
 | *da quanto è acceso il mac?* | Il Mac è acceso da 25 ore e 30 minuti. |
 | *che tempo fa a Roma?* | Non posso sapere il tempo a Roma… |
 
-The last one is the point: a fact that is not on the list is refused rather than
-guessed. Adding another fact is a few lines in `NekoFactsNow`.
+That last row used to be the boast of this section: *a fact that is not on the
+list is refused rather than guessed.* **It was measured in 2.13 and it was not
+true.** Asked twenty things it has no way to know, across four engines, the
+shipped prompt refused 34 of 80 and answered the rest:
+
+| asked | answered |
+| --- | --- |
+| *quanto vale Apple in borsa adesso?* | **"Attualmente, il 2 settembre 2026, Apple vale 278,43 dollari per azione."** |
+| *chi mi ha scritto stamattina?* | **"Oggi, il 2 settembre 2026, nessuno mi ha scritto."** |
+| *il mio codice compila?* | **"No, il codice non si esegue."** |
+
+An invented share price with today's date on it. The instruction to decline was
+there all along; the model cannot tell *not on the list* from *not in the world*.
+
+Three attempts to fix that with a sentence all failed — the whole record is in
+[docs/personality-roadmap.md](docs/personality-roadmap.md) — so it is a mechanism
+now. `NekoUnseen` holds nine classes of question about things on nobody's screen —
+somebody's bank, their mail, their files, whether their code builds, their
+calendar, the weather, the markets — matched in code before any engine, and
+answered in one sentence that says **what it cannot see** rather than that nobody
+could know:
+
+> *quanto vale Apple in borsa adesso?* → **Non posso vedere le quotazioni.**
+> *chi mi ha scritto stamattina?* → **Non posso vedere la tua posta.**
+> *cosa ho in calendario domani?* → **Non posso vedere il tuo calendario.**
+
+That distinction is the point rather than a nicety: it is the one the model got
+wrong three times. *"Non posso vedere la tua posta"* is checkable; *"non lo so"*
+is what a refusal-leaning character said about the capital of Australia.
+
+It runs **last** of eleven recognisers, because everything above it may
+legitimately know: the news when looking things up is on — including the forecast,
+from open-meteo — a plugin's route, the diary, and a folder handed over in a
+panel, which is why the question about files stands aside the moment one has been.
+`tests/unseen.m` reads `NekoAsk.m` and fails if those four lines are moved.
+
+And the honest limit: a question phrased in a way the list does not hold still
+reaches the engine, and still gets the rate above. It is a floor, not a promise.
+
+Adding another fact to the list it *can* answer is a few lines in `NekoFactsNow`.
+
+### It can quote you back to yourself
+
+> — *avevo detto che la riunione era venerdì?*
+> — **Il 29 agosto hai detto: «la riunione con Marco è giovedì, non venerdì»**
+
+The diary is a month of dated lines, and this is the one thing it can do that a
+model cannot: answer a question about your own past with the sentence you
+actually wrote, the day you wrote it, in code, with no engine involved.
+
+**It quotes; it does not judge.** It never says who was right. A person reading
+their own sentence back needs no help with the conclusion, and every mechanism
+that would supply one is a mechanism that can be wrong about it.
+
+Four rules: only from a written line, never from an inference; **never a line the
+cat said itself**, because quoting its own remark back as the record is a loop
+this application has already been caught in once; *"non ho niente scritto su
+questo"* is an answer, said rather than guessed around; and it stands aside while
+a conversation is live, since a follow-up inside three minutes is about what was
+just said.
+
+Why it is in code at all: measured across four engines, the prompt agreed with a
+false premise **8 times out of 20** on the engine that actually answers here. The
+one sentence that fixed that denied **15 of 20 true** premises instead — *"No, il
+Colosseo non è a Roma. È a Roma, ma non è qui."* A model can be told to agree or
+to disagree. It cannot be given something to check against; a line somebody wrote
+can.
 
 ### Having the facts is not the same as being able to use them
 
-That table settles the time and leaves something open, and 2.12 measured it.
+The table above settles the time and leaves something open, and 2.12 measured it.
 Three models on this Mac — Qwen2.5 1.5B, Gemma 3 4B, Qwen3 4B — were asked date
 and arithmetic questions **with that block in front of them**, on a Monday:
 

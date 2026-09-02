@@ -1,5 +1,110 @@
 # Changelog
 
+## 2.13 — 2026-09-02
+
+Five stages of a roadmap built from the research literature, and the interesting
+part is that three of them ended by rejecting the thing they were meant to build.
+The whole record, with every number, is in
+[docs/personality-roadmap.md](docs/personality-roadmap.md).
+
+### It says what it cannot see, instead of inventing a share price
+
+The README used to boast that *"a fact that is not on the list is refused rather
+than guessed"*. **That was measured and it was false.** Asked twenty things it
+has no way to know, across four engines, the shipped prompt refused 34 of 80 and
+answered the rest:
+
+    quanto vale Apple in borsa adesso?  →  "Attualmente, il 2 settembre 2026,
+                                            Apple vale 278,43 dollari per azione."
+    chi mi ha scritto stamattina?       →  "Oggi, il 2 settembre 2026, nessuno mi
+                                            ha scritto."
+    il mio codice compila?              →  "No, il codice non si esegue."
+
+An invented share price with today's date on it. The instruction to decline was
+in the prompt all along: the model cannot tell *not on the list* from *not in the
+world*.
+
+Three attempts to fix that with a sentence failed, all three recorded. So there
+is a mechanism now: nine classes of question — somebody's bank, their mail, their
+files, whether their code builds, their calendar, the weather, the markets, other
+people, their own night — matched in code before any engine and answered in one
+sentence that says **what it cannot see** rather than that nobody could know.
+*"Non posso vedere la tua posta"* is checkable; *"non lo so"* is what a
+refusal-leaning character said about the capital of Australia.
+
+It runs **last** of eleven recognisers, because everything above it may
+legitimately know the answer — the news and the forecast when looking things up
+is on, a plugin's route, the diary, and a folder handed over in a panel, which is
+why the question about files stands aside the moment one has been.
+
+### It can quote you back to yourself
+
+> — *avevo detto che la riunione era venerdì?*
+> — **Il 29 agosto hai detto: «la riunione con Marco è giovedì, non venerdì»**
+
+A question about your own past, answered with the sentence you actually wrote and
+the day you wrote it, from the diary, in code.
+
+**It quotes; it does not judge** — it never says who was right. And it never
+quotes a line the cat said itself, because quoting its own remark back as the
+record is a loop this application was caught in once already.
+
+Why in code: the prompt agreed with a false premise **8 times out of 20** on the
+engine that answers here, and the one sentence that fixed that denied **15 of 20
+true** premises instead — *"No, il Colosseo non è a Roma. È a Roma, ma non è
+qui."* A model can be told to agree or disagree; it cannot be given something to
+check against.
+
+### A remark that says nothing is not a remark
+
+Two families of failure, both found in eight days of this Mac's own diary rather
+than imagined:
+
+- **the clock, read back** — twenty-two of sixty-five remarks opened with
+  *"L'orario attuale 10:44, mercoledì 26 agosto 2026…"*, and the prompt already
+  forbade exactly that. It is a check now: precise about it, so *"alle 18:30 hai
+  la riunione"* still gets said;
+- **an invented cause** — *"build lento perché progetto grande"*, and *"il build è
+  lento perché i server sono sovraccarichi"*. There are no servers. A remark that
+  explains something and names nothing that was in front of it is thrown away.
+
+That second check **started wider and was narrowed by its own table**: throwing
+away any remark that named nothing on screen also threw away *"una pausa ti
+conviene"* and *"sei concentrato"*. A gate that silences ordinary advice is worse
+than the failure it prevents. Twelve of twelve ordinary remarks still said.
+
+Plus a reproach — *dovresti*, *avresti dovuto*, *te l'avevo detto* — which is on
+the list of things nobody would keep on their desktop.
+
+### The three things that were measured and not built
+
+Written down because a roadmap that only records its successes is a sales
+document:
+
+- **the persona costs accuracy** — the paper says MMLU 71.6% → 68.0%. It does not
+  reproduce here: 60 / 62 / 59 right of 80 across the arms. No prompt
+  restructuring needed.
+- **which character matters** — it does not. *"a fox: quick, sly, and pleased with
+  your own cleverness"* against *"an assistant"*: 27 against 27 agreements with a
+  false premise, 50 against 50 corrections. **The choice of character is free.**
+- **a character can be leant on to refuse more** — it can, and it is not shipped.
+  Four words took wanted refusals from 43% to 76%, and then it declined to name
+  the capital of Australia and asserted that nobody knows who wrote *I
+  Malavoglia*. Two different wordings produced the same conflation of *cannot
+  see* with *cannot know*.
+
+### Smaller
+
+- The news path did not understand *"qué tiempo hace"* — it held *"el tiempo"*,
+  which is not in that sentence — so a Spanish weather question fell through to a
+  model with no forecast in front of it. Spanish, French and English phrasings
+  added, and that widening exposed an older defect: the town matcher took the word
+  after the *first* pointer, so *"va a llover en Bilbao?"* came back as **weather
+  llover**. It walks backwards now.
+- `Qwen3.5 4B` is in the download list. The measurement harnesses `price.m`,
+  `refuse.m`, `thin.m`, `record.m` and `unseen.m` are new, and two of them are
+  `--slow` measurements that do not gate the build.
+
 ## 2.12.1 — 2026-09-02
 
 ### It had started talking to itself, and the diary proved it
