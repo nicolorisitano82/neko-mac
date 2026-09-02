@@ -14,7 +14,7 @@ than deciding what they may be.
 ## 1. Where they live
 
 ```
-~/Library/Containers/com.yourcompany.neko/Data/Library/
+~/Library/Containers/com.nekomac.neko/Data/Library/
     Application Support/Neko/
         Memory/                       the diary, since 2.1
         Models/                       the GGUF files

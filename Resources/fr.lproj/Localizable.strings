@@ -560,3 +560,29 @@
 "I cannot know that about you." = "Ça, de toi, je ne peux pas le savoir.";
 "I cannot see the weather." = "Je ne peux pas voir la météo.";
 "I cannot see your calendar." = "Je ne peux pas voir ton agenda.";
+
+/* Updates, and the permission check at launch. */
+"Something is switched on that I am not allowed to do: %@." = "Quelque chose est activé que je n’ai pas le droit de faire : %@.";
+"Look for new versions" = "Chercher de nouvelles versions";
+"Neko is not signed, so it never installs anything itself: it tells you, downloads the disk image if you say so, and you drag it across." = "Neko n’est pas signé, donc il n’installe jamais rien lui-même : il te le dit, télécharge l’image disque si tu le veux, et c’est toi qui la fais glisser.";
+"Check now" = "Vérifier maintenant";
+"reasons before answering; its notes stay hidden" = "réfléchit avant de répondre ; ses notes restent cachées";
+"Downloading %.0f%%…" = "Téléchargement %.0f%%…";
+"Version %@ is out…" = "La %@ est sortie…";
+"I could not ask about new versions just now." = "Je n’ai pas pu demander s’il y a du nouveau.";
+"This is the newest one: %@." = "C’est la plus récente : %@.";
+"There is a %@ now. It is in my menu when you want it." = "Il y a une %@ maintenant. Elle est dans mon menu quand tu veux.";
+"Neko %@ is out." = "Neko %@ est sorti.";
+"Shall I download the disk image%@? Installing it is yours to do: I open it and quit, and you drag Neko into Applications the way you did the first time." = "Je télécharge l’image disque%@ ? L’installation est à toi : je l’ouvre et je me ferme, et tu fais glisser Neko dans Applications comme la première fois.";
+"What changed" = "Ce qui a changé";
+"%.0f MB of %.0f MB" = "%.0f Mo sur %.0f Mo";
+"The download did not finish." = "Le téléchargement n’a pas abouti.";
+"Neko %@ is downloaded." = "Neko %@ est téléchargé.";
+"Shall I open it and quit? Then drag Neko into Applications, replacing the one that is there, and start it again. I close first so that the copy you are replacing is not the copy that is running." = "Je l’ouvre et je me ferme ? Ensuite fais glisser Neko dans Applications, à la place de celui qui y est, et relance-le. Je me ferme d’abord pour que la copie que tu remplaces ne soit pas celle qui tourne.";
+"Open it and quit" = "Ouvrir et fermer";
+"Later" = "Plus tard";
+"It is in %@ when you want it." = "Elle est dans %@ quand tu veux.";
+"I could not open the disk image." = "Je n’ai pas pu ouvrir l’image disque.";
+"Downloading Neko" = "Téléchargement de Neko";
+"reasons before answering" = "réfléchit avant de répondre";
+"2.7 GB — the most recent, and it reasons at such length that it often never reaches the answer" = "2,7 Go — le plus récent, et il réfléchit si longuement qu’il n’atteint souvent pas la réponse";

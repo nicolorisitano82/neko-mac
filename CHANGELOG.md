@@ -1,5 +1,120 @@
 # Changelog
 
+## 2.14 — 2026-09-02
+
+### Read this before you upgrade
+
+**The bundle identifier changed**, from `com.yourcompany.neko` — a placeholder
+that had been there since 2007 — to `com.nekomac.neko`. That is one line in a
+plist, and macOS keys four things to the identifier rather than to the name, so
+all four are silently orphaned by it:
+
+    your settings      which character, which engine, which model
+    the diary          Memory/, including facts.txt and synonyms.txt
+    the models         two or three gigabytes each
+    the plugins        whatever you dropped in
+
+A sandboxed application cannot read another application's container, so Neko
+cannot move them for itself. There is a script:
+
+    ./tools/rename-domain.sh          says what it would move, moves nothing
+    ./tools/rename-domain.sh --go     moves it
+
+Launch 2.14 once and quit it first — the system makes the container itself, with
+metadata a plain `mkdir` does not write — then run it. It refuses to merge two
+diaries and it deletes nothing.
+
+**The permissions do not come across, and nothing can bring them.** To macOS
+this is an application that has never asked. Neko now opens the Permissions tab
+by itself, once, a few seconds after login, when something is switched on that
+it is not allowed to do — which is how you will find out which ones.
+
+### It tells you when there is a new version, and installs nothing
+
+Neko goes out as an unsigned disk image, and that decides the shape of this
+entirely. A signed application can replace its own bundle and relaunch; an
+unsigned one that tried would hand you a copy Gatekeeper refuses to open, having
+already thrown away the one that worked. So:
+
+1. it asks this project's own releases, once a day, what the newest one is;
+2. if that is newer, it says so — once out loud, and then in the cat's menu;
+3. it asks whether to download, with the size, before fetching anything;
+4. it downloads with a progress bar, and can be stopped;
+5. it asks again before doing anything with the file;
+6. and then it opens the disk image and quits, so the copy you are replacing is
+   not the copy that is running.
+
+**The drag into Applications is yours.** That is one step more than a
+self-updater and it is the step that makes the other five safe.
+
+What the check reveals, since it is a network request that was not there before:
+one HTTPS request to api.github.com, carrying no diary, no question, and no
+identifier of its own. The switch is in the Pet tab and turns the whole thing
+off. It is on by default because an unsigned application that cannot tell you it
+is out of date is worse than one that asks a public API for a version number.
+
+### ⌘Q no longer takes the cat with it
+
+It had two sources. The cat's own menu gave its Quit item a ⌘Q — a keystroke
+that on a menu-bar pet can only ever be an accident, and an expensive one, since
+everything it was in the middle of goes too. And `MainMenu.nib` has carried a
+standard application menu since 2007, never drawn because this runs as an
+accessory with no Dock icon, **whose key equivalents work anyway** whenever the
+application is active: while the preferences are open, or the moment the panel
+takes focus to have a question typed into it.
+
+Both are disarmed now. The menu item stays, and it is the only way out.
+
+### The model's own notes never reach the bubble
+
+Reported from use, and it is the worst thing this application has shown anybody.
+With Qwen3.5 4B chosen, asked for Apple's share price, the cat answered with the
+model's scratchpad — including the persona quoted back verbatim:
+
+    <think> Thinking Process: 1. **Analyze Request:** * **Role:** fox living
+    someone's computer desktop (quick, sly, pleased own cleverness). …
+
+`NekoSense` does not catch that by design: it judges the remarks the cat makes on
+its own, never an answer, because dropping an answer leaves somebody who asked
+staring at a cat. So the engine's own adapter takes it out, on the way out, for
+all five callers.
+
+**And the cause was upstream of any code.** That catalogue entry was added in
+2.13 by checking its URL, its bytes and its licence, and never asking what the
+model *writes*. So whether a model reasons is now a **required** argument on
+every catalogue entry — a model cannot be added without deciding — and the
+preferences say which ones do.
+
+Two attempts to make it answer anyway, both measured and both recorded: Qwen3's
+`/no_think` is gone in Qwen3.5, which reasons *about* the token instead of
+obeying it; and room does not fix it either — given 1200 tokens the same question
+produced 4,498 characters of notes, nine drafted answers, a "Final Decision" and
+then a "Check constraints again", and still never began. That entry's own line in
+the list says so now.
+
+### Smaller, and mostly things a harness found
+
+- **The news path did not understand Spanish weather.** It held *"el tiempo"*,
+  which is not in *"qué tiempo hace en Roma?"*, so the question fell through to a
+  model with no forecast in front of it. Fixing it exposed an older defect: the
+  town matcher took the word after the *first* preposition, so *"va a llover en
+  Bilbao?"* came back as **weather llover**. It walks backwards now.
+- **A harness could not see the models**, the same way it could not see the diary
+  a day earlier: it runs unsandboxed and the application looks in its container.
+  So the arm that asks every installed model a question and refuses any answer
+  carrying a reasoning tag — the one check that would have caught the scratchpad
+  — had been measuring nothing. It measures now, and found the empty answers
+  above within a minute of being unblocked.
+- **`tests/docs.m` held twelve macro names written out by hand and was missing
+  eight**, so every module added with its own localisation macro had its strings
+  invisible to the one check that says whether a sentence will appear in Italian.
+  Derived now: 415 keys became 495, and 22 were untranslated. Two of those were
+  split across string literals, which can never match a `.strings` entry.
+- **`tests/layout` caught a visual bug the same afternoon it was made**: the new
+  switch overlapped Restore Defaults by six points. And the model detail field
+  turned out to have been a shade too narrow for the longest Italian line all
+  along.
+
 ## 2.13 — 2026-09-02
 
 Five stages of a roadmap built from the research literature, and the interesting

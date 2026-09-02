@@ -560,3 +560,29 @@
 "I cannot know that about you." = "Questo di te non posso saperlo.";
 "I cannot see the weather." = "Non posso vedere il meteo.";
 "I cannot see your calendar." = "Non posso vedere il tuo calendario.";
+
+/* Updates, and the permission check at launch. */
+"Something is switched on that I am not allowed to do: %@." = "C’è qualcosa di attivo che non mi è permesso fare: %@.";
+"Look for new versions" = "Cerca nuove versioni";
+"Neko is not signed, so it never installs anything itself: it tells you, downloads the disk image if you say so, and you drag it across." = "Neko non è firmato, quindi non installa mai niente da sé: te lo dice, scarica l’immagine disco se glielo permetti, e il trascinamento lo fai tu.";
+"Check now" = "Controlla adesso";
+"reasons before answering; its notes stay hidden" = "ragiona prima di rispondere; i suoi appunti restano nascosti";
+"Downloading %.0f%%…" = "Scaricamento %.0f%%…";
+"Version %@ is out…" = "È uscita la %@…";
+"I could not ask about new versions just now." = "Non sono riuscito a chiedere se ci sono versioni nuove.";
+"This is the newest one: %@." = "Questa è la più recente: %@.";
+"There is a %@ now. It is in my menu when you want it." = "Adesso c’è la %@. Sta nel mio menu quando la vuoi.";
+"Neko %@ is out." = "È uscito Neko %@.";
+"Shall I download the disk image%@? Installing it is yours to do: I open it and quit, and you drag Neko into Applications the way you did the first time." = "Scarico l’immagine disco%@? L’installazione la fai tu: io la apro e mi chiudo, e trascini Neko dentro Applicazioni come la prima volta.";
+"What changed" = "Cosa è cambiato";
+"%.0f MB of %.0f MB" = "%.0f MB di %.0f MB";
+"The download did not finish." = "Lo scaricamento non è finito.";
+"Neko %@ is downloaded." = "Neko %@ è scaricato.";
+"Shall I open it and quit? Then drag Neko into Applications, replacing the one that is there, and start it again. I close first so that the copy you are replacing is not the copy that is running." = "La apro e mi chiudo? Poi trascina Neko dentro Applicazioni, al posto di quello che c’è, e riavvialo. Mi chiudo prima perché la copia che sostituisci non sia la copia in esecuzione.";
+"Open it and quit" = "Apri e chiudi";
+"Later" = "Più tardi";
+"It is in %@ when you want it." = "Sta in %@ quando la vuoi.";
+"I could not open the disk image." = "Non sono riuscito ad aprire l’immagine disco.";
+"Downloading Neko" = "Scaricamento di Neko";
+"reasons before answering" = "ragiona prima di rispondere";
+"2.7 GB — the most recent, and it reasons at such length that it often never reaches the answer" = "2,7 GB — il più recente, e ragiona così a lungo che spesso non arriva alla risposta";

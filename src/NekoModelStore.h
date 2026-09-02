@@ -10,12 +10,24 @@
 	NSString *detail;
 	NSURL *url;
 	long long expectedBytes;
+	BOOL thinks;
 }
+/* Whether this model writes its notes before it answers.
+
+   A required argument and not a setter, on purpose: a catalogue entry added
+   without deciding this is exactly how Qwen3.5 4B got in. Its URL was checked,
+   its bytes were checked, its licence was checked, and nobody asked what it
+   **writes** — which is a `<think>` block, and it went in the bubble with the
+   persona quoted back inside it. NekoLocalProvider takes it out now; this says
+   which ones it will be taking it out of, so the preferences can say so too. */
+- (BOOL)thinks;
+
 - (id)initWithIdentifier:(NSString *)anIdentifier
                     name:(NSString *)aName
                   detail:(NSString *)aDetail
                      url:(NSURL *)aURL
-                   bytes:(long long)bytes;
+                   bytes:(long long)bytes
+                  thinks:(BOOL)thinksOutLoud;
 - (NSString *)identifier;
 - (NSString *)name;
 - (NSString *)detail;        /* "468 MB, 4-bit" and so on */
@@ -40,6 +52,20 @@
 	void (^progressBlock)(double);
 	void (^completionBlock)(NSURL *, NSError *);
 }
+
+/* Where the models are, when they are not where they live.
+
+   Not a preference and not in any window, and here for the same reason
+   NekoMemoryDirectoryKey is: a harness runs unsandboxed and looks in
+   ~/Library/Application Support, while the application looks inside its
+   container, so the check that matters most cannot see the file it needs.
+
+   That cost something real. The arm of tests/think.m that asks every installed
+   model a question and refuses any answer carrying a reasoning tag — the one
+   check that would have caught a `<think>` block reaching a speech bubble —
+   found nothing to ask, because the only model on the machine was in the app's
+   container. It reported that honestly and it still measured nothing. */
+extern NSString * const NekoModelsDirectoryKey;
 
 + (NekoModelStore *)sharedStore;
 

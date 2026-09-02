@@ -121,6 +121,89 @@ NSString * const NekoAskLocalModelKey = @"NekoAskLocalModel";
 	[self askQuestion:question instructions:instructions partial:NULL completion:completion];
 }
 
+/* The tags a reasoning model wraps its notes in. */
+static NSArray *NekoReasoningTags(void)
+{
+	static NSArray *tags = nil;
+	if(tags == nil)
+		tags = [[NSArray alloc] initWithObjects:
+			@"think", @"thinking", @"thought", @"reasoning", nil];
+	return tags;
+}
+
+/* What the model is actually asked, which is not always what was asked.
+
+   Measured, after -withoutReasoning: was already in place: Qwen3.5 4B answered
+   "quotazione oggi borsa Apple" with **nothing at all**. The scratchpad was
+   taken out and there was nothing behind it — the generation budget is 200
+   tokens, small on purpose because a cat says a sentence or two, and a reasoning
+   model spends all 200 on its notes and never reaches the answer.
+
+   Raising the budget for those models was the other option and it is the wrong
+   one: it would make every answer from them several times slower for notes
+   nobody sees. The Qwen family documents a switch instead, and `/no_think` in
+   the user turn is it.
+
+   Only for models the catalogue says reason, and only on the way to the engine:
+   what somebody said is what is written in the diary and what is read back to
+   them, and neither gets this. */
+- (NSString *)askedOf:(NSString *)question
+{
+	return question;
+}
+
+/* Room for the notes, and only for the models that write them.
+
+   Five times the ordinary budget, which is what it took to get past 829
+   characters of thinking and reach a sentence. It is spent only by a model the
+   person chose from a list that says it reasons, and it is not spent by any of
+   the other seven. */
+static const int NekoLocalThinkingTokens = 1000;
+
+- (void)giveRoomToThink
+{
+	if(![engine respondsToSelector:@selector(setTokenBudget:)])
+		return;
+	NekoLocalModel *model = [[NekoModelStore sharedStore]
+		modelWithIdentifier:[self modelIdentifier]];
+	[engine setTokenBudget:[model thinks] ? NekoLocalThinkingTokens : 0];
+}
+
++ (NSString *)withoutReasoning:(NSString *)text
+{
+	if([text length] == 0)
+		return text;
+	NSMutableString *left = [[text mutableCopy] autorelease];
+
+	NSEnumerator *e = [NekoReasoningTags() objectEnumerator];
+	NSString *tag;
+	while((tag = [e nextObject]) != nil) {
+		NSString *opens = [NSString stringWithFormat:@"<%@>", tag];
+		NSString *closes = [NSString stringWithFormat:@"</%@>", tag];
+		for(;;) {
+			NSRange from = [left rangeOfString:opens
+			                          options:NSCaseInsensitiveSearch];
+			if(from.location == NSNotFound)
+				break;
+			NSRange after = NSMakeRange(NSMaxRange(from),
+				[left length] - NSMaxRange(from));
+			NSRange to = [left rangeOfString:closes
+			                        options:NSCaseInsensitiveSearch range:after];
+			if(to.location == NSNotFound) {
+				/* Still inside it, or the budget ran out inside it. Everything
+				   from here on is more of the same. */
+				[left deleteCharactersInRange:
+					NSMakeRange(from.location, [left length] - from.location)];
+				break;
+			}
+			[left deleteCharactersInRange:
+				NSMakeRange(from.location, NSMaxRange(to) - from.location)];
+		}
+	}
+	return [left stringByTrimmingCharactersInSet:
+		[NSCharacterSet whitespaceAndNewlineCharacterSet]];
+}
+
 - (void)askQuestion:(NSString *)question
        instructions:(NSString *)instructions
             partial:(void (^)(NSString *sofar))partial
@@ -131,8 +214,26 @@ NSString * const NekoAskLocalModelKey = @"NekoAskLocalModel";
 	   freeze the whole app — the cat, the bubble, the spinner that is meant to
 	   say something is happening — so the load goes to a queue of its own and
 	   the question follows it there. */
-	void (^partialCopy)(NSString *) = partial ? Block_copy(partial) : nil;
-	void (^completionCopy)(NSString *, NSError *) = Block_copy(completion);
+	/* Everything the engine says goes through -withoutReasoning: on the way out,
+	   so no caller has to remember. A partial that is *entirely* scratchpad is
+	   not forwarded at all: an empty bubble flashing while the model thinks is
+	   worse than the spinner it would replace. */
+	void (^partialCopy)(NSString *) = nil;
+	if(partial != NULL) {
+		void (^caller)(NSString *) = Block_copy(partial);
+		partialCopy = Block_copy(^(NSString *sofar) {
+			NSString *shown = [NekoLocalProvider withoutReasoning:sofar];
+			if([shown length] > 0)
+				caller(shown);
+		});
+		Block_release(caller);
+	}
+	void (^callerDone)(NSString *, NSError *) = Block_copy(completion);
+	void (^completionCopy)(NSString *, NSError *) =
+		Block_copy(^(NSString *answer, NSError *error) {
+		callerDone([NekoLocalProvider withoutReasoning:answer], error);
+	});
+	Block_release(callerDone);
 
 	dispatch_async(loader, ^{
 		NSError *problem = nil;
@@ -145,7 +246,8 @@ NSString * const NekoAskLocalModelKey = @"NekoAskLocalModel";
 			if(!ready) {
 				completionCopy(nil, failure);
 			} else {
-				[engine generateFor:question
+				[self giveRoomToThink];
+				[engine generateFor:[self askedOf:question]
 				       instructions:instructions
 				            partial:partialCopy
 				         completion:completionCopy];

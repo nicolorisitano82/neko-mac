@@ -560,3 +560,29 @@
 "I cannot know that about you." = "Eso de ti no puedo saberlo.";
 "I cannot see the weather." = "No puedo ver el tiempo.";
 "I cannot see your calendar." = "No puedo ver tu calendario.";
+
+/* Updates, and the permission check at launch. */
+"Something is switched on that I am not allowed to do: %@." = "Hay algo activado que no me está permitido hacer: %@.";
+"Look for new versions" = "Buscar versiones nuevas";
+"Neko is not signed, so it never installs anything itself: it tells you, downloads the disk image if you say so, and you drag it across." = "Neko no está firmado, así que nunca instala nada por sí mismo: te lo dice, descarga la imagen de disco si se lo permites, y arrastrarla lo haces tú.";
+"Check now" = "Comprobar ahora";
+"reasons before answering; its notes stay hidden" = "razona antes de responder; sus notas quedan ocultas";
+"Downloading %.0f%%…" = "Descargando %.0f%%…";
+"Version %@ is out…" = "Ya está la %@…";
+"I could not ask about new versions just now." = "No he podido preguntar si hay versiones nuevas.";
+"This is the newest one: %@." = "Esta es la más reciente: %@.";
+"There is a %@ now. It is in my menu when you want it." = "Ahora hay una %@. Está en mi menú cuando la quieras.";
+"Neko %@ is out." = "Ya está Neko %@.";
+"Shall I download the disk image%@? Installing it is yours to do: I open it and quit, and you drag Neko into Applications the way you did the first time." = "¿Descargo la imagen de disco%@? La instalación es tuya: yo la abro y me cierro, y arrastras Neko a Aplicaciones como la primera vez.";
+"What changed" = "Qué ha cambiado";
+"%.0f MB of %.0f MB" = "%.0f MB de %.0f MB";
+"The download did not finish." = "La descarga no ha terminado.";
+"Neko %@ is downloaded." = "Neko %@ está descargado.";
+"Shall I open it and quit? Then drag Neko into Applications, replacing the one that is there, and start it again. I close first so that the copy you are replacing is not the copy that is running." = "¿La abro y me cierro? Luego arrastra Neko a Aplicaciones, en lugar del que está, y vuelve a abrirlo. Me cierro primero para que la copia que sustituyes no sea la que está en marcha.";
+"Open it and quit" = "Abrir y cerrar";
+"Later" = "Más tarde";
+"It is in %@ when you want it." = "Está en %@ cuando la quieras.";
+"I could not open the disk image." = "No he podido abrir la imagen de disco.";
+"Downloading Neko" = "Descargando Neko";
+"reasons before answering" = "razona antes de responder";
+"2.7 GB — the most recent, and it reasons at such length that it often never reaches the answer" = "2,7 GB — el más reciente, y razona tanto que a menudo no llega a la respuesta";
