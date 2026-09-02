@@ -31,7 +31,11 @@ SOURCES=$(sed -n '/^SOURCES="/,/"$/p' build.sh | tr '\n' ' ' \
 	| sed -e 's/^SOURCES="//' -e 's/"//g' -e 's|src/main.m||')
 
 OBJECTS=$(mktemp -d /tmp/neko-tests.XXXXXX)
-trap 'rm -rf "$OBJECTS"; rm -f "$APP/Contents/MacOS/neko-test"' EXIT
+# A diary of its own. Three harnesses write notes, and they used to write them in
+# the real one: that is how "zzq-test" ended up being said out loud, written down
+# as "test zqqmark", and carried into every prompt for a week. See NekoMemory.h.
+MEMORY=$(mktemp -d /tmp/neko-diary.XXXXXX)
+trap 'rm -rf "$OBJECTS" "$MEMORY"; rm -f "$APP/Contents/MacOS/neko-test"' EXIT
 
 echo "compiling the app once for all of them…"
 for SOURCE in $SOURCES; do
@@ -83,7 +87,8 @@ for HARNESS in tests/*.m; do
 	# Settings arrive as arguments: NSUserDefaults reads those before anything
 	# saved, so a test says what it needs without touching what the user chose.
 	if "$APP/Contents/MacOS/neko-test" $SLOW_ARG \
-		-NekoAskEnabled 1 -NekoAskFollowUp 1 -NekoAskProvider apple 2>/dev/null; then
+		-NekoAskEnabled 1 -NekoAskFollowUp 1 -NekoAskProvider apple \
+		-NekoMemoryDirectory "$MEMORY" 2>/dev/null; then
 		:
 	else
 		FAILED="$FAILED $NAME"

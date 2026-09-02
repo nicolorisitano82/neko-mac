@@ -24,6 +24,8 @@ static const NSUInteger NekoMemoryLineChars = 160;
 
 static NSString * const NekoMemoryReflectedKey = @"NekoMemoryReflected";
 
+NSString * const NekoMemoryDirectoryKey = @"NekoMemoryDirectory";
+
 @implementation NekoMemory
 
 + (NekoMemory *)sharedMemory
@@ -40,6 +42,12 @@ static NSString * const NekoMemoryReflectedKey = @"NekoMemoryReflected";
 		NSApplicationSupportDirectory, NSUserDomainMask, YES);
 	NSString *path = [[[support firstObject] stringByAppendingPathComponent:@"Neko"]
 		stringByAppendingPathComponent:@"Memory"];
+	/* Somewhere else, if a harness said so. See NekoMemory.h for why this is
+	   here: a test that can write in the real diary already wrote in it once. */
+	NSString *elsewhere = [[NSUserDefaults standardUserDefaults]
+		stringForKey:NekoMemoryDirectoryKey];
+	if([elsewhere length] > 0)
+		path = [elsewhere stringByExpandingTildeInPath];
 	[[NSFileManager defaultManager] createDirectoryAtPath:path
 	                         withIntermediateDirectories:YES
 	                                          attributes:nil
@@ -368,6 +376,22 @@ static BOOL NekoMemoryWorthKeeping(NSString *word)
 	return recallVocabulary;
 }
 
+- (BOOL)alreadySaidToday:(NSString *)line
+{
+	if([line length] == 0)
+		return NO;
+	NSMutableArray *said = [NSMutableArray array];
+	NSEnumerator *e = [[self linesOfFile:[self fileForDay:[NSDate date]]]
+		objectEnumerator];
+	NSString *one;
+	while((one = [e nextObject]) != nil) {
+		NSArray *parts = [one componentsSeparatedByString:@"\t"];
+		if([parts count] >= 3 && [[parts objectAtIndex:1] isEqualToString:@"sed"])
+			[said addObject:[parts objectAtIndex:2]];
+	}
+	return [self line:line saysTheSameAsAnyOf:said];
+}
+
 - (NSString *)contextForPrompt
 {
 	return [self contextForPrompt:nil];
@@ -505,10 +529,38 @@ static BOOL NekoMemoryWorthKeeping(NSString *word)
 		return;
 
 	NSDate *yesterday = [NSDate dateWithTimeIntervalSinceNow:-24.0 * 3600.0];
-	NSArray *lines = [self linesOfFile:[self fileForDay:yesterday]];
+
+	/* **Only what was noticed and what was said to you.** The cat's own remarks
+	   are in that file too — `noteSaid` puts them there — and handing them back
+	   to a model asked for durable facts closes a loop: what it said becomes
+	   what it knows, becomes what it says tomorrow.
+
+	   That is not a hypothesis. It happened on this Mac, and `tools/diary.py`
+	   can still see it: 91% of eight days of diary was the cat's own voice, none
+	   of it was anything a person said, and of twenty-one durable lines **none**
+	   traced back to the person or the Mac — sixteen traced to the cat's own
+	   remarks and five to nothing at all. One non-fact degraded across four days
+	   of it: `test zqqmark` → `test barge` → `test boat` → `test chiatta`, and it
+	   was in every prompt for a week.
+
+	   The old prompt did say to throw away "anything you said yourself". It was
+	   obeyed on the days there was something else; on a day of nothing but
+	   remarks the model invented biography instead — "reviews code every Monday",
+	   which nobody ever said. An instruction is not a filter. */
+	NSMutableArray *lines = [NSMutableArray array];
+	NSEnumerator *rows = [[self linesOfFile:[self fileForDay:yesterday]]
+		objectEnumerator];
+	NSString *one;
+	while((one = [rows nextObject]) != nil) {
+		NSArray *parts = [one componentsSeparatedByString:@"\t"];
+		if([parts count] >= 3 && [[parts objectAtIndex:1] isEqualToString:@"sed"])
+			continue;
+		[lines addObject:one];
+	}
 	if([lines count] < 3) {
-		/* Not enough of a day to have a shape. Marked done so it is not
-		   attempted again until tomorrow. */
+		/* Not enough of a day to have a shape — and a day the cat spent talking
+		   to itself is exactly that, however many lines it has. Marked done so it
+		   is not attempted again until tomorrow. */
 		[[NSUserDefaults standardUserDefaults] setObject:[NSDate date]
 		                                         forKey:NekoMemoryReflectedKey];
 		[self pruneOldDays];
@@ -527,8 +579,8 @@ static BOOL NekoMemoryWorthKeeping(NSString *word)
 
 	NSString *instructions =
 		@"You keep a short diary about one person's working life. Below is a day of "
-		@"raw notes, three kinds: saw is what you noticed, sed is what you said, "
-		@"you is what they said. They are written short, without articles.\n\n"
+		@"raw notes, two kinds: saw is what you noticed, you is what they said. "
+		@"They are written short, without articles.\n\n"
 		@"Write at most four lines that will still be true next week, and prefer "
 		@"fewer. The test is whether the line would still mean something on "
 		@"Monday.\n\n"
@@ -536,7 +588,7 @@ static BOOL NekoMemoryWorthKeeping(NSString *word)
 		@"habit that shows up more than once. For example, \"the release notes are "
 		@"due Friday\" or \"prefers to leave the changelog until last\".\n\n"
 		@"Throw away: how long a program was open, how many times they switched, "
-		@"what time it was, anything you said yourself, and anything true only of "
+		@"what time it was, and anything true only of "
 		@"that afternoon. \"Xcode was open for forty minutes\" and \"they switched "
 		@"programs fourteen times\" are exactly the lines not to keep — by Monday "
 		@"they mean nothing.\n\n"
@@ -580,9 +632,24 @@ static BOOL NekoMemoryWorthKeeping(NSString *word)
 		NSEnumerator *fresh = [[[durable componentsSeparatedByString:@"\n"]
 			filteredArrayUsingPredicate:[NSPredicate predicateWithFormat:@"length > 0"]]
 			objectEnumerator];
-		NSString *one;
-		while((one = [fresh nextObject]) != nil)
-			[all addObject:one];
+		NSString *fromToday;
+		while((fromToday = [fresh nextObject]) != nil) {
+			/* "build slow because project big" and "project large, build slow"
+			   are one fact, and the prompt has room for a thousand characters.
+			   Measured before this existed: twenty-one durable lines carrying
+			   seventeen distinct facts, five days of the same one. The text is
+			   compared without its date, which is the only part guaranteed to
+			   differ. */
+			NSString *text = [[fromToday componentsSeparatedByString:@"\t"] lastObject];
+			NSMutableArray *saidBefore = [NSMutableArray array];
+			NSEnumerator *had = [all objectEnumerator];
+			NSString *older;
+			while((older = [had nextObject]) != nil)
+				[saidBefore addObject:[[older componentsSeparatedByString:@"\t"] lastObject]];
+			if([self line:text saysTheSameAsAnyOf:saidBefore])
+				continue;
+			[all addObject:fromToday];
+		}
 		/* No silent dropping at forty any more: what falls off the end goes
 		   through -distilIfDue first, and only a ceiling far above that ever
 		   removes a line nobody has read. */

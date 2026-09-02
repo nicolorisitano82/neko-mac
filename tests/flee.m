@@ -14,7 +14,20 @@
    3. The bounding box of every screen is not the screens. With two displays of
       different heights it contains a rectangle where there is nothing, and a cat
       that walked into it sat somewhere nobody could see. That one is a bug, and
-      it is tested against staged rectangles because this Mac has one display. */
+      it is tested against staged rectangles because this Mac has one display.
+
+   **The pointer is staged too, and that was a defect here rather than a choice.**
+   This used to read `[NSEvent mouseLocation]` and place the cat forty points from
+   wherever the mouse actually was, clamped two hundred points inside the screen so
+   the cat had room to run. With the mouse in a corner the clamp wins: the cat lands
+   **224** points away, which is outside the radius that sets fleeing off, so
+   nothing moves and the measurement fails having measured nothing. It failed once
+   in three runs on this Mac and passed on re-running, which is the worst kind of
+   test — one whose result depends on where somebody left the mouse.
+
+   So `+[NSEvent mouseLocation]` answers what this harness says it answers, and one
+   check asks the cat where it thinks the pointer is, so that a staging that stopped
+   working could not pass quietly. */
 
 #import <Cocoa/Cocoa.h>
 #import <objc/runtime.h>
@@ -38,6 +51,27 @@ static void onlyStagedTicks(MyPanel *panel)
 	NSTimer *ticking = (NSTimer *)object_getIvar(panel, found);
 	[ticking invalidate];
 	object_setIvar(panel, found, nil);
+}
+
+/* The pointer, as this harness says it is. Everything the cat does about the
+   mouse goes through +[NSEvent mouseLocation], so that is the one thing to answer
+   — and answering it makes every measurement below the same on any Mac and at any
+   time of day. */
+static NSPoint stagedPointer;
+
+static NSPoint stagedMouseLocation(id ignored, SEL cmd)
+{
+	return stagedPointer;
+}
+
+static BOOL stagePointerAt(NSPoint where)
+{
+	stagedPointer = where;
+	Method found = class_getClassMethod([NSEvent class], @selector(mouseLocation));
+	if(found == NULL)
+		return NO;
+	method_setImplementation(found, (IMP)stagedMouseLocation);
+	return NSEqualPoints([NSEvent mouseLocation], where);
 }
 
 static NSValue *rect(float x, float y, float w, float h)
@@ -114,13 +148,16 @@ int main(void)
 	spin(0.2);
 
 	NSRect room = [[NSScreen mainScreen] visibleFrame];
-	NSPoint pointer = [NSEvent mouseLocation];
 
-	/* Put the cat right next to the pointer, well inside the near radius, and
-	   let it think. Anywhere on the screen will do as long as it has room. */
-	NSPoint start = NSMakePoint(
-		MIN(MAX(pointer.x + 40.0f, NSMinX(room) + 200.0f), NSMaxX(room) - 200.0f),
-		MIN(MAX(pointer.y + 40.0f, NSMinY(room) + 200.0f), NSMaxY(room) - 200.0f));
+	/* The middle of the screen, which is the one place with room to run in every
+	   direction — and no clamping afterwards, since the clamping is what used to
+	   put the cat outside the radius and measure nothing. */
+	NSPoint pointer = NSMakePoint(NSMidX(room), NSMidY(room));
+	ok(stagePointerAt(pointer), @"the pointer is where this harness says it is",
+		[NSString stringWithFormat:@"%.0f,%.0f", pointer.x, pointer.y]);
+	/* Forty points away: well inside the near radius, with the screen's whole
+	   half in front of it. */
+	NSPoint start = NSMakePoint(pointer.x + 40.0f, pointer.y + 40.0f);
 	[panel setFrame:NSMakeRect(start.x, start.y, 32.0f, 32.0f) display:NO];
 	[panel setStateTo:NekoStateStop];
 
@@ -183,6 +220,17 @@ int main(void)
 	[settings setBool:NO forKey:NekoStayKey];
 	[panel applySettings];
 	onlyStagedTicks(panel);
+
+	/* Asked here rather than up in the fleeing, where -chaseTarget answers with
+	   the place the cat is running *to*. Following, it answers with the pointer
+	   itself — so this is the one moment that can say the staging above reaches
+	   the code that reads it, rather than only the harness that set it. */
+	ok(hypotf([panel chaseTarget].x - pointer.x,
+	          [panel chaseTarget].y - pointer.y) < 1.0f,
+		@"and following, it is the staged pointer the cat walks towards",
+		[NSString stringWithFormat:@"%.0f,%.0f", [panel chaseTarget].x,
+			[panel chaseTarget].y]);
+
 	for(tick = 0; tick < 60; tick++)
 		[panel handleTimer:nil];
 	NSPoint freed = [panel frame].origin;

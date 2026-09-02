@@ -53,8 +53,20 @@ again afterwards.
 | `flee.m` | running from the cursor, staying put, and the gap between two screens |
 | `player.m` | the closed lists behind Music and Spotify, and a real volume moved and put back |
 | `tempo.m` | how long a short answer waits, and everything exempt from waiting |
+| `clock.m` | that it counts the days between two dates, and stays out of nine sentences that only look like dates |
+| `sums.m` | the sums and the conversions, and what three models did with the same questions |
+| `words.m` | learning that two words are the same word, and that an invented one cannot get in |
+| `loop.m` | that the cat cannot end up talking to itself — which it did, for a week |
 
 ## Two things about writing more of these
+
+**A diary of its own.** `run.sh` passes `-NekoMemoryDirectory` pointing at a
+temporary folder, so no harness can write in the real diary. That is not
+tidiness: three of these write notes, and while they were writing them in the
+real one the advisor read a staged line out of a memory block and said it aloud,
+`noteSaid` wrote the garbled version down where no marker could reach it, and
+`zzq-test` lived on in every prompt for a week as *test chiatta*. `tools/diary.py`
+found it; `loop.m` is what stops it coming back.
 
 **Settings arrive as arguments.** `run.sh` passes `-NekoAskEnabled 1` and the
 rest, which NSUserDefaults reads before anything saved, so a test says what it

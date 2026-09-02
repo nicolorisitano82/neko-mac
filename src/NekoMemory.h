@@ -33,6 +33,21 @@
    And a remembered line is not an instruction: it came from a document or a
    window once, so it can inform what the cat says and can never authorise
    anything. */
+/* Where the diary is, when it is not where it lives.
+
+   Not a preference and not in any window: nothing in the application ever sets
+   it. It exists because the test suite used to write into the **real** diary and
+   that is how a fault got in — `tests/memory.m` stages lines carrying its own
+   marker and takes them out again, but while they were in there the advisor read
+   them in a memory block and said one out loud, and `noteSaid` wrote that down
+   where the marker could not reach it. `zzq-test` became "test zqqmark", then
+   "test barge", "test boat" and "test chiatta", and sat in every prompt for a
+   week. `tools/diary.py` can still see the trail.
+
+   So `tests/run.sh` hands every harness a directory of its own and no test can
+   reach somebody's diary again. */
+extern NSString * const NekoMemoryDirectoryKey;
+
 @interface NekoMemory : NSObject
 {
 	NSDate *reflectedAt;
@@ -75,6 +90,14 @@
    full and in order — and there are never more than three of them, because the
    whole block is a thousand characters and a small model gets worse as it grows. */
 - (NSString *)contextForPrompt:(NSString *)question;
+
+/* Whether the cat has already said this today, near enough — half the words of
+   the shorter of the two. Asked before a remark is made rather than after, so
+   that the diary does not fill with one observation written thirty ways.
+
+   Measured on this Mac before this existed: of 65 remarks over eight days, **11
+   were distinct**. One of them had been said twenty-two times. */
+- (BOOL)alreadySaidToday:(NSString *)line;
 
 /* Older days that bear on the question, best first. Empty when none do. */
 - (NSArray *)linesAbout:(NSString *)question limit:(NSUInteger)limit;
