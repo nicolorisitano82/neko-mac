@@ -771,6 +771,23 @@ engine, and the two things that would change it are **recalling the diary by
 relevance rather than by recency** and **growing the closed list of questions it
 answers in code instead of guessing**.
 
+[docs/self.md](docs/self.md) asks what it would take to give the cat a sense of
+where it is, of what happened to it, and of what time it is — read from the
+literature in September 2026, and it finds that the field's "self-awareness" is
+the **wrong** self for a character: the careful instrument in that area, a
+13,000-question benchmark over sixteen models, measures whether a model knows it
+is a language model, whether it is being tested, and whether it wrote a given
+text. A pixel cat should not know any of that. What it should know — where it
+lives, what happened before, what time it is — turns out to be unstudied as
+*self*, and the constructive finding is the opposite of what the phrase suggests:
+**a sense of time is achievable precisely because it must be computed rather than
+reasoned.** Timeline ordering sits below 30% across 24 models on the largest
+temporal benchmark, and this application's own measurement put three models at
+one of nine with the date already in the prompt. The document also handles the
+question of existence once, and puts it down: a self-model is buildable and
+testable, whether anything is experienced is not currently answerable by anybody,
+and so the cat may know things about itself and may never claim to feel them.
+
 [docs/personality.md](docs/personality.md) is what the research literature
 actually shows about building an assistant with a personality — read in September
 2026 rather than recalled, and deliberately excluding the embodied-agent and
