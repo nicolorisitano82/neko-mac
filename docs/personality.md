@@ -283,6 +283,14 @@ The gaps, now that embodiment is out of scope and the object is any assistant:
 
 ## 11. What this means for this application
 
+> **The order to build these in is in
+> [personality-roadmap.md](personality-roadmap.md)**, and it contradicts the
+> ordering below: ranked by evidence of need *here* rather than by the strength
+> of the paper behind it, the piece with the best-evidenced value is (c)'s
+> descendant — a gate on remarks that name nothing concrete — because eight days
+> of this Mac's own diary demonstrate the failure, while (a)'s successor is
+> licensed by strong research and by nothing local until the experiment runs.
+
 **a. The persona block has never been measured here, and §1 and §2 both say it
 should be.** `NekoAnswerProvider` puts a character's voice in every prompt. The
 literature says that costs about 3.6 points of MMLU-shaped accuracy and, if the

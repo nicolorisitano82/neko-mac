@@ -671,7 +671,12 @@ belief the user had stated, with MMLU and GSM8K untouched. Then: the Big Five do
 them failure modes, one called *Artificial* with *intrusive* and *annoying* in it;
 expression follows an **inverted U**; and matching the user's personality, the
 field's most-cited advice, keeps failing to replicate. The document ends with the
-experiment this application has never run on itself.
+experiment this application has never run on itself, and
+[docs/personality-roadmap.md](docs/personality-roadmap.md) puts the ideas in the
+order the evidence gives rather than the order the papers rank — which inverts
+the list, because the piece with the best-evidenced value is the one this Mac's
+own diary demonstrated the need for last week, and the piece with the best paper
+behind it has no local evidence at all until the first measurement runs.
 
 [docs/others-2.md](docs/others-2.md) is the second look, after 2.11: what closed,
 what the field offers when its own pages are read rather than remembered, and the
