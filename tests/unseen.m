@@ -21,6 +21,7 @@
 #import "support.h"
 #import "NekoUnseen.h"
 #import "NekoFolderAccess.h"
+#import "NekoWeb.h"
 
 int main(void)
 {
@@ -124,6 +125,42 @@ int main(void)
 		            @"handed over — needs a security-scoped bookmark this harness "
 		            @"cannot make without a panel and a person");
 	}
+
+	printf("\n--- and the news path wins every weather question it can answer ---\n");
+
+	/* Not reasoned, checked. NekoWeb can fetch a forecast from open-meteo and
+	   runs nine places earlier in the chain, so a weather question it can answer
+	   must never reach this file. Its matcher is the wider of the two — "che
+	   tempo fa" is a prefix of "che tempo farà" — and this asserts that rather
+	   than trusting it. */
+	NSArray *forecasts = [NSArray arrayWithObjects:
+		@"che tempo fa a Roma?",                    @"Roma",
+		@"che tempo farà a Milano domani?",         @"Milano",
+		@"quanti gradi ci sono a Torino?",          @"Torino",
+		@"pioverà a Napoli?",                       @"Napoli",
+		@"il tempo a Roma in questo momento",       @"Roma",
+		@"what's the weather in London?",           @"London",
+		@"qué tiempo hace en Roma?",                @"Roma",
+		@"quel temps fait-il à Paris ?",            @"Paris",
+		@"cuántos grados hace en Madrid?",          @"Madrid",
+		@"va a llover en Bilbao?",                  @"Bilbao",
+		@"how many degrees is it in Dublin?",       @"Dublin",
+		nil];
+	NSUInteger f;
+	for(f = 0; f < [forecasts count]; f += 2) {
+		question = [forecasts objectAtIndex:f];
+		NSString *town = [forecasts objectAtIndex:f + 1];
+		NSString *feed = [NekoWeb wantedFor:question];
+		/* The town, not merely a town: the first version of this check asked only
+		   that something came back, and "va a llover en Bilbao?" came back as
+		   "weather llover". */
+		ok(feed != nil && [feed rangeOfString:town].location != NSNotFound,
+			question, [NSString stringWithFormat:@"news path takes it as “%@”",
+				feed ?: @"(nothing)"]);
+	}
+	notMeasured(@"so the weather sentence here is only ever said when looking "
+	            @"things up is switched off, or when no town is known — which is "
+	            @"the case where the engine used to invent one");
 
 	printf("\n--- and it is a floor, which means it runs last ---\n");
 
