@@ -1,5 +1,13 @@
 # A sense of self: where it is, what happened to it, and what time it is
 
+> **A second pass, deeper, is in [self-2.md](self-2.md).** This document was read
+> mostly from abstracts; that one reads one survey properly — the one about
+> always-on agents, which is what this application is by that survey's own
+> decision procedure — and it supplies what this one lacks: six named axes with
+> invariants, a published finding that a continuously consolidated memory falls
+> **below the no-memory baseline** as it accumulates, and a falsifiable bar this
+> application does not currently clear.
+
 Read in September 2026, from the question *"come si dà a un personaggio un
 concetto di sé — di esistenza, di dove si trova, del proprio passato — e
 soprattutto del tempo?"*, and read rather than recalled.

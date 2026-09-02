@@ -842,8 +842,17 @@ one of nine with the date already in the prompt. The document also handles the
 question of existence once, and puts it down: a self-model is buildable and
 testable, whether anything is experienced is not currently answerable by anybody,
 and so the cat may know things about itself and may never claim to feel them.
-The first two things it proposes are built — see **What it knows about itself**
-above.
+The first three things it proposes are built — see **What it knows about itself**
+above. And [docs/self-2.md](docs/self-2.md) is the second, deeper pass: one
+ninety-page survey read properly rather than a dozen abstracts, which turns out to
+be about exactly this kind of program — *"systems whose future behaviour depends on
+durable state accumulated across earlier interactions"* — and which supplies six
+named axes for judging a diary, a published finding that a continuously
+consolidated memory **falls below the no-memory baseline** as it accumulates, and
+a falsifiable bar this application does not clear: *adaptation is net-positive only
+when the system can identify, de-authorise and revert the state update that later
+caused a regression.* The 2.12.1 fixes stopped the poisoning; none of them is a
+return arc.
 
 [docs/personality.md](docs/personality.md) is what the research literature
 actually shows about building an assistant with a personality — read in September
