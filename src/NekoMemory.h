@@ -76,6 +76,14 @@
    whole block is a thousand characters and a small model gets worse as it grows. */
 - (NSString *)contextForPrompt:(NSString *)question;
 
+/* Whether the cat has already said this today, near enough — half the words of
+   the shorter of the two. Asked before a remark is made rather than after, so
+   that the diary does not fill with one observation written thirty ways.
+
+   Measured on this Mac before this existed: of 65 remarks over eight days, **11
+   were distinct**. One of them had been said twenty-two times. */
+- (BOOL)alreadySaidToday:(NSString *)line;
+
 /* Older days that bear on the question, best first. Empty when none do. */
 - (NSArray *)linesAbout:(NSString *)question limit:(NSUInteger)limit;
 

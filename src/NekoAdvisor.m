@@ -234,6 +234,21 @@ static const NSTimeInterval NekoAdvisorTyping = 3.0;
 		if(problem != nil && ![problem isEqualToString:@"nothing to say"])
 			NSLog(@"Neko: a suggestion was thrown away — %@: %@", problem, line);
 
+		/* And having said it once is a reason not to say it again. The rate rule
+		   counts how often the cat speaks; nothing counted whether it was saying
+		   the same thing, and the diary on this Mac answered that question
+		   without being asked: 65 remarks over eight days, **11 of them
+		   distinct**, one said twenty-two times. */
+		if([NekoSense isWorthSaying:line]
+		   && [[NekoMemory sharedMemory] alreadySaidToday:line]) {
+			NSLog(@"Neko: a suggestion was thrown away — said already today: %@", line);
+			if(callerReport != nil) {
+				callerReport(nil, error);
+				Block_release(callerReport);
+			}
+			return;
+		}
+
 		if([NekoSense isWorthSaying:line]) {
 			[[NSUserDefaults standardUserDefaults]
 				setObject:line forKey:NekoSuggestLastKey];
