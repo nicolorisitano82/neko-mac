@@ -33,24 +33,29 @@ int main(void)
 
 	printf("\n--- having said it once is a reason not to say it again ---\n");
 
-	[memory noteSaid:[Mark stringByAppendingString:@" build lento perché progetto grande"]];
+	/* Nonsense on purpose, and this was a defect in the first draft of this
+	   harness: it used "build lento perché progetto grande", which is a sentence
+	   the real cat had actually said that day, so the last check here failed
+	   whenever the diary legitimately contained it. A test about repetition has
+	   to be written in words nothing else can be about. */
+	[memory noteSaid:[Mark stringByAppendingString:@" sprocchia il grumbolo con calma"]];
 
 	ok([memory alreadySaidToday:
-		[Mark stringByAppendingString:@" build lento perché progetto grande"]],
+		[Mark stringByAppendingString:@" sprocchia il grumbolo con calma"]],
 		@"the same remark, word for word", nil);
 	ok([memory alreadySaidToday:
-		[Mark stringByAppendingString:@" progetto grande, build lento"]],
+		[Mark stringByAppendingString:@" grumbolo sprocchiato con calma"]],
 		@"and the same remark reworded — which is how it filled a week", nil);
 	ok(![memory alreadySaidToday:
-		[Mark stringByAppendingString:@" sua sorella ha telefonato ieri sera"]],
+		[Mark stringByAppendingString:@" trombetta zia vanda finalmente arrivata"]],
 		@"but not something else entirely", nil);
 	ok(![memory alreadySaidToday:@""], @"and not nothing", nil);
 
 	/* What the person said is not what the cat said: a question of theirs must
 	   never make the cat's own remark look like a repeat. */
-	[memory noteHeard:[Mark stringByAppendingString:@" quanto manca a venerdì"]];
+	[memory noteHeard:[Mark stringByAppendingString:@" quando fiorisce il baobab arancione"]];
 	ok(![memory alreadySaidToday:
-		[Mark stringByAppendingString:@" quanto manca a venerdì"]],
+		[Mark stringByAppendingString:@" quando fiorisce il baobab arancione"]],
 		@"and a line of theirs is not a line of its own", nil);
 
 	printf("\n--- and the reflection is not handed the cat's own voice ---\n");
@@ -86,10 +91,24 @@ int main(void)
 	notMeasured(@"what this cannot measure is whether a remark was worth hearing. "
 	            @"It can only say that the same one was not made twice");
 
+	printf("\n--- and no harness can write in the real diary any more ---\n");
+
+	/* The seed of the whole fault. tests/memory.m stages lines carrying its own
+	   marker and takes them out again — but while they were in there the advisor
+	   read one in a memory block and said it out loud, and what noteSaid then
+	   wrote down was past the reach of any marker. "zzq-test" became "test
+	   zqqmark", then "barge", "boat", "chiatta". */
+	NSString *lives = [[NSSearchPathForDirectoriesInDomains(
+		NSApplicationSupportDirectory, NSUserDomainMask, YES) firstObject]
+		stringByAppendingPathComponent:@"Neko/Memory"];
+	ok(![[[memory directory] path] isEqualToString:lives],
+		@"the diary this harness writes in is not the one on this Mac",
+		[[memory directory] path]);
+
 	[memory forgetLinesContaining:Mark];
 	ok(![memory alreadySaidToday:
-		[Mark stringByAppendingString:@" build lento perché progetto grande"]],
-		@"and the harness took its own lines back out of the diary", nil);
+		[Mark stringByAppendingString:@" sprocchia il grumbolo con calma"]],
+		@"and it takes its own lines back out of it regardless", nil);
 
 	[pool release];
 	return NekoTestResult();

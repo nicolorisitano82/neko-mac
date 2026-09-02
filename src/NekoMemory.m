@@ -24,6 +24,8 @@ static const NSUInteger NekoMemoryLineChars = 160;
 
 static NSString * const NekoMemoryReflectedKey = @"NekoMemoryReflected";
 
+NSString * const NekoMemoryDirectoryKey = @"NekoMemoryDirectory";
+
 @implementation NekoMemory
 
 + (NekoMemory *)sharedMemory
@@ -40,6 +42,12 @@ static NSString * const NekoMemoryReflectedKey = @"NekoMemoryReflected";
 		NSApplicationSupportDirectory, NSUserDomainMask, YES);
 	NSString *path = [[[support firstObject] stringByAppendingPathComponent:@"Neko"]
 		stringByAppendingPathComponent:@"Memory"];
+	/* Somewhere else, if a harness said so. See NekoMemory.h for why this is
+	   here: a test that can write in the real diary already wrote in it once. */
+	NSString *elsewhere = [[NSUserDefaults standardUserDefaults]
+		stringForKey:NekoMemoryDirectoryKey];
+	if([elsewhere length] > 0)
+		path = [elsewhere stringByExpandingTildeInPath];
 	[[NSFileManager defaultManager] createDirectoryAtPath:path
 	                         withIntermediateDirectories:YES
 	                                          attributes:nil

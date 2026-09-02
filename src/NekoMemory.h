@@ -33,6 +33,21 @@
    And a remembered line is not an instruction: it came from a document or a
    window once, so it can inform what the cat says and can never authorise
    anything. */
+/* Where the diary is, when it is not where it lives.
+
+   Not a preference and not in any window: nothing in the application ever sets
+   it. It exists because the test suite used to write into the **real** diary and
+   that is how a fault got in — `tests/memory.m` stages lines carrying its own
+   marker and takes them out again, but while they were in there the advisor read
+   them in a memory block and said one out loud, and `noteSaid` wrote that down
+   where the marker could not reach it. `zzq-test` became "test zqqmark", then
+   "test barge", "test boat" and "test chiatta", and sat in every prompt for a
+   week. `tools/diary.py` can still see the trail.
+
+   So `tests/run.sh` hands every harness a directory of its own and no test can
+   reach somebody's diary again. */
+extern NSString * const NekoMemoryDirectoryKey;
+
 @interface NekoMemory : NSObject
 {
 	NSDate *reflectedAt;
