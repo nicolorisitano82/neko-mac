@@ -668,6 +668,58 @@ The `*_togi` states are the cat clawing at what it cannot get past: the edge of
 the screens, or the top of the window it stands on when the pointer is inside
 that window.
 
+## When there is a new version
+
+Neko goes out as an **unsigned** disk image, and that decides the shape of this
+entirely. A signed application can replace its own bundle and relaunch; an
+unsigned one that tried would hand you a copy Gatekeeper refuses to open, having
+already thrown away the one that worked. So it never installs anything:
+
+1. it asks this project's own releases, once a day, what the newest one is;
+2. if that is newer, it says so — once out loud, and then in the cat's menu;
+3. it asks whether to download, with the size, before fetching anything;
+4. it downloads with a progress bar, and can be stopped;
+5. it asks again before doing anything with the file;
+6. and then it opens the disk image and quits, so the copy you are replacing is
+   not the copy that is running.
+
+**The drag into Applications is yours.** One step more than a self-updater, and
+it is the step that makes the other five safe. What the check reveals, since it
+is a network request: one HTTPS request to `api.github.com`, with no diary, no
+question and no identifier of its own. The switch is in the Pet tab.
+
+And what it does not promise: this checks a version number, not a signature. The
+assurances are TLS and the address it asks, and after that it is a disk image you
+look at before dragging anything. Nothing here verifies the download, because an
+unsigned build has nothing to verify against.
+
+### A permission that is missing is a feature silently not working
+
+A few seconds after login, once, Neko asks `NekoPermissions` what is **switched
+on but not allowed** — its own words for it, so nothing here decides what counts
+as needed — and if anything is, it says which and opens the Permissions tab.
+Once per launch and no more: the window is the message, and a cat that opens it
+every hour is a cat somebody switches off.
+
+### If you are upgrading from 2.13 or earlier
+
+The bundle identifier changed in 2.14, from a placeholder that had been there
+since 2007. macOS keys your settings, the diary, the models and the plugins to
+the identifier rather than to the name, so all four are orphaned by that one
+line — and a sandboxed application cannot read another application's container,
+so Neko cannot move them for itself.
+
+Launch 2.14 once and quit it, then:
+
+```
+./tools/rename-domain.sh          # says what it would move, and moves nothing
+./tools/rename-domain.sh --go     # moves it
+```
+
+The permissions cannot be moved by anything: to macOS this is an application
+that has never asked. Neko will tell you which ones, by itself, the next time it
+starts.
+
 ## Building
 
 Open `Neko.xcodeproj` in Xcode and build, or, with only the Command Line Tools
