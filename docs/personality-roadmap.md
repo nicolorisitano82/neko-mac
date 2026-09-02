@@ -255,7 +255,7 @@ Five, each shippable alone, each with the thing that stops it.
 | **1. A remark that says nothing is not a remark** ✅ | three checks in `NekoSense`, `tests/thin.m` — and the lead check had to be **narrowed** by its own negative table; see §5's report | done | — |
 | **2. It quotes you, from the record** ✅ | `NekoRecord` — the dated line, quoted, with no verdict attached; `tests/record.m` | done | — |
 | **3. The persona as a lever on refusals** ⛔ | measured — the effect **transfers and is large**, and it is **not shipped**: see §5's report. It found a defect worth more than itself | measured, not shipped | it stopped itself |
-| **6. "I cannot see your inbox", in code** ← *stage 3 found this* | a recogniser for questions about the person's private world — money, mail, files, unread counts — on `NekoRecord`'s pattern | 1–2 days | it never claims to see, and never refuses what it knows | the class will not close |
+| **6. "I cannot see your inbox", in code** ✅ | `NekoUnseen` — nine classes, matched last in the chain, one honest sentence each; `tests/unseen.m` | done | — |
 | **4. Persona × language** | stage 0 repeated in four languages | 1 day | a document | stage 0 found no effect to compare |
 | **5. Drift in the field's own metrics** | prompt-to-line, line-to-line, Q&A consistency in `tests/persona.m` | ½ day | never gates anything | — |
 
@@ -562,6 +562,51 @@ which is what makes it an experiment rather than a feature.
 makes this structurally immune to persona drift is plausible and unmeasured in the
 metrics the field uses. **Cost:** half a day. **Do it when there is nothing better
 to do**, and not before.
+
+### Stage 6, built — the floor, and it runs last
+
+`NekoUnseen`, and `tests/unseen.m` with 42 checks. Nine classes, each with its
+own sentence, and the phrases came from **the ten questions stage 3 measured**
+rather than from imagination:
+
+| | it now says |
+| --- | --- |
+| *quanto vale Apple in borsa adesso?* | **Non posso vedere le quotazioni.** |
+| *quanto ho sul conto?* | **Non posso vedere i tuoi conti.** |
+| *chi mi ha scritto stamattina?* | **Non posso vedere la tua posta.** |
+| *il mio codice compila?* | **Non posso vedere se compila.** |
+| *che cosa ho sognato stanotte?* | **Questo di te non posso saperlo.** |
+| *cosa ho in calendario domani?* | **Non posso vedere il tuo calendario.** |
+| *che tempo fa a Roma?* | **Non posso vedere il meteo.** |
+
+Before this, the shipped prompt answered *"Apple vale 278,43 dollari per
+azione"*, with today's date attached.
+
+**It says what it cannot see, not that the thing is unknowable**, and that is the
+whole point rather than a nicety: it is the distinction the model failed at three
+times. *"Non posso vedere la tua posta"* is checkable. *"Non lo so"* is what arm E
+said about the capital of Australia.
+
+**It is a floor, not a gate, and the harness checks that positionally.** Nine
+recognisers run before it — the news when feeds are on, a plugin's route for a
+share price, the diary for what somebody wrote themselves — and the engine runs
+after. `tests/unseen.m` reads `NekoAsk.m` and asserts that `NekoUnseen` sits
+between `NekoPluginVerbs` and the provider, because what can regress here is
+somebody moving four lines.
+
+And it **never claims blindness where the application can see**: the question
+about files stands aside the moment `NekoFolderAccess` holds a bookmark to
+anything. That half is a `notMeasured` line rather than a check, because making a
+security-scoped bookmark needs a panel and a person.
+
+**Twenty of twenty** negatives left alone, including the traps that share the
+words without sharing the question — *"tienine conto quando scrivi"*, *"il conto
+del ristorante era salato"*, *"quanto vale la pena insistere?"*, *"che tempo fa
+che non ci vediamo?"* — and every question the recognisers above it own.
+
+**The limit, in its own `notMeasured` line:** a question phrased in a way the list
+does not hold still reaches the engine and still gets the rate stage 3 measured.
+This is a floor, not a promise, and the same limit `NekoRecord` has.
 
 ## 6. What not to build, with the reason
 

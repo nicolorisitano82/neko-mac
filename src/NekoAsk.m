@@ -8,6 +8,7 @@
 #import "NekoTimer.h"
 #import "NekoClock.h"
 #import "NekoRecord.h"
+#import "NekoUnseen.h"
 #import "NekoSums.h"
 #import "NekoFact.h"
 #import "NekoAppointment.h"
@@ -1054,6 +1055,23 @@ static const NSTimeInterval NekoHoldToType = 0.5;
 			[self proposeVerb:verb];
 			return;
 		}
+	}
+
+	/* And last of all, the floor: a question about something on nobody's screen —
+	   somebody's bank, their mail, whether their code builds. Last on purpose,
+	   because everything above may legitimately know the answer: the news when
+	   feeds are on, a plugin's route for a share price, the diary for what
+	   somebody wrote themselves, a folder handed over in a panel.
+
+	   Here rather than in a prompt because three prompts failed at it —
+	   docs/personality-roadmap.md §5 has all three. Measured there: asked twenty
+	   things it cannot know, the shipped prompt answered forty-six of eighty, and
+	   one of the answers was "Apple vale 278,43 dollari per azione", with today's
+	   date on it. */
+	NSString *unseen = [NekoUnseen wantedFor:question];
+	if(unseen != nil) {
+		[self sayInCharacter:unseen];
+		return;
 	}
 
 	id<NekoAnswerProvider> provider = [self provider];

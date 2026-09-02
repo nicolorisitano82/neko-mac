@@ -59,6 +59,7 @@ again afterwards.
 | `loop.m` | that the cat cannot end up talking to itself — which it did, for a week |
 | `price.m` | what the character costs: accuracy, and agreeing with something that is not so |
 | `thin.m` | a remark that reads the clock back, blames, or explains something it never saw |
+| `unseen.m` | the questions about somebody's bank, mail and code that nothing on this Mac can answer |
 | `refuse.m` | whether a character can be told to say "I do not know" — and what it stops answering when it is |
 | `record.m` | quoting somebody back to themselves — with the day, never from its own remarks, and with no verdict |
 

@@ -549,3 +549,14 @@
 "I have nothing written down about that." = "Je n’ai rien de noté là-dessus.";
 "On %@ you said: “%@”" = "Le %@ tu as dit : « %@ »";
 "On %@ I noted: “%@”" = "Le %@ j’ai noté : « %@ »";
+
+/* What it cannot see, said instead of guessed at. */
+"I cannot see your accounts." = "Je ne peux pas voir tes comptes.";
+"I cannot see the markets." = "Je ne peux pas voir les cours.";
+"I cannot see your mail." = "Je ne peux pas voir ton courrier.";
+"I cannot see inside your files." = "Je ne peux pas voir dans tes fichiers.";
+"I cannot see whether it builds." = "Je ne peux pas voir si ça compile.";
+"I cannot see who is there." = "Je ne peux pas voir qui est là.";
+"I cannot know that about you." = "Ça, de toi, je ne peux pas le savoir.";
+"I cannot see the weather." = "Je ne peux pas voir la météo.";
+"I cannot see your calendar." = "Je ne peux pas voir ton agenda.";
