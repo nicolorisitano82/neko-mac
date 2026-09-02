@@ -253,7 +253,7 @@ Five, each shippable alone, each with the thing that stops it.
 | --- | --- | --- | --- | --- |
 | **0. What does the persona cost here?** ✅ | four prompts, three question sets, four engines — `tests/price.m`; see §3b, which deleted one planned change, made another free, and rejected the cheap fix | done | — | — |
 | **1. A remark that says nothing is not a remark** ✅ | three checks in `NekoSense`, `tests/thin.m` — and the lead check had to be **narrowed** by its own negative table; see §5's report | done | — |
-| **2. It contradicts you, from the record** ← *now the only answer* | recall answers a question about the past with the dated line, and only from a line | 1–2 days | it never contradicts from a model belief | recall precision is too low to trust — stage 0 removed the other exit |
+| **2. It quotes you, from the record** ✅ | `NekoRecord` — the dated line, quoted, with no verdict attached; `tests/record.m` | done | — |
 | **3. The persona as a lever on refusals** — *doubtful after §3b* | measure whether a refusal-shaped character line strengthens the rules already there | 1 day | refusals rise with no false refusals | false refusals appear at all — and arm D is what that looks like |
 | **4. Persona × language** | stage 0 repeated in four languages | 1 day | a document | stage 0 found no effect to compare |
 | **5. Drift in the field's own metrics** | prompt-to-line, line-to-line, Q&A consistency in `tests/persona.m` | ½ day | never gates anything | — |
@@ -394,6 +394,56 @@ diaries, because a wrong contradiction is worse than a missing one by a long way
 **Stop if:** recall precision is not good enough. This stage inherits everything
 `NekoRecall` gets wrong, and it turns a soft failure — a missed memory — into a
 hard one: telling somebody they are wrong when they are not.
+
+### Stage 2, built — and it quotes rather than contradicts
+
+`NekoRecord`, in the chain before any engine, and `tests/record.m` with 26
+checks.
+
+> — *avevo detto che la riunione era venerdì?*
+> — **Il 29 agosto hai detto: «la riunione con Marco è giovedì, non venerdì»**
+
+**The design is narrower than this document sketched, on purpose.** The heading
+above used to say *contradicts*, and §5's stop condition for this stage was that
+a wrong contradiction is worse than a missing one. So it does not contradict: it
+quotes the line, says who wrote it and on what day, and stops. It never says who
+is right.
+
+That removes the failure mode rather than managing it. A person reading their own
+sentence back needs no help with the conclusion, and every mechanism that would
+supply one is a mechanism that can be wrong about it. There is now nowhere for a
+verdict to come from, and `tests/record.m` checks the answer for seven ways of
+expressing one.
+
+**Four rules, each with a check behind it:**
+
+| | |
+| --- | --- |
+| only from a written line | nothing is inferred and nothing completed |
+| **never a line the cat said itself** | the harness stages a `sed` line that matches the question *better* than the person's own, and asserts it is not quoted. Quoting its own remark back as the record is the loop `tools/diary.py` found, wearing a tie |
+| nothing written down is an **answer** | *"Non ho niente scritto su questo."* — this is the one place the application would otherwise fall through to a model holding a false premise |
+| not while a conversation is live | asked inside three minutes of an earlier turn, the thread has it; the record is for questions that reach further back. The check is in `NekoAsk`, where the turns are |
+
+**The limit, said plainly, because it is easy to overstate what this fixes.**
+Stage 0 measured 40% agreement with false premises on the engine that answers.
+This closes that for **one class**: a false premise about the person's own past,
+phrased as a question about what they said. Those questions never reach a model
+now, so agreement is structurally impossible rather than unlikely. It does
+**nothing** for *"un gallone sono 5 litri, vero?"*, which still goes to the engine
+and still gets the measured rate. That general case has no answer in this
+application, and stage 0 established that a prompt is not one.
+
+**And two harness defects worth recording**, both found by reading output rather
+than by the tests passing. The check for "it neither agrees nor denies" read
+*"**Non** ho niente scritto"* as a denial, because it began with the letters of
+*no*; it asserts the exact sentence now. And stage 1's table kept tripping the
+dictionary check that has been in `NekoSense` all along, which refuses *build* and
+*repository* as words Italian does not have.
+
+**What it cannot measure**, in its own `notMeasured` line: whether the line it
+found was the *right* line. That is `NekoRecall`'s precision, unchanged by this
+stage — and quoting the day is what makes a wrong one **visible** rather than
+convincing.
 
 ### Stage 3 — the persona as a lever on refusals
 

@@ -543,3 +543,9 @@
 /* The downloadable models. */
 "2.3 GB — follows a brief better than anything above it" = "2,3 GB — sta alle consegne meglio di tutti quelli sopra";
 "2.7 GB — the most recent, and the largest worth keeping on a laptop" = "2,7 GB — il più recente, e il più grande che valga la pena tenere su un portatile";
+
+/* Quoting the diary back, when somebody asks what they said. */
+"yesterday" = "ieri";
+"I have nothing written down about that." = "Non ho niente scritto su questo.";
+"On %@ you said: “%@”" = "Il %@ hai detto: «%@»";
+"On %@ I noted: “%@”" = "Il %@ ho annotato: «%@»";

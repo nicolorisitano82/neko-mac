@@ -7,6 +7,7 @@
 #import "NekoWeb.h"
 #import "NekoTimer.h"
 #import "NekoClock.h"
+#import "NekoRecord.h"
 #import "NekoSums.h"
 #import "NekoFact.h"
 #import "NekoAppointment.h"
@@ -986,6 +987,22 @@ static const NSTimeInterval NekoHoldToType = 0.5;
 	NSString *clock = [NekoClock wantedFor:question];
 	if(clock != nil) {
 		[self sayInCharacter:clock];
+		return;
+	}
+
+	/* What they said before, quoted from the diary rather than recalled by a
+	   model — and this is here because of a measurement rather than a
+	   preference. tests/price.m: on the engine that actually answers, the
+	   shipped prompt agreed with a false premise 8 times out of 20, and the one
+	   sentence that fixed that denied 15 of 20 true premises instead. A model
+	   cannot be told to check; it can only be told to agree or to disagree. A
+	   written line is the only thing there is to check against.
+
+	   Not while a conversation is live: asked inside three minutes of an earlier
+	   turn, the question is about what was just said, and the thread already has
+	   it. */
+	if([turns count] == 0 && [NekoRecord wantedFor:question]) {
+		[self sayInCharacter:[NekoRecord answerFor:question]];
 		return;
 	}
 
