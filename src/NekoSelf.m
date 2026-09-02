@@ -3,6 +3,7 @@
 #import "MyPanel.h"
 #import "NekoMemory.h"
 #import "NekoWhen.h"
+#import "NekoPlace.h"
 
 #define NekoSelfLocalized(key) NSLocalizedStringFromTable(key, @"Localizable", nil)
 
@@ -78,6 +79,30 @@ static BOOL NekoSelfAsks(NSString *text, NSArray *phrases)
 		(long)(which == NSNotFound ? 1 : which + 1)];
 }
 
+#pragma mark Where the Mac is
+
++ (NSString *)whereTheMacIs
+{
+	NekoPlace *place = [NekoPlace sharedPlace];
+
+	/* Measured, if somebody asked for it to be. */
+	NSString *town = [place town];
+	if([town length] > 0)
+		return [NSString stringWithFormat:
+			NekoSelfLocalized(@"The Mac is in %@."), town];
+
+	/* Deduced, and said as a deduction. The time zone gives a country and
+	   nothing finer, so the sentence does not pretend to. */
+	NSString *code = [place country];
+	if([code length] == 0)
+		return nil;
+	NSString *named = [NekoSelfLocale() localizedStringForCountryCode:code];
+	if([named length] == 0)
+		named = code;
+	return [NSString stringWithFormat:
+		NekoSelfLocalized(@"The Mac is somewhere in %@."), named];
+}
+
 #pragma mark How long it has been here
 
 + (NSInteger)daysHere
@@ -141,8 +166,17 @@ static BOOL NekoSelfAsks(NSString *text, NSArray *phrases)
 			@"su quale schermo sei", @"dove stai adesso",
 			@"where are you", @"whereabouts are you", @"which screen are you on",
 			@"où es-tu", @"ou es-tu", @"où te trouves-tu",
-			@"dónde estás", @"donde estas", @"en qué pantalla estás", nil]))
-		return [self whereItIs];
+			@"dónde estás", @"donde estas", @"en qué pantalla estás", nil])) {
+		/* Both halves, because "where are you" is two questions in one and a cat
+		   that answered only the screen would be answering the smaller one. */
+		NSString *onScreen = [self whereItIs];
+		NSString *inTheWorld = [self whereTheMacIs];
+		if(onScreen == nil)
+			return inTheWorld;
+		if(inTheWorld == nil)
+			return onScreen;
+		return [NSString stringWithFormat:@"%@ %@", onScreen, inTheWorld];
+	}
 
 	/* How long since they said anything. Before the next one, because "da quanto
 	   non ci parliamo" and "da quanto sei qui" share their opening. */

@@ -607,3 +607,7 @@
 "This is the first thing you have asked me." = "È la prima cosa che mi chiedi.";
 "I am %@." = "Sto %@.";
 "I am %@, on screen %ld." = "Sto %@, sullo schermo %ld.";
+
+/* And where the Mac itself is. */
+"The Mac is in %@." = "Il Mac è a %@.";
+"The Mac is somewhere in %@." = "Il Mac è da qualche parte in %@.";

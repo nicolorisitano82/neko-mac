@@ -19,6 +19,7 @@
 #import "NekoMemory.h"
 #import "NekoController.h"
 #import "MyPanel.h"
+#import "NekoPlace.h"
 
 int main(void)
 {
@@ -82,6 +83,57 @@ int main(void)
 	ok(low != nil && high != nil && ![low isEqualToString:high],
 		@"moving the cat changes the answer",
 		[NSString stringWithFormat:@"“%@” then “%@”", low, high]);
+
+	printf("\n--- and where the Mac is, in two tiers ---\n");
+
+	/* Two different questions in one sentence: where the cat is sitting, and
+	   where the machine it sits on happens to be. The second has a measured tier
+	   and a deduced one, and the wording has to tell them apart — a time zone
+	   gives a country, and a cat that said "sono a Roma" to everyone in Italy
+	   would be wrong about almost all of them. */
+	NSUserDefaults *place = [NSUserDefaults standardUserDefaults];
+	id townBefore = [[[place objectForKey:NekoPlaceTownKey] copy] autorelease];
+
+	[place removeObjectForKey:NekoPlaceTownKey];
+	NSString *deduced = [NekoSelf whereTheMacIs];
+	printf("      with no town: %s\n", [(deduced ?: @"(nothing)") UTF8String]);
+	ok(deduced != nil, @"the time zone alone is enough to say something", deduced);
+	/* Checked against the sentence frame rather than against a hunch, and in any
+	   language: the deduced answer must use the "somewhere in" frame and not the
+	   plain one. The first version of this check was a ternary that evaluated to
+	   "deduced is not nil" whatever happened — a vacuous assertion of exactly the
+	   kind this suite exists to avoid. */
+	NSString *vague = NSLocalizedString(@"The Mac is somewhere in %@.", nil);
+	NSRange gap = [vague rangeOfString:@"%@"];
+	NSString *vaguePrefix = gap.location != NSNotFound
+		? [vague substringToIndex:gap.location] : vague;
+	ok(deduced != nil && [vaguePrefix length] > 0
+	   && [deduced hasPrefix:vaguePrefix],
+		@"and it is phrased as a deduction, not as a position",
+		[NSString stringWithFormat:@"“%@…”", vaguePrefix]);
+	ok([[NekoPlace sharedPlace] country] != nil,
+		@"which costs no permission at all",
+		[[NekoPlace sharedPlace] country]);
+
+	[place setObject:@"Vicenza" forKey:NekoPlaceTownKey];
+	NSString *measured = [NekoSelf whereTheMacIs];
+	printf("      with a town:  %s\n", [(measured ?: @"(nothing)") UTF8String]);
+	ok(measured != nil
+	   && [measured rangeOfString:@"Vicenza"].location != NSNotFound,
+		@"and a town that was looked up is named", measured ?: @"(nothing)");
+	ok(measured != nil && ![measured isEqualToString:deduced],
+		@"in a different sentence from the deduced one", nil);
+
+	NSString *both = [NekoSelf wantedFor:@"dove sei?"];
+	printf("      asked:        %s\n", [(both ?: @"(nothing)") UTF8String]);
+	ok(both != nil && [both rangeOfString:@"Vicenza"].location != NSNotFound
+	   && [both length] > [measured length],
+		@"and “dove sei?” answers both halves", both ?: @"(nothing)");
+
+	if(townBefore != nil)
+		[place setObject:townBefore forKey:NekoPlaceTownKey];
+	else
+		[place removeObjectForKey:NekoPlaceTownKey];
 
 	printf("\n--- how long it has been here ---\n");
 

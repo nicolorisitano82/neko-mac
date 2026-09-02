@@ -32,7 +32,7 @@
    Four things it can say about itself, all of them checkable by the person who
    hears them:
 
-       where it is       which screen, and where on it
+       where it is       which screen, where on it, and where the Mac is
        how long it has   the day the two of you met, stamped once and kept
        how long quiet    since they last asked it anything
        and the middle    of that: how many days, said as days
@@ -57,7 +57,22 @@
 + (NSString *)wantedFor:(NSString *)question;
 
 /* The pieces, exposed so a harness can check them without a window. */
+
+/* Where the cat is: which screen, and where on it. */
 + (NSString *)whereItIs;                /* nil when there is no panel yet */
+
+/* Where the **Mac** is, which is a different question and answered in two
+   tiers, both of them NekoPlace's and neither of them sent anywhere.
+
+   The town, when somebody has pressed the button for it: measured, at the
+   accuracy macOS calls reduced, and kept as a word rather than a coordinate.
+
+   Otherwise the country the **time zone** implies, which costs nothing and
+   needs nobody's permission — and the sentence says *somewhere in* rather than
+   naming a place, because a time zone is a deduction about a country and not a
+   position. A cat that said "sono a Roma" to everyone in Italy would be wrong
+   about almost all of them. */
++ (NSString *)whereTheMacIs;            /* nil when even the time zone says nothing */
 + (NSInteger)daysHere;
 + (NSString *)howLongSinceHeard;        /* nil when nothing was ever heard */
 
