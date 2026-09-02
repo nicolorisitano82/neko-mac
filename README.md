@@ -654,6 +654,30 @@ engine, and the two things that would change it are **recalling the diary by
 relevance rather than by recency** and **growing the closed list of questions it
 answers in code instead of guessing**.
 
+[docs/personality.md](docs/personality.md) is what the research literature
+actually shows about building an assistant with a personality — read in September
+2026 rather than recalled, and deliberately excluding the embodied-agent and
+facial-expression work, which measures a channel this kind of software does not
+have. The finding that reframes the question: **a persona is a trade, not a win.**
+Tested on 162 personas across 9 models and 2,410 MMLU questions, adding one to the
+system prompt improved accuracy over having none **not at all** — and the paper
+that explains why puts numbers on both halves: writing, roleplay and refusals get
+better (a safety persona took jailbreak refusals from 53.2% to 70.9%) while
+knowledge and reasoning get worse (MMLU 71.6% → 68.0%, coding −0.65). Warmth is
+the same trade with a bigger bill: across five model families, training for warmth
+raised errors 7.4 points and made a model ~40% more likely to affirm a false
+belief the user had stated, with MMLU and GSM8K untouched. Then: the Big Five does
+**not** describe agents — 744 people's own adjectives give ten dimensions, six of
+them failure modes, one called *Artificial* with *intrusive* and *annoying* in it;
+expression follows an **inverted U**; and matching the user's personality, the
+field's most-cited advice, keeps failing to replicate. The document ends with the
+experiment this application has never run on itself, and
+[docs/personality-roadmap.md](docs/personality-roadmap.md) puts the ideas in the
+order the evidence gives rather than the order the papers rank — which inverts
+the list, because the piece with the best-evidenced value is the one this Mac's
+own diary demonstrated the need for last week, and the piece with the best paper
+behind it has no local evidence at all until the first measurement runs.
+
 [docs/others-2.md](docs/others-2.md) is the second look, after 2.11: what closed,
 what the field offers when its own pages are read rather than remembered, and the
 one paragraph of the first study that measurement turned out to contradict.
