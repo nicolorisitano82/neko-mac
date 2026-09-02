@@ -186,6 +186,14 @@ int main(int argc, const char *argv[])
 
 	printf("\n--- the turn just before ---\n");
 
+	/* Emptied first. The watch above runs for twelve seconds and an idle remark
+	   may well have fired inside it, which left a stray "Xcode has been open a
+	   while" at the head of the thread — the same words this section adds on
+	   purpose below. The ordering check then matched the stray one and failed
+	   about once in a few runs, for a reason that had nothing to do with
+	   ordering. */
+	[ask rememberQuestion:nil answer:nil];
+
 	[ask rememberQuestion:@"Who wrote The Hobbit?" answer:@"Tolkien did."];
 	NSString *thread = [ask threadForPrompt];
 	ok([thread rangeOfString:@"They asked: Who wrote The Hobbit?"].location != NSNotFound
@@ -202,7 +210,8 @@ int main(int argc, const char *argv[])
 	   the only one. Which is what this asserts: it is a turn, and it is the
 	   newest. */
 	NSString *after = [ask threadForPrompt];
-	NSRange remark = [after rangeOfString:@"You said, without being asked: Xcode"];
+	NSRange remark = [after rangeOfString:@"You said, without being asked: Xcode"
+	                              options:NSBackwardsSearch];
 	ok(remark.location != NSNotFound,
 		@"a remark nobody asked for is a turn too", after);
 	ok(remark.location != NSNotFound
@@ -217,7 +226,13 @@ int main(int argc, const char *argv[])
 	while([huge length] < 900)
 		[huge appendString:@"words and more words "];
 	[ask rememberQuestion:huge answer:huge];
-	ok([[ask threadForPrompt] length] <= 640,
+	/* Both halves, because for a while this passed at zero characters: one turn
+	   of six hundred and twenty-seven went over the budget and was dropped
+	   whole, so the check for "no more than the budget" was met by there being
+	   nothing at all. A trim has to leave something behind. */
+	ok([[ask threadForPrompt] length] <= 600      /* the budget in NekoAsk.m */
+	   && [[ask threadForPrompt] rangeOfString:@"They asked: words and more"].location
+	      != NSNotFound,
 		@"a long turn is trimmed, not passed on whole",
 		[NSString stringWithFormat:@"%lu chars from %lu",
 			(unsigned long)[[ask threadForPrompt] length], (unsigned long)(2 * [huge length])]);

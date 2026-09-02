@@ -1,5 +1,89 @@
 # Changelog
 
+## 2.15 — 2026-09-03
+
+Neko knows where it is, since when, and what was actually said to it — and the
+one file that is worth protecting got two rules that keep it honest.
+
+### Where it is
+
+*Dove sei?* is two questions, and this answers both.
+
+    — dove sei?
+    — Sto in alto a destra. Il Mac è a Vicenza.
+
+Where the **cat** sits is nine regions of the screen, worked out from the cat's
+own midpoint — not the pointer's, not the front window's. Where the **Mac**
+stands has two tiers, and the wording keeps them apart:
+
+| | |
+| --- | --- |
+| a town, when the location permission was granted | *"Il Mac è **a** Vicenza."* |
+| otherwise the country the **time zone** implies | *"Il Mac è **da qualche parte in** Italia."* |
+
+The second tier costs no permission at all and is the honest half of the pair: a
+time zone gives a country and nothing finer, so the sentence does not name a
+place it does not know. Nothing leaves the machine either way, and only the name
+of a town is ever kept — never a coordinate.
+
+### Since when
+
+    — da quanto ci conosciamo?     — 43 giorni, dal 22 luglio.
+    — da quanto non ci parliamo?   — 3 giorni fa.
+    — quando hai parlato l'ultima volta?  — 2 giorni fa.
+
+The first is a stamp written once and kept, not a count of the day files — an
+installation whose old days were pruned would otherwise say *thirty* for ever.
+The last two are mirrors of each other, one about you and one about it, and a
+check makes sure they never answer each other's question.
+
+**None of this goes into the prompt**, on purpose. A cat handed its own
+biography before every answer is a cat that talks about itself.
+
+### Asked *when*, it answers with the day
+
+    — quando ho detto che il build era lento?
+    — Il 30 agosto, 4 giorni fa.
+
+It takes the **most recent** line that matches, not the oldest, and it does not
+quote the line back — that would be answering a different question. Today and
+yesterday are said as words, because *"0 giorni fa"* is not how anybody says it.
+
+### Two rules for the durable file
+
+The handful of standing facts is the only part of the diary a model may add to,
+and 2.12.1 is on record for what happens when it does. Two rules now:
+
+1. **A durable line names the notes it came from, or it is not written.** The
+   citation is the gate as well as the provenance.
+2. **A newer line takes the older one's place** instead of sitting beside it, so
+   a corrected fact does not travel alongside the stale one.
+
+A correction that rewords more than half a line is still not detected — one word
+of three in common is below any threshold that does not also collapse unrelated
+facts. That case is written down in `tests/anchor.m` rather than papered over,
+and [docs/graph.md](docs/graph.md) is the study of whether structured memory
+answers it. The conclusion is that it does, at a price this project should not
+pay yet.
+
+### Fixed
+
+- **"Da quanto non ci parliamo?" always said "un attimo fa."** The stamp was
+  overwritten before the answer read it. Four more of the same kind were found
+  in the same re-reading: *dove sei nato* got the present position, *when*
+  answered with the oldest mention rather than the newest, the met-on stamp was
+  written lazily and wrongly, and the first fix for the first bug made the very
+  first question of a session answer *"un attimo fa"* about itself.
+- A durable line reading *"a well-known thing - said plainly"* was cut in half:
+  the separator is now only a separator when real times stand before it.
+- **A long answer took the follow-up with it.** The three-turn thread has a six
+  hundred character budget, spent newest first so that what falls off the end is
+  the oldest. A single turn longer than that went over the budget on its own and
+  was dropped whole — so after one long answer, *"e quando?"* had nothing to
+  refer to. The newest turn is now cut to fit instead of discarded. Found by a
+  check that had been passing at zero characters, which is to say passing
+  because there was nothing left to measure.
+
 ## 2.14 — 2026-09-02
 
 ### Read this before you upgrade

@@ -750,11 +750,11 @@ static BOOL NekoMemoryWorthKeeping(NSString *word)
 		if([durable length] == 0)
 			return;
 
-		NSArray *all = [self durable:[self durableLines] after:
-			[[durable componentsSeparatedByString:@"\n"]
-				filteredArrayUsingPredicate:
-					[NSPredicate predicateWithFormat:@"length > 0"]]];
-		all = [NSMutableArray arrayWithArray:all];
+		NSMutableArray *all = [NSMutableArray arrayWithArray:
+			[self durable:[self durableLines] after:
+				[[durable componentsSeparatedByString:@"\n"]
+					filteredArrayUsingPredicate:
+						[NSPredicate predicateWithFormat:@"length > 0"]]]];
 
 		/* No silent dropping at forty any more: what falls off the end goes
 		   through -distilIfDue first, and only a ceiling far above that ever

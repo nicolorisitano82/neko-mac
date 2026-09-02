@@ -764,8 +764,19 @@ static const NSTimeInterval NekoHoldToType = 0.5;
 				asked, answered]
 			: [NSString stringWithFormat:@"You said, without being asked: %@",
 				answered];
-		if(spent + [said length] > NekoThreadChars)
-			break;
+		if(spent + [said length] > NekoThreadChars) {
+			/* The newest turn is never dropped for being long. Older ones
+			   still fall off the end — that is what the budget is for — but
+			   the budget was discarding the *most recent* turn whenever it
+			   alone was over six hundred characters, and a follow-up that has
+			   lost its referent entirely is worse than one that reads half of
+			   it. Cut on a character boundary, not in the middle of one. */
+			if([lines count] > 0)
+				break;
+			said = [said substringToIndex:[said
+				rangeOfComposedCharacterSequenceAtIndex:
+					NekoThreadChars].location];
+		}
 		[lines insertObject:said atIndex:0];       /* oldest first, once kept */
 		spent += [said length];
 	}
