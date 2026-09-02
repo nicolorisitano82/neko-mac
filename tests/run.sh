@@ -35,7 +35,32 @@ OBJECTS=$(mktemp -d /tmp/neko-tests.XXXXXX)
 # the real one: that is how "zzq-test" ended up being said out loud, written down
 # as "test zqqmark", and carried into every prompt for a week. See NekoMemory.h.
 MEMORY=$(mktemp -d /tmp/neko-diary.XXXXXX)
-trap 'rm -rf "$OBJECTS" "$MEMORY"; rm -f "$APP/Contents/MacOS/neko-test"' EXIT
+
+# And a models directory the harnesses can actually see. They run unsandboxed and
+# look in ~/Library/Application Support; the application looks inside its
+# container, so the arm of tests/think.m that asks every installed model a
+# question — the one check that would have caught a <think> block reaching a
+# speech bubble — found nothing to ask and measured nothing.
+#
+# Hard links, not copies and not symlinks. Not copies because a model is two or
+# three gigabytes. Not symlinks because -attributesOfItemAtPath: does not follow
+# one, so the store measured the length of a path instead of the length of a
+# model, called it an unfinished download, and reported no models again. A hard
+# link is the same bytes under a second name, and removing it leaves the
+# original alone.
+MODELS=$(mktemp -d /tmp/neko-models.XXXXXX)
+for WHERE in "$HOME/Library/Application Support/Neko/Models" \
+             "$HOME/Library/Containers/com.nekomac.neko/Data/Library/Application Support/Neko/Models"; do
+	[ -d "$WHERE" ] || continue
+	for GGUF in "$WHERE"/*.gguf; do
+		[ -e "$GGUF" ] || continue
+		ln -f "$GGUF" "$MODELS/$(basename "$GGUF")" 2>/dev/null \
+			|| ln -sf "$GGUF" "$MODELS/$(basename "$GGUF")"
+	done
+done
+FOUND=$(ls "$MODELS" 2>/dev/null | wc -l | tr -d ' ')
+echo "$FOUND model(s) linked for the slow arms"
+trap 'rm -rf "$OBJECTS" "$MEMORY" "$MODELS"; rm -f "$APP/Contents/MacOS/neko-test"' EXIT
 
 echo "compiling the app once for all of them…"
 for SOURCE in $SOURCES; do
@@ -88,7 +113,7 @@ for HARNESS in tests/*.m; do
 	# saved, so a test says what it needs without touching what the user chose.
 	if "$APP/Contents/MacOS/neko-test" $SLOW_ARG \
 		-NekoAskEnabled 1 -NekoAskFollowUp 1 -NekoAskProvider apple \
-		-NekoMemoryDirectory "$MEMORY" 2>/dev/null; then
+		-NekoMemoryDirectory "$MEMORY" -NekoModelsDirectory "$MODELS" 2>/dev/null; then
 		:
 	else
 		FAILED="$FAILED $NAME"

@@ -16,6 +16,11 @@
 
 /* Two short sentences, so there is no reason to let it run on. */
 static const int NekoLlamaMaxTokens = 200;
+
+/* Raised for one answer when the provider says the chosen model writes its notes
+   first — see -setTokenBudget: in NekoLocalProvider.h for the measurement. Zero
+   means the ordinary budget. */
+static int NekoLlamaBudget = 0;
 static const int NekoLlamaContext = 4096;
 
 /* How many tokens go into one llama_decode. The prompt is fed in pieces of this
@@ -256,7 +261,8 @@ static const int NekoLlamaBatch = 512;
 			}
 		}
 
-		while(problem == nil && produced < NekoLlamaMaxTokens) {
+		const int allowed = NekoLlamaBudget > 0 ? NekoLlamaBudget : NekoLlamaMaxTokens;
+		while(problem == nil && produced < allowed) {
 			if(stop.load())
 				break;
 
@@ -312,6 +318,11 @@ static const int NekoLlamaBatch = 512;
 		if(partial)
 			Block_release(partial);
 	});
+}
+
+- (void)setTokenBudget:(int)tokens
+{
+	NekoLlamaBudget = tokens;
 }
 
 - (void)cancel

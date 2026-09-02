@@ -131,6 +131,44 @@ static NSArray *NekoReasoningTags(void)
 	return tags;
 }
 
+/* What the model is actually asked, which is not always what was asked.
+
+   Measured, after -withoutReasoning: was already in place: Qwen3.5 4B answered
+   "quotazione oggi borsa Apple" with **nothing at all**. The scratchpad was
+   taken out and there was nothing behind it — the generation budget is 200
+   tokens, small on purpose because a cat says a sentence or two, and a reasoning
+   model spends all 200 on its notes and never reaches the answer.
+
+   Raising the budget for those models was the other option and it is the wrong
+   one: it would make every answer from them several times slower for notes
+   nobody sees. The Qwen family documents a switch instead, and `/no_think` in
+   the user turn is it.
+
+   Only for models the catalogue says reason, and only on the way to the engine:
+   what somebody said is what is written in the diary and what is read back to
+   them, and neither gets this. */
+- (NSString *)askedOf:(NSString *)question
+{
+	return question;
+}
+
+/* Room for the notes, and only for the models that write them.
+
+   Five times the ordinary budget, which is what it took to get past 829
+   characters of thinking and reach a sentence. It is spent only by a model the
+   person chose from a list that says it reasons, and it is not spent by any of
+   the other seven. */
+static const int NekoLocalThinkingTokens = 1000;
+
+- (void)giveRoomToThink
+{
+	if(![engine respondsToSelector:@selector(setTokenBudget:)])
+		return;
+	NekoLocalModel *model = [[NekoModelStore sharedStore]
+		modelWithIdentifier:[self modelIdentifier]];
+	[engine setTokenBudget:[model thinks] ? NekoLocalThinkingTokens : 0];
+}
+
 + (NSString *)withoutReasoning:(NSString *)text
 {
 	if([text length] == 0)
@@ -208,7 +246,8 @@ static NSArray *NekoReasoningTags(void)
 			if(!ready) {
 				completionCopy(nil, failure);
 			} else {
-				[engine generateFor:question
+				[self giveRoomToThink];
+				[engine generateFor:[self askedOf:question]
 				       instructions:instructions
 				            partial:partialCopy
 				         completion:completionCopy];

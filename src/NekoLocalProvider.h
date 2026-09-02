@@ -19,6 +19,18 @@
              partial:(void (^)(NSString *sofar))partial
           completion:(void (^)(NSString *answer, NSError *error))completion;
 - (void)cancel;
+
+@optional
+/* How many tokens the next answer may take. Optional, and asked for only when
+   the catalogue says the chosen model reasons before answering.
+
+   Measured on Qwen3.5 4B: asked "quotazione oggi borsa Apple" it writes 829
+   characters of notes and the default budget of 200 tokens runs out inside them,
+   so the answer never begins. Asked "che ore sono?" it writes `<think></think>`
+   with nothing between and answers in one line. It is not a switchable habit —
+   `/no_think`, which Qwen3 honoured, is gone: this model reasons *about* the
+   token instead of obeying it. So the only thing left is room. */
+- (void)setTokenBudget:(int)tokens;
 @end
 
 

@@ -53,6 +53,20 @@
 	void (^completionBlock)(NSURL *, NSError *);
 }
 
+/* Where the models are, when they are not where they live.
+
+   Not a preference and not in any window, and here for the same reason
+   NekoMemoryDirectoryKey is: a harness runs unsandboxed and looks in
+   ~/Library/Application Support, while the application looks inside its
+   container, so the check that matters most cannot see the file it needs.
+
+   That cost something real. The arm of tests/think.m that asks every installed
+   model a question and refuses any answer carrying a reasoning tag — the one
+   check that would have caught a `<think>` block reaching a speech bubble —
+   found nothing to ask, because the only model on the machine was in the app's
+   container. It reported that honestly and it still measured nothing. */
+extern NSString * const NekoModelsDirectoryKey;
+
 + (NekoModelStore *)sharedStore;
 
 /* What can be downloaded, in ascending size. */

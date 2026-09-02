@@ -1,6 +1,8 @@
 #import "NekoModelStore.h"
 #import "NekoAnswerProvider.h"
 
+NSString * const NekoModelsDirectoryKey = @"NekoModelsDirectory";
+
 @implementation NekoLocalModel
 
 - (id)initWithIdentifier:(NSString *)anIdentifier
@@ -139,7 +141,7 @@
 		[[[NekoLocalModel alloc]
 			initWithIdentifier:@"qwen3.5-4b-q4"
 			              name:@"Qwen3.5 4B"
-			            detail:NSLocalizedString(@"2.7 GB — the most recent, and the largest worth keeping on a laptop", nil)
+			            detail:NSLocalizedString(@"2.7 GB — the most recent, and it reasons at such length that it often never reaches the answer", nil)
 			               url:[NSURL URLWithString:@"https://huggingface.co/unsloth/Qwen3.5-4B-GGUF/resolve/main/Qwen3.5-4B-Q4_K_M.gguf"]
 			             bytes:2740937888LL
 			            thinks:YES] autorelease],
@@ -213,6 +215,12 @@
 		NSApplicationSupportDirectory, NSUserDomainMask, YES);
 	NSString *path = [[[support firstObject] stringByAppendingPathComponent:@"Neko"]
 		stringByAppendingPathComponent:@"Models"];
+	/* Somewhere else, if a harness said so. See NekoModelStore.h for what not
+	   having this cost. */
+	NSString *elsewhere = [[NSUserDefaults standardUserDefaults]
+		stringForKey:NekoModelsDirectoryKey];
+	if([elsewhere length] > 0)
+		path = [elsewhere stringByExpandingTildeInPath];
 	[[NSFileManager defaultManager] createDirectoryAtPath:path
 	                         withIntermediateDirectories:YES
 	                                          attributes:nil
