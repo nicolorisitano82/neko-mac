@@ -671,7 +671,14 @@ belief the user had stated, with MMLU and GSM8K untouched. Then: the Big Five do
 them failure modes, one called *Artificial* with *intrusive* and *annoying* in it;
 expression follows an **inverted U**; and matching the user's personality, the
 field's most-cited advice, keeps failing to replicate. The document ends with the
-experiment this application has never run on itself, and
+experiment this application had never run on itself — now run, in
+[docs/personality-roadmap.md §3b](docs/personality-roadmap.md): the accuracy cost
+**did not reproduce** here, the choice of character turns out to be **free**, and
+the cheap fix was measured and thrown away, because the sentence that stopped the
+cat agreeing with false premises made it deny **fifteen of twenty true ones** —
+*"No, Verga non ha scritto I Malavoglia. È stato scritto da Giovanni Verga."* What
+is left is the number that matters: on the engine that actually answers here, the
+shipped prompt agrees with a false premise **8 times out of 20**. And
 [docs/personality-roadmap.md](docs/personality-roadmap.md) puts the ideas in the
 order the evidence gives rather than the order the papers rank — which inverts
 the list, because the piece with the best-evidenced value is the one this Mac's

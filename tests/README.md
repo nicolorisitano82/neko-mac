@@ -57,6 +57,7 @@ again afterwards.
 | `sums.m` | the sums and the conversions, and what three models did with the same questions |
 | `words.m` | learning that two words are the same word, and that an invented one cannot get in |
 | `loop.m` | that the cat cannot end up talking to itself — which it did, for a week |
+| `price.m` | what the character costs: accuracy, and agreeing with something that is not so |
 
 ## Two things about writing more of these
 
