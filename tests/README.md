@@ -59,6 +59,7 @@ again afterwards.
 | `loop.m` | that the cat cannot end up talking to itself — which it did, for a week |
 | `price.m` | what the character costs: accuracy, and agreeing with something that is not so |
 | `thin.m` | a remark that reads the clock back, blames, or explains something it never saw |
+| `anchor.m` | that a durable line names the notes it came from, and is refused when it cannot |
 | `edge.m` | where the cat's edges are, that they have names, and that they move when a folder is handed over |
 | `itself.m` | what the cat knows about its own situation — where on the screen, since when, and how long you have been quiet |
 | `update.m` | which version is newer, which asset to fetch, and the one step in that sequence a harness cannot settle |

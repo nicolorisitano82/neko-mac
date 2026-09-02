@@ -190,6 +190,16 @@ maps onto a file:
 > and audit and rollback so that a degrading update can be identified and
 > reverted."
 
+> **Items 1 and 2 are built, and they turned out to be the same change.** ✅ The
+> reflection is asked to put the times of the notes each line came from in front
+> of it, and a line whose times are not in that day is refused. The citation is
+> the provenance *and* the gate, and it works across languages — the diary is in
+> Italian and the lesson often is not, so a word-overlap gate would have measured
+> nothing. Stored as `day ⇥ times ⇥ lesson`; a model is shown the day and the
+> lesson and never the times. Measured on the engine that answers here: three
+> lines from a staged day, **three of three anchored**, so the gate is a filter
+> and not a wall. What follows is what was written before it was built.
+
 **1. A validation gate on a durable line.** `NekoMemory`'s reflection writes what
 the model returns, trimmed and de-duplicated, and that is all. The gate that is
 missing is the one `NekoSense` already applies to remarks: **a durable line must

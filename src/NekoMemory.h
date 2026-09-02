@@ -147,6 +147,10 @@ extern NSString * const NekoMemoryDirectoryKey;
 
    Nothing here is a fact about the person. It is what the cat knows about its
    own situation, which is the subject of docs/self.md. */
+/* A durable line without its citation — the day and the lesson, which is all a
+   model should be given. The times are for a person and for tools/diary.py. */
+- (NSString *)durableForPrompt:(NSString *)line;
+
 - (NSDate *)metOn;
 - (NSDate *)lastHeard;
 

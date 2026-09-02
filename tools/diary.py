@@ -100,6 +100,12 @@ def read_day(path):
 
 
 def read_durable(path):
+    """day, the times it was distilled from, and the lesson.
+
+    Three fields since the citation was added: a durable line that could not
+    point at a note in its own day is now refused before it is written, so the
+    times here are a fact rather than an inference. Two fields means a line from
+    before that, and those are counted separately."""
     out = []
     if not os.path.exists(path):
         return out
@@ -109,8 +115,12 @@ def read_durable(path):
             if not line:
                 continue
             parts = line.split("\t")
-            out.append((parts[0], "\t".join(parts[1:])) if len(parts) >= 2
-                       else ("", line))
+            if len(parts) >= 3:
+                out.append((parts[0], parts[1], "\t".join(parts[2:])))
+            elif len(parts) == 2:
+                out.append((parts[0], "", parts[1]))
+            else:
+                out.append(("", "", line))
     return out
 
 
@@ -178,11 +188,11 @@ def main():
     standing = read_durable(os.path.join(args.dir, "standing.txt"))
     if not durable and not standing:
         print("  none")
-    body = "\n".join(text for _, text in durable + standing)
+    body = "\n".join(text for _, _, text in durable + standing)
     print("  %d dated, %d standing, %d characters of every prompt"
           % (len(durable), len(standing), len(body)))
 
-    facts = [text for _, text in durable + standing]
+    facts = [text for _, _, text in durable + standing]
     factGroups = collapse(facts)
     if facts:
         print("  %d lines, %d distinct facts — the prompt spends %d%% of that "
@@ -202,25 +212,33 @@ def main():
             saidWords[day] |= words(line)
 
     fromPerson = fromItself = fromNowhere = 0
-    for day, text in durable:
-        mine = words(text)
-        theirs = heardWords.get(day, set())
-        own = saidWords.get(day, set())
-        where = ("the person or the Mac" if mine & theirs
-                 else "its own remarks" if mine & own
-                 else "nowhere in that day")
-        if mine & theirs:
+    cited = 0
+    for day, times, text in durable:
+        if times:
+            # Said rather than guessed: the line names the notes it came from,
+            # and those were checked against the day before it was written.
+            cited += 1
+            where = "cited: " + times
+        else:
+            mine = words(text)
+            theirs = heardWords.get(day, set())
+            own = saidWords.get(day, set())
+            where = ("the person or the Mac" if mine & theirs
+                     else "its own remarks" if mine & own
+                     else "nowhere in that day")
+        if times or words(text) & heardWords.get(day, set()):
             fromPerson += 1
-        elif mine & own:
+        elif words(text) & saidWords.get(day, set()):
             fromItself += 1
         else:
             fromNowhere += 1
         if args.lines:
-            print("  %-12s %-22s %s" % (day, where, text[:70]))
+            print("  %-12s %-24s %s" % (day, where, text[:66]))
     if not args.lines and durable:
         print("  (use --lines to see them one by one)")
     if durable:
-        print("\n  %d traceable to the person or the Mac, %d to the cat's own "
+        print("\n  %d of %d name the notes they came from" % (cited, len(durable)))
+        print("  %d traceable to the person or the Mac, %d to the cat's own "
               "remarks, %d to nothing in that day"
               % (fromPerson, fromItself, fromNowhere))
 
