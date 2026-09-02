@@ -83,4 +83,10 @@ extern NSString * const NekoUpdateDidChangeNotification;
 /* This build, from Info.plist. */
 + (NSString *)runningVersion;
 
+/* What a GitHub release answer amounts to: Version, Bytes, Download and Notes,
+   or nil when it is not a release, has no disk image in it, or is not newer than
+   this build. Separate from the request so that it can be measured against a
+   staged answer instead of against the network. */
++ (NSDictionary *)releaseFrom:(NSData *)json;
+
 @end

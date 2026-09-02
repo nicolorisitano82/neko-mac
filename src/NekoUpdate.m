@@ -137,65 +137,84 @@ static NSString * const NekoUpdateSaidKey  = @"NekoUpdateAnnounced";
 	}] resume];
 }
 
++ (NSDictionary *)releaseFrom:(NSData *)json
+{
+	NSDictionary *release = nil;
+	if([json length] > 0)
+		release = [NSJSONSerialization JSONObjectWithData:json options:0 error:NULL];
+	if(![release isKindOfClass:[NSDictionary class]])
+		return nil;
+
+	NSString *tag = [release objectForKey:@"tag_name"];
+	if(![tag isKindOfClass:[NSString class]])
+		return nil;
+	if(![self version:tag isNewerThan:[self runningVersion]])
+		return nil;
+
+	/* The disk image, and only that: a release carries source archives too and
+	   they are not what anybody wants here. */
+	NSString *where = nil;
+	long long size = 0;
+	NSEnumerator *e = [[release objectForKey:@"assets"] objectEnumerator];
+	NSDictionary *asset;
+	while((asset = [e nextObject]) != nil) {
+		if(![asset isKindOfClass:[NSDictionary class]])
+			continue;
+		NSString *name = [asset objectForKey:@"name"];
+		if(![name isKindOfClass:[NSString class]]
+		   || ![[name pathExtension] isEqualToString:@"dmg"])
+			continue;
+		NSString *address = [asset objectForKey:@"browser_download_url"];
+		if([address isKindOfClass:[NSString class]]) {
+			where = address;
+			size = [[asset objectForKey:@"size"] longLongValue];
+		}
+		break;
+	}
+	if([where length] == 0)
+		return nil;              /* a release with nothing to install */
+
+	NSCharacterSet *strip = [NSCharacterSet characterSetWithCharactersInString:@"vV "];
+	NSString *page = [release objectForKey:@"html_url"];
+	NSMutableDictionary *found = [NSMutableDictionary dictionary];
+	[found setObject:[tag stringByTrimmingCharactersInSet:strip] forKey:@"Version"];
+	[found setObject:[NSURL URLWithString:where] forKey:@"Download"];
+	[found setObject:[NSNumber numberWithLongLong:size] forKey:@"Bytes"];
+	if([page isKindOfClass:[NSString class]])
+		[found setObject:page forKey:@"Notes"];
+	return found;
+}
+
 - (void)heard:(NSData *)data error:(NSError *)error outLoud:(BOOL)outLoud
 {
 	checking = NO;
 	[[NSUserDefaults standardUserDefaults] setObject:[NSDate date]
 	                                         forKey:NekoUpdateAskedKey];
 
-	NSDictionary *release = nil;
-	if([data length] > 0)
-		release = [NSJSONSerialization JSONObjectWithData:data options:0 error:NULL];
-	if(![release isKindOfClass:[NSDictionary class]]) {
-		if(outLoud)
-			[self say:NekoUpdateLocalized(@"I could not ask about new versions just now.")];
-		[[NSNotificationCenter defaultCenter]
-			postNotificationName:NekoUpdateDidChangeNotification object:self];
-		return;
-	}
+	NSDictionary *found = [NekoUpdate releaseFrom:data];
 
-	NSString *tag = [release objectForKey:@"tag_name"];
-	NSString *page = [release objectForKey:@"html_url"];
-
-	/* The disk image, and only that: a release carries source archives too and
-	   they are not what anybody wants here. */
-	NSURL *image = nil;
-	long long size = 0;
-	NSEnumerator *e = [[release objectForKey:@"assets"] objectEnumerator];
-	NSDictionary *asset;
-	while((asset = [e nextObject]) != nil) {
-		NSString *name = [asset objectForKey:@"name"];
-		if(![name isKindOfClass:[NSString class]] || ![name hasSuffix:@".dmg"])
-			continue;
-		NSString *where = [asset objectForKey:@"browser_download_url"];
-		if([where isKindOfClass:[NSString class]]) {
-			image = [NSURL URLWithString:where];
-			size = [[asset objectForKey:@"size"] longLongValue];
-		}
-		break;
-	}
-
-	if(![NekoUpdate version:tag isNewerThan:[NekoUpdate runningVersion]] || image == nil) {
+	if(found == nil) {
 		[version release]; version = nil;
 		[download release]; download = nil;
 		[notes release]; notes = nil;
 		if(outLoud)
-			[self say:[NSString stringWithFormat:
-				NekoUpdateLocalized(@"This is the newest one: %@."),
-				[NekoUpdate runningVersion]]];
+			[self say:[data length] > 0
+				? [NSString stringWithFormat:
+					NekoUpdateLocalized(@"This is the newest one: %@."),
+					[NekoUpdate runningVersion]]
+				: NekoUpdateLocalized(@"I could not ask about new versions just now.")];
 		[[NSNotificationCenter defaultCenter]
 			postNotificationName:NekoUpdateDidChangeNotification object:self];
 		return;
 	}
 
-	NSCharacterSet *strip = [NSCharacterSet characterSetWithCharactersInString:@"vV "];
 	[version release];
-	version = [[tag stringByTrimmingCharactersInSet:strip] copy];
+	version = [[found objectForKey:@"Version"] copy];
 	[download release];
-	download = [image retain];
+	download = [[found objectForKey:@"Download"] retain];
 	[notes release];
-	notes = [page copy];
-	bytes = size;
+	notes = [[found objectForKey:@"Notes"] copy];
+	bytes = [[found objectForKey:@"Bytes"] longLongValue];
 
 	[[NSNotificationCenter defaultCenter]
 		postNotificationName:NekoUpdateDidChangeNotification object:self];
@@ -387,6 +406,13 @@ static NSString * const NekoUpdateSaidKey  = @"NekoUpdateAnnounced";
 	}
 
 	if(![[NSWorkspace sharedWorkspace] openURL:image]) {
+		/* If the image cannot be opened — the one step in this whole sequence
+		   that could not be measured without a person, because it depends on
+		   another process being handed access to a file inside this one's
+		   container — then at least show where it is instead of leaving somebody
+		   with a download they cannot find. */
+		[[NSWorkspace sharedWorkspace] selectFile:[image path]
+		                 inFileViewerRootedAtPath:@""];
 		[self say:NekoUpdateLocalized(@"I could not open the disk image.")];
 		return;
 	}
