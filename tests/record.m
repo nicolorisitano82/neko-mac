@@ -130,6 +130,41 @@ int main(void)
 			clean = NO;
 	ok(clean, @"the quotation carries no opinion about who was right", nil);
 
+	printf("\n--- asked *when*, it answers with the day and how long ago ---\n");
+
+	/* The same diary, read for a different answer. A date is a fact about the
+	   calendar; "four days ago" is a fact about the two of you, and it is a
+	   subtraction rather than something a model works out — docs/self.md §4. */
+	ok([NekoRecord asksWhen:@"quando te l'ho detto della riunione?"],
+		@"a question about when is recognised as one", nil);
+	ok(![NekoRecord asksWhen:@"cosa avevo detto della riunione?"],
+		@"and a question about what is not", nil);
+	ok([NekoRecord wantedFor:@"quando te l'ho detto della riunione?"],
+		@"both kinds are answered from the diary", nil);
+
+	NSString *whenSaid = [NekoRecord answerFor:@"quando te l'ho detto della riunione?"];
+	printf("      %s\n", [(whenSaid ?: @"(nothing)") UTF8String]);
+	ok(whenSaid != nil && [whenSaid rangeOfString:@"4"].location != NSNotFound,
+		@"four days ago is said as four days", whenSaid ?: @"(nothing)");
+	ok(whenSaid != nil
+	   && [whenSaid rangeOfString:@"giovedì"].location == NSNotFound
+	   && [whenSaid rangeOfString:@"«"].location == NSNotFound,
+		@"and the line itself is not quoted: that answers the other question",
+		whenSaid ?: @"(nothing)");
+
+	/* Today and yesterday are said as words, because "0 giorni fa" is not how
+	   anybody says it. */
+	stage(memory, 1, @"09:00\tyou\til dentista è mercoledì mattina\n");
+	NSString *recent = [NekoRecord answerFor:@"quando te l'ho detto del dentista?"];
+	printf("      %s\n", [(recent ?: @"(nothing)") UTF8String]);
+	ok(recent != nil
+	   && [recent isEqualToString:NSLocalizedString(@"Yesterday.", nil)],
+		@"yesterday is a word, not a number", recent ?: @"(nothing)");
+
+	ok([[NekoRecord answerFor:@"quando te l'ho detto del pianoforte?"]
+		isEqualToString:NSLocalizedString(@"I have nothing written down about that.", nil)],
+		@"and nothing written down is still an answer, not a date", nil);
+
 	printf("\n--- and the half that is the work: what it is not asked ---\n");
 
 	NSArray *not = [NSArray arrayWithObjects:

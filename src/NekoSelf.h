@@ -76,4 +76,10 @@
 + (NSInteger)daysHere;
 + (NSString *)howLongSinceHeard;        /* nil when nothing was ever heard */
 
+/* And the mirror of it: how long since the cat itself said something unprompted.
+   The stamp is NekoAsk's, kept in the defaults so that quitting is not a way of
+   resetting the quiet period — which means it is also the one number here that
+   survives the application being closed and opened again. */
++ (NSString *)howLongSinceSpoke;        /* nil when it has never spoken */
+
 @end

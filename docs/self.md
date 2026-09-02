@@ -245,11 +245,17 @@ long since you last asked it anything. Computed, in code, from timestamps and a
 window frame. Half a day, no model, and it is the difference between a program
 that reports a desktop and one that is somewhere.
 
-**Second — time relative to itself.** `NekoClock` counts days between two dates
-for the person; the same machinery pointed inward gives *"non ci parliamo da tre
-giorni"*, *"me l'hai chiesto giovedì"*, *"sono qui da quarantatré giorni"*. The
-diary has the timestamps; `NekoRecord` already quotes a line **with the day it was
-written**, which is the hard half. A day.
+**Second — time relative to itself.** ✅ *Built. Half of it arrived with the
+first piece; what remained was the difference between* what *and* when. Asked
+*"cosa avevo detto"* the diary is quoted with the day in front of it; asked
+*"quando te l'ho detto"* the answer is **the day and how long ago** — *"Il 30
+agosto, 4 giorni fa"* — and nothing else, because quoting the line would be
+answering the other question. Today and yesterday are said as words, since "0
+giorni fa" is not how anybody says it. And the mirror of *"da quanto non ci
+parliamo"* is now there too: *"quando hai parlato l'ultima volta?"*, from the
+stamp `NekoAsk` keeps in the defaults so that quitting is not a way of resetting
+the quiet period. A date is a fact about the calendar; four days ago is a fact
+about the two of you.*
 
 **Third — a boundary of self worth naming.** `NekoUnseen` is already a list of
 what lies outside it. KAPRO's distinction says the useful thing is not just

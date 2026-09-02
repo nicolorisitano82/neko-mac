@@ -195,6 +195,34 @@ int main(void)
 		@"and three days later reads as three days, not seventy-two hours",
 		awhile ?: @"(nothing)");
 
+	printf("\n--- and the mirror: when it last spoke ---\n");
+
+	id spokeBefore = [[[settings objectForKey:@"NekoLastUnprompted"] copy] autorelease];
+	[settings removeObjectForKey:@"NekoLastUnprompted"];
+	ok([NekoSelf howLongSinceSpoke] == nil,
+		@"never having spoken is nothing to subtract", nil);
+	NSString *neverSpoke = [NekoSelf wantedFor:@"quando hai parlato l'ultima volta?"];
+	ok([neverSpoke length] > 0, @"and the question still gets an answer", neverSpoke);
+
+	[settings setObject:[NSDate dateWithTimeIntervalSinceNow:-2.0 * 86400.0]
+	             forKey:@"NekoLastUnprompted"];
+	NSString *spoke = [NekoSelf wantedFor:@"quando hai parlato l'ultima volta?"];
+	printf("      %s\n", [(spoke ?: @"(nothing)") UTF8String]);
+	ok(spoke != nil && [spoke rangeOfString:@"2"].location != NSNotFound,
+		@"two days ago is said as two days", spoke ?: @"(nothing)");
+
+	/* The two are different questions and must not answer each other. */
+	[settings setObject:[NSDate dateWithTimeIntervalSinceNow:-600.0]
+	             forKey:@"NekoMemoryLastHeard"];
+	ok(![[NekoSelf wantedFor:@"quando hai parlato l'ultima volta?"]
+		isEqualToString:[NekoSelf wantedFor:@"da quanto non ci parliamo?"]],
+		@"and what it said is not what you said", nil);
+
+	if(spokeBefore != nil)
+		[settings setObject:spokeBefore forKey:@"NekoLastUnprompted"];
+	else
+		[settings removeObjectForKey:@"NekoLastUnprompted"];
+
 	printf("\n--- and the half that is the work: what it is not asked ---\n");
 
 	NSArray *not = [NSArray arrayWithObjects:

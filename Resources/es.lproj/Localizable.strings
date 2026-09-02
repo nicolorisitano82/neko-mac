@@ -611,3 +611,9 @@
 /* And where the Mac itself is. */
 "The Mac is in %@." = "El Mac está en %@.";
 "The Mac is somewhere in %@." = "El Mac está en algún lugar de %@.";
+
+/* When, rather than what. */
+"Today." = "Hoy.";
+"Yesterday." = "Ayer.";
+"On %@, %ld days ago." = "El %@, hace %ld días.";
+"I have not said anything yet." = "Todavía no he dicho nada.";

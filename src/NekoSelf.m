@@ -4,6 +4,7 @@
 #import "NekoMemory.h"
 #import "NekoWhen.h"
 #import "NekoPlace.h"
+#import "NekoAsk.h"
 
 #define NekoSelfLocalized(key) NSLocalizedStringFromTable(key, @"Localizable", nil)
 
@@ -153,6 +154,19 @@ static BOOL NekoSelfAsks(NSString *text, NSArray *phrases)
 		[NekoWhen describe:ago]];
 }
 
++ (NSString *)howLongSinceSpoke
+{
+	NSDate *last = [[NSUserDefaults standardUserDefaults]
+		objectForKey:NekoLastUnpromptedKey];
+	if(![last isKindOfClass:[NSDate class]])
+		return nil;
+	NSTimeInterval ago = -[last timeIntervalSinceNow];
+	if(ago < 60.0)
+		return NekoSelfLocalized(@"A moment ago.");
+	return [NSString stringWithFormat:NekoSelfLocalized(@"%@ ago."),
+		[NekoWhen describe:ago]];
+}
+
 #pragma mark
 
 + (NSString *)wantedFor:(NSString *)question
@@ -190,6 +204,18 @@ static BOOL NekoSelfAsks(NSString *text, NSArray *phrases)
 			@"cuánto hace que no hablamos", @"cuando hablamos", nil])) {
 		NSString *ago = [self howLongSinceHeard];
 		return ago ?: NekoSelfLocalized(@"This is the first thing you have asked me.");
+	}
+
+	/* And when it last said something of its own accord, which is the mirror of
+	   the question above: one is about you, this one is about it. */
+	if(NekoSelfAsks(text, [NSArray arrayWithObjects:
+			@"quando hai parlato", @"quando hai detto qualcosa",
+			@"da quanto non parli", @"quando hai parlato l'ultima volta",
+			@"l'ultima volta che hai parlato",
+			@"when did you last speak", @"when did you last say something",
+			@"quand as-tu parlé", @"cuándo hablaste", nil])) {
+		NSString *ago = [self howLongSinceSpoke];
+		return ago ?: NekoSelfLocalized(@"I have not said anything yet.");
 	}
 
 	/* How long it has been here, which is also how long you have known it. */

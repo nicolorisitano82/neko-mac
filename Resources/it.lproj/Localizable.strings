@@ -611,3 +611,9 @@
 /* And where the Mac itself is. */
 "The Mac is in %@." = "Il Mac è a %@.";
 "The Mac is somewhere in %@." = "Il Mac è da qualche parte in %@.";
+
+/* When, rather than what. */
+"Today." = "Oggi.";
+"Yesterday." = "Ieri.";
+"On %@, %ld days ago." = "Il %@, %ld giorni fa.";
+"I have not said anything yet." = "Non ho ancora detto niente.";

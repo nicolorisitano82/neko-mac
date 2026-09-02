@@ -40,8 +40,22 @@
      in `NekoAsk`, where the turns are. */
 @interface NekoRecord : NSObject
 
-/* Whether the sentence is asking what somebody said or wrote before. */
+/* Whether the sentence is asking what somebody said or wrote before — or
+   **when** they did, which is the same diary read for a different answer.
+
+   The two are worth telling apart. Asked *what* it quotes the line and puts the
+   day in front of it; asked *when* it answers with the day and **how long ago**,
+   and nothing else. The elapsed part is the addition: a date is a fact about the
+   calendar, and "six days ago" is a fact about the two of you. docs/self.md §4
+   is why that has to be a subtraction rather than something a model works out —
+   on the largest temporal benchmark, relating two times drops the same model
+   from strong to about half, and this application measured three of its own at
+   one of nine with the date already in the prompt. */
 + (BOOL)wantedFor:(NSString *)question;
+
+/* Whether that question was a *when*. Exposed because the difference is the
+   whole of this addition and a harness should be able to see it. */
++ (BOOL)asksWhen:(NSString *)question;
 
 /* The lines, quoted with the day they were written — or the sentence that says
    there are none. Never nil once -wantedFor: has said yes. */
