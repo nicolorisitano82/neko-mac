@@ -750,28 +750,12 @@ static BOOL NekoMemoryWorthKeeping(NSString *word)
 		if([durable length] == 0)
 			return;
 
-		NSMutableArray *all = [NSMutableArray arrayWithArray:[self durableLines]];
-		NSEnumerator *fresh = [[[durable componentsSeparatedByString:@"\n"]
-			filteredArrayUsingPredicate:[NSPredicate predicateWithFormat:@"length > 0"]]
-			objectEnumerator];
-		NSString *fromToday;
-		while((fromToday = [fresh nextObject]) != nil) {
-			/* "build slow because project big" and "project large, build slow"
-			   are one fact, and the prompt has room for a thousand characters.
-			   Measured before this existed: twenty-one durable lines carrying
-			   seventeen distinct facts, five days of the same one. The text is
-			   compared without its date, which is the only part guaranteed to
-			   differ. */
-			NSString *text = [[fromToday componentsSeparatedByString:@"\t"] lastObject];
-			NSMutableArray *saidBefore = [NSMutableArray array];
-			NSEnumerator *had = [all objectEnumerator];
-			NSString *older;
-			while((older = [had nextObject]) != nil)
-				[saidBefore addObject:[[older componentsSeparatedByString:@"\t"] lastObject]];
-			if([self line:text saysTheSameAsAnyOf:saidBefore])
-				continue;
-			[all addObject:fromToday];
-		}
+		NSArray *all = [self durable:[self durableLines] after:
+			[[durable componentsSeparatedByString:@"\n"]
+				filteredArrayUsingPredicate:
+					[NSPredicate predicateWithFormat:@"length > 0"]]];
+		all = [NSMutableArray arrayWithArray:all];
+
 		/* No silent dropping at forty any more: what falls off the end goes
 		   through -distilIfDue first, and only a ceiling far above that ever
 		   removes a line nobody has read. */
@@ -989,6 +973,49 @@ static BOOL NekoMemoryWorthKeeping(NSString *word)
 		   && ![name isEqualToString:@"standing.txt"])
 			[days addObject:name];
 	return [days sortedArrayUsingSelector:@selector(compare:)];
+}
+
+/* Yesterday's lines and today's, merged — and **the newer one wins**.
+
+   This used to keep the older and discard the newer, which is how a fix for one
+   thing became the failure the survey in docs/self-2.md names next. Deduplicating
+   durable lines was added in 2.12.1 because five days had produced five wordings
+   of "the build is slow"; the word-overlap rule that catches those cannot tell a
+   restatement from a correction, so "the release slipped to Monday" looked like
+   "the release ships on Friday" and was thrown away, leaving the stale one in
+   every prompt.
+
+   Their phrasing for the invariant is exact: a superseded fact should **lose
+   authority rather than linger**. So the later line supersedes: the older ones it
+   matches are removed, and it takes their place at the end. A restatement is
+   harmless either way; a correction now lands.
+
+   What this does not do is judge whether the two disagree. It does not need to:
+   for two lines about the same thing, written on different days, the later one is
+   the one to keep whichever it is. */
+- (NSArray *)durable:(NSArray *)existing after:(NSArray *)fresh
+{
+	NSMutableArray *all = [NSMutableArray arrayWithArray:existing];
+	NSEnumerator *e = [fresh objectEnumerator];
+	NSString *line;
+	while((line = [e nextObject]) != nil) {
+		NSString *text = [[line componentsSeparatedByString:@"\t"] lastObject];
+		if([text length] == 0)
+			continue;
+
+		NSMutableIndexSet *superseded = [NSMutableIndexSet indexSet];
+		NSUInteger i;
+		for(i = 0; i < [all count]; i++) {
+			NSString *older = [[[all objectAtIndex:i]
+				componentsSeparatedByString:@"\t"] lastObject];
+			if([self line:text saysTheSameAsAnyOf:
+					[NSArray arrayWithObject:older ?: @""]])
+				[superseded addIndex:i];
+		}
+		[all removeObjectsAtIndexes:superseded];
+		[all addObject:line];
+	}
+	return all;
 }
 
 /* Where a citation ends, or NSNotFound. The separator only counts when what

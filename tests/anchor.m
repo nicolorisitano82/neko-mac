@@ -99,6 +99,66 @@ int main(void)
 		isEqualToString:@"2026-08-27\tan older line, from before this"],
 		@"and a line written before any of this is left alone", nil);
 
+	printf("\n--- a restatement collapses, and the newer one is the one kept ---\n");
+
+	/* The third item of docs/self-2.md's work order. Deduplicating durable lines
+	   was added in 2.12.1 because five days had produced five wordings of "the
+	   build is slow" — and it kept the **older** one, discarding the newer. For a
+	   restatement that hardly matters; for anything that has moved on it is the
+	   failure the survey names, a superseded fact lingering rather than losing
+	   authority. The later line takes the earlier one's place now. */
+	NSArray *had = [NSArray arrayWithObjects:
+		@"2026-08-28\t09:00\tbuild slow because project big",
+		@"2026-08-28\t10:00\tthey prefer to leave the changelog until last", nil];
+	NSArray *now = [NSArray arrayWithObject:
+		@"2026-09-02\t11:00\tproject large, build slow"];
+	NSArray *after = [memory durable:had after:now];
+	NSString *joined = [after componentsJoinedByString:@" | "];
+	printf("      %s\n", [joined UTF8String]);
+
+	ok([after count] == 2, @"two wordings of one fact stay one line",
+		[NSString stringWithFormat:@"%lu line(s)", (unsigned long)[after count]]);
+	ok([joined rangeOfString:@"2026-09-02"].location != NSNotFound
+	   && [joined rangeOfString:@"2026-08-28\t09:00"].location == NSNotFound,
+		@"and it is the newer one that stays, with the newer day on it", nil);
+	ok([joined rangeOfString:@"changelog"].location != NSNotFound,
+		@"while a line about something else is untouched", nil);
+	ok([[after lastObject] rangeOfString:@"build slow"].location != NSNotFound,
+		@"the newest goes last, where the ageing expects it", nil);
+
+	NSArray *unrelated = [memory durable:after after:[NSArray arrayWithObject:
+		@"2026-09-03\t08:00\tthe dentist is on Wednesday morning"]];
+	ok([unrelated count] == 3, @"and something genuinely new is added",
+		[NSString stringWithFormat:@"%lu line(s)", (unsigned long)[unrelated count]]);
+
+	printf("\n--- and the case this does not solve, measured rather than claimed ---\n");
+
+	/* A correction that changes one word is **not** caught, and the reason is
+	   arithmetic: -line:saysTheSameAsAnyOf: wants half the words of the shorter
+	   line to be shared. "the release ships on Friday" and "the release slipped to
+	   Monday" share one word of three. So both survive, and the stale one is in
+	   every prompt beside the true one.
+
+	   The rule that would catch it — two lines sharing their rarest word, the
+	   newer wins — was considered and not built, because in a diary about
+	   software "release" is not rare and every line about a release would collapse
+	   into the last one. docs/self-2.md said this case needed measuring before
+	   building; this is the measurement, and it says the cheap mechanism is not
+	   available. */
+	NSArray *corrected = [memory durable:
+		[NSArray arrayWithObject:@"2026-08-28\t09:00\tthe release ships on Friday"]
+		after:[NSArray arrayWithObject:
+			@"2026-09-02\t11:00\tthe release slipped to Monday"]];
+	printf("      %s\n", [[corrected componentsJoinedByString:@" | "] UTF8String]);
+	ok([corrected count] == 2,
+		@"a correction is added beside the thing it corrects, not instead of it",
+		[NSString stringWithFormat:@"%lu line(s) — this is the open case",
+			(unsigned long)[corrected count]]);
+	notMeasured(@"so a superseded fact still lingers when the correction reworded "
+	            @"more than half of it. What is fixed is the restatement, which is "
+	            @"what the real diary actually accumulated; what is not is the "
+	            @"contradiction, and no cheap rule was found for it");
+
 	if(![[NSUserDefaults standardUserDefaults] boolForKey:@"slow"]) {
 		notMeasured(@"whether a real engine complies with the format — the arm "
 		            @"that decides whether this gate is a filter or a wall — "

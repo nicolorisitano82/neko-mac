@@ -215,11 +215,26 @@ lookup. It also makes `tools/diary.py`'s traceability column a fact rather than 
 inference. A day.
 
 **3. Recency and authority, so a superseded line loses force rather than
-lingering.** The survey's phrasing is exact: *lose authority rather than linger*.
-A durable line contradicted by a newer one should be demoted rather than kept
-beside it. `NekoMemory` already has `-line:saysTheSameAsAnyOf:` for the identical
-case; the interesting case is the contradictory one, and that is harder and
-probably needs measuring before building.
+lingering.** ⚠️ *Half built, and the measurement said which half.*
+
+*The half that is fixed: the deduplication added in 2.12.1 kept the **older**
+line and discarded the newer. For five wordings of "the build is slow" that
+hardly matters; for anything that has moved on it is precisely the failure named
+here. The later line takes the earlier one's place now, and the merge is its own
+method so it can be measured without an engine — which is how the defect was
+found.*
+
+*The half that is not, and why. A correction that rewords more than half of a
+line is not detected as related at all: "the release ships on Friday" and "the
+release slipped to Monday" share one word of three, and
+`-line:saysTheSameAsAnyOf:` wants half of the shorter. So both survive and the
+stale one is in every prompt beside the true one. The cheap rule that would catch
+it — two lines sharing their rarest word, the newer wins — was considered and not
+built: in a diary about software "release" is not rare, and every line about a
+release would collapse into the last one. This section said the contradictory case
+needed measuring before building; the measurement says no cheap mechanism is
+available, and `tests/anchor.m` carries that as a recorded open case rather than
+as a passing test.*
 
 **And one that is not in their list but follows from §4:** decay per kind, not per
 age (§2, Mutability).

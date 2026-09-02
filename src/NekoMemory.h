@@ -147,6 +147,13 @@ extern NSString * const NekoMemoryDirectoryKey;
 
    Nothing here is a fact about the person. It is what the cat knows about its
    own situation, which is the subject of docs/self.md. */
+/* Yesterday's durable lines and today's, merged with **the newer winning**: a
+   line that says what an older one says takes its place rather than being
+   dropped, so a correction is not mistaken for a repetition. Its own method
+   because it can then be measured without an engine, which is how the defect it
+   fixes was found. */
+- (NSArray *)durable:(NSArray *)existing after:(NSArray *)fresh;
+
 /* A durable line without its citation — the day and the lesson, which is all a
    model should be given. The times are for a person and for tools/diary.py. */
 - (NSString *)durableForPrompt:(NSString *)line;
