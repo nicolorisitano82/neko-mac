@@ -230,7 +230,9 @@ static const NSTimeInterval NekoAdvisorTyping = 3.0;
 		[lastSubject release];
 		lastSubject = [subject retain];
 
-		NSString *problem = [NekoSense problemWith:line];
+		/* Judged against what it could actually see, which is the prompt it
+		   was given: the desktop summary and the diary that went with it. */
+		NSString *problem = [NekoSense problemWith:line seeing:context];
 		if(problem != nil && ![problem isEqualToString:@"nothing to say"])
 			NSLog(@"Neko: a suggestion was thrown away — %@: %@", problem, line);
 
@@ -239,7 +241,7 @@ static const NSTimeInterval NekoAdvisorTyping = 3.0;
 		   the same thing, and the diary on this Mac answered that question
 		   without being asked: 65 remarks over eight days, **11 of them
 		   distinct**, one said twenty-two times. */
-		if([NekoSense isWorthSaying:line]
+		if([NekoSense isWorthSaying:line seeing:context]
 		   && [[NekoMemory sharedMemory] alreadySaidToday:line]) {
 			NSLog(@"Neko: a suggestion was thrown away — said already today: %@", line);
 			if(callerReport != nil) {
@@ -249,7 +251,7 @@ static const NSTimeInterval NekoAdvisorTyping = 3.0;
 			return;
 		}
 
-		if([NekoSense isWorthSaying:line]) {
+		if([NekoSense isWorthSaying:line seeing:context]) {
 			[[NSUserDefaults standardUserDefaults]
 				setObject:line forKey:NekoSuggestLastKey];
 			/* Written down before it is said, so that a remark and what
@@ -261,7 +263,7 @@ static const NSTimeInterval NekoAdvisorTyping = 3.0;
 		}
 
 		if(callerReport != nil) {
-			callerReport([NekoSense isWorthSaying:line] ? line : nil, error);
+			callerReport([NekoSense isWorthSaying:line seeing:context] ? line : nil, error);
 			Block_release(callerReport);
 		}
 	}];

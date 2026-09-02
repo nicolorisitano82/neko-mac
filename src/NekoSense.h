@@ -25,6 +25,35 @@
 /* Why it was thrown away, for the preferences and the logs. nil when it passes. */
 + (NSString *)problemWith:(NSString *)line;
 
+/* The same, judged also against **what the cat could actually see** when it said
+   it — the desktop summary and the lines of diary that went into the prompt.
+
+   One check needs that and cannot be made without it, and it is here because of
+   a measurement rather than a hunch — and it is **narrower than it started**,
+   because its own negative table said so: see -explainsSomethingItDidNotSee: for
+   what it stopped trying to catch and why. `tools/diary.py`, run on eight days of real
+   diary, found 65 remarks carrying 11 distinct thoughts, and the content was:
+
+       L'orario attuale 10:44, mercoledì 26 agosto 2026, Xcode aperto recente
+       build lento perché progetto grande
+
+   The first reads the clock back — which the suggestion prompt **already
+   forbids**, in so many words, and which happened 22 times anyway. The second
+   names nothing that was on the screen: there is no "build" and no "progetto" in
+   anything the cat was shown. `tests/persona.m` produced two more of that family
+   the same afternoon, unprompted: *"il build è lento perché i server sono
+   sovraccarichi"* — there are no servers.
+
+   Both are in Völkel et al.'s tenth factor for conversational agents, the one
+   they named *Artificial*, whose top twenty descriptors include **vague**,
+   **superficial** and **monotonous** — an instrument built from 349 adjectives
+   rated by 744 people rather than from our own judgement. See
+   docs/personality.md §3.
+
+   Passing nil for `seen` is exactly the old behaviour. */
++ (NSString *)problemWith:(NSString *)line seeing:(NSString *)seen;
++ (BOOL)isWorthSaying:(NSString *)line seeing:(NSString *)seen;
+
 /* The first word in the line that the system dictionary does not know, or nil.
    Names, versions and file names are left alone. */
 + (NSString *)unknownWordIn:(NSString *)line;

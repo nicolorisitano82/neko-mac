@@ -252,7 +252,7 @@ Five, each shippable alone, each with the thing that stops it.
 | stage | work | cost | ship when | stop if |
 | --- | --- | --- | --- | --- |
 | **0. What does the persona cost here?** ✅ | four prompts, three question sets, four engines — `tests/price.m`; see §3b, which deleted one planned change, made another free, and rejected the cheap fix | done | — | — |
-| **1. A remark that says nothing is not a remark** | the *Artificial* and *Unstable* checks `NekoSense` does not have, led by "names nothing concrete" | 1 day | the negative table passes | the table cannot be made to pass without silencing good remarks |
+| **1. A remark that says nothing is not a remark** ✅ | three checks in `NekoSense`, `tests/thin.m` — and the lead check had to be **narrowed** by its own negative table; see §5's report | done | — |
 | **2. It contradicts you, from the record** ← *now the only answer* | recall answers a question about the past with the dated line, and only from a line | 1–2 days | it never contradicts from a model belief | recall precision is too low to trust — stage 0 removed the other exit |
 | **3. The persona as a lever on refusals** — *doubtful after §3b* | measure whether a refusal-shaped character line strengthens the rules already there | 1 day | refusals rise with no false refusals | false refusals appear at all — and arm D is what that looks like |
 | **4. Persona × language** | stage 0 repeated in four languages | 1 day | a document | stage 0 found no effect to compare |
@@ -302,6 +302,76 @@ this stage should move is *distinct remarks per day*.
 
 **Stop if:** the vague check cannot be tuned to let good remarks through. A gate
 that silences the cat is worse than a cat that says something thin.
+
+### Stage 1, built — and the lead check did not survive its own negative table
+
+Three checks in `NekoSense`, judged against what the cat could actually see, which
+is now passed in from `NekoAdvisor`. `tests/thin.m`, 23 checks.
+
+**The one with the most evidence behind it: the clock, read back.** Twenty-two of
+sixty-five remarks in eight days of real diary opened with *"L'orario attuale
+10:44, mercoledì 26 agosto 2026…"*, and the suggestion prompt **already forbade
+it** in so many words. So it is a check now and not a request — the second time
+this project has learned that an instruction is not a filter.
+
+It is deliberately exact: it looks for **the time it is** and **the date it is**,
+not for any time and any date. *"L'orario attuale 17:23"* said at 17:23 goes;
+*"alle 18:30 hai la riunione"* stays, because a remark about something later is a
+remark and refusing it would cost more than the failure does.
+
+**And the lead check was too wide, which its own table proved.** The plan was:
+throw away any remark that names nothing the cat could see. It worked on every
+failure from the diary — and it also threw away these:
+
+```
+Una pausa ti conviene.                     → thrown away
+Sei concentrato.                            → thrown away
+Alle 18:30 hai la riunione, non fare tardi. → thrown away
+Sessantuno tasti al minuto: vai così.       → thrown away
+```
+
+**A gate that silences ordinary advice is worse than the failure it prevents**,
+and §4's stop condition for this stage said exactly that in advance. So it did not
+ship in that shape. What ships is the conjunction of two things: the remark
+**explains** something — *perché*, *because*, *parce que*, *porque* — **and**
+nothing it names was in front of it. That is the family that actually filled the
+diary:
+
+| | |
+| --- | --- |
+| *"build lento perché progetto grande"* | thrown away — no build and no project in anything it was shown |
+| *"il build è lento perché i server sono sovraccarichi"* | thrown away — there are no servers |
+| *"Xcode è lento perché ci lavori da quarantadue minuti"* | **said** — it names two things it saw |
+
+**What it therefore does not catch, said plainly rather than left to be
+discovered:** a bare invention with no explaining word in it — *"test chiatta
+ancora attivo"* — and a cause carried by grammar instead of a conjunction — *"il
+progetto è grande e la compilazione ne soffre"*. Both are in `tests/thin.m`'s
+borderline list, printed with the verdict *said*, so the gap is visible rather
+than implied. The first is what `alreadySaidToday:` is for, since an invention
+that matters gets repeated; the second is caught by nothing here.
+
+**The third check is a reproach**, from Völkel's fourth factor, which has
+*faultfinding* in it: a closed list of blaming constructions in four languages,
+*dovresti* and *avresti dovuto* and *te l'avevo detto*. It looks for blame and not
+for advice, so *"ti conviene una pausa"* stays.
+
+**Two of the descriptors were considered and left out**, in the file rather than
+in silence. *Superficial* — a cause asserted with no evidence — because a cause
+can be right without anything on screen supporting it and this file cannot tell
+which. *Egocentric* — a remark about itself — because Italian drops its pronouns,
+so every rule drafted for it also rejected *"ti conviene una pausa"*.
+
+**And the negative table earned its keep twice more.** It found that the number
+table this used first stopped at forty-five, so *"quarantadue minuti nello stesso
+file"* — about a summary that said **42** — was thrown away for naming nothing;
+the system's own spell-out formatter replaced the table. And it found that the
+dictionary check which has been in this file all along refuses *build* and
+*repository*, because they are not Italian words — which means the existing gate
+already declines English technical vocabulary inside an Italian remark, and two of
+my test sentences tripped it before they reached anything I had written.
+
+**Twelve of twelve** ordinary remarks still said.
 
 ### Stage 2 — it contradicts you, from the record
 
