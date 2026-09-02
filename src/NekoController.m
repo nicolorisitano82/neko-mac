@@ -215,13 +215,24 @@ static const float NekoMaxStopRadius = 200.0f;
 	                keyEquivalent:@""];
 	[item setTarget:self];
 
+	/* No ⌘Q. A cat in the menu bar has no window you are finished with and no
+	   document you are done editing, so the keystroke has nothing to mean here
+	   except an accident — and the accident is expensive, because everything the
+	   cat is in the middle of goes with it: a timer, a stretch of looking, a
+	   question half typed.
+
+	   It is also invisible. There is no Dock icon and no application menu on
+	   screen, so nothing tells you the shortcut exists until it has fired. The
+	   menu item stays, and it is the only way out. */
 	item = [menu addItemWithTitle:NekoLocalized(@"Quit Neko")
 	                       action:@selector(quit:)
-	                keyEquivalent:@"q"];
+	                keyEquivalent:@""];
 	[item setTarget:self];
 
 	[statusItem setMenu:menu];
 	[menu release];
+
+	[self disarmQuitShortcut];
 
 	[self updateAskItem];
 	[self updateStatusItemImage];
@@ -650,6 +661,53 @@ static const float NekoMaxStopRadius = 200.0f;
 {
 	[NSApp activateIgnoringOtherApps:YES];
 	[NSApp orderFrontStandardAboutPanel:sender];
+}
+
+/* And the other ⌘Q, which is the one that was actually firing.
+
+   MainMenu.nib has carried a standard application menu since 2007 — "Quit
+   NewApplication", ⌘Q, wired to -terminate: — and Info.plist still names it as
+   NSMainNibFile. That menu is never drawn, because this process runs as an
+   accessory with no Dock icon, **and its key equivalents work anyway** whenever
+   the application is active: while the preferences are open, after the About
+   panel, or the moment the panel takes focus to have a question typed into it.
+
+   So the shortcut is taken off every item in that menu that terminates, at the
+   same moment the status item is installed. Done in code rather than by editing
+   the nib because it is an eighteen-year-old compiled keyedobjects.nib, and a
+   binary nobody can read in a diff is a poor place to keep a decision. */
+- (void)disarmQuitShortcut
+{
+	[self disarmQuitIn:[NSApp mainMenu]];
+	/* And again once the nib has finished, because the order is not ours to
+	   assume: this controller is built from -awakeFromNib of a panel that lives
+	   in the same nib as the menu, and nothing promises the menu has been
+	   connected to NSApp by then. A second pass after launching costs nothing
+	   and is the one that is guaranteed to see it. */
+	[[NSNotificationCenter defaultCenter] addObserver:self
+	                                        selector:@selector(disarmQuitAgain:)
+	                                            name:NSApplicationDidFinishLaunchingNotification
+	                                          object:nil];
+}
+
+- (void)disarmQuitAgain:(NSNotification *)note
+{
+	[self disarmQuitIn:[NSApp mainMenu]];
+}
+
+- (void)disarmQuitIn:(NSMenu *)menu
+{
+	NSEnumerator *e = [[menu itemArray] objectEnumerator];
+	NSMenuItem *item;
+	while((item = [e nextObject]) != nil) {
+		if([item action] == @selector(terminate:)
+		   || [item action] == @selector(quit:)) {
+			[item setKeyEquivalent:@""];
+			[item setKeyEquivalentModifierMask:0];
+		}
+		if([item hasSubmenu])
+			[self disarmQuitIn:[item submenu]];
+	}
 }
 
 - (void)quit:(id)sender
