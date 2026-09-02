@@ -379,6 +379,61 @@ Colosseo non è a Roma. È a Roma, ma non è qui."* A model can be told to agree
 to disagree. It cannot be given something to check against; a line somebody wrote
 can.
 
+And **when** is a different question from **what**, answered from the same diary:
+
+> — *quando te l'ho detto?*
+> — **Il 30 agosto, 4 giorni fa.**
+
+Quoting the line back would be answering the other one, so this does not. Today
+and yesterday are said as words, because *"0 giorni fa"* is not how anybody says
+it. The elapsed part is the point: a date is a fact about the calendar, and *four
+days ago* is a fact about the two of you.
+
+### What it knows about itself
+
+> — *dove sei?*
+> — **Sto in alto a destra. Il Mac è a Vicenza.**
+
+*Where are you* is two questions. Where the cat sits is a rectangle on a screen —
+nine parts of it, worked out from the cat's own middle, not the pointer's and not
+the front window's. Where the **Mac** stands is the other half, and it has two
+tiers that the wording keeps apart:
+
+| | |
+| --- | --- |
+| a town, when somebody granted the location permission | *"Il Mac è **a** Vicenza."* |
+| otherwise the country the **time zone** implies | *"Il Mac è **da qualche parte in** Italia."* |
+
+The second costs no permission at all and is the honest half of the pair: a time
+zone gives a country and nothing finer, so the sentence does not name a place. A
+cat that said *"sono a Roma"* to everyone in Italy would be wrong about almost all
+of them. Nothing leaves the machine either way — only the name of a town is ever
+kept, never a coordinate.
+
+Three more, all of them subtractions:
+
+> — *da quanto ci conosciamo?* — **43 giorni, dal 22 luglio.**
+> — *da quanto non ci parliamo?* — **3 giorni fa.**
+> — *quando hai parlato l'ultima volta?* — **2 giorni fa.**
+
+The first is a stamp written once and kept, not a count of diary files: an
+installation whose old days have been pruned would otherwise say *thirty* for
+ever. The last two are mirrors of each other — one is about you, one is about it
+— and the harness checks they do not answer each other.
+
+**None of it is in the prompt**, deliberately. The block a model is given is
+already a thousand characters, and the factor analysis behind
+[docs/personality.md](docs/personality.md) has *egocentric* among the top
+descriptors of its second dimension: a cat handed its own biography before every
+answer is a cat that talks about itself. A check reads the source and fails if
+that ever changes.
+
+And what it may never do is claim to feel any of it. A self-model is buildable
+and testable; whether anything is experienced is not currently answerable by
+anybody, and `NekoSense` already throws away a remark that claims *"mi sento
+solo"* — refused as a feeling it does not have. See [docs/self.md](docs/self.md)
+for why that rule, written for taste, is worth keeping for a reason.
+
 ### Having the facts is not the same as being able to use them
 
 The table above settles the time and leaves something open, and 2.12 measured it.
@@ -787,6 +842,8 @@ one of nine with the date already in the prompt. The document also handles the
 question of existence once, and puts it down: a self-model is buildable and
 testable, whether anything is experienced is not currently answerable by anybody,
 and so the cat may know things about itself and may never claim to feel them.
+The first two things it proposes are built — see **What it knows about itself**
+above.
 
 [docs/personality.md](docs/personality.md) is what the research literature
 actually shows about building an assistant with a personality — read in September

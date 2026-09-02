@@ -257,8 +257,20 @@ stamp `NekoAsk` keeps in the defaults so that quitting is not a way of resetting
 the quiet period. A date is a fact about the calendar; four days ago is a fact
 about the two of you.*
 
-**Third — a boundary of self worth naming.** `NekoUnseen` is already a list of
-what lies outside it. KAPRO's distinction says the useful thing is not just
+**Third — a boundary of self worth naming.** ✅ *Built as measurement:
+`tests/edge.m`, 22 checks. The nine classes give **nine different sentences** —
+a boundary that answered them all alike would be a wall, not an edge anybody
+could reason about. It **moves inwards** when a folder is handed over: the files
+class stands aside, and comes back when the folder is taken away. It **stays
+put** for the five nothing anybody can grant — a bank, a night's sleep. And it
+moves **outwards** where the application can actually reach: a forecast is not
+something it cannot see, and a plugin's route is asked before the edge is. The
+folder half was recorded in two files as unmeasurable, because a real grant is a
+security-scoped bookmark and a harness may not put a panel on somebody's screen;
+it is measured by swapping the method that answers the question, which is what
+`tests/quit.m` does to `+[NSEvent mouseLocation]`.*
+
+`NekoUnseen` is already a list of what lies outside it. KAPRO's distinction says the useful thing is not just
 *having* the boundary but *knowing* where it is, and there is a measurable version:
 does it decline the nine classes for the right reason, and does it stop declining
 when a folder or a feed puts one of them inside the boundary? Half a day, mostly
