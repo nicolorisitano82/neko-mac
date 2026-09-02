@@ -13,6 +13,7 @@
 #import "NekoFolderAccess.h"
 #import "NekoWakeWord.h"
 #import "NekoPermissions.h"
+#import "NekoUpdate.h"
 #import "NekoPlayer.h"
 #import "NekoBrains.h"
 #import "NekoRate.h"
@@ -172,6 +173,19 @@ static const float NekoMaxStopRadius = 200.0f;
 	                      keyEquivalent:@""];
 	[glanceItem setTarget:self];
 	[self updateGlanceItem];
+
+	/* And a new version, when there is one. Same shape as the two above: absent
+	   until it means something, and one click is the whole of the interface. It
+	   is the part of the update that does not depend on a rate rule — the cat
+	   says it once out loud and then this is where it waits. */
+	newVersionItem = [menu addItemWithTitle:@"" action:@selector(offerIt:)
+	                         keyEquivalent:@""];
+	[newVersionItem setTarget:[NekoUpdate sharedUpdate]];
+	[self updateNewVersionItem];
+	[[NSNotificationCenter defaultCenter] addObserver:self
+	                                        selector:@selector(updateChanged:)
+	                                            name:NekoUpdateDidChangeNotification
+	                                          object:nil];
 	[[NSNotificationCenter defaultCenter] addObserver:self
 	                                         selector:@selector(updateGlanceItem)
 	                                             name:NekoGlanceDidChangeNotification
@@ -299,6 +313,35 @@ static const float NekoMaxStopRadius = 200.0f;
 {
 	[self updateTimerItem];
 	[self updateGlanceItem];
+	[self updateNewVersionItem];
+}
+
+- (void)updateNewVersionItem
+{
+	NSString *title = [[NekoUpdate sharedUpdate] menuTitle];
+	[newVersionItem setHidden:title == nil];
+	[newVersionItem setTitle:title ?: @""];
+}
+
+- (void)updateChanged:(NSNotification *)note
+{
+	[self updateNewVersionItem];
+}
+
+- (void)checkForNewVersion
+{
+	[[NekoUpdate sharedUpdate] checkQuietly];
+}
+
+- (void)checkNow:(id)sender
+{
+	[[NekoUpdate sharedUpdate] checkAloud];
+}
+
+- (void)takeUpdateCheckFrom:(id)sender
+{
+	[[NSUserDefaults standardUserDefaults]
+		setBool:[sender state] == NSControlStateValueOn forKey:NekoUpdateCheckKey];
 }
 
 - (void)updateGlanceItem
@@ -685,14 +728,59 @@ static const float NekoMaxStopRadius = 200.0f;
 	   connected to NSApp by then. A second pass after launching costs nothing
 	   and is the one that is guaranteed to see it. */
 	[[NSNotificationCenter defaultCenter] addObserver:self
-	                                        selector:@selector(disarmQuitAgain:)
+	                                        selector:@selector(applicationLaunched:)
 	                                            name:NSApplicationDidFinishLaunchingNotification
 	                                          object:nil];
 }
 
-- (void)disarmQuitAgain:(NSNotification *)note
+/* The one launch hook, because two would be two places to look. */
+- (void)applicationLaunched:(NSNotification *)note
 {
 	[self disarmQuitIn:[NSApp mainMenu]];
+
+	/* Not immediately: the first seconds after login belong to whatever else is
+	   starting, and a window that appears while the desktop is still settling is
+	   a window nobody reads. */
+	[self performSelector:@selector(checkPermissionsOnce) withObject:nil afterDelay:4.0];
+	[self performSelector:@selector(checkForNewVersion) withObject:nil afterDelay:12.0];
+}
+
+/* A permission that is missing and needed is a feature that is silently not
+   working. Said once per launch and no more: the window is the message, and a
+   cat that opens it every hour is a cat somebody switches off.
+
+   "Missing" is NekoPermissions' own word for it — switched on but not allowed —
+   so nothing here decides what counts as needed. A permission nothing uses is
+   worth showing in that tab and is not worth a word about. */
+- (void)checkPermissionsOnce
+{
+	if(naggedAboutPermissions)
+		return;
+	naggedAboutPermissions = YES;
+
+	NSArray *missing = [NekoPermissions missing];
+	if([missing count] == 0)
+		return;
+
+	NSMutableArray *names = [NSMutableArray array];
+	NSEnumerator *e = [missing objectEnumerator];
+	NekoPermission *one;
+	while((one = [e nextObject]) != nil)
+		[names addObject:[one name]];
+
+	NSLog(@"Neko: switched on but not allowed — %@",
+		[names componentsJoinedByString:@", "]);
+	[[NekoAsk sharedAsk] sayUnprompted:[NSString stringWithFormat:
+		NekoLocalized(@"Something is switched on that I am not allowed to do: %@."),
+		[names componentsJoinedByString:@", "]]];
+	[self showPermissions:nil];
+}
+
+/* The preferences, opened on the tab that is the reason for opening them. */
+- (void)showPermissions:(id)sender
+{
+	[self showPreferences:sender];
+	[prefsTabs selectTabViewItemWithIdentifier:@"permissions"];
 }
 
 - (void)disarmQuitIn:(NSMenu *)menu
@@ -917,14 +1005,39 @@ static const float NekoMaxStopRadius = 200.0f;
 	[content addSubview:loginCheck];
 	[loginCheck release];
 
+	/* Looking for a new version. On by default, and this is the switch that
+	   stops it: what it sends is one request to this project's own releases and
+	   nothing about you beyond what any request carries. See NekoUpdate.h. */
+	updateCheck = [[NSButton alloc] initWithFrame:NSMakeRect(154.0f, 126.0f, 300.0f, 18.0f)];
+	[updateCheck setButtonType:NSButtonTypeSwitch];
+	[updateCheck setTitle:NekoLocalized(@"Look for new versions")];
+	[updateCheck setState:[[NSUserDefaults standardUserDefaults]
+		boolForKey:NekoUpdateCheckKey] ? NSControlStateValueOn : NSControlStateValueOff];
+	[updateCheck setTarget:self];
+	[updateCheck setAction:@selector(takeUpdateCheckFrom:)];
+	/* One literal, not four joined: a key split across string literals is a key
+	   that can never match an entry in Localizable.strings, and tests/docs.m
+	   found exactly that here. */
+	[updateCheck setToolTip:NekoLocalized(@"Neko is not signed, so it never installs anything itself: it tells you, downloads the disk image if you say so, and you drag it across.")];
+	[content addSubview:updateCheck];
+	[updateCheck release];
+
 	/* Restore defaults */
-	NSButton *reset = [[NSButton alloc] initWithFrame:NSMakeRect(16.0f, 100.0f, 180.0f, 32.0f)];
+	NSButton *reset = [[NSButton alloc] initWithFrame:NSMakeRect(16.0f, 62.0f, 180.0f, 32.0f)];
 	[reset setBezelStyle:NSBezelStyleRounded];
 	[reset setTitle:NekoLocalized(@"Restore Defaults")];
 	[reset setTarget:self];
 	[reset setAction:@selector(restoreDefaults:)];
 	[content addSubview:reset];
 	[reset release];
+
+	NSButton *look = [[NSButton alloc] initWithFrame:NSMakeRect(206.0f, 62.0f, 160.0f, 32.0f)];
+	[look setBezelStyle:NSBezelStyleRounded];
+	[look setTitle:NekoLocalized(@"Check now")];
+	[look setTarget:self];
+	[look setAction:@selector(checkNow:)];
+	[content addSubview:look];
+	[look release];
 
 	[self buildAskTab:askContent];
 	[self updateWanderAvailability];
@@ -1777,7 +1890,7 @@ static const float NekoMaxStopRadius = 200.0f;
 	[localModelPopUp release];
 
 	localDetailField = [self labelWithString:@""
-	                                   frame:NSMakeRect(152.0f, 326.0f, 290.0f, 17.0f)];
+	                                   frame:NSMakeRect(152.0f, 326.0f, 420.0f, 17.0f)];
 	[localDetailField setAlignment:NSTextAlignmentLeft];
 	[[localDetailField cell] setWraps:YES];
 	[content addSubview:localDetailField];
@@ -1920,7 +2033,13 @@ static const float NekoMaxStopRadius = 200.0f;
 	NekoLocalModel *model = [self selectedLocalModel];
 	BOOL installed = [store installedURLForIdentifier:[model identifier]] != nil;
 	BOOL busy = [store isDownloading];
-	[localDetailField setStringValue:[model detail]];
+	/* And whether it writes its notes first, said in the list rather than
+	   discovered in a bubble. NekoLocalProvider takes the notes out; this is so
+	   that choosing one is a choice and not a surprise. */
+	[localDetailField setStringValue:[model thinks]
+		? [NSString stringWithFormat:@"%@ · %@", [model detail],
+			NekoLocalized(@"reasons before answering")]
+		: [model detail]];
 
 	BOOL broken = [store isIncomplete:[model identifier]];
 	[localActionButton setTitle:busy ? NekoLocalized(@"Stop")

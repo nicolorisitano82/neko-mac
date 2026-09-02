@@ -27,6 +27,9 @@ extern NSString * const NekoSettingsDidChangeNotification;
 {
 	MyPanel *panel;              /* not retained, owned by the nib */
 	NSStatusItem *statusItem;
+	BOOL naggedAboutPermissions;   /* once a launch, and no more than once */
+	NSMenuItem *newVersionItem;    /* only there when there is one */
+	NSButton *updateCheck;
 	NSMenuItem *pauseItem;
 	NSMenuItem *stayItem;
 	NSMenuItem *timerItem;
@@ -122,6 +125,15 @@ extern NSString * const NekoSettingsDidChangeNotification;
 - (BOOL)canOpenAtLogin;
 
 - (void)showPreferences:(id)sender;
+
+/* The preferences, opened on the Permissions tab — which is what happens by
+   itself, once, a few seconds after login, when something is switched on that
+   macOS is not allowing. */
+- (void)showPermissions:(id)sender;
+
+/* Asks GitHub what the newest release is, and says so either way. The quiet
+   version of this runs once a day on its own — see NekoUpdate.h. */
+- (void)checkNow:(id)sender;
 
 /* The menu that asks which folder, shared with the Permissions tab: the folders
    row there is not one permission but six, and the menu belongs where the folders

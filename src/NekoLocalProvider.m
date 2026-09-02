@@ -121,6 +121,51 @@ NSString * const NekoAskLocalModelKey = @"NekoAskLocalModel";
 	[self askQuestion:question instructions:instructions partial:NULL completion:completion];
 }
 
+/* The tags a reasoning model wraps its notes in. */
+static NSArray *NekoReasoningTags(void)
+{
+	static NSArray *tags = nil;
+	if(tags == nil)
+		tags = [[NSArray alloc] initWithObjects:
+			@"think", @"thinking", @"thought", @"reasoning", nil];
+	return tags;
+}
+
++ (NSString *)withoutReasoning:(NSString *)text
+{
+	if([text length] == 0)
+		return text;
+	NSMutableString *left = [[text mutableCopy] autorelease];
+
+	NSEnumerator *e = [NekoReasoningTags() objectEnumerator];
+	NSString *tag;
+	while((tag = [e nextObject]) != nil) {
+		NSString *opens = [NSString stringWithFormat:@"<%@>", tag];
+		NSString *closes = [NSString stringWithFormat:@"</%@>", tag];
+		for(;;) {
+			NSRange from = [left rangeOfString:opens
+			                          options:NSCaseInsensitiveSearch];
+			if(from.location == NSNotFound)
+				break;
+			NSRange after = NSMakeRange(NSMaxRange(from),
+				[left length] - NSMaxRange(from));
+			NSRange to = [left rangeOfString:closes
+			                        options:NSCaseInsensitiveSearch range:after];
+			if(to.location == NSNotFound) {
+				/* Still inside it, or the budget ran out inside it. Everything
+				   from here on is more of the same. */
+				[left deleteCharactersInRange:
+					NSMakeRange(from.location, [left length] - from.location)];
+				break;
+			}
+			[left deleteCharactersInRange:
+				NSMakeRange(from.location, NSMaxRange(to) - from.location)];
+		}
+	}
+	return [left stringByTrimmingCharactersInSet:
+		[NSCharacterSet whitespaceAndNewlineCharacterSet]];
+}
+
 - (void)askQuestion:(NSString *)question
        instructions:(NSString *)instructions
             partial:(void (^)(NSString *sofar))partial
@@ -131,8 +176,26 @@ NSString * const NekoAskLocalModelKey = @"NekoAskLocalModel";
 	   freeze the whole app — the cat, the bubble, the spinner that is meant to
 	   say something is happening — so the load goes to a queue of its own and
 	   the question follows it there. */
-	void (^partialCopy)(NSString *) = partial ? Block_copy(partial) : nil;
-	void (^completionCopy)(NSString *, NSError *) = Block_copy(completion);
+	/* Everything the engine says goes through -withoutReasoning: on the way out,
+	   so no caller has to remember. A partial that is *entirely* scratchpad is
+	   not forwarded at all: an empty bubble flashing while the model thinks is
+	   worse than the spinner it would replace. */
+	void (^partialCopy)(NSString *) = nil;
+	if(partial != NULL) {
+		void (^caller)(NSString *) = Block_copy(partial);
+		partialCopy = Block_copy(^(NSString *sofar) {
+			NSString *shown = [NekoLocalProvider withoutReasoning:sofar];
+			if([shown length] > 0)
+				caller(shown);
+		});
+		Block_release(caller);
+	}
+	void (^callerDone)(NSString *, NSError *) = Block_copy(completion);
+	void (^completionCopy)(NSString *, NSError *) =
+		Block_copy(^(NSString *answer, NSError *error) {
+		callerDone([NekoLocalProvider withoutReasoning:answer], error);
+	});
+	Block_release(callerDone);
 
 	dispatch_async(loader, ^{
 		NSError *problem = nil;

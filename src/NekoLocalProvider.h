@@ -47,6 +47,39 @@
    model is not installed. */
 - (void)setPreferredModel:(NSString *)identifier;
 
+/* A reasoning model's scratchpad, taken out of what it said.
+
+   Reported from use, and it is the worst thing that has been visible in this
+   application: asked for Apple's share price, the cat answered with
+
+       <think> Thinking Process: 1. **Analyze Request:** * **Role:** fox living
+       someone's computer desktop (quick, sly, pleased own cleverness). *
+       **Task:** Answer que…
+
+   — the model's own notes, in the bubble, with the persona quoted back verbatim.
+   Qwen3, Qwen3.5 and every other reasoning build emits a `<think>` block before
+   answering, and nothing here took it out. `NekoSense` does not catch it by
+   design: it judges the remarks the cat makes on its own, never an answer to a
+   question, because dropping an answer would leave somebody who asked staring at
+   a cat.
+
+   The cause was a catalogue entry added without asking what the model **writes**.
+   Its URL, its bytes and its licence were all checked. See `-thinks` on
+   NekoLocalModel, which is the other half of this fix.
+
+   Done here rather than at the call sites because there are five of them — the
+   question, the unprompted remark, the nightly reflection, the word learning and
+   the drawing — and a sixth would forget. This is the engine's own adapter, and
+   the scratchpad is the engine's own habit.
+
+   **What it covers:** `<think>`, `<thinking>`, `<thought>` and `<reasoning>`,
+   in any case, closed or left open by a budget that ran out — an unclosed block
+   takes everything after it, because everything after it is more of the same.
+   Not covered: the channel syntax some models use instead (`<|channel|>analysis`),
+   which nothing in this catalogue emits and which would be guesswork to write
+   against. */
++ (NSString *)withoutReasoning:(NSString *)text;
+
 /* nil until an engine is compiled into the app. The provider reports itself
    unconfigured while this is the case, and says so in the preferences rather
    than failing at the moment someone asks a question. */

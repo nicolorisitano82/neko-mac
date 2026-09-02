@@ -39,12 +39,49 @@ static NSArray *markdownIn(NSString *folder)
 static NSArray *keysIn(NSString *source)
 {
 	NSMutableArray *keys = [NSMutableArray array];
-	NSArray *macros = [NSArray arrayWithObjects:
-		@"NSLocalizedString(@\"", @"NekoPluginLocalized(@\"", @"NekoPluginsLocalized(@\"",
-		@"NekoPanelLocalized(@\"", @"NekoAskLocalized(@\"", @"NekoLocalized(@\"",
-		@"NekoAdvisorLocalized(@\"", @"NekoAnticsLocalized(@\"",
-		@"NekoPermissionLocalized(@\"", @"NekoVoiceLocalized(@\"",
-		@"NekoVerbsLocalized(@\"", @"NekoTimerLocalized(@\"", nil];
+
+	/* **Derived, not listed.** This used to hold twelve macro names written out
+	   by hand, and by 2.14 it was missing eight: every module added with its own
+	   NekoSomethingLocalized() — the clock, the sums, the diary quotations, the
+	   things it cannot see, the words it learns, the updates — had its strings
+	   invisible to this check, which is the one check that says whether a
+	   sentence will appear in Italian. A list of names is a list somebody has to
+	   remember to add to, and nobody did.
+	   So: anything ending in Localized(@" counts, plus NSLocalizedString itself. */
+	NSMutableArray *macros = [NSMutableArray arrayWithObject:@"NSLocalizedString(@\""];
+	NSRange looking = NSMakeRange(0, [source length]);
+	while(looking.length > 0) {
+		NSRange found = [source rangeOfString:@"Localized(" options:0 range:looking];
+		if(found.location == NSNotFound)
+			break;
+		/* Walk back over the identifier in front of it. */
+		NSUInteger start = found.location;
+		while(start > 0) {
+			unichar c = [source characterAtIndex:start - 1];
+			if(!((c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z')
+			     || (c >= '0' && c <= '9') || c == '_'))
+				break;
+			start--;
+		}
+		/* The literal may be on the next line: NekoSomethingLocalized( then a
+		   newline then @"…". Both shapes are in this source. */
+		NSUInteger at = NSMaxRange(found);
+		while(at < [source length]) {
+			unichar c = [source characterAtIndex:at];
+			if(c == ' ' || c == '\t' || c == '\n' || c == '\r') { at++; continue; }
+			break;
+		}
+		if(at + 1 < [source length] && [source characterAtIndex:at] == '@'
+		   && [source characterAtIndex:at + 1] == '"') {
+			NSString *macro = [NSString stringWithFormat:@"%@@\"",
+				[source substringWithRange:
+					NSMakeRange(start, NSMaxRange(found) - start)]];
+			if(![macros containsObject:macro])
+				[macros addObject:macro];
+		}
+		looking = NSMakeRange(NSMaxRange(found), [source length] - NSMaxRange(found));
+	}
+
 	NSEnumerator *m = [macros objectEnumerator];
 	NSString *macro;
 	while((macro = [m nextObject]) != nil) {

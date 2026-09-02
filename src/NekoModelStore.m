@@ -8,8 +8,10 @@
                   detail:(NSString *)aDetail
                      url:(NSURL *)aURL
                    bytes:(long long)bytes
+                  thinks:(BOOL)thinksOutLoud
 {
 	if((self = [super init]) != nil) {
+		thinks = thinksOutLoud;
 		identifier = [anIdentifier copy];
 		name = [aName copy];
 		detail = [aDetail copy];
@@ -33,6 +35,7 @@
 - (NSString *)detail { return detail; }
 - (NSURL *)url { return url; }
 - (long long)expectedBytes { return expectedBytes; }
+- (BOOL)thinks { return thinks; }
 
 @end
 
@@ -89,49 +92,57 @@
 			              name:@"Qwen2.5 0.5B Instruct"
 			            detail:NSLocalizedString(@"468 MB — answers in a blink, and gets simple facts wrong", nil)
 			               url:[NSURL URLWithString:@"https://huggingface.co/Qwen/Qwen2.5-0.5B-Instruct-GGUF/resolve/main/qwen2.5-0.5b-instruct-q4_k_m.gguf"]
-			             bytes:491544576LL] autorelease],
+			             bytes:491544576LL
+			            thinks:NO] autorelease],
 		[[[NekoLocalModel alloc]
 			initWithIdentifier:@"qwen2.5-1.5b-instruct-q4"
 			              name:@"Qwen2.5 1.5B Instruct"
 			            detail:NSLocalizedString(@"1.0 GB — the smallest one worth believing", nil)
 			               url:[NSURL URLWithString:@"https://huggingface.co/Qwen/Qwen2.5-1.5B-Instruct-GGUF/resolve/main/qwen2.5-1.5b-instruct-q4_k_m.gguf"]
-			             bytes:1117320192LL] autorelease],
+			             bytes:1117320192LL
+			            thinks:NO] autorelease],
 		[[[NekoLocalModel alloc]
 			initWithIdentifier:@"llama-3.2-3b-instruct-q4"
 			              name:@"Llama 3.2 3B Instruct"
 			            detail:NSLocalizedString(@"1.9 GB — good in several languages, a second or two to answer", nil)
 			               url:[NSURL URLWithString:@"https://huggingface.co/bartowski/Llama-3.2-3B-Instruct-GGUF/resolve/main/Llama-3.2-3B-Instruct-Q4_K_M.gguf"]
-			             bytes:2019377696LL] autorelease],
+			             bytes:2019377696LL
+			            thinks:NO] autorelease],
 		[[[NekoLocalModel alloc]
 			initWithIdentifier:@"qwen2.5-3b-instruct-q4"
 			              name:@"Qwen2.5 3B Instruct"
 			            detail:NSLocalizedString(@"2.0 GB — right and brief, and a year older than the two below", nil)
 			               url:[NSURL URLWithString:@"https://huggingface.co/Qwen/Qwen2.5-3B-Instruct-GGUF/resolve/main/qwen2.5-3b-instruct-q4_k_m.gguf"]
-			             bytes:2104521312LL] autorelease],
+			             bytes:2104521312LL
+			            thinks:NO] autorelease],
 		[[[NekoLocalModel alloc]
 			initWithIdentifier:@"qwen3-1.7b-q8"
 			              name:@"Qwen3 1.7B"
 			            detail:NSLocalizedString(@"1.7 GB — newer than the 1.5B and better at holding to an instruction", nil)
 			               url:[NSURL URLWithString:@"https://huggingface.co/Qwen/Qwen3-1.7B-GGUF/resolve/main/Qwen3-1.7B-Q8_0.gguf"]
-			             bytes:1834426016LL] autorelease],
+			             bytes:1834426016LL
+			            thinks:YES] autorelease],
 		[[[NekoLocalModel alloc]
 			initWithIdentifier:@"gemma-3-4b-it-q4"
 			              name:@"Gemma 3 4B"
 			            detail:NSLocalizedString(@"2.3 GB — the best of these outside English", nil)
 			               url:[NSURL URLWithString:@"https://huggingface.co/ggml-org/gemma-3-4b-it-GGUF/resolve/main/gemma-3-4b-it-Q4_K_M.gguf"]
-			             bytes:2489757856LL] autorelease],
+			             bytes:2489757856LL
+			            thinks:NO] autorelease],
 		[[[NekoLocalModel alloc]
 			initWithIdentifier:@"qwen3-4b-instruct-q4"
 			              name:@"Qwen3 4B Instruct"
 			            detail:NSLocalizedString(@"2.3 GB — follows a brief better than anything above it", nil)
 			               url:[NSURL URLWithString:@"https://huggingface.co/unsloth/Qwen3-4B-Instruct-2507-GGUF/resolve/main/Qwen3-4B-Instruct-2507-Q4_K_M.gguf"]
-			             bytes:2497281120LL] autorelease],
+			             bytes:2497281120LL
+			            thinks:NO] autorelease],
 		[[[NekoLocalModel alloc]
 			initWithIdentifier:@"qwen3.5-4b-q4"
 			              name:@"Qwen3.5 4B"
 			            detail:NSLocalizedString(@"2.7 GB — the most recent, and the largest worth keeping on a laptop", nil)
 			               url:[NSURL URLWithString:@"https://huggingface.co/unsloth/Qwen3.5-4B-GGUF/resolve/main/Qwen3.5-4B-Q4_K_M.gguf"]
-			             bytes:2740937888LL] autorelease],
+			             bytes:2740937888LL
+			            thinks:YES] autorelease],
 		nil];
 	return cached;
 }
@@ -168,7 +179,8 @@
 			              name:@"Stable Diffusion 1.5"
 			            detail:NSLocalizedString(@"1.6 GB, 8-bit — draws a 512 pixel picture on this Mac's GPU", nil)
 			               url:[NSURL URLWithString:@"https://huggingface.co/second-state/stable-diffusion-v1-5-GGUF/resolve/main/stable-diffusion-v1-5-pruned-emaonly-Q8_0.gguf"]
-			             bytes:1717986918LL] autorelease], nil];
+			             bytes:1717986918LL
+			            thinks:NO] autorelease], nil];
 	return cached;
 }
 
