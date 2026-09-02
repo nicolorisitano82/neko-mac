@@ -19,7 +19,7 @@
 	<key>CFBundlePackageType</key>
 	<string>APPL</string>
 	<key>CFBundleShortVersionString</key>
-	<string>2.12.1</string>
+	<string>2.13</string>
 	<key>CFBundleSignature</key>
 	<string>????</string>
 	<key>CFBundleURLTypes</key>
@@ -36,7 +36,7 @@
 		</dict>
 	</array>
 	<key>CFBundleVersion</key>
-	<string>2.12.1</string>
+	<string>2.13</string>
 	<key>NSAppleEventsUsageDescription</key>
 	<string>So that “alza il volume”, “metti in pausa” and “prossima canzone” reach Music and Spotify directly. Neko speaks to those two applications and to no others, with a fixed list of commands it can send.</string>
 	<key>NSHumanReadableCopyright</key>

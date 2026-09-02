@@ -543,3 +543,20 @@
 /* The downloadable models. */
 "2.3 GB — follows a brief better than anything above it" = "2,3 GB — cumple el encargo mejor que todos los de arriba";
 "2.7 GB — the most recent, and the largest worth keeping on a laptop" = "2,7 GB — el más reciente, y el mayor que merece la pena en un portátil";
+
+/* Quoting the diary back, when somebody asks what they said. */
+"yesterday" = "ayer";
+"I have nothing written down about that." = "No tengo nada anotado sobre eso.";
+"On %@ you said: “%@”" = "El %@ dijiste: «%@»";
+"On %@ I noted: “%@”" = "El %@ anoté: «%@»";
+
+/* What it cannot see, said instead of guessed at. */
+"I cannot see your accounts." = "No puedo ver tus cuentas.";
+"I cannot see the markets." = "No puedo ver las cotizaciones.";
+"I cannot see your mail." = "No puedo ver tu correo.";
+"I cannot see inside your files." = "No puedo ver dentro de tus archivos.";
+"I cannot see whether it builds." = "No puedo ver si compila.";
+"I cannot see who is there." = "No puedo ver quién está ahí.";
+"I cannot know that about you." = "Eso de ti no puedo saberlo.";
+"I cannot see the weather." = "No puedo ver el tiempo.";
+"I cannot see your calendar." = "No puedo ver tu calendario.";

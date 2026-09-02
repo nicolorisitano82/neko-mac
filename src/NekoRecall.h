@@ -138,6 +138,11 @@
               rarity:(NSDictionary *)rarity
             synonyms:(NSDictionary *)synonyms;
 
+/* The score a line has to reach to count as being about the question at all.
+   Exposed because there is now a second caller scoring lines itself, and two
+   different bars would be two different ideas of what "about" means. */
++ (double)floor;
+
 /* What a line scored, exposed so a test can say why rather than only whether. */
 + (double)scoreOf:(NSString *)line asked:(NSDictionary *)asked
            rarity:(NSDictionary *)rarity;

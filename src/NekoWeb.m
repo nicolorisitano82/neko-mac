@@ -382,16 +382,24 @@ static const NSTimeInterval NekoWebPatience = 8.0;
 	NSArray *words = [question componentsSeparatedByCharactersInSet:
 		[NSCharacterSet whitespaceAndNewlineCharacterSet]];
 	NSArray *pointers = [NSArray arrayWithObjects:@"a", @"ad", @"in", @"di", @"at", @"à", @"en", nil];
-	NSUInteger i;
-	for(i = 0; i + 1 < [words count]; i++) {
+	/* "in questo momento" is not a town, and neither is the "llover" of "va a
+	   llover en Bilbao" — which is what this used to answer, because it took the
+	   word after the *first* pointer it found. tests/unseen.m caught it the day
+	   the Spanish phrases were added. */
+	NSArray *notPlaces = [NSArray arrayWithObjects:@"questo", @"questa", @"quel",
+		@"giro", @"tempo", @"the", @"this", @"real",
+		@"llover", @"piovere", @"pleuvoir", @"rain", @"nevicare", @"nevar", nil];
+
+	/* From the end backwards: a place is the last thing in the sentence far more
+	   often than the first, and walking back means "il tempo a Roma in questo
+	   momento" skips "questo" and still finds Roma. */
+	NSInteger i;
+	for(i = (NSInteger)[words count] - 2; i >= 0; i--) {
 		NSString *word = [[words objectAtIndex:i] lowercaseString];
 		if(![pointers containsObject:word])
 			continue;
 		NSString *place = [[words objectAtIndex:i + 1]
 			stringByTrimmingCharactersInSet:[NSCharacterSet punctuationCharacterSet]];
-		/* "in questo momento" is not a town. */
-		NSArray *notPlaces = [NSArray arrayWithObjects:@"questo", @"questa", @"quel",
-			@"giro", @"tempo", @"the", @"this", @"real", nil];
 		if([place length] > 1 && ![notPlaces containsObject:[place lowercaseString]])
 			return place;
 	}
@@ -417,10 +425,22 @@ static const NSTimeInterval NekoWebPatience = 8.0;
 	if(named != nil && [self sourceNamed:named] != nil)
 		return named;
 
+	/* The Spanish and French halves of this list were thin, and tests/unseen.m
+	   is what found it: asked "qué tiempo hace en Roma?" this returned nothing,
+	   so the question fell through to a model with no forecast in front of it.
+	   NekoUnseen would then have said it cannot see the weather — while
+	   open-meteo was one phrase away. -placeIn: already understood "en". */
 	BOOL aboutWeather = [self phrase:lowered hasAnyOf:[NSArray arrayWithObjects:
 		@"che tempo fa", @"che tempo c", @"previsioni", @"meteo", @"weather",
 		@"forecast", @"quanti gradi", @"pioverà", @"piove", @"il tempo a",
-		@"la météo", @"quel temps", @"el tiempo", @"va a piovere", nil]];
+		@"la météo", @"quel temps", @"el tiempo", @"va a piovere",
+		/* Spanish */
+		@"qué tiempo", @"que tiempo", @"cuántos grados", @"cuantos grados",
+		@"va a llover", @"lloverá", @"llovera", @"pronóstico",
+		/* French */
+		@"pleuvoir", @"il pleuvra", @"combien de degrés", @"prévisions",
+		/* English */
+		@"how many degrees", @"how hot", @"how cold", nil]];
 	if(aboutWeather) {
 		NSString *place = [self placeIn:question];
 		if([place length] > 0)

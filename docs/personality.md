@@ -291,8 +291,22 @@ The gaps, now that embodiment is out of scope and the object is any assistant:
 > of this Mac's own diary demonstrate the failure, while (a)'s successor is
 > licensed by strong research and by nothing local until the experiment runs.
 
-**a. The persona block has never been measured here, and §1 and §2 both say it
-should be.** `NekoAnswerProvider` puts a character's voice in every prompt. The
+**a. The persona block has now been measured here, and §1 did not reproduce.**
+`tests/price.m` — four prompts, four engines, 80 answers a cell — found **no
+accuracy cost at all** (60 / 62 / 59 right of 80), and found that the character's
+*name and Persona string* change nothing measurable either (27 against 27
+agreements with a false premise). What does move it is the character
+*instructions*, and what matters more than the comparison is the absolute rate:
+on the engine that actually answers here, the shipped prompt **agreed with a
+false premise 8 times out of 20**. The cheap fix — one sentence telling it not to
+go along with a false premise — was measured and **rejected**: it denied 15 of 20
+**true** premises, saying things like *"No, il Colosseo non è a Roma. È a Roma, ma
+non è qui."* Full report in
+[personality-roadmap.md §3b](personality-roadmap.md). The paragraph below is what
+this said before any of that was run, and is left as written.
+
+**a′ (as written before the measurement). The persona block has never been
+measured here, and §1 and §2 both say it should be.** `NekoAnswerProvider` puts a character's voice in every prompt. The
 literature says that costs about 3.6 points of MMLU-shaped accuracy and, if the
 voice is warm, roughly 40% more agreement with a false premise the person stated.
 Neither has been measured on this code. The experiment is the shape this project

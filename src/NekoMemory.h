@@ -59,6 +59,7 @@ extern NSString * const NekoMemoryDirectoryKey;
 	   every question. */
 	NSArray *recallLines;
 	NSArray *recallWords;
+	NSArray *recallDays;           /* the day each recalled line was written */
 	NSDictionary *recallRarity;
 	NSArray *recallVocabulary;
 	NSDate *recallBuiltAt;
@@ -101,6 +102,15 @@ extern NSString * const NekoMemoryDirectoryKey;
 
 /* Older days that bear on the question, best first. Empty when none do. */
 - (NSArray *)linesAbout:(NSString *)question limit:(NSUInteger)limit;
+
+/* The lines that bear on the question, each with the day it was written and who
+   said it: Day, Time, Kind and Text. For the one caller that has to quote
+   somebody back to themselves, which -linesAbout: cannot do because it drops
+   the day with the file name.
+
+   **Never a line the cat said itself.** Quoting its own remark back as if it
+   were the record is the loop tools/diary.py found, wearing a tie. */
+- (NSArray *)recordAbout:(NSString *)question limit:(NSUInteger)limit;
 
 /* The diary's own words of substance, rarest first: the nouns and adjectives
    somebody actually wrote, without the verbs a line is carried by and without

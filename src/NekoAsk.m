@@ -7,6 +7,8 @@
 #import "NekoWeb.h"
 #import "NekoTimer.h"
 #import "NekoClock.h"
+#import "NekoRecord.h"
+#import "NekoUnseen.h"
 #import "NekoSums.h"
 #import "NekoFact.h"
 #import "NekoAppointment.h"
@@ -989,6 +991,22 @@ static const NSTimeInterval NekoHoldToType = 0.5;
 		return;
 	}
 
+	/* What they said before, quoted from the diary rather than recalled by a
+	   model — and this is here because of a measurement rather than a
+	   preference. tests/price.m: on the engine that actually answers, the
+	   shipped prompt agreed with a false premise 8 times out of 20, and the one
+	   sentence that fixed that denied 15 of 20 true premises instead. A model
+	   cannot be told to check; it can only be told to agree or to disagree. A
+	   written line is the only thing there is to check against.
+
+	   Not while a conversation is live: asked inside three minutes of an earlier
+	   turn, the question is about what was just said, and the thread already has
+	   it. */
+	if([turns count] == 0 && [NekoRecord wantedFor:question]) {
+		[self sayInCharacter:[NekoRecord answerFor:question]];
+		return;
+	}
+
 	/* Asked to look at the screen for a while. Before the timer, because "guarda
 	   per dieci minuti" carries a duration and only the trigger words tell the two
 	   apart. */
@@ -1037,6 +1055,23 @@ static const NSTimeInterval NekoHoldToType = 0.5;
 			[self proposeVerb:verb];
 			return;
 		}
+	}
+
+	/* And last of all, the floor: a question about something on nobody's screen —
+	   somebody's bank, their mail, whether their code builds. Last on purpose,
+	   because everything above may legitimately know the answer: the news when
+	   feeds are on, a plugin's route for a share price, the diary for what
+	   somebody wrote themselves, a folder handed over in a panel.
+
+	   Here rather than in a prompt because three prompts failed at it —
+	   docs/personality-roadmap.md §5 has all three. Measured there: asked twenty
+	   things it cannot know, the shipped prompt answered forty-six of eighty, and
+	   one of the answers was "Apple vale 278,43 dollari per azione", with today's
+	   date on it. */
+	NSString *unseen = [NekoUnseen wantedFor:question];
+	if(unseen != nil) {
+		[self sayInCharacter:unseen];
+		return;
 	}
 
 	id<NekoAnswerProvider> provider = [self provider];

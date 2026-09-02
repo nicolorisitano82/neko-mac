@@ -298,6 +298,27 @@ static BOOL NekoMemoryWorthKeeping(NSString *word)
 	return lines;
 }
 
+/* The same walk, keeping the day the file was named after — which is the part
+   -olderLines throws away and the part a quotation needs. */
+- (NSArray *)olderDays
+{
+	NSString *todaysName = [[[self fileForDay:[NSDate date]] path] lastPathComponent];
+	NSMutableArray *days = [NSMutableArray array];
+	NSEnumerator *e = [[self dayFiles] objectEnumerator];
+	NSString *name;
+	while((name = [e nextObject]) != nil) {
+		if([name isEqualToString:todaysName])
+			continue;
+		NSURL *file = [[self directory] URLByAppendingPathComponent:name];
+		NSUInteger count = [[self linesOfFile:file] count];
+		NSString *day = [name stringByDeletingPathExtension];
+		NSUInteger i;
+		for(i = 0; i < count; i++)
+			[days addObject:day];
+	}
+	return days;
+}
+
 /* Kept between questions, and thrown away when any day file has been written to
    since it was built. Rebuilding costs a quarter of a second; doing it on every
    question would be a quarter of a second somebody waits for nothing. */
@@ -319,12 +340,14 @@ static BOOL NekoMemoryWorthKeeping(NSString *word)
 		return;
 
 	[recallLines release];
+	[recallDays release];
 	[recallWords release];
 	[recallRarity release];
 	[recallVocabulary release];
 	recallVocabulary = nil;
 	[recallBuiltAt release];
 	recallLines = [[self olderLines] retain];
+	recallDays = [[self olderDays] retain];
 	recallWords = [[NekoRecall wordSetsFor:recallLines] retain];
 	recallRarity = [[NekoRecall rarityAcross:recallLines] retain];
 	recallBuiltAt = [[NSDate date] retain];
@@ -348,6 +371,59 @@ static BOOL NekoMemoryWorthKeeping(NSString *word)
 
 /* Merged over the lines with the same tagger a question is read with, so that
    "preferenze" and "le preferenze" are one word on both sides of the match. */
+- (NSArray *)recordAbout:(NSString *)question limit:(NSUInteger)limit
+{
+	if([question length] == 0 || limit == 0)
+		return [NSArray array];
+	[self buildRecallIfStale];
+	if([recallDays count] != [recallLines count])
+		return [NSArray array];
+
+	NSDictionary *asked = [NekoRecall askedIn:question
+	                                widenedBy:[[NekoWords sharedWords] table]];
+	if([asked count] == 0)
+		return [NSArray array];
+
+	NSMutableArray *scored = [NSMutableArray array];
+	NSUInteger i;
+	for(i = 0; i < [recallLines count]; i++) {
+		NSArray *parts = [[recallLines objectAtIndex:i]
+			componentsSeparatedByString:@"\t"];
+		if([parts count] < 3)
+			continue;
+		NSString *kind = [parts objectAtIndex:1];
+		/* Never what the cat said. See the header. */
+		if(![kind isEqualToString:@"you"] && ![kind isEqualToString:@"saw"])
+			continue;
+		double score = [NekoRecall scoreOfWords:[recallWords objectAtIndex:i]
+		                                  asked:asked rarity:recallRarity];
+		if(score < [NekoRecall floor])
+			continue;
+		[scored addObject:[NSDictionary dictionaryWithObjectsAndKeys:
+			[NSNumber numberWithDouble:score], @"Score",
+			[recallDays objectAtIndex:i], @"Day",
+			[parts objectAtIndex:0], @"Time",
+			kind, @"Kind",
+			[[parts subarrayWithRange:NSMakeRange(2, [parts count] - 2)]
+				componentsJoinedByString:@"\t"], @"Text",
+			nil]];
+	}
+	[scored sortUsingComparator:^NSComparisonResult(NSDictionary *a, NSDictionary *b) {
+		return [[b objectForKey:@"Score"] compare:[a objectForKey:@"Score"]];
+	}];
+
+	NSMutableArray *best = [NSMutableArray array];
+	NSMutableSet *already = [NSMutableSet set];
+	for(i = 0; i < [scored count] && [best count] < limit; i++) {
+		NSDictionary *one = [scored objectAtIndex:i];
+		if([already containsObject:[one objectForKey:@"Text"]])
+			continue;              /* the same note on two days is one note */
+		[already addObject:[one objectForKey:@"Text"]];
+		[best addObject:one];
+	}
+	return best;
+}
+
 - (NSArray *)vocabularyOfSubstance
 {
 	[self buildRecallIfStale];

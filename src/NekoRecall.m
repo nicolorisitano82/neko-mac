@@ -60,6 +60,8 @@ static double NekoWeightForClass(NLTag tag)
 
 @implementation NekoRecall
 
++ (double)floor { return NekoRecallFloor; }
+
 + (NSArray *)wordsOf:(NSString *)text
 {
 	if([text length] == 0)
