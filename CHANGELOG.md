@@ -1,5 +1,64 @@
 # Changelog
 
+## 2.12.1 — 2026-09-02
+
+### It had started talking to itself, and the diary proved it
+
+`tools/diary.py` is new, and it exists because of a question that deserved a
+better answer than a guess: *when is it worth reading the logs?* It reads the
+diary on this Mac and says what is in it. Run on eight days, it found a closed
+loop:
+
+    91% of the diary was the cat's own remarks; 0% was anything a person said
+    65 remarks, 11 of them distinct — one of them said 22 times
+    21 durable lines, in every prompt: 0 traceable to the person or the Mac,
+       16 to the cat's own remarks, 5 to nothing in that day at all
+    test zqqmark → test barge → test boat → test chiatta: one non-fact
+       degrading over four days, restated in durable.txt on every one of them
+
+The mechanism, once seen, is plain. `noteSaid` writes each remark to the diary;
+the nightly reflection reads the day back; on a day the cat spoke and nobody else
+did, the only material for a durable fact is the cat. Those lines then go into
+the next prompt, so the next remark is made out of the last one.
+
+It also explains exactly what it looked like from outside, which is how this was
+reported: a memory block asserting *"app update due next week"* and *"test barge
+still running"* will read a chat window as release notes, and leaves no room for
+the question actually being asked.
+
+The old prompt did say to throw away *"anything you said yourself"*, and it was
+obeyed on the days there was something else. On a day of nothing but remarks the
+model invented biography instead — *"reviews code every Monday"*, which nobody
+ever said. **An instruction is not a filter**, and this project knows that
+everywhere else.
+
+Three fixes, all three in code rather than in a prompt:
+
+- the reflection is handed only what was noticed and what was said **to** it, and
+  a day with fewer than three such lines is not reflected on at all;
+- a remark that says what an earlier one today says is thrown away before it is
+  spoken, by the same word-overlap rule the distillation already used;
+- a durable line that repeats an existing one is not written a second time.
+
+And the seed of the whole thing was the test suite. Three harnesses wrote notes
+in the **real** diary; `tests/memory.m` stages lines carrying its own marker and
+takes them out again, but while they were in there the advisor read one and said
+it aloud, and what `noteSaid` then wrote down was past any marker's reach. Every
+harness gets a diary of its own now, and `tests/loop.m` fails if one can still
+reach the diary on this Mac.
+
+### A test that depended on where you had left the mouse
+
+`tests/flee` put the cat forty points from the real pointer, clamped two hundred
+points inside the screen so it had room to run. With the mouse in a corner the
+clamp wins: the cat lands 224 points away, outside the radius that sets fleeing
+off, so nothing moves and the check fails having measured nothing — one run in
+three. The pointer is staged now, the way that file already stages screens, and
+three runs give 69 → 203 points identically.
+
+Nothing else changed: no new capability, no new permission, and the diary is
+still a text file you can open and delete a line from.
+
 ## 2.12 — 2026-09-01
 
 ### The screen is read for a stretch somebody asked for, not until they remember
