@@ -152,6 +152,28 @@ int main(void)
 		@"and the line itself is not quoted: that answers the other question",
 		whenSaid ?: @"(nothing)");
 
+	/* Two mentions of the same thing, and *when* means the later one. Measured
+	   before this was true: nine days back and two, and it answered nine,
+	   because -recordAbout: ranks by how much a line is about the question —
+	   right for "cosa avevo detto" and wrong for "quando". */
+	/* The filler is not padding. With only five lines staged, a word in two of
+	   them has almost no rarity left — inverse document frequency is doing what
+	   it is for — and both mentions of the meeting fell below the recall floor
+	   the moment a second one existed. On a real month that is two lines in three
+	   hundred; on a staged five it is forty per cent. Worth knowing, and worth
+	   not mistaking for a defect in the thing under test. */
+	stage(memory, 6, @"08:00\tyou\til treno delle sette era in ritardo\n"
+	                 @"09:00\tsaw\tha guardato la partita\n"
+	                 @"10:00\tyou\tho comprato il pane\n"
+	                 @"11:00\tsaw\tha chiamato sua sorella\n"
+	                 @"12:00\tyou\tdomani porto la macchina dal meccanico\n");
+	stage(memory, 3, @"08:00\tyou\tla riunione è spostata a lunedì\n");
+	NSString *later = [NekoRecord answerFor:@"quando te l'ho detto della riunione?"];
+	printf("      %s\n", [(later ?: @"(nothing)") UTF8String]);
+	ok(later != nil && [later rangeOfString:@"3"].location != NSNotFound,
+		@"the most recent mention, not the best-scoring one",
+		later ?: @"(nothing)");
+
 	/* Today and yesterday are said as words, because "0 giorni fa" is not how
 	   anybody says it. */
 	stage(memory, 1, @"09:00\tyou\til dentista è mercoledì mattina\n");

@@ -172,7 +172,11 @@ int main(void)
 
 	printf("\n--- how long since you said anything ---\n");
 
+	/* Both stamps, because the defaults are shared by every harness in a run and
+	   an earlier one leaves its own behind. This check failed in the suite and
+	   passed on its own, which is the shape of that mistake. */
 	[settings removeObjectForKey:@"NekoMemoryLastHeard"];
+	[settings removeObjectForKey:@"NekoMemoryHeardBefore"];
 	ok([NekoSelf howLongSinceHeard] == nil,
 		@"nothing heard is nothing to subtract", nil);
 	ok([[NekoSelf wantedFor:@"da quanto non ci parliamo?"] length] > 0,
@@ -182,12 +186,37 @@ int main(void)
 	[memory noteHeard:@"zzq-self una domanda qualunque"];
 	ok([[NekoMemory sharedMemory] lastHeard] != nil,
 		@"asking something stamps the moment", nil);
-	NSString *justNow = [NekoSelf wantedFor:@"da quanto non ci parliamo?"];
-	printf("      %s\n", [justNow UTF8String]);
-	ok([justNow length] > 0, @"which reads as just now", justNow);
+	ok([[NekoMemory sharedMemory] heardBefore] == nil,
+		@"and the first thing said has nothing before it", nil);
+	NSString *first = [NekoSelf wantedFor:@"da quanto non ci parliamo?"];
+	printf("      %s\n", [(first ?: @"(nothing)") UTF8String]);
+	ok(first != nil && [first isEqualToString:
+		NSLocalizedString(@"This is the first thing you have asked me.", nil)],
+		@"so the first time it is asked, it says so rather than “a moment ago”",
+		first ?: @"(nothing)");
 
+	[memory noteHeard:@"zzq-self e una seconda"];
+	NSString *justNow = [NekoSelf wantedFor:@"da quanto non ci parliamo?"];
+	printf("      %s\n", [(justNow ?: @"(nothing)") UTF8String]);
+	ok(justNow != nil, @"and after a second one there is something to subtract",
+		justNow ?: @"(nothing)");
+
+	/* And the sequence that actually happens, which the first version of this
+	   harness never ran: -ask: calls -noteHeard: **before** the question reaches
+	   any recogniser, so the most recent thing said is the question itself. Set
+	   by hand this passed while the feature answered "un attimo fa" for ever. */
 	[settings setObject:[NSDate dateWithTimeIntervalSinceNow:-3.0 * 86400.0]
 	             forKey:@"NekoMemoryLastHeard"];
+	[settings removeObjectForKey:@"NekoMemoryHeardBefore"];
+	[memory noteHeard:@"zzq-self da quanto non ci parliamo?"];
+	NSString *afterAsking = [NekoSelf wantedFor:@"da quanto non ci parliamo?"];
+	printf("      asked the real way: %s\n", [(afterAsking ?: @"(nothing)") UTF8String]);
+	ok(afterAsking != nil && [afterAsking rangeOfString:@"3"].location != NSNotFound,
+		@"asking does not reset the thing it asks about",
+		afterAsking ?: @"(nothing)");
+
+	[settings setObject:[NSDate dateWithTimeIntervalSinceNow:-3.0 * 86400.0]
+	             forKey:@"NekoMemoryHeardBefore"];
 	NSString *awhile = [NekoSelf wantedFor:@"da quanto non ci parliamo?"];
 	printf("      %s\n", [awhile UTF8String]);
 	ok(awhile != nil && justNow != nil && ![awhile isEqualToString:justNow]
@@ -226,6 +255,12 @@ int main(void)
 	printf("\n--- and the half that is the work: what it is not asked ---\n");
 
 	NSArray *not = [NSArray arrayWithObjects:
+		/* the past tense, which shares its opening with the present and must not
+		   share its answer: "dove sei nato?" was getting where the cat is
+		   sitting right now */
+		@"dove sei nato?", @"dove sei stato tutto il giorno?",
+		@"dove sei andato ieri?", @"quando hai parlato con Marco?",
+		@"da quanto sei qui in questa cartella?",
 		/* the same words, about the person or the machine */
 		@"dove sono le mie cartelle?", @"dove ho salvato il file?",
 		@"dove sono i modelli?", @"da quanto è acceso il mac?",
@@ -240,6 +275,27 @@ int main(void)
 	while((sentence = [e nextObject]) != nil)
 		ok([NekoSelf wantedFor:sentence] == nil, sentence,
 			[NekoSelf wantedFor:sentence] ?: @"left alone");
+
+	printf("\n--- while a harmless word after it is still the same question ---\n");
+
+	NSArray *stillAsking = [NSArray arrayWithObjects:
+		@"dove sei?", @"dove sei adesso?", @"tu dove sei ora?",
+		@"where are you right now?", nil];
+	e = [stillAsking objectEnumerator];
+	while((sentence = [e nextObject]) != nil)
+		ok([NekoSelf wantedFor:sentence] != nil, sentence,
+			[NekoSelf wantedFor:sentence] ?: @"REFUSED");
+
+	printf("\n--- and the day they met is stamped at launch ---\n");
+
+	/* Not the first time somebody asks: asked first after a month, the fallback
+	   would have said thirty for ever, because the older day files are pruned. */
+	NSString *controller = [NSString stringWithContentsOfFile:@"src/NekoController.m"
+		encoding:NSUTF8StringEncoding error:NULL];
+	ok(controller != nil
+	   && [controller rangeOfString:@"[[NekoMemory sharedMemory] metOn]"].location
+	      != NSNotFound,
+		@"taken when the application starts", nil);
 
 	printf("\n--- and none of this is in the prompt ---\n");
 

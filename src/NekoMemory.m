@@ -246,9 +246,14 @@ static BOOL NekoMemoryWorthKeeping(NSString *word)
 - (void)noteHeard:(NSString *)line
 {
 	/* Stamped as well as written down, so that "how long since you asked me
-	   anything" is a subtraction and not a walk back through a month of files. */
-	[[NSUserDefaults standardUserDefaults] setObject:[NSDate date]
-	                                         forKey:@"NekoMemoryLastHeard"];
+	   anything" is a subtraction and not a walk back through a month of files —
+	   and the one before it is kept, because the question that asks is itself a
+	   thing they said. See -heardBefore. */
+	NSUserDefaults *settings = [NSUserDefaults standardUserDefaults];
+	NSDate *was = [settings objectForKey:@"NekoMemoryLastHeard"];
+	if([was isKindOfClass:[NSDate class]])
+		[settings setObject:was forKey:@"NekoMemoryHeardBefore"];
+	[settings setObject:[NSDate date] forKey:@"NekoMemoryLastHeard"];
 	[self append:@"you" text:line];
 }
 
@@ -982,6 +987,13 @@ static BOOL NekoMemoryWorthKeeping(NSString *word)
 {
 	NSDate *stamped = [[NSUserDefaults standardUserDefaults]
 		objectForKey:@"NekoMemoryLastHeard"];
+	return [stamped isKindOfClass:[NSDate class]] ? stamped : nil;
+}
+
+- (NSDate *)heardBefore
+{
+	NSDate *stamped = [[NSUserDefaults standardUserDefaults]
+		objectForKey:@"NekoMemoryHeardBefore"];
 	return [stamped isKindOfClass:[NSDate class]] ? stamped : nil;
 }
 

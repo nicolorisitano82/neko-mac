@@ -149,6 +149,16 @@ extern NSString * const NekoMemoryDirectoryKey;
    own situation, which is the subject of docs/self.md. */
 - (NSDate *)metOn;
 - (NSDate *)lastHeard;
+
+/* The time they said something **before** the thing being handled now.
+
+   Which sounds like a nicety and is the difference between a working answer and
+   a useless one. -noteHeard: is called by -ask: before the question reaches any
+   recogniser, so by the time "da quanto non ci parliamo?" is answered, the most
+   recent thing said is that very question, and the answer was always "un attimo
+   fa". The harness had set the stamp by hand and never gone through -ask:, so it
+   passed while the feature did not work at all. */
+- (NSDate *)heardBefore;
 - (long long)bytesOnDisk;
 - (void)pruneOldDays;
 - (BOOL)forgetLinesContaining:(NSString *)text;

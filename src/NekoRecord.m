@@ -150,7 +150,17 @@ static NSInteger NekoRecordDaysAgo(NSString *stamp)
 	/* Asked *when*, the day and how long ago is the whole answer: quoting the
 	   line back would be answering a different question. */
 	if([self asksWhen:question]) {
+		/* The **most recent** mention, not the best-scoring one. -recordAbout:
+		   ranks by how much a line is about the question, which is right for
+		   "cosa avevo detto" and wrong here: "quando te l'ho detto" asks when it
+		   was last said. Measured before this line existed — two mentions of the
+		   same meeting, nine days back and two, and it answered nine. */
 		NSDictionary *first = [found objectAtIndex:0];
+		NSUInteger n;
+		for(n = 1; n < [found count]; n++)
+			if([[[found objectAtIndex:n] objectForKey:@"Day"]
+					compare:[first objectForKey:@"Day"]] == NSOrderedDescending)
+				first = [found objectAtIndex:n];
 		NSString *stamp = [first objectForKey:@"Day"];
 		NSInteger ago = NekoRecordDaysAgo(stamp);
 		if(ago == 0)

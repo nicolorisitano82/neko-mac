@@ -741,6 +741,13 @@ static const float NekoMaxStopRadius = 200.0f;
 	/* Not immediately: the first seconds after login belong to whatever else is
 	   starting, and a window that appears while the desktop is still settling is
 	   a window nobody reads. */
+	/* Stamped now rather than the first time somebody asks how long it has been
+	   here. Asked for the first time after a month, the fallback — the oldest day
+	   file — would have said thirty for ever, because the older days are pruned.
+	   Taken at launch it is right from the first day, and on an installation that
+	   predates the stamp it is the best answer available. */
+	[[NekoMemory sharedMemory] metOn];
+
 	[self performSelector:@selector(checkPermissionsOnce) withObject:nil afterDelay:4.0];
 	[self performSelector:@selector(checkForNewVersion) withObject:nil afterDelay:12.0];
 }

@@ -14,14 +14,36 @@ static NSLocale *NekoSelfLocale(void)
 	return [NSLocale localeWithLocaleIdentifier:code ?: @"en"];
 }
 
-/* Whichever of these the sentence contains. */
+/* Whichever of these the sentence contains — **and nothing much after it**.
+
+   The guard is not fussiness. Without it "dove sei" matched "dove sei nato?",
+   "dove sei stato tutto il giorno?" and "dove sei andato ieri?", and all three
+   were answered with where the cat is sitting right now: a present-tense answer
+   to a question about the past. The same shape NekoClock uses for "che ore
+   sono", for the same reason, with the same short list of words that may
+   harmlessly follow. */
 static BOOL NekoSelfAsks(NSString *text, NSArray *phrases)
 {
+	static NSArray *harmless = nil;
+	if(harmless == nil)
+		harmless = [[NSArray alloc] initWithObjects:
+			@"adesso", @"ora", @"in questo momento", @"di preciso", @"esattamente",
+			@"now", @"right now", @"at the moment", @"exactly",
+			@"maintenant", @"en ce moment",
+			@"ahora", @"ahora mismo", @"en este momento", nil];
+
 	NSEnumerator *e = [phrases objectEnumerator];
 	NSString *phrase;
-	while((phrase = [e nextObject]) != nil)
-		if([text rangeOfString:phrase].location != NSNotFound)
+	while((phrase = [e nextObject]) != nil) {
+		NSRange found = [text rangeOfString:phrase];
+		if(found.location == NSNotFound)
+			continue;
+		NSString *tail = [[text substringFromIndex:NSMaxRange(found)]
+			stringByTrimmingCharactersInSet:
+				[NSCharacterSet characterSetWithCharactersInString:@" ?!.,;:\t\n"]];
+		if([tail length] == 0 || [harmless containsObject:tail])
 			return YES;
+	}
 	return NO;
 }
 
@@ -144,7 +166,13 @@ static BOOL NekoSelfAsks(NSString *text, NSArray *phrases)
 
 + (NSString *)howLongSinceHeard
 {
-	NSDate *last = [[NekoMemory sharedMemory] lastHeard];
+	/* The one before this question, because asking is itself saying something —
+	   and **no fallback to the most recent**, which was there for a moment and
+	   was wrong: with nothing before it, the most recent thing said is the
+	   question being answered, and "da quanto non ci parliamo?" would have come
+	   back "un attimo fa" the very first time it was ever asked. Nothing before
+	   it means there was nothing, which the caller says as such. */
+	NSDate *last = [[NekoMemory sharedMemory] heardBefore];
 	if(last == nil)
 		return nil;
 	NSTimeInterval ago = -[last timeIntervalSinceNow];
