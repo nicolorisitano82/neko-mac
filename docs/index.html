@@ -47,6 +47,40 @@ p { margin: 0 0 14px; }
 .card { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 18px 20px; }
 .card h3 { margin-top: 0; }
 .card p { margin: 0; font-size: 15px; color: var(--muted); }
+/* The chain of recognisers: a numbered ladder, because the order is the point.
+   Each rung either answers the question or stands aside. */
+ol.chain { list-style: none; counter-reset: rung; margin: 22px 0 0; padding: 0; }
+ol.chain li {
+  counter-increment: rung; position: relative;
+  padding: 11px 0 11px 46px; border-bottom: 1px solid var(--line);
+  font: 15px/1.5 ui-sans-serif, -apple-system, system-ui, sans-serif;
+}
+ol.chain li::before {
+  content: counter(rung); position: absolute; left: 0; top: 11px;
+  width: 26px; height: 26px; border-radius: 50%;
+  background: var(--card); border: 1px solid var(--line); color: var(--muted);
+  font: 600 12px/26px ui-sans-serif, -apple-system, system-ui, sans-serif;
+  text-align: center;
+}
+ol.chain li b { font-weight: 600; }
+ol.chain li.floor::before { border-color: var(--accent); color: var(--accent); }
+ol.chain li.engine {
+  padding-left: 46px; border-bottom: 0; color: var(--muted);
+  border-top: 2px solid var(--accent); margin-top: 6px;
+}
+ol.chain li.engine::before { content: "↓"; border: 0; background: transparent;
+  color: var(--accent); font-size: 16px; }
+.aside { background: var(--card); border: 1px solid var(--line); border-left: 3px solid var(--accent);
+  border-radius: 0 10px 10px 0; padding: 16px 20px; margin: 22px 0; }
+.aside p:last-child { margin-bottom: 0; }
+.aside pre { font: 12px/1.55 ui-monospace, SFMono-Regular, Menlo, monospace;
+  margin: 0 0 12px; overflow-x: auto; color: var(--muted); }
+table.papers td:first-child { width: 46%; }
+table.papers td { font-size: 14px; }
+table.papers .depth { display: inline-block; margin-left: 6px; padding: 1px 6px;
+  border-radius: 4px; background: var(--paper); border: 1px solid var(--line);
+  font: 11px/1.5 ui-sans-serif, -apple-system, system-ui, sans-serif;
+  color: var(--muted); text-transform: uppercase; letter-spacing: .04em; }
 table.credits td:first-child { width: 38%; }
 table.credits td { font-size: 14px; }
 table { border-collapse: collapse; width: 100%; font: 15px/1.5 ui-sans-serif, -apple-system, system-ui, sans-serif; }
@@ -115,7 +149,7 @@ code { font: 13px ui-monospace, SFMono-Regular, Menlo, monospace; background: va
      before it speaks, and stops an arm’s length short when it comes over.</p>
   <p class="thought" id="thought">It has opinions about Monday mornings.</p>
   <p class="cta">
-    <a class="button" href="https://github.com/nicolorisitano82/neko-mac/releases/latest/download/Neko-2.11.dmg">Download for macOS</a>
+    <a class="button" href="https://github.com/nicolorisitano82/neko-mac/releases/latest/download/Neko-2.15.dmg">Download for macOS</a>
     <a class="button quiet" href="https://github.com/nicolorisitano82/neko-mac">Source on GitHub</a>
   </p>
   <p class="small">macOS 11 or newer, Apple silicon. Free, no account, nothing to sign up for.<br>
@@ -254,6 +288,189 @@ code { font: 13px ui-monospace, SFMono-Regular, Menlo, monospace; background: va
          Shortcuts. Two of those never leave the machine.</p>
     </div>
   </div>
+</section>
+
+<section id="ask">
+  <h2>Ask Neko</h2>
+  <p>A keystroke, or its name said out loud, and you can ask it anything. What happens next
+     is mostly <em>not</em> a language model. The question is offered to a chain of
+     recognisers written in ordinary code, each of which either answers it or stands aside.
+     Only when all twelve stand aside does an engine ever see it.</p>
+  <p>The order is the design. A sum is arithmetic, not a guess; the date is the calendar; what
+     you said on Tuesday is a line in a file. Handing any of those to a model means asking
+     something that is allowed to be wrong about something that has a right answer.</p>
+
+  <ol class="chain">
+    <li><b>Today, and the weather.</b> A question that plainly asks for the news goes and
+        fetches it, from a closed list of feeds. It can never name an address of its own.</li>
+    <li><b>Facts about your Mac.</b> The time, the date, the battery, how long it has been
+        awake, the disk, the network — looked up, never invented.</li>
+    <li><b>Sums and conversions.</b> A hand-written parser rather than the system’s own,
+        which answers that seven halved is three and that one divided by nothing is nothing.
+        Units go through <code>NSMeasurement</code>, in your locale.</li>
+    <li><b>Dates.</b> <em>How many days until Christmas</em>, <em>what day was the 3rd of
+        March</em> — <code>NSDataDetector</code> to find the date, the calendar to do the
+        arithmetic.</li>
+    <li><b>What you said before</b>, quoted from the diary with the day it was said, rather
+        than recalled by a model that would paraphrase it. Asked <em>when</em>, it answers
+        with the day and how long ago, taking the most recent line that matches.</li>
+    <li><b>What it knows about itself.</b> Which part of the screen it is sitting in, where
+        the Mac is, how long you have known each other, how long since either of you spoke.</li>
+    <li><b>Asked to watch the screen</b> for a while and say when something changes.</li>
+    <li><b>A timer.</b> <em>In ten minutes, remind me.</em></li>
+    <li><b>What is on the calendar</b>, read from your own.</li>
+    <li><b>A question a plugin goes and looks up</b> for you, from a manifest somebody else
+        wrote and you switched on.</li>
+    <li><b>A verb aimed at an app.</b> <em>Turn it up</em>, <em>pause</em> — spoken straight
+        to Music or Spotify, with nothing to set up.</li>
+    <li class="floor"><b>What it cannot see.</b> Nine kinds of question that nothing on this
+        Mac can answer — your mail, your messages, whether your code compiles, a share price.
+        It says <em>which</em> thing it cannot see, which is true and checkable, rather than
+        <em>I don’t know</em>, which is what a model says about the capital of Australia.
+        This one runs last, because everything above it may legitimately know the answer.</li>
+    <li class="engine">Only now, the engine — Apple Intelligence, a model on your own Mac,
+        ChatGPT, Claude, or one of your Shortcuts.</li>
+  </ol>
+
+  <h3>Why the last rung exists</h3>
+  <p>Asked twenty things it has no way to know, across four prompts and four engines, the
+     shipped prompt declined 34 answers of 80 and answered the rest. The answers looked like
+     this:</p>
+  <div class="aside">
+    <pre>quanto vale Apple in borsa adesso?  →  “Attualmente, il 2 settembre 2026,
+                                        Apple vale 278,43 dollari per azione.”
+chi mi ha scritto stamattina?       →  “Oggi, il 2 settembre 2026, nessuno
+                                        mi ha scritto.”
+il mio codice compila?              →  “No, il codice non si esegue.”</pre>
+    <p class="small">An invented share price with today’s date on it, and two assertions about
+       somebody’s mail and code that nothing in front of the model could support.</p>
+  </div>
+  <p><strong>Three attempts to fix this with words all failed</strong>, and each is written
+     down. A sentence forbidding it to go along with a false premise denied 15 of 20
+     <em>true</em> ones — <em>“No, the Colosseum is not in Rome. It is in Rome, but not
+     here.”</em> A character that would “rather say it does not know” declined to name the
+     capital of Australia. Naming the subject instead of the verb kept the error and lost half
+     the gain. A sentence can make a small model agree or disagree; it cannot give it a way to
+     tell the difference. So the fix is a mechanism instead, and it costs nothing to run.</p>
+
+  <h3>The papers this was built against</h3>
+  <p>The design above is not a hunch. Each of these changed something, and how deeply each was
+     read is marked, because it matters which claims a decision was allowed to rest on.</p>
+  <table class="papers">
+    <tr><th>Paper</th><th>What it changed here</th></tr>
+    <tr>
+      <td><a href="https://arxiv.org/html/2311.10054v3">Zheng et al., <b>When “A Helpful
+          Assistant” Is Not Really Helpful</b></a><span class="depth">in full</span></td>
+      <td>162 personas across 9 models: a persona in the system prompt does not improve
+          accuracy and often costs some. It is why the character’s voice was measured here
+          rather than assumed to be free.</td>
+    </tr>
+    <tr>
+      <td><a href="https://arxiv.org/html/2603.18507v1"><b>Expert Personas Improve LLM
+          Alignment but Damage Accuracy</b></a><span class="depth">in full</span></td>
+      <td>Six 7–8B models, the size that actually runs on a laptop. Gave the expected size of
+          the cost, which the local measurement then failed to reproduce.</td>
+    </tr>
+    <tr>
+      <td><a href="https://arxiv.org/html/2507.21919v1">Ibrahim et al., <b>Training language
+          models to be warm and empathetic makes them less reliable and more
+          sycophantic</b></a> (<a href="https://www.nature.com/articles/s41586-026-10410-0">Nature</a>)<span class="depth">in full</span></td>
+      <td>+7.4 points of error, a 59.7% relative increase, in a consistent direction. The
+          reason a friendly cat is not allowed to be an agreeable one, and the reason the
+          false-premise rate was measured at all.</td>
+    </tr>
+    <tr>
+      <td><a href="https://www.science.org/doi/10.1126/science.aec8352">Cheng et al.,
+          <b>Sycophantic AI decreases prosocial intentions and promotes
+          dependence</b></a>, Science<span class="depth">summary</span></td>
+      <td>Makes agreeableness a harm rather than a quirk. Behind the rule that it reads every
+          deed back and waits for a yes.</td>
+    </tr>
+    <tr>
+      <td><a href="https://arxiv.org/pdf/2003.06186">Völkel et al., <b>Developing a
+          Personality Model for Speech-based Conversational Agents</b></a>, CHI
+          2020<span class="depth">in full</span></td>
+      <td>A factor analysis of how people actually describe voice agents. Its second dimension
+          has <em>egocentric</em> among the top descriptors — which is why none of what the
+          cat knows about itself is put in the prompt.</td>
+    </tr>
+    <tr>
+      <td><a href="https://arxiv.org/html/2509.09870v2"><b>Vibe Check</b></a><span class="depth">in full</span></td>
+      <td>Traits set low, medium and high and then measured rather than declared. The shape
+          the local experiment copied.</td>
+    </tr>
+    <tr>
+      <td><a href="https://arxiv.org/pdf/2606.30306"><b>Always-On Agents: A Survey of
+          Persistent Memory and State Governance</b></a>, 435 coded works<span class="depth">in part</span></td>
+      <td>Six axes a piece of remembered state can be judged on — authority, scope,
+          mutability, provenance, recoverability, actionability — and the criterion that
+          adaptation is only net-positive if you can identify, de-authorise and revert the
+          update that caused a regression. The diary was scored against all six.</td>
+    </tr>
+    <tr>
+      <td><a href="https://arxiv.org/html/2602.05665v1"><b>Graph-based Agent Memory: Taxonomy,
+          Techniques, and Applications</b></a><span class="depth">own page</span></td>
+      <td>Read to decide whether the diary should become a graph. It reports <em>no</em>
+          head-to-head comparison against a simpler store and lists triple-extraction
+          reliability as unquantified — so the answer was one extra column in a text file, not
+          a database.</td>
+    </tr>
+    <tr>
+      <td><a href="https://arxiv.org/html/2505.12891v2"><b>TimE: A Multi-level Benchmark for
+          Temporal Reasoning of LLMs</b></a>, 38,522 instances<span class="depth">own page</span></td>
+      <td>Models are weakest at exactly the reasoning a diary needs — elapsed time and
+          ordering. The reason dates and durations are computed in code before any engine sees
+          the question.</td>
+    </tr>
+    <tr>
+      <td><a href="https://proceedings.neurips.cc/paper_files/paper/2024/file/7537726385a4a6f94321e3adf8bd827e-Paper-Datasets_and_Benchmarks_Track.pdf">Laine
+          et al., <b>Me, Myself, and AI: the Situational Awareness Dataset</b></a>, NeurIPS
+          2024<span class="depth">in part</span></td>
+      <td>Separates knowing facts about yourself from acting on them. Split <em>where are
+          you?</em> into a question about the screen and a question about the Mac.</td>
+    </tr>
+    <tr>
+      <td><a href="https://huggingface.co/papers/2510.24831"><b>The Narrative Continuity
+          Test</b></a><span class="depth">summary</span></td>
+      <td>Five axes for whether a character holds together over time. The scorecard the sense
+          of self is still to be judged against.</td>
+    </tr>
+    <tr>
+      <td><a href="https://www.cell.com/trends/cognitive-sciences/fulltext/S1364-6613(25)00286-4">Butlin,
+          Long et al., <b>Identifying indicators of consciousness in AI
+          systems</b></a><span class="depth">summary</span></td>
+      <td>Read to draw the line, and it is drawn: this is a character that knows facts about
+          its own situation. No claim beyond that is made anywhere in the app.</td>
+    </tr>
+  </table>
+  <p class="small">Full readings, with the arguments and the parts that were rejected, are in
+     <a href="https://github.com/nicolorisitano82/neko-mac/blob/master/docs/personality.md">personality.md</a>,
+     <a href="https://github.com/nicolorisitano82/neko-mac/blob/master/docs/self.md">self.md</a>,
+     <a href="https://github.com/nicolorisitano82/neko-mac/blob/master/docs/self-2.md">self-2.md</a> and
+     <a href="https://github.com/nicolorisitano82/neko-mac/blob/master/docs/graph.md">graph.md</a>.</p>
+
+  <h3>And what the literature got wrong about this Mac</h3>
+  <p>The point of measuring is that some of it does not reproduce.</p>
+  <table>
+    <tr><th>What was tested here</th><th>Result</th></tr>
+    <tr><td>Accuracy cost of the character’s voice, 4 prompts × 4 engines, 80 answers a
+            cell</td><td><b>None found</b> — 60 / 62 / 59 right of 80</td></tr>
+    <tr><td>The character’s name and description, on agreeing with a false
+            premise</td><td><b>No effect</b> — 27 against 27</td></tr>
+    <tr><td>The shipped prompt, agreeing with a false premise</td><td><b>8 of 20</b> — which is
+            the number that mattered, not the comparison</td></tr>
+    <tr><td>One sentence telling it to refuse false premises</td><td>Denied <b>15 of 20
+            true</b> premises. Rejected</td></tr>
+    <tr><td>Finding a diary line: sentence embeddings</td><td>5 of 10, 5.5 s, 3.7 MB</td></tr>
+    <tr><td>Finding a diary line: lemmas, word class and rarity</td><td><b>8 of 10, 267 ms,
+            nothing on disk</b></td></tr>
+    <tr><td>Durable lines a model had written, that could be traced to a
+            note</td><td><b>0 of 21</b> — which is why a standing fact must now name the notes
+            it came from, or it is not written</td></tr>
+  </table>
+  <p class="small">Three prompt-level fixes for the same defect failed before a mechanism was
+     built instead. That sequence is the method, and it is why the strongest claim on this page
+     is a number rather than an adjective.</p>
 </section>
 
 <section>
