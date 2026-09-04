@@ -506,13 +506,32 @@ static const NSTimeInterval NekoHoldToType = 0.5;
 	[[self panel] holdWithState:NekoStateStop];
 	[self showBubble:NekoAskLocalized(@"Listening…") dismissAfter:0.0];
 
-	BOOL started = [listener startListeningWithLocale:[NSLocale currentLocale]
-		report:^(NSString *text, BOOL final, NSError *error) {
-			[self heard:text final:final error:error];
-		}];
+	BOOL started = NO;
+	@try {
+		started = [listener startListeningWithLocale:[NSLocale currentLocale]
+			report:^(NSString *text, BOOL final, NSError *error) {
+				[self heard:text final:final error:error];
+			}];
+	}
+	@catch(NSException *raised) {
+		/* The belt as well as the braces. NekoListener now turns a CoreAudio
+		   raise into a returned NO, but anything that gets past it must not
+		   leave this method halfway through: `phase` would stay on
+		   NekoPhaseListening with nothing on screen, and the next press would
+		   take the -isBusy branch, cancel and return. Press, press, press,
+		   nothing — until a restart. That is a real report, and tests/deaf.m
+		   holds the log of the night it happened. */
+		NSLog(@"Neko: the microphone could not be opened — %@", [raised reason]);
+		started = NO;
+	}
 	if(!started) {
+		[listener cancel];
+		[bubble hide];
 		phase = NekoPhaseIdle;
-		[self sayInCharacter:NekoAskLocalized(@"I could not hear anything at all.")];
+		/* A line to type in rather than a complaint, which is what
+		   -beginListening already does for a Mac with no microphone and for one
+		   whose owner said no. A keystroke has to do something. */
+		[self typeALine];
 	}
 }
 

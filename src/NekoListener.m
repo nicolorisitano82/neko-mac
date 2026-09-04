@@ -103,17 +103,32 @@ static const NSTimeInterval NekoListeningLimit = 15.0;
 		engine = audio;
 		AVAudioInputNode *input = [audio inputNode];
 		AVAudioFormat *format = [input outputFormatForBus:0];
-		if([format sampleRate] <= 0.0) {          /* no usable microphone */
+		/* Both halves of "usable", because the second one cost a day. A default
+		   input that has gone away — a display waking, a headset leaving —
+		   hands back a format with a sane sample rate and **no channels**, and
+		   -installTapOnBus: does not return an error for that. It raises. The
+		   unified log for the failure is quoted in tests/deaf.m. */
+		if([format sampleRate] <= 0.0 || [format channelCount] == 0) {
 			[self cancel];
 			return NO;
 		}
-		[input installTapOnBus:0 bufferSize:1024 format:format
-		                block:^(AVAudioPCMBuffer *buffer, AVAudioTime *when) {
-			[(SFSpeechAudioBufferRecognitionRequest *)request appendAudioPCMBuffer:buffer];
-		}];
 
 		NSError *error = nil;
-		[audio prepare];
+		@try {
+			[input installTapOnBus:0 bufferSize:1024 format:format
+			                block:^(AVAudioPCMBuffer *buffer, AVAudioTime *when) {
+				[(SFSpeechAudioBufferRecognitionRequest *)request appendAudioPCMBuffer:buffer];
+			}];
+			[audio prepare];
+		}
+		@catch(NSException *raised) {
+			/* A raise from CoreAudio is a failure to start like any other, and
+			   every caller of this method is written to read a BOOL. */
+			NSLog(@"Neko: the microphone would not open — %@", [raised reason]);
+			[self cancel];
+			return NO;
+		}
+
 		if(![audio startAndReturnError:&error]) {
 			void (^failed)(NSString *, BOOL, NSError *) = report;
 			report = NULL;

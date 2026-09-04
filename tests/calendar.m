@@ -37,28 +37,38 @@ int main(void)
 
 	printf("\n--- what it takes for a calendar ---\n");
 
-	const char *asked[] = {
-		"metti in calendario la riunione con Marco venerdì alle 9:30",
-		"segna un appuntamento dal dentista il 3 settembre a mezzogiorno",
-		"appuntamento domani alle 15",
-		"add to my calendar the standup tomorrow at 9am",
-		"schedule lunch with Ana tomorrow at 1pm",
-		"rendez-vous chez le dentiste demain à 15h",
-		"añade al calendario la reunión mañana a las 10",
-	};
-	NSUInteger i, understood = 0, total = sizeof(asked) / sizeof(asked[0]);
+	/* The named day is computed rather than written down. It used to say "il 3
+	   settembre", which was next week when this was written and yesterday by the
+	   time somebody ran it again — the check went red for the calendar rather
+	   than for the code. A date three weeks out is always ahead. */
+	NSDateFormatter *saidAs = [[[NSDateFormatter alloc] init] autorelease];
+	[saidAs setLocale:[[[NSLocale alloc] initWithLocaleIdentifier:@"it_IT"] autorelease]];
+	[saidAs setDateFormat:@"d MMMM"];
+	NSString *threeWeeksOn = [saidAs stringFromDate:
+		[NSDate dateWithTimeIntervalSinceNow:21.0 * 24.0 * 3600.0]];
+
+	NSArray *asked = [NSArray arrayWithObjects:
+		@"metti in calendario la riunione con Marco venerdì alle 9:30",
+		[NSString stringWithFormat:
+			@"segna un appuntamento dal dentista il %@ a mezzogiorno", threeWeeksOn],
+		@"appuntamento domani alle 15",
+		@"add to my calendar the standup tomorrow at 9am",
+		@"schedule lunch with Ana tomorrow at 1pm",
+		@"rendez-vous chez le dentiste demain à 15h",
+		@"añade al calendario la reunión mañana a las 10", nil];
+	NSUInteger i, understood = 0, total = [asked count];
 	NSMutableString *missed = [NSMutableString string];
 	for(i = 0; i < total; i++) {
-		NSString *said = [NSString stringWithUTF8String:asked[i]];
+		NSString *said = [asked objectAtIndex:i];
 		NSDictionary *got = [NekoAppointment wantedFor:said];
 		if(got != nil && [got objectForKey:@"When"] != nil
 		   && [[got objectForKey:@"Title"] length] > 0) {
 			understood++;
-			printf("      %-58s %s — “%s”\n", asked[i], [whenOf(got) UTF8String],
+			printf("      %-58s %s — “%s”\n", [said UTF8String], [whenOf(got) UTF8String],
 				[[got objectForKey:@"Title"] UTF8String]);
 		}
 		else
-			[missed appendFormat:@"%s; ", asked[i]];
+			[missed appendFormat:@"%@; ", said];
 	}
 	ok(understood == total, [NSString stringWithFormat:
 		@"all %lu are understood, with a day and a title",
