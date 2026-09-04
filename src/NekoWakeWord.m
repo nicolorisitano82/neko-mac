@@ -161,21 +161,34 @@ static NSString * const NekoWakeSpellings[] = {
 		engine = audio;
 		AVAudioInputNode *input = [audio inputNode];
 		AVAudioFormat *format = [input outputFormatForBus:0];
-		if([format sampleRate] <= 0.0) {
+		/* The same two guards as NekoListener, and this is the path that runs
+		   unattended: a default input that has gone away gives a sane sample
+		   rate and no channels, and -installTapOnBus: raises rather than
+		   returning. See tests/deaf.m. */
+		if([format sampleRate] <= 0.0 || [format channelCount] == 0) {
 			[self stop];
 			return;
 		}
-		/* The tap outlives each recognition task: only the request underneath it
-		   is swapped, every fifty seconds. */
-		[input installTapOnBus:0 bufferSize:2048 format:format
-		                block:^(AVAudioPCMBuffer *buffer, AVAudioTime *when) {
-			id current = request;
-			if(current != nil)
-				[(SFSpeechAudioBufferRecognitionRequest *)current appendAudioPCMBuffer:buffer];
-		}];
 
 		NSError *problem = nil;
-		[audio prepare];
+		@try {
+			/* The tap outlives each recognition task: only the request
+			   underneath it is swapped, every fifty seconds. */
+			[input installTapOnBus:0 bufferSize:2048 format:format
+			                block:^(AVAudioPCMBuffer *buffer, AVAudioTime *when) {
+				id current = request;
+				if(current != nil)
+					[(SFSpeechAudioBufferRecognitionRequest *)current appendAudioPCMBuffer:buffer];
+			}];
+			[audio prepare];
+		}
+		@catch(NSException *raised) {
+			NSLog(@"Neko: the wake word could not open the microphone — %@",
+				[raised reason]);
+			[self stop];
+			return;
+		}
+
 		if(![audio startAndReturnError:&problem]) {
 			[self stop];
 			return;
