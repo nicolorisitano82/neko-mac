@@ -1,5 +1,53 @@
 # Changelog
 
+## 2.15.1 — 2026-09-04
+
+**Ask Neko could go dead until a restart.** After many hours the keystroke and
+the menu item both did nothing, and only quitting and reopening brought it back.
+
+The unified log for the night it happened has the whole chain, and the first
+thing it says is that every press *did* reach the code:
+
+    23:10:10.938  (TCC) TCCAccessRequest() IPC
+    23:10:10.948  +[SFSpeechAssetManager pathToAssetWithConfig:...]
+    23:10:19.872  IsDeviceUsable: Device ID: 840 (Input:No | Output:No):
+    23:10:19.872  E  AudioObjectRemovePropertyListener: no object with given ID 0
+
+Presses at 23:10:10, :15 and :19 — four or five seconds apart, which is somebody
+pressing again because nothing happened.
+
+The default audio device had changed underneath the app at a display wake
+fourteen hours earlier, and what `AVAudioEngine` handed back was a device that is
+**neither input nor output**. Its input node gives a format with a sane sample
+rate and **no channels**, and `-installTapOnBus:bufferSize:format:block:` does not
+return an error for such a format — **it raises**. So no check on a `BOOL` or an
+`NSError` could ever have seen it.
+
+The exception left `-startCapture` halfway through, with the phase still on
+*listening* and nothing on screen. The next press therefore took the *already
+busy* branch, cancelled and returned; the one after that raised again. Press,
+press, press, nothing, for ever.
+
+Three fixes, because the same shape was in three places:
+
+- **The listener** now guards the channel count as well as the sample rate, and
+  turns a CoreAudio raise into the `NO` its callers are written to read.
+- **The wake word** had the identical unguarded pattern, on the path that runs
+  unattended. Same two guards.
+- **The question** catches anything that still gets past, and falls back to a
+  line to type in rather than a complaint — which is what it already does for a
+  Mac with no microphone, on the grounds that a keystroke has to do something.
+
+`tests/deaf.m` measures all three: that the format raises rather than returning,
+that the phase used to be stranded by it, and that five presses now give five
+ways in instead of alternating between a throw and a silent cancel.
+
+### Also
+
+- A check in the calendar harness pinned *"il 3 settembre"*, which was next week
+  when it was written and yesterday by the time it ran again. The day is computed
+  now, so the suite goes red for the code rather than for the calendar.
+
 ## 2.15 — 2026-09-03
 
 Neko knows where it is, since when, and what was actually said to it — and the
