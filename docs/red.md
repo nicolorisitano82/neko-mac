@@ -7,7 +7,7 @@ was not, and it had the two of them **backwards**.
 |  | what I said first | what six runs say |
 | --- | --- | --- |
 | `persona` | stable, not intermittent | **intermittent** — 3 of 3 passed on re-run, then 0 empty in 24. Settled below |
-| `timer` | intermittent | **not intermittent** — 6 of 6 failed |
+| `timer` | intermittent | **not intermittent** — 6 of 6 failed. Fixed below |
 
 The lesson is the one this project keeps relearning: a harness run twice is a
 guess. Neither of these had been run more than twice when I described them.
@@ -87,27 +87,16 @@ asking the right question.
 
 ---
 
-## 2. `timer` — the harness is measuring the display, not the patience
+## 2. `timer` — the harness was measuring the display, not the patience ✅ *fixed*
 
-**Status: fails every time, and the code is behaving as designed. The check is
-the defect, plus one real question underneath it.**
+**Was: fails every time, and the code behaving as designed. The check was the
+defect. Fixed, and the question underneath turned out to have an answer.**
 
-Six consecutive runs, asked for a two-second timer:
+Six consecutive runs, asked for a two-second timer: **30.2, 387.1, 30.2, 30.2,
+30.1 and 403.0 seconds**. Never the twelve the check allows, and never near it.
 
-| run | fired after |
-| --- | --- |
-| 1 | 30.2 s |
-| 2 | 387.1 s |
-| 3 | 30.2 s |
-| 4 | 30.2 s |
-| 5 | 30.1 s |
-| 6 | 403.0 s |
-
-Never the twelve seconds the check allows, and never anywhere near it. Two
-clusters, and both have the same cause.
-
-`NekoTimer` has two branches before it speaks, and only the second is what the
-check has in mind:
+`NekoTimer` has two branches before it speaks, and only the second is the one the
+check had in mind:
 
 ```objc
 if([[NekoDesktop sharedDesktop] nobodyIsThere]
@@ -122,36 +111,52 @@ if(![NekoAsk mayInterruptNow] && putOff * NekoTimerRetry < NekoTimerPatience) {
 }
 ```
 
-`NekoTimerPatience` is 8 s, and `tests/timer.m` allows 12. But
-`-whyNobodyIsThere` returns non-nil for three reasons, and the third is
-**`CGDisplayIsAsleep`**. The suite runs unattended; the display sleeps; the timer
-takes the *first* branch and waits for somebody to come back, which is exactly
-what its comment says it should do.
+`-whyNobodyIsThere` returns non-nil for three reasons and the third is
+**`CGDisplayIsAsleep`**. The suite runs unattended, the display sleeps, and the
+timer takes the *first* branch — exactly what its own comment says it should do.
+The 30.2 s cluster is the harness's `while` loop giving up with the timer still
+running; the 387 s and 403 s are longer than that loop can possibly run, which
+means the Mac itself slept mid-wait.
 
-- **The 30.2 s cluster** is the harness's own `while` loop giving up after 30 s
-  with the timer still running.
-- **The 387 s and 403 s** are longer than that loop can possibly run, which means
-  the Mac itself slept mid-wait and the wall clock jumped. Same cause, one level
-  up.
+**Fixed** by staging the condition, the way `tests/flee.m` stages
+`+[NSEvent mouseLocation]` after failing for the same kind of reason — reading the
+real machine instead of a controlled one. `-[NekoDesktop nobodyIsThere]` is
+swizzled to NO, and the check now reads:
 
-**What to do about the check:** stage the condition, the way `tests/flee.m`
-already stages `+[NSEvent mouseLocation]` after that harness failed for the same
-kind of reason — reading the real machine instead of a controlled one. Swizzle
-`-[NekoDesktop nobodyIsThere]` to return NO for the duration, and the check then
-measures `NekoTimerPatience`, which is what it is named after.
+    ok    it goes off by itself, waiting for a decent moment   asked for 2 s, went off after 10.3 s
+    ok    and never waits longer than its patience             10.3 s
 
-**And the real question underneath, which is not a test problem:**
+Ten point three: two seconds of timer and eight of patience, which is
+`NekoTimerPatience` exactly. That is the number the check was named after and had
+never once measured.
 
-> `-whyNobodyIsThere` treats *the display is asleep* the same as *the screen is
-> locked* and *somebody else is logged in*. Those are not the same. A locked
-> screen means somebody chose to step away. A sleeping display can mean somebody
-> is sitting right there reading something on paper — and a timer they set
-> themselves is the one thing in this application worth waking a display for.
+**And the branch above it is pinned now too**, because nothing checked it at all —
+which is how it came to be what the suite was accidentally measuring:
 
-`NekoTimer.m`'s own comment argues that a timer eight seconds late is fine and
-twenty is not. An hour is neither, and nobody has decided whether it should be.
-Measuring first: how often does a timer land while the display is asleep but
-somebody is still there? That is answerable from the diary.
+    ok    a timer does not go off into an empty room, it waits  still running 6 s after a 2 s timer
+
+### The question underneath, which turned out to have an answer
+
+This document previously argued that *the display is asleep* should not be
+treated like *the screen is locked* — that somebody reading paper at their desk is
+still there, and a timer they set is worth waking a display for.
+
+**That argument does not survive one line of the code.** `NekoAskSpeakKey`
+defaults to **NO**: unless somebody turned the voice on, a timer that lands
+produces a **bubble and nothing else**, and a bubble on a sleeping display is not
+a late timer — it is a timer that failed in silence and counted itself as said.
+Which is precisely the failure the existing comment says it is avoiding.
+
+So the current behaviour is right for the configuration almost everybody runs,
+and the case for changing it narrows to one: **when the voice is on**, sound
+reaches somebody whose display has slept, and waiting is then pure lateness.
+
+That is a real but small improvement, and it carries the risk the design already
+weighs — a display asleep usually means somebody left, and speaking into an empty
+room consumes the timer. Nothing here measures how often a display sleeps with
+somebody still in front of it, and nothing in the diary records it either. So it
+stays open, deliberately, as a change with a known cost and an unknown benefit
+rather than an obvious win.
 
 ---
 

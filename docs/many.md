@@ -215,6 +215,99 @@ Stated so somebody can falsify it rather than argue about it.
   a project ends up with a router that has learned to say *"use the small one"*
   and a benchmark that congratulates it.
 
+## 7. Second instalment: the signal, measured rather than assumed
+
+§5.1 said the first experiment is whether `NekoRate` correlates with a good
+answer. That experiment **cannot be run**, and finding out why took ten minutes of
+reading rather than a week of building.
+
+### `NekoRate` is not what §5.1 took it for
+
+Three things, all checkable in the source:
+
+- It keeps **daily aggregates** in `NSUserDefaults` — said, answered, ignored,
+  dismissed — reset each day. There is no per-question record, no question text,
+  no engine, no answer.
+- Every verdict is gated by `if(!saidUnasked) return;`. It judges **remarks the
+  cat made on its own**, never an answer to a question somebody asked.
+- Its purpose is stated in its own header: it decides *how often the cat may
+  speak unasked*. It was never a quality signal and does not pretend to be.
+
+So the correlation §5.1 wanted has nothing on either side of it. **The signal
+would have to be built, not measured** — which is a different project and a
+larger one.
+
+### What the literature does instead, and it is the right instinct
+
+*Learning to Route and Schedule LLMs from User Retrials via Contextual Queueing
+Bandits* (arXiv 2602.02061 — **read as summary**) faces the same wall and gets
+around it the obvious way: **asking people to rate answers degrades the thing you
+are trying to improve**, so infer from behaviour instead. Their signal is the
+**retrial** — somebody who asks again was not satisfied — and their algorithm
+carries a routing regret of Õ(√t).
+
+That is exactly the shape available here. The diary already records every
+question with the minute it was asked. A re-ask is visible without building
+anything.
+
+### So it was measured, on this Mac's own diary
+
+Timestamps only, no content read:
+
+| | |
+| --- | --- |
+| days of diary | 12 |
+| questions asked, all of them | **42** |
+| consecutive pairs within a day | 33 |
+| pairs **less than a minute** apart | **23 of 33** |
+| median gap between questions | **1 minute** |
+
+Two findings, and the second kills the first.
+
+**a. The rapid re-ask is common — twenty-three of thirty-three.** As a raw rate
+that is a rich signal, far richer than anything a ratings prompt would collect.
+
+**b. And it is the same event as the feature this application already
+shipped.** `NekoAsk`'s own comment records the earlier measurement: *"of fourteen
+runs of questions inside three minutes of each other, six reached a third turn"*
+— which is why the conversational thread carries three turns rather than one. A
+question a minute after the last one is a **follow-up** at least as often as it is
+a **retrial**, and from the timing alone the two are indistinguishable. Telling
+them apart needs the content of both questions compared, which is a model, which
+is the thing being routed.
+
+### And the number that settles it for now
+
+**t = 42, over twelve days.**
+
+Every guarantee in §2 and in the bandit line of work is asymptotic. Õ(√t) is a
+promise about what happens as t grows; at t = 42 it promises nothing at all, and
+the exploration half of exploration-versus-exploitation would spend a
+non-trivial share of those forty-two questions deliberately taking the worse
+path — on somebody's real Mac, to learn something the hand-written chain already
+decides correctly most of the time.
+
+This is the sharpest difference between this application and every system in the
+literature, and it is not a matter of engineering. **Those systems see millions of
+queries from many people; this one sees three and a half a day from one.** A
+learned router is a technique for a workload that does not exist here.
+
+### What that leaves, which is not nothing
+
+- **Learning is out at this scale.** Not wrong in principle — out of reach in
+  practice, and the reason is a number that can be re-checked in a year rather
+  than an opinion.
+- **The seed-set half of BoundaryRouter survives**, because it is training-free.
+  Running the cheap path and the expensive path over the diary's forty-two real
+  questions and *looking at where they disagree* costs nothing at runtime and
+  would say, concretely, which questions the recogniser chain is losing. That is
+  a measurement this project can act on — it produces phrases for a list, which
+  is how `NekoUnseen`, `NekoClock` and `NekoSums` were all built.
+- **And the honest version of the proposal is that last line.** Not a router that
+  learns, but a measurement that tells a person what to write down. The memory
+  stays crucial — it is the diary, and it is the only reason there is a seed set
+  at all.
+
 ---
 
 *Read in the paper: [**Unsolvability Ceiling in Multi-LLM Routing**, arXiv
@@ -228,7 +321,9 @@ Models: A Survey on LLM Ensemble**, arXiv
 Fail?**, arXiv 2503.13657](https://arxiv.org/abs/2503.13657), NeurIPS 2025;
 [**OrcaRouter**, arXiv 2605.30736](https://arxiv.org/html/2605.30736v1);
 [**Learning to Route LLMs from Bandit Feedback** (BaRP), arXiv
-2510.07429](https://arxiv.org/abs/2510.07429); [**Dynamic Model Routing and
+2510.07429](https://arxiv.org/abs/2510.07429); [**Learning to Route and Schedule
+LLMs from User Retrials via Contextual Queueing Bandits**, arXiv
+2602.02061](https://arxiv.org/abs/2602.02061); [**Dynamic Model Routing and
 Cascading for Efficient LLM Inference: A Survey**, arXiv
 2603.04445](https://arxiv.org/html/2603.04445v2); [**RouterEval**, arXiv
 2503.10657](https://arxiv.org/pdf/2503.10657).*
