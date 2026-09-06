@@ -221,3 +221,51 @@ to what it actually does, with the limit stated rather than implied.
 That is the honest yield of two steps: the measurement the branch was opened for
 is dead, and the by-catch is two real gaps and one false claim taken off a public
 page — none of which anybody was looking for.
+
+---
+
+## Step three: the first gap closed, and the diagnosis was wrong twice
+
+**"the weather is only recognised when a place is named" was wrong.** `NekoWeb`
+already falls back to the town this Mac is in. Read properly, the chain is:
+
+1. a place in the question → answer it;
+2. otherwise the Mac's own town → answer it;
+3. otherwise **nil** — and guessing a city really would be worse than asking.
+
+So the failure needed a third condition, and it is the ordinary one: **a Mac that
+has not been told where it is**, which is every Mac until somebody grants the
+location permission. Then `NekoWeb` correctly declines — and the floor underneath
+was supposed to catch it.
+
+**It did not.** `NekoUnseen`'s weather class held `"che tempo fa a"`, `"che tempo
+farà"` and `"che tempo fa fuori"` — every phrasing except the bare one. So *"che
+tempo fa?"*, the commonest way anybody asks, went past the recogniser, past the
+floor, and into a model with no forecast in front of it. That is the exact
+failure `NekoUnseen` exists to prevent, and the hole was at the most-used phrase.
+
+### And widening it broke something within a minute
+
+Shortened to the bare forms, `tests/unseen.m` failed immediately:
+
+    FAIL  che tempo fa che non ci vediamo?    Non posso vedere il meteo.
+
+*"che tempo fa che non ci vediamo"* is **how long has it been** — the same three
+words, a different sentence. That check exists precisely for this and it earned
+its keep.
+
+The fix is a veto rather than a special case: a phrase written with a leading
+`"!"` stops its class claiming the question. Four of them now sit in the weather
+class (`!tempo fa che`, `!quanto tempo fa`, `!da quanto tempo`, `!piove sul
+bagnato`), which lets every other entry stay short instead of enumerating every
+phrasing — the thing this file has always been bad at.
+
+    the weather asked the way people ask it     10 of 10, in four languages
+
+### Still open
+
+`NekoClock` does duration arithmetic only. *"che giorno era il 3 marzo 2026?"*
+and *"quanti giorni mancano a Natale?"* both reach the engine — the first because
+the capability does not exist, the second because a holiday by name is not a date
+`NSDataDetector` reads. The page no longer claims otherwise. Whether either is
+worth building is a separate decision, and neither is in this Mac's diary.

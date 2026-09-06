@@ -74,14 +74,31 @@ static NSArray *NekoUnseenClasses(void)
 			@"what's my colleague called", @"qui est au téléphone",
 			@"quién está al teléfono", nil],
 
-		/* The weather, which is the world rather than the Mac — and which the
-		   news path takes first when somebody has a feed for it. */
+		/* The weather, which is the world rather than the Mac — and which
+		   NekoWeb takes first whenever it can actually answer: a place named in
+		   the question, or the town this Mac is in. This only ever speaks for
+		   what is left, which is the ordering the whole class relies on.
+
+		   The bare present tense used to be missing. "che tempo fa a Vicenza"
+		   was here and "che tempo fa" was not, so on a Mac that has not been
+		   told where it is — which is every Mac until somebody grants the
+		   location — the commonest phrasing of all went past NekoWeb, past this,
+		   and into a model with no forecast in front of it. tests/reach.m found
+		   it: that question is in this Mac's own diary twice. Each entry below
+		   is now the shortest form NekoWeb also recognises, so the two lists
+		   cannot drift apart again. */
 		[NSArray arrayWithObjects:@"weather",
 			@"I cannot see the weather.",
-			@"che tempo fa a", @"che tempo farà", @"che tempo fa fuori",
-			@"piove a", @"pioverà", @"che temperatura c'è a", @"quanti gradi ci sono a",
-			@"what's the weather", @"what is the weather", @"will it rain",
-			@"quel temps fait-il", @"qué tiempo hace", nil],
+			@"che tempo fa", @"che tempo farà", @"che tempo c",
+			@"piove", @"pioverà", @"che temperatura c'è", @"quanti gradi",
+			@"previsioni", @"meteo",
+			@"what's the weather", @"what is the weather", @"how's the weather",
+			@"how is the weather", @"will it rain", @"how many degrees",
+			@"quel temps", @"la météo", @"combien de degrés",
+			@"qué tiempo", @"que tiempo", @"cuántos grados",
+			/* Not the weather: tempo is also time, and these are time. */
+			@"!tempo fa che", @"!quanto tempo fa", @"!da quanto tempo",
+			@"!piove sul bagnato", nil],
 
 		/* And what is in a calendar this application can write to and not read. */
 		[NSArray arrayWithObjects:@"calendar",
@@ -121,10 +138,35 @@ static NSArray *NekoUnseenClasses(void)
 		   && [[[NekoFolderAccess sharedAccess] allowedKeys] count] > 0)
 			continue;
 
+		/* A phrase written with a leading "!" is the other kind: it does not
+		   claim the question, it stops this class claiming it.
+
+		   Needed the moment a phrase got short enough to be useful, because a
+		   short phrase in one language is a different sentence in another part
+		   of the same one. "che tempo fa" is the weather; "che tempo fa che non
+		   ci vediamo" is how long it has been — same three words, and
+		   tests/unseen.m caught it within a minute of the list being widened. A
+		   veto keeps the entries short instead of forcing every phrasing to be
+		   enumerated, which is the thing this file is bad at. */
 		NSUInteger i;
-		for(i = 2; i < [group count]; i++)
-			if([text rangeOfString:[group objectAtIndex:i]].location != NSNotFound)
+		BOOL vetoed = NO;
+		for(i = 2; i < [group count] && !vetoed; i++) {
+			NSString *phrase = [group objectAtIndex:i];
+			if([phrase hasPrefix:@"!"]
+			   && [text rangeOfString:[phrase substringFromIndex:1]].location
+			      != NSNotFound)
+				vetoed = YES;
+		}
+		if(vetoed)
+			continue;
+
+		for(i = 2; i < [group count]; i++) {
+			NSString *phrase = [group objectAtIndex:i];
+			if([phrase hasPrefix:@"!"])
+				continue;
+			if([text rangeOfString:phrase].location != NSNotFound)
 				return NekoUnseenLocalized([group objectAtIndex:1]);
+		}
 	}
 	return nil;
 }
