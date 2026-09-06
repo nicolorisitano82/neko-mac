@@ -308,9 +308,10 @@ code { font: 13px ui-monospace, SFMono-Regular, Menlo, monospace; background: va
     <li><b>Sums and conversions.</b> A hand-written parser rather than the system’s own,
         which answers that seven halved is three and that one divided by nothing is nothing.
         Units go through <code>NSMeasurement</code>, in your locale.</li>
-    <li><b>Dates.</b> <em>How many days until Christmas</em>, <em>what day was the 3rd of
-        March</em> — <code>NSDataDetector</code> to find the date, the calendar to do the
-        arithmetic.</li>
+    <li><b>Dates.</b> <em>How many days until 25 December</em>, <em>how long since the 3rd
+        of March</em> — <code>NSDataDetector</code> to find the date, the calendar to do
+        the arithmetic. It counts the days between now and a date it can read; it does not
+        answer what day a date fell on, and a holiday by name is not a date.</li>
     <li><b>What you said before</b>, quoted from the diary with the day it was said, rather
         than recalled by a model that would paraphrase it. Asked <em>when</em>, it answers
         with the day and how long ago, taking the most recent line that matches.</li>

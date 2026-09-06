@@ -144,3 +144,80 @@ Three ways forward, and the cheap one is not the obvious one:
 
 The finding stands on its own either way: **step one as written cannot be done,
 and it took one afternoon rather than one week to establish.**
+
+---
+
+## Step two: plugins loaded, and the list read
+
+`NekoPlugins` had no directory override — `NekoMemory` and `NekoModelStore` both
+have one, for exactly this reason — so a test binary run out of the bundle
+resolved outside the sandboxed container and found nothing. Added, and both
+plugin rungs run now.
+
+    (the engine)        28          answered in code    14 of 42 (33%)
+    NekoWeb              6          through to engine   28
+    NekoPluginVerbs      5          plugins loaded       5
+    NekoSums             1
+    NekoTimer            1
+    NekoPluginRoutes     1
+
+Nineteen per cent became **thirty-three**, and `NekoPluginVerbs` alone took five —
+*"Metti Apple Music"*, *"Alza volume"*, *"Metti Taylor Swift"*. That half of the
+floor is now measured rather than guessed at.
+
+### Reading the twenty-eight
+
+Almost every remaining line is a question the chain **has a rung for**: *"tempo
+fa"*, *"giorno oggi"*, *"ore"*, *"sei"*, *"quotazione oggi borsa Apple"*. The
+suspicion writes itself — the chain would have caught them as they were spoken.
+
+Guessing at what somebody originally said would prove nothing, so the harness
+does not guess. It takes phrasings **verified to be caught as spoken**, puts each
+through `-[NekoMemory squeeze:]` — the very method the diary writes with — and
+asks the same chain again:
+
+| as spoken | after the diary |
+| --- | --- |
+| *che giorno è oggi?* → `NekoClock` | *giorno oggi?* → the engine |
+| *che ore sono?* → `NekoClock` | *ore* → the engine |
+| *cosa è successo oggi nel mondo?* → `NekoWeb` | *cosa successo oggi mondo?* → the engine |
+| *che tempo fa a Vicenza?* → `NekoWeb` | *tempo fa Vicenza?* → the engine |
+| *dove sei?* → `NekoSelf` | unchanged |
+| *quanto vale Apple in borsa adesso?* → `NekoUnseen` | unchanged |
+| *puoi mettere un timer di 10 minuti?* → `NekoTimer` | unchanged |
+| *quanti giorni mancano al 25 dicembre?* → `NekoClock` | unchanged |
+
+    as spoken, the chain catches all of them     8 of 8
+    as the diary keeps them, it catches          4 of 8
+    so the diary alone loses                     4 of 8
+
+**The diary loses half of them by itself.** Measured, not argued: the same
+questions, the same chain, one method in between. So the twenty-eight are not a
+list of gaps — they are mostly a list of things `squeeze:` broke, and the seed-set
+plan is confirmed dead in the form it was written.
+
+### But choosing that list found two gaps that are real
+
+Neither has anything to do with the diary. Both fail **as spoken**:
+
+    che tempo fa?                    → the engine
+    che tempo fa oggi?               → the engine
+    quanti giorni mancano a Natale?  → the engine
+    che giorno era il 3 marzo 2026?  → the engine
+
+1. **The weather is only recognised when a place is named.** *"che tempo fa a
+   Vicenza?"* works; *"che tempo fa?"* — the phrasing people actually use — goes
+   to the engine, which is precisely what `NekoWeb` exists to prevent. The diary
+   has that bare question **twice**.
+2. **The clock does duration arithmetic only** — how long until a date, how long
+   since one. It does not answer *what day a date fell on*, and a holiday by name
+   is not a date it can read.
+
+**And the second of those was a published claim.** The site's Ask Neko section
+said the chain handles *"How many days until Christmas, what day was the 3rd of
+March"*, and **both examples are ones it does not answer**. Corrected on the page
+to what it actually does, with the limit stated rather than implied.
+
+That is the honest yield of two steps: the measurement the branch was opened for
+is dead, and the by-catch is two real gaps and one false claim taken off a public
+page — none of which anybody was looking for.

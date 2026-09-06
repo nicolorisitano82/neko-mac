@@ -126,7 +126,7 @@ for HARNESS in tests/*.m; do
 	# saved, so a test says what it needs without touching what the user chose.
 	if "$APP/Contents/MacOS/neko-test" $SLOW_ARG \
 		-NekoAskEnabled 1 -NekoAskFollowUp 1 -NekoAskProvider apple \
-		-NekoMemoryDirectory "$MEMORY" -NekoModelsDirectory "$MODELS" 2>/dev/null; then
+		-NekoMemoryDirectory "$MEMORY" -NekoModelsDirectory "$MODELS" -NekoPluginsFrom "${NEKO_TEST_PLUGINS:-}" 2>/dev/null; then
 		:
 	else
 		FAILED="$FAILED $NAME"

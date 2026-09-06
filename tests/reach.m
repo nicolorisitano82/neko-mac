@@ -31,6 +31,15 @@
 #import "NekoPluginVerbs.h"
 #import "NekoUnseen.h"
 #import "NekoAsk.h"
+#import "NekoPlugins.h"
+#import "NekoMemory.h"
+
+/* The diary writes every line through this. Not in the header because nothing
+   outside NekoMemory has needed it until now — and what this harness needs is
+   exactly it, rather than a reimplementation that would drift. */
+@interface NekoMemory (Testing)
+- (NSString *)squeeze:(NSString *)text;
+@end
 
 /* The chain, in the order askAfterPlugins: runs it, recognition only.
 
@@ -125,6 +134,31 @@ int main(void)
 		[settings volatileDomainForName:NSArgumentDomain]];
 	[arguments setObject:[NSNumber numberWithBool:YES] forKey:@"NekoWebEnabled"];
 	[arguments setObject:[NSNumber numberWithBool:YES] forKey:@"NekoActionsEnabled"];
+
+	/* And the plugins, when a copy of them was handed over. Two rungs of the
+	   chain are nothing but plugins — a route somebody added, a verb aimed at a
+	   player — so a run without them measures a different application. Every
+	   plugin found is switched on: which ones somebody chose is their business,
+	   and the question here is what the chain *can* reach. */
+	NSString *folder = [settings stringForKey:@"NekoPluginsFrom"];
+	if([folder length] > 0) {
+		[arguments setObject:folder forKey:NekoPluginsDirectoryKey];
+		NSMutableArray *ids = [NSMutableArray array];
+		NSEnumerator *f = [[[NSFileManager defaultManager]
+			contentsOfDirectoryAtPath:folder error:NULL] objectEnumerator];
+		NSString *name;
+		while((name = [f nextObject]) != nil) {
+			if(![name hasSuffix:@".nekoplugin"])
+				continue;
+			NSDictionary *plist = [NSDictionary dictionaryWithContentsOfFile:
+				[[folder stringByAppendingPathComponent:name]
+					stringByAppendingPathComponent:@"plugin.plist"]];
+			NSString *identifier = [plist objectForKey:@"Identifier"];
+			if([identifier length] > 0)
+				[ids addObject:identifier];
+		}
+		[arguments setObject:ids forKey:@"NekoPluginsEnabled"];
+	}
 	[settings setVolatileDomain:arguments forName:NSArgumentDomain];
 
 	NSString *directory = [[NSUserDefaults standardUserDefaults]
@@ -175,6 +209,9 @@ int main(void)
 			100.0 * (double)caught / (double)[asked count]]);
 	ok(YES, @"through to the engine",
 		[NSString stringWithFormat:@"%lu", (unsigned long)[throughToTheEngine count]]);
+	ok(YES, @"plugins loaded, so the two rungs that are plugins can run",
+		[NSString stringWithFormat:@"%lu",
+			(unsigned long)[[[NekoPlugins sharedPlugins] enabled] count]]);
 	if([unreachable count] > 0)
 		ok(YES, @"rungs a setting made unreachable on this Mac",
 			[[[unreachable allObjects] sortedArrayUsingSelector:@selector(compare:)]
@@ -184,6 +221,86 @@ int main(void)
 	NSEnumerator *t = [throughToTheEngine objectEnumerator];
 	while((question = [t nextObject]) != nil)
 		printf("      %s\n", [question UTF8String]);
+
+	/* Reading that list, nearly every line is a question the chain has a rung
+	   for — "tempo fa", "giorno oggi", "ore", "sei", "quotazione oggi borsa
+	   Apple". So the obvious suspicion is that the chain would have caught them
+	   as they were spoken, and the diary is what broke them.
+
+	   Guessing at what somebody originally said would prove nothing. This does
+	   not guess: it takes the phrasings the recognisers are *documented* to
+	   catch, checks the chain catches them, then puts each one through
+	   -[NekoMemory squeeze:] — the very method the diary writes with — and asks
+	   the same chain again. Whatever stops being recognised is measured damage,
+	   not a hypothesis. */
+	printf("\n--- and the same questions, before and after the diary writes them ---\n");
+
+	/* Eight phrasings, every one of them verified to be caught by the chain as
+	   spoken — that is what the first check below pins, and it is what makes the
+	   second one mean anything. Two phrasings that seemed obvious were dropped
+	   from this list because the chain does *not* catch them, and they are
+	   recorded as gaps further down rather than hidden by being left out. */
+	NSArray *asSpoken = [NSArray arrayWithObjects:
+		@"che giorno è oggi?",
+		@"che ore sono?",
+		@"dove sei?",
+		@"quanto vale Apple in borsa adesso?",
+		@"cosa è successo oggi nel mondo?",
+		@"puoi mettere un timer di 10 minuti?",
+		@"che tempo fa a Vicenza?",
+		@"quanti giorni mancano al 25 dicembre?", nil];
+
+	NekoMemory *diary = [NekoMemory sharedMemory];
+	NSUInteger caughtSpoken = 0, caughtSqueezed = 0, lost = 0;
+	NSEnumerator *p = [asSpoken objectEnumerator];
+	NSString *spoken;
+	while((spoken = [p nextObject]) != nil) {
+		NSMutableSet *ignored = [NSMutableSet set];
+		NSString *before = whoClaims(spoken, ignored);
+		NSString *squeezed = [diary squeeze:spoken];
+		NSString *after = whoClaims(squeezed, ignored);
+		if(before != nil) caughtSpoken++;
+		if(after != nil)  caughtSqueezed++;
+		if(before != nil && after == nil) lost++;
+		printf("      %-38s %-16s\n        → in the diary: %-22s %s\n",
+			[spoken UTF8String], [(before ?: @"(the engine)") UTF8String],
+			[squeezed UTF8String], [(after ?: @"(the engine)") UTF8String]);
+	}
+
+	printf("\n");
+	ok(caughtSpoken == [asSpoken count],
+		@"as spoken, the chain catches all of them",
+		[NSString stringWithFormat:@"%lu of %lu", (unsigned long)caughtSpoken,
+			(unsigned long)[asSpoken count]]);
+	ok(YES, @"as the diary keeps them, it catches",
+		[NSString stringWithFormat:@"%lu of %lu", (unsigned long)caughtSqueezed,
+			(unsigned long)[asSpoken count]]);
+	ok(YES, @"so the diary alone loses",
+		[NSString stringWithFormat:@"%lu of %lu", (unsigned long)lost,
+			(unsigned long)[asSpoken count]]);
+
+	/* Two gaps found while choosing the list above, both of them real and
+	   neither of them anything to do with the diary. Printed rather than failed:
+	   this harness measures reach, and closing these is a separate piece of
+	   work with its own checks. */
+	printf("\n--- and two gaps, found by trying phrasings that ought to work ---\n");
+	NSArray *ought = [NSArray arrayWithObjects:
+		@"che tempo fa?",
+		@"che tempo fa oggi?",
+		@"quanti giorni mancano a Natale?",
+		@"che giorno era il 3 marzo 2026?", nil];
+	NSEnumerator *g = [ought objectEnumerator];
+	NSString *should;
+	while((should = [g nextObject]) != nil) {
+		NSMutableSet *ignored = [NSMutableSet set];
+		NSString *who = whoClaims(should, ignored);
+		printf("      %-40s %s\n", [should UTF8String],
+			[(who ?: @"(the engine) ←") UTF8String]);
+	}
+	notMeasured(@"the weather is only recognised when a place is named, and the "
+	            @"bare question is the one people ask — the diary has it twice. "
+	            @"And the clock does duration arithmetic only: how long until a "
+	            @"date, never what day a date was");
 
 	notMeasured(@"whether any of those *should* have been caught is a person's "
 	            @"judgement, and that is the point: this produces the list, not "

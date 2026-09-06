@@ -2,6 +2,7 @@
 #import "NekoPlugin.h"
 
 NSString * const NekoPluginsEnabledKey = @"NekoPluginsEnabled";
+NSString * const NekoPluginsDirectoryKey = @"NekoPluginsDirectory";
 NSString * const NekoPluginsDidChangeNotification = @"NekoPluginsDidChange";
 
 /* Which bundled plugins have already been put in place, and at which version, so
@@ -42,6 +43,15 @@ static NSString * const NekoPluginsSeededKey = @"NekoPluginsSeeded";
 		NSApplicationSupportDirectory, NSUserDomainMask, YES);
 	NSString *path = [[[support firstObject] stringByAppendingPathComponent:@"Neko"]
 		stringByAppendingPathComponent:@"Plugins"];
+	/* Somewhere else, if a harness said so — the same seam Memory and Models
+	   already have, and for the same reason: a test binary run straight out of
+	   the bundle does not resolve to the sandboxed container, so without this it
+	   sees no plugins at all and every rung that needs one reads as standing
+	   aside. tests/reach.m counted two of them unreachable before this existed. */
+	NSString *elsewhere = [[NSUserDefaults standardUserDefaults]
+		stringForKey:NekoPluginsDirectoryKey];
+	if([elsewhere length] > 0)
+		path = [elsewhere stringByExpandingTildeInPath];
 	[[NSFileManager defaultManager] createDirectoryAtPath:path
 	                         withIntermediateDirectories:YES
 	                                          attributes:nil
