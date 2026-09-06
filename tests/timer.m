@@ -16,7 +16,34 @@
 #import "NekoTimer.h"
 #import "NekoAsk.h"
 #import "NekoBubble.h"
+#import "NekoDesktop.h"
 #import <objc/runtime.h>
+
+/* Whether anybody is at the Mac, as this harness says. Everything the timer does
+   about it goes through -[NekoDesktop nobodyIsThere], so that is the one thing to
+   answer — and answering it is what makes the two branches below measurable at
+   all. Unstaged, the suite runs unattended, the display sleeps, CGDisplayIsAsleep
+   says nobody is there, and the timer takes the wait-an-hour branch exactly as
+   designed: six runs gave 30.2, 387.1, 30.2, 30.2, 30.1 and 403.0 seconds for a
+   two-second timer. That is the display's sleep timeout being measured, not the
+   timer's patience. docs/red.md §2 has the whole of it. */
+static BOOL stagedNobody = NO;
+
+static BOOL stagedNobodyIsThere(id ignored, SEL cmd)
+{
+	return stagedNobody;
+}
+
+static BOOL stageNobodyThere(BOOL nobody)
+{
+	stagedNobody = nobody;
+	Method found = class_getInstanceMethod([NekoDesktop class],
+		@selector(nobodyIsThere));
+	if(found == NULL)
+		return NO;
+	method_setImplementation(found, (IMP)stagedNobodyIsThere);
+	return [[NekoDesktop sharedDesktop] nobodyIsThere] == nobody;
+}
 
 @interface NekoAsk (TestOnly)
 - (void)cancelEverything;
@@ -134,6 +161,9 @@ int main(void)
 	   after eight. A timer somebody set is the one thing here worth interrupting
 	   for. How long it actually took is printed, because "it fired" and "it fired
 	   when it said it would" are different claims. */
+	ok(stageNobodyThere(NO), @"somebody is at the Mac, as far as this test goes",
+		nil);
+
 	NSDate *set = [NSDate date];
 	[timer startFor:2.0];
 	NSDate *until = [NSDate dateWithTimeIntervalSinceNow:30.0];
@@ -145,6 +175,23 @@ int main(void)
 		[NSString stringWithFormat:@"asked for 2 s, went off after %.1f s", took]);
 	ok(took < 12.0, @"and never waits longer than its patience",
 		[NSString stringWithFormat:@"%.1f s", took]);
+
+	/* And the branch above it, which nothing checked at all — which is how it
+	   came to be the thing the suite was accidentally measuring. Saying it to an
+	   empty room and counting it as said is the one way a timer can fail in
+	   silence, so this pins that it does not. */
+	ok(stageNobodyThere(YES), @"and now nobody is", nil);
+	[timer startFor:2.0];
+	NSDate *waited = [NSDate dateWithTimeIntervalSinceNow:6.0];
+	while([timer isRunning] && [waited timeIntervalSinceNow] > 0.0)
+		[[NSRunLoop currentRunLoop] runMode:NSDefaultRunLoopMode
+		                         beforeDate:[NSDate dateWithTimeIntervalSinceNow:0.2]];
+	ok([timer isRunning],
+		@"a timer does not go off into an empty room, it waits",
+		[NSString stringWithFormat:@"still running %.0f s after a 2 s timer",
+			6.0]);
+	[timer cancel];
+	stageNobodyThere(NO);
 
 	printf("\n--- and through the door a question comes in by ---\n");
 
