@@ -537,6 +537,8 @@
 "Yesterday was %@." = "Ieri era %@.";
 "That is today." = "È oggi.";
 "That is tomorrow." = "È domani.";
+"%@ was a %@." = "Il %@ era un %@.";
+"%@ will be a %@." = "Il %@ sarà un %@.";
 "%ld days, on %@." = "%ld giorni, %@.";
 "%@, at %@." = "%@, alle %@.";
 

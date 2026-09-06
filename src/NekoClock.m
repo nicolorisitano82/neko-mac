@@ -130,6 +130,19 @@ static NSString *NekoDateWritten(NSDate *when)
 	return [formatter stringFromDate:when];
 }
 
+/* The same date with the weekday left off. NekoDateWritten uses the full style,
+   which names the day — right everywhere else in this file, and absurd in the one
+   sentence whose whole job is to name it: "il martedì 3 marzo 2026 era un
+   martedì". */
+static NSString *NekoDateWithoutDay(NSDate *when)
+{
+	NSDateFormatter *formatter = [[[NSDateFormatter alloc] init] autorelease];
+	[formatter setLocale:NekoClockLocale()];
+	[formatter setDateStyle:NSDateFormatterLongStyle];
+	[formatter setTimeStyle:NSDateFormatterNoStyle];
+	return [formatter stringFromDate:when];
+}
+
 static NSString *NekoTimeWritten(NSDate *when)
 {
 	NSDateFormatter *formatter = [[[NSDateFormatter alloc] init] autorelease];
@@ -167,6 +180,8 @@ static NSString *NekoTimeWritten(NSDate *when)
 		@"che data è",
 		@"che data e'", @"quanti ne abbiamo",
 		@"what day of the week is it", @"what day is it", @"what day is",
+		@"what day was it", @"what day was", @"what weekday was",
+		@"what weekday is",
 		@"what's the date", @"what is the date", @"what's today's date",
 		@"quel jour sommes-nous", @"quel jour est-ce", @"quel jour est",
 		@"quelle est la date", @"on est quel jour",
@@ -176,8 +191,27 @@ static NSString *NekoTimeWritten(NSDate *when)
 	if(tail == nil)
 		return nil;
 	NSNumber *offset = NekoDayOffset(tail);
-	if(offset == nil)
-		return nil;                  /* "che giorno è meglio per uscire" */
+	if(offset == nil) {
+		/* Not today, tomorrow or yesterday — so a date, if the tail names one.
+		   "che giorno era il 3 marzo 2026?" used to stop here and reach a model,
+		   and the site said this worked, which it did not. Past and future both:
+		   this one is a lookup in the calendar, not a subtraction, so nothing
+		   about it prefers the future. */
+		NSDate *dated = NekoDateIn(NekoWithoutLeadingWords(tail), YES);
+		if(dated == nil)
+			return nil;              /* "che giorno è meglio per uscire" */
+		NSDateFormatter *weekday = [[[NSDateFormatter alloc] init] autorelease];
+		[weekday setLocale:NekoClockLocale()];
+		[weekday setDateFormat:@"EEEE"];
+		/* Two sentences rather than one, because a language with tenses needs
+		   them: "il 3 marzo era un martedì" and "il 25 dicembre sarà un
+		   venerdì" are not the same sentence with a different noun in it. */
+		BOOL gone = [dated timeIntervalSinceNow] < 0.0;
+		return [NSString stringWithFormat:
+			gone ? NekoClockLocalized(@"%@ was a %@.")
+			     : NekoClockLocalized(@"%@ will be a %@."),
+			NekoDateWithoutDay(dated), [weekday stringFromDate:dated]];
+	}
 
 	NSCalendar *calendar = [NSCalendar currentCalendar];
 	NSDate *when = [calendar dateByAddingUnit:NSCalendarUnitDay
@@ -198,6 +232,59 @@ static NSString *NekoTimeWritten(NSDate *when)
 }
 
 #pragma mark How long until something
+
+/* Enough of a date for the detector to be trusted with it.
+
+   Without this the detector's documented failure — handed a phrase it cannot
+   read, it answers **today at noon** and reports that it used all of it — turns
+   every "che giorno è meglio per uscire" into a confident answer about today.
+   -untilIfAsked: is shielded from that by throwing away anything in the past;
+   a question about a day that has *been* cannot use that guard, so it uses this
+   one instead. */
+static BOOL NekoLooksLikeADate(NSString *tail)
+{
+	if([tail rangeOfCharacterFromSet:
+			[NSCharacterSet decimalDigitCharacterSet]].location != NSNotFound)
+		return YES;
+
+	static NSArray *months = nil;
+	if(months == nil)
+		months = [[NSArray alloc] initWithObjects:
+			@"gennaio", @"febbraio", @"marzo", @"aprile", @"maggio", @"giugno",
+			@"luglio", @"agosto", @"settembre", @"ottobre", @"novembre", @"dicembre",
+			@"january", @"february", @"march", @"april", @"june", @"july",
+			@"august", @"september", @"october", @"november", @"december",
+			@"janvier", @"février", @"mars", @"avril", @"mai", @"juin", @"juillet",
+			@"août", @"septembre", @"octobre", @"novembre", @"décembre",
+			@"enero", @"febrero", @"marzo", @"abril", @"mayo", @"junio", @"julio",
+			@"agosto", @"septiembre", @"octubre", @"noviembre", @"diciembre", nil];
+	NSEnumerator *e = [months objectEnumerator];
+	NSString *month;
+	while((month = [e nextObject]) != nil)
+		if([tail rangeOfString:month].location != NSNotFound)
+			return YES;
+	return NO;
+}
+
+/* The date a tail names, or nil.
+
+   `shaped` is whether NekoLooksLikeADate must vouch for it first, and the two
+   callers genuinely differ. -untilIfAsked: does not want it: "quanti giorni
+   mancano a venerdì" names a weekday, which has neither a digit nor a month in
+   it, and that question is the one this file was written for. It is safe there
+   because it throws away anything landing in the past, which is what the
+   detector's failure looks like. The question about a day that has *been* cannot
+   use that guard and so asks for the shape instead. */
+static NSDate *NekoDateIn(NSString *tail, BOOL shaped)
+{
+	if(shaped && !NekoLooksLikeADate(tail))
+		return nil;
+	NSDataDetector *detector = [NSDataDetector
+		dataDetectorWithTypes:NSTextCheckingTypeDate error:NULL];
+	NSTextCheckingResult *found = [detector firstMatchInString:tail options:0
+	                                                     range:NSMakeRange(0, [tail length])];
+	return [found date];
+}
 
 /* The detector's own way of saying it was given no time of day: noon. Anything
    landing exactly there is a day rather than a moment, and is counted in days. */
@@ -234,11 +321,7 @@ static BOOL NekoIsNoon(NSDate *when)
 	if([tail length] == 0)
 		return nil;
 
-	NSDataDetector *detector = [NSDataDetector
-		dataDetectorWithTypes:NSTextCheckingTypeDate error:NULL];
-	NSTextCheckingResult *found = [detector firstMatchInString:tail options:0
-	                                                     range:NSMakeRange(0, [tail length])];
-	NSDate *target = [found date];
+	NSDate *target = NekoDateIn(tail, NO);
 	if(target == nil)
 		return nil;                  /* "quanto manca al lancio del prodotto" */
 

@@ -94,6 +94,8 @@ int main(void)
 		@"il conto del ristorante era salato",
 		@"quanto vale la pena insistere?",
 		@"che tempo fa che non ci vediamo?",
+		@"quanto tempo fa è successo?",
+		@"da quanto tempo lavori qui?",
 		@"come si chiama questo carattere?",
 		@"quanto ho scritto oggi?",
 		nil];
@@ -108,6 +110,29 @@ int main(void)
 	}
 	printf("      %lu of %lu left alone\n", (unsigned long)quiet,
 		(unsigned long)asked);
+
+	/* The bare present tense, which was the hole. On a Mac that has not been told
+	   where it is — every Mac until somebody grants the location — NekoWeb cannot
+	   answer these, and before this they went past the floor and into a model
+	   with no forecast in front of it. tests/reach.m found it in this Mac's own
+	   diary, twice. */
+	printf("\n--- the weather asked the way people ask it ---\n");
+	NSArray *bare = [NSArray arrayWithObjects:
+		@"che tempo fa?", @"che tempo fa oggi?", @"che tempo c'è?",
+		@"piove?", @"quanti gradi ci sono?", @"meteo",
+		@"how's the weather?", @"what's the weather like?",
+		@"quel temps fait-il?", @"qué tiempo hace?", nil];
+	e = [bare objectEnumerator];
+	NSUInteger caught = 0;
+	while((question = [e nextObject]) != nil) {
+		NSString *said = [NekoUnseen wantedFor:question];
+		if(said != nil)
+			caught++;
+		ok(said != nil, question, said ?: @"went past the floor");
+	}
+	ok(caught == [bare count], @"every one of them, in four languages",
+		[NSString stringWithFormat:@"%lu of %lu", (unsigned long)caught,
+			(unsigned long)[bare count]]);
 
 	printf("\n--- and it never claims blindness where the app can see ---\n");
 

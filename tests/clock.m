@@ -133,6 +133,59 @@ int main(void)
 		@"quanto manca a Natale",
 		@"metti un timer di dieci minuti",
 		@"quanto fa 47 per 23", nil];
+	printf("\n--- and what day a date fell on, which is a lookup and not a sum ---\n");
+
+	/* The gap tests/reach.m found, and it was on the website as a thing that
+	   worked: "what day was the 3rd of March". It did not — the triggers were
+	   there but nothing behind them could read a date, so every one of these
+	   reached a model. A model here is the thing NekoClock.h measured at one of
+	   nine.
+
+	   Dates with a year on them, so the answer is the same next year and the
+	   check does not rot the way tests/calendar.m did. */
+	NSArray *dated = [NSArray arrayWithObjects:
+		@"che giorno era il 3 marzo 2026?",
+		@"che giorno è il 25 dicembre 2027?",
+		@"what day was 3 March 2026?",
+		@"quel jour est le 3 mars 2026?",
+		@"qué día es el 25 de diciembre de 2027?", nil];
+	NSEnumerator *d = [dated objectEnumerator];
+	NSString *asked;
+	NSUInteger answered = 0;
+	while((asked = [d nextObject]) != nil) {
+		NSString *said = [NekoClock wantedFor:asked];
+		if([said length] > 0)
+			answered++;
+		ok([said length] > 0, asked, said ?: @"reached a model");
+	}
+	ok(answered == [dated count], @"all of them, in four languages",
+		[NSString stringWithFormat:@"%lu of %lu", (unsigned long)answered,
+			(unsigned long)[dated count]]);
+
+	/* 3 March 2026 was a Tuesday and 25 December 2027 is a Saturday. Checked
+	   against NSCalendar rather than typed from memory, because a weekday
+	   somebody remembered wrongly is exactly the confident wrong answer this
+	   file exists to stop. */
+	NSDateComponents *parts = [[[NSDateComponents alloc] init] autorelease];
+	[parts setYear:2026]; [parts setMonth:3]; [parts setDay:3]; [parts setHour:12];
+	NSDate *thatDay = [[NSCalendar currentCalendar] dateFromComponents:parts];
+	NSDateFormatter *weekday = [[[NSDateFormatter alloc] init] autorelease];
+	[weekday setLocale:[NSLocale localeWithLocaleIdentifier:@"it_IT"]];
+	[weekday setDateFormat:@"EEEE"];
+	NSString *itWas = [weekday stringFromDate:thatDay];
+	NSString *said = [NekoClock wantedFor:@"che giorno era il 3 marzo 2026?"];
+	ok([said rangeOfString:itWas].location != NSNotFound,
+		@"and it names the right weekday, not just a weekday",
+		[NSString stringWithFormat:@"%@ — the calendar says %@", said, itWas]);
+
+	/* The tense, because a language that has one needs it used. */
+	NSString *ahead = [NekoClock wantedFor:@"che giorno è il 25 dicembre 2027?"];
+	ok([ahead rangeOfString:@"sarà"].location != NSNotFound,
+		@"a day still to come is spoken of in the future", ahead);
+	ok([said rangeOfString:@"era"].location != NSNotFound,
+		@"and one that has been, in the past", said);
+
+	printf("\n--- and it still says nothing to the rest ---\n");
 	NSEnumerator *quiet = [not objectEnumerator];
 	NSString *sentence;
 	while((sentence = [quiet nextObject]) != nil) {

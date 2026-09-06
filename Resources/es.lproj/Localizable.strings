@@ -537,6 +537,8 @@
 "Yesterday was %@." = "Ayer fue %@.";
 "That is today." = "Es hoy.";
 "That is tomorrow." = "Es mañana.";
+"%@ was a %@." = "El %@ fue un %@.";
+"%@ will be a %@." = "El %@ será un %@.";
 "%ld days, on %@." = "%ld días, el %@.";
 "%@, at %@." = "%@, a las %@.";
 

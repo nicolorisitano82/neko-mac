@@ -9,6 +9,10 @@
    app not consulting it. */
 extern NSString * const NekoPluginsEnabledKey;
 
+/* Where the folders are, when a harness needs them somewhere else. A test binary
+   run out of the bundle does not resolve to the sandboxed container. */
+extern NSString * const NekoPluginsDirectoryKey;
+
 /* Posted when one is added, removed, enabled or disabled. */
 extern NSString * const NekoPluginsDidChangeNotification;
 

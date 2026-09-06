@@ -34,7 +34,20 @@ OBJECTS=$(mktemp -d /tmp/neko-tests.XXXXXX)
 # A diary of its own. Three harnesses write notes, and they used to write them in
 # the real one: that is how "zzq-test" ended up being said out loud, written down
 # as "test zqqmark", and carried into every prompt for a week. See NekoMemory.h.
-MEMORY=$(mktemp -d /tmp/neko-diary.XXXXXX)
+# A harness normally gets an empty diary made here and thrown away on the way
+# out. NEKO_TEST_MEMORY points one at a diary that already has something in it —
+# tests/reach.m measures a real corpus or it measures nothing.
+#
+# The trap below used to remove $MEMORY unconditionally, which with this override
+# would have deleted somebody's actual diary. It removes only a directory this
+# script created. Point the override at a copy anyway.
+if [ -n "$NEKO_TEST_MEMORY" ]; then
+	MEMORY="$NEKO_TEST_MEMORY"
+	MEMORY_IS_OURS=no
+else
+	MEMORY=$(mktemp -d /tmp/neko-diary.XXXXXX)
+	MEMORY_IS_OURS=yes
+fi
 
 # And a models directory the harnesses can actually see. They run unsandboxed and
 # look in ~/Library/Application Support; the application looks inside its
@@ -60,7 +73,7 @@ for WHERE in "$HOME/Library/Application Support/Neko/Models" \
 done
 FOUND=$(ls "$MODELS" 2>/dev/null | wc -l | tr -d ' ')
 echo "$FOUND model(s) linked for the slow arms"
-trap 'rm -rf "$OBJECTS" "$MEMORY" "$MODELS"; rm -f "$APP/Contents/MacOS/neko-test"' EXIT
+trap 'rm -rf "$OBJECTS" "$MODELS"; [ "$MEMORY_IS_OURS" = yes ] && rm -rf "$MEMORY"; rm -f "$APP/Contents/MacOS/neko-test"' EXIT
 
 echo "compiling the app once for all of them…"
 for SOURCE in $SOURCES; do
@@ -113,7 +126,7 @@ for HARNESS in tests/*.m; do
 	# saved, so a test says what it needs without touching what the user chose.
 	if "$APP/Contents/MacOS/neko-test" $SLOW_ARG \
 		-NekoAskEnabled 1 -NekoAskFollowUp 1 -NekoAskProvider apple \
-		-NekoMemoryDirectory "$MEMORY" -NekoModelsDirectory "$MODELS" 2>/dev/null; then
+		-NekoMemoryDirectory "$MEMORY" -NekoModelsDirectory "$MODELS" -NekoPluginsFrom "${NEKO_TEST_PLUGINS:-}" 2>/dev/null; then
 		:
 	else
 		FAILED="$FAILED $NAME"
