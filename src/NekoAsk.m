@@ -1597,6 +1597,18 @@ static const NSTimeInterval NekoHoldToType = 0.5;
 	} else if([error localizedDescription] != nil) {
 		line = [error localizedDescription];
 	}
+
+	/* NekoAskErrorNoAnswer falls through the switch above on purpose — what the
+	   cat says about it is its own sentence, not the engine's. But the engine's
+	   sentence was then dropped on the floor, and that is why an engine that
+	   answered with nothing left nothing at all to diagnose: no bubble to read,
+	   no line in the log, only a check going red hours later. The last bug of
+	   this shape took a night and the unified log to find. */
+	NSString *why = [error localizedDescription];
+	if([why length] > 0 && ![why isEqualToString:line])
+		NSLog(@"Neko: no answer from the engine — %@ (%@ %ld)",
+			why, [error domain], (long)[error code]);
+
 	phase = NekoPhaseIdle;
 	[self sayInCharacter:line];
 }

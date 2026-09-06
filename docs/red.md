@@ -6,7 +6,7 @@ was not, and it had the two of them **backwards**.
 
 |  | what I said first | what six runs say |
 | --- | --- | --- |
-| `persona` | stable, not intermittent | **intermittent** — 3 of 3 passed on re-run |
+| `persona` | stable, not intermittent | **intermittent** — 3 of 3 passed on re-run, then 0 empty in 24. Settled below |
 | `timer` | intermittent | **not intermittent** — 6 of 6 failed |
 
 The lesson is the one this project keeps relearning: a harness run twice is a
@@ -14,47 +14,75 @@ guess. Neither of these had been run more than twice when I described them.
 
 ---
 
-## 1. `persona` — the engine answers with nothing
+## 1. `persona` — the engine answers with nothing ✅ *settled after 2.15.1*
 
-**Status: intermittent, cause outside this code, one product question inside it.**
+**Was: intermittent, cause outside this code. Now: measured, and the one thing
+worth fixing was not the thing I expected.**
 
-The failing check wants two characters given the same question to give two
-different answers, and it requires both to be non-empty:
+The three questions this section set, answered in order.
+
+### How often — rarer than 1 in 24, and that is all 24 samples can say
+
+`tests/empty.m` asks the same pair repeatedly and keeps **both** halves of the
+completion, which the persona harness did not: its helper wrote
+`said = [text retain]` and dropped the `NSError`, so from inside it *nothing* and
+*an error* looked identical.
+
+    answers asked for                    24
+    came back empty                       0 of 24 (0%)
+    two characters answered identically   0 of 12 rounds
+
+Zero of twenty-four, against one empty seen earlier in the day. So it is rare —
+and twenty-four samples put no useful ceiling on *how* rare, which is why the
+harness prints a rate and refuses to pass or fail on it. It runs two pairs in the
+suite to keep the path exercised, and the full dozen under `--slow`.
+
+### Whether an empty answer is handled — yes, and this was the good news
+
+Traced rather than assumed:
 
 ```objc
-ok(one != nil && two != nil && ![one isEqualToString:two],
-    @"and they do not answer identically", nil);
+if([answer length] > 0)  [self answer:answer];
+else                     [self failed:error];
 ```
 
-What was seen on the run that failed:
+`-failed:` says a sentence in character and sets `phase` back to idle. So an
+empty answer produces something visible and strands nothing — it is **not**
+another 2.15.1. The worry in the first draft of this document was reasonable and
+turned out to be wrong, which is worth leaving on the page.
 
+### But the reason was being thrown away, and that is the defect
+
+`NekoAppleProvider` wraps whatever the framework said in the error:
+
+```objc
+completion(nil, [NSError errorWithDomain:NekoAskErrorDomain
+                                    code:NekoAskErrorNoAnswer
+                                userInfo:failure != nil
+    ? [NSDictionary dictionaryWithObject:failure forKey:NSLocalizedDescriptionKey]
+    : nil]);
 ```
-wizard: Sì, la pausa ti conviene: sono le diciotto e trenta minuti di venerdì…
-cat:    (nothing)
-```
 
-The wizard arm answered. The cat arm returned **nothing at all** — from Apple
-Intelligence, on the identical question, differing only in the character
-sentence. Three runs immediately afterwards all passed, with both arms answering
-normally, so it is not a broken code path and it is not the persona.
+and `-failed:` sends `NekoAskErrorNoAnswer` through `default: break`. That is
+right for the *bubble* — what the cat says should be its own sentence, not a
+framework's. But the framework's sentence was then dropped on the floor: **no
+bubble to read it in, and no line in the log either.** An engine that answered
+with nothing left nothing at all to diagnose, which is exactly the position this
+section started from.
 
-**What to investigate, in order:**
+Fixed: `-failed:` now logs the reason whenever there is one and it is not what is
+being said out loud. One line, and the next occurrence leaves evidence — which is
+how the 2.15.1 bug was actually solved.
 
-1. **How often.** Twenty runs of that single pair, counting empties. Anything
-   above a couple of per cent is worth knowing about, because it is not confined
-   to the harness — the same provider answers real questions.
-2. **Whether an empty answer is handled.** This is the half that is *this*
-   project's problem rather than Apple's. If `NekoAppleProvider` can hand back
-   nil or an empty string, the question is what the cat then does: an empty
-   bubble, a bubble that never appears, or an honest sentence. Two of those three
-   look exactly like the bug fixed in 2.15.1 — something happens, nothing is
-   shown — and that one took a night of somebody's time to find.
-3. **Then, and only then, the check.** If empties are real and handled, the
-   harness should say so out loud rather than fail: this project has
-   `notMeasured()` for exactly that, and a check that fails for the engine's
-   mood teaches nobody anything.
+### And the check now makes one claim instead of two
 
-**What not to do:** loosen the check to `one != nil` and move on. The check is
+It used to require, in a single `ok()`, that the engine answered *and* that two
+characters answered differently. Only the second is about personas. They are
+separated now, and when the engine gives nothing the harness says so with
+`notMeasured()` rather than failing. The claim is exactly as strong as it was —
+what changed is that it no longer goes red for the engine's mood.
+
+**What was deliberately not done:** loosening the check to `one != nil`. It is
 asking the right question.
 
 ---
