@@ -1,5 +1,60 @@
 # Changelog
 
+## 2.15.2 — 2026-09-05
+
+**A small release, and worth saying so plainly: the only change that reaches the
+screen is a line in the log.** The rest is two checks that had been red for
+reasons other than the code, and the study behind them.
+
+### An engine that answers with nothing now leaves something to diagnose
+
+Every so often — rarer than 1 in 24 on this Mac, measured — Apple Intelligence
+returns no answer at all. What the cat says about that is already right: a
+sentence in character, and the phase put back to idle, so nothing hangs.
+
+But the *reason* the engine gave was being thrown away. `NekoAppleProvider` wraps
+it in `NSLocalizedDescriptionKey`, and `-failed:` sends `NekoAskErrorNoAnswer`
+through `default: break` — correct for the bubble, since what the cat says should
+be its own sentence rather than a framework's. It was then dropped on the floor:
+no bubble to read it in and **no line in the log either**. An engine that answered
+with nothing left nothing at all to diagnose.
+
+It is logged now. The last bug of that shape took a night and the unified log to
+find.
+
+### The two checks
+
+Both are in [docs/red.md](docs/red.md), and both were described to somebody as
+one thing and turned out to be the other — the characterisations were **backwards**.
+
+- **`persona`** was called stable and is intermittent. It failed because the
+  engine returned nothing on one arm of a pair, which is not a fact about
+  personas. The check used to make two claims in one assertion — that the engine
+  answered *and* that two characters answered differently — and only the second
+  is what it is for. They are separated now, and an empty arm is said out loud
+  rather than failed. Not loosened: the claim is exactly as strong.
+- **`timer`** was called intermittent and fails every time: six runs of a
+  two-second timer gave 30.2, 387.1, 30.2, 30.2, 30.1 and 403.0 seconds against a
+  twelve-second bound. `-whyNobodyIsThere` returns non-nil when
+  `CGDisplayIsAsleep`, so an unattended suite sends the timer down the
+  wait-up-to-an-hour branch **exactly as designed**. The harness now stages that
+  condition, the way `tests/flee.m` stages the mouse, and reads **10.3 s** — two
+  seconds of timer and eight of patience, which is the number it was named after
+  and had never once measured. The branch above it is pinned too, because nothing
+  checked it at all, which is how it came to be what the suite was accidentally
+  measuring.
+
+### New measurements
+
+- `tests/empty.m` — how often an engine answers with nothing, keeping the
+  `NSError` as well as the text. Two pairs in the suite, the full dozen under
+  `--slow`. It prints a rate and refuses to pass or fail on it.
+- [docs/many.md](docs/many.md) — whether multiple models with a memory that
+  learns to route between them would help here. Short answer: the mechanism is
+  real, the published gain over plain retrieval is 8.2%, and this Mac's diary
+  holds **42 questions in twelve days**, which is not a workload a learned router
+  can exist on.
+
 ## 2.15.1 — 2026-09-04
 
 **Ask Neko could go dead until a restart.** After many hours the keystroke and
