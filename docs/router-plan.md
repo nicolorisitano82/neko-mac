@@ -72,3 +72,75 @@ Written down because each of these is a tempting next step and each is wrong.
 
 *Grounding: [many.md](many.md) §2 for BoundaryRouter's numbers, §3 for the
 ceiling and the routing-collapse failure, §7 for the signal and the forty-two.*
+
+---
+
+## Step one, run — and it found the thing that stops step one
+
+`tests/reach.m`. Every recogniser in `askAfterPlugins:` is split in two — a pure
+`+wantedFor:` / `+matchFor:` that claims the question, and a separate `+act:` /
+`+make:` / `+fetch:` that does the thing — so the whole chain can be asked in
+order **without a timer starting, an event being written, or Spotify being spoken
+to.** The seam was already there; the measurement needed no change to `src/`.
+
+Run over the diary, on a copy, nothing written:
+
+    (the engine)         34
+    NekoWeb               6
+    NekoSums              1
+    NekoTimer             1
+
+    answered in code, before any engine     8 of 42 (19%)
+    through to the engine                   34
+    rungs a setting made unreachable        NekoPluginRoutes, NekoPluginVerbs
+
+**That 19% is a floor and not a reach, twice over**, and the second reason is the
+one that matters.
+
+### a. Two rungs could not run
+
+`+anythingListens` needs plugins the harness does not load. The list of
+questions that went through plainly contains *"Metti Apple Music"*, *"Alza
+volume"*, *"Metti Taylor Swift"* — `NekoPluginVerbs` would have taken all three.
+Environmental, and fixable.
+
+### b. The diary is not a record of the questions
+
+Not inferred from how the lines look — read in the code. `-noteHeard:` calls
+`-append:`, which calls `-tidy:`, which calls **`-squeeze:`**, and `squeeze:`
+drops filler words on purpose. Its own comment says so:
+
+> "The diary is notes, not a transcript... about a third less of it to read back
+> tomorrow — which matters because a small model reads the whole thing before it
+> answers anything."
+
+So what is on disk is *"tempo fa"*, *"giorno oggi"*, *"sei"* — not *"che tempo
+fa?"*, *"che giorno è oggi?"*, *"dove sei?"*. **The recognisers match phrases, and
+the phrases have had exactly the function words removed that several of them key
+on.** Replaying the diary through the chain does not measure the chain on real
+questions; it measures the chain on a lossy summary of them.
+
+### What that means for this branch
+
+**The seed set the plan assumed does not exist.** The corpus of questions as
+somebody actually asked them is nowhere on disk — `lastQuestion` holds one, in
+memory, 300 characters, never written. The diary is the only record and it is
+squeezed by design, for a reason that is good and that nobody should undo lightly:
+every extra word is read back by a small model before it answers anything.
+
+Three ways forward, and the cheap one is not the obvious one:
+
+1. **Keep the raw question too.** Small change, and it costs the diary's own
+   promise — more of somebody's words kept on disk, for a benefit that is
+   currently hypothetical. Not without deciding that trade deliberately.
+2. **Measure the chain against questions phrased as people phrase them**, from
+   somewhere other than the diary. But a corpus written for the purpose proves
+   nothing, which is the whole reason the diary was chosen.
+3. **Fix (a) and read the list as it is.** Load the plugins, re-run, and let a
+   person read the thirty-four. Squeezed lines are still recognisable to a human
+   as the questions they came from, and the output was always meant to be a list
+   for somebody to judge rather than a number. **This is the next step**, and it
+   costs an afternoon.
+
+The finding stands on its own either way: **step one as written cannot be done,
+and it took one afternoon rather than one week to establish.**
