@@ -269,3 +269,58 @@ and *"quanti giorni mancano a Natale?"* both reach the engine — the first beca
 the capability does not exist, the second because a holiday by name is not a date
 `NSDataDetector` reads. The page no longer claims otherwise. Whether either is
 worth building is a separate decision, and neither is in this Mac's diary.
+
+---
+
+## Step four: the clock's gap, half of which should not be closed
+
+Two things reached a model that should not have. Only one of them was a defect.
+
+### What day a date fell on — built
+
+The triggers were already there: `dayIfAsked` matches *"che giorno era"*, *"che
+giorno è"*, *"quel jour est"*. Behind them sat `NekoDayOffset`, which knows today,
+tomorrow and yesterday and nothing else, so any actual date fell straight through
+to a model — the thing `NekoClock.h` measured at **one of nine**.
+
+It now reads the date and names the weekday, in four languages:
+
+    che giorno era il 3 marzo 2026?         Il 3 marzo 2026 era un martedì.
+    che giorno è il 25 dicembre 2027?       Il 25 dicembre 2027 sarà un sabato.
+    what day was 3 March 2026?              Il 3 marzo 2026 era un martedì.
+
+Three things the harness caught on the way, all of them mine:
+
+- **A guard that broke the file's own reason for existing.** The detector's
+  documented failure — answering *today at noon* for a phrase it cannot read —
+  needed heading off, since a question about a day that has *been* cannot use
+  `-untilIfAsked:`'s trick of throwing away the past. The gate I wrote demanded a
+  digit or a month name, and applied it to both callers, which killed *"quanti
+  giorni mancano a venerdì"* — the question this file was written for. It is a
+  per-caller choice now, and the reason is in the comment.
+- **"what day was" was not an English trigger.** Only the present tense was
+  there, so the English half of the new capability did not work at all.
+- **"Il martedì 3 marzo 2026 era un martedì."** `NekoDateWritten` uses the full
+  style, which names the weekday — right everywhere else in the file, absurd in
+  the one sentence whose whole job is to name it.
+
+### A holiday by name — deliberately not built
+
+`quanti giorni mancano a Natale?` was the other gap, and I built a table for it:
+Natale, Christmas, Noël, Navidad, Capodanno, Ferragosto, and the rest, fixed
+dates only.
+
+**`tests/clock.m` refused it, and it was right.** *"quanto manca a Natale"* is in
+that harness's **silent** list, with the reason written beside it:
+
+> NSDataDetector does not know the feast days, and **a holiday table in four
+> countries is a bigger promise than this is.**
+
+That is a decision somebody already took, for a good reason, and my change
+overrode it without noticing. Which holidays, in which countries, is a question
+with no end — regional patron saints, movable feasts hung off Easter, days that
+are public holidays in one country and ordinary in the next. The table came out.
+Silence is the honest answer and it was already the chosen one.
+
+The check that stopped it is nine words in a list. That is the second time in two
+steps that a harness has caught something the code review in my head did not.
