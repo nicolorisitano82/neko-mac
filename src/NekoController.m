@@ -1896,8 +1896,18 @@ static const float NekoMaxStopRadius = 200.0f;
 	[content addSubview:localModelPopUp];
 	[localModelPopUp release];
 
+	/* Two lines, not one. The catalogue's own sentence is the first; whether this
+	   Mac can run the thing is the second, and it only ever appears when there is
+	   something to say. At seventeen points it wrapped and then clipped, which
+	   made the warning invisible — a warning nobody sees is not one.
+
+	   Thirty-four and not twenty-nine, because tests/room.m measures the longest
+	   of those sentences in all four languages and it comes to thirty-two. The
+	   first attempt at this passed only by a tolerance I had written into the
+	   check myself, which is not the same as fitting. The room comes from the gap
+	   that was already empty above the button. */
 	localDetailField = [self labelWithString:@""
-	                                   frame:NSMakeRect(152.0f, 326.0f, 420.0f, 17.0f)];
+	                                   frame:NSMakeRect(152.0f, 313.0f, 420.0f, 34.0f)];
 	[localDetailField setAlignment:NSTextAlignmentLeft];
 	[[localDetailField cell] setWraps:YES];
 	[content addSubview:localDetailField];
@@ -1946,9 +1956,28 @@ static const float NekoMaxStopRadius = 200.0f;
 
 - (void)takeLocalModelFrom:(id)sender
 {
+	NekoLocalModel *model = [self selectedLocalModel];
 	[[NSUserDefaults standardUserDefaults]
-		setObject:[[self selectedLocalModel] identifier] forKey:@"NekoAskLocalModel"];
+		setObject:[model identifier] forKey:@"NekoAskLocalModel"];
 	[self syncLocalControls];
+
+	/* Choosing one that is already on the disk and cannot be loaded is the other
+	   half of the same warning, and it has to arrive now rather than the next
+	   time somebody asks a question and gets nothing. Said once per choice, and
+	   the choice stands — it is theirs, and the row keeps saying so in red. */
+	if([[NekoModelStore sharedStore] installedURLForIdentifier:[model identifier]] != nil
+	   && [model fitOnThisMac] == NekoModelWillNotLoad) {
+		NSAlert *alert = [[[NSAlert alloc] init] autorelease];
+		[alert setAlertStyle:NSAlertStyleCritical];
+		[alert setMessageText:[NSString stringWithFormat:
+			NekoLocalized(@"%@ will not load on this Mac"), [model name]]];
+		[alert setInformativeText:[NSString stringWithFormat:@"%@\n\n%@",
+			[model memoryWarning],
+			NekoLocalized(@"It is on the disk, and questions sent to it will come back empty. Choose a smaller one, or remove it to get the space back.")]];
+		[alert addButtonWithTitle:NekoLocalized(@"OK")];
+		[NSApp activateIgnoringOtherApps:YES];
+		[alert runModal];
+	}
 }
 
 /* One button, three jobs, depending on what there is to do. */
@@ -1966,6 +1995,38 @@ static const float NekoMaxStopRadius = 200.0f;
 		[store removeIdentifier:[model identifier]];
 		[self syncLocalControls];
 		return;
+	}
+
+	/* Sixteen gigabytes is an hour of somebody's connection. If it cannot be
+	   loaded at the end of it, or will not fit on the disk in the first place,
+	   that is worth an alert rather than a line of grey text — and the choice
+	   stays theirs, because a Mac they plug more memory into tomorrow is still
+	   their Mac. */
+	NSString *cannot = [model fitOnThisMac] == NekoModelWillNotLoad
+		? [model memoryWarning] : nil;
+	NSString *noRoom = [store diskWarningFor:model];
+	if(cannot != nil || noRoom != nil) {
+		NSAlert *alert = [[[NSAlert alloc] init] autorelease];
+		[alert setAlertStyle:NSAlertStyleCritical];
+		[alert setMessageText:cannot != nil
+			? [NSString stringWithFormat:
+				NekoLocalized(@"%@ will not run on this Mac"), [model name]]
+			: [NSString stringWithFormat:
+				NekoLocalized(@"There is not room for %@"), [model name]]];
+		NSMutableArray *why = [NSMutableArray array];
+		if(cannot != nil)
+			[why addObject:cannot];
+		if(noRoom != nil)
+			[why addObject:noRoom];
+		[why addObject:NekoLocalized(@"Downloading it will work. Loading it will not, and the download is several gigabytes.")];
+		[alert setInformativeText:[why componentsJoinedByString:@"\n\n"]];
+		[alert addButtonWithTitle:NekoLocalized(@"Do not download")];
+		[alert addButtonWithTitle:NekoLocalized(@"Download anyway")];
+		[NSApp activateIgnoringOtherApps:YES];
+		if([alert runModal] == NSAlertFirstButtonReturn) {
+			[self syncLocalControls];
+			return;
+		}
 	}
 
 	[store downloadModel:model
@@ -2043,10 +2104,33 @@ static const float NekoMaxStopRadius = 200.0f;
 	/* And whether it writes its notes first, said in the list rather than
 	   discovered in a bubble. NekoLocalProvider takes the notes out; this is so
 	   that choosing one is a choice and not a surprise. */
-	[localDetailField setStringValue:[model thinks]
-		? [NSString stringWithFormat:@"%@ · %@", [model detail],
-			NekoLocalized(@"reasons before answering")]
-		: [model detail]];
+	NSMutableString *says = [NSMutableString stringWithString:[model detail]];
+	if([model thinks])
+		[says appendFormat:@" · %@", NekoLocalized(@"reasons before answering")];
+
+	/* Whether this Mac can actually run it, which is a different question from
+	   whether it can fetch it — and for a 27B the two answers differ. Said in
+	   the row whichever way it falls, because a warning nobody sees is not one.
+
+	   Two sentences at most and only when there is something to say: memory
+	   always, disk only while it is still a download. A model already on the
+	   disk has spent that space, and repeating it would be noise. */
+	NekoModelFit fit = [model fitOnThisMac];
+	/* One warning line at most, because there is room for one — and memory
+	   outranks the disk, since a model that cannot be loaded is not made better
+	   by there being somewhere to put it. The alert before a download says both.
+	   The disk is only asked about while it is still a download: a model already
+	   on the disk has spent that space, and saying so again would be noise. */
+	NSString *warning = [model memoryWarning];
+	if(warning == nil && !installed)
+		warning = [store diskWarningFor:model];
+	if(warning != nil)
+		[says appendFormat:@"\n%@", warning];
+	[localDetailField setStringValue:says];
+	[localDetailField setTextColor:fit == NekoModelWillNotLoad
+		? [NSColor systemRedColor]
+		: (fit == NekoModelFitsTightly ? [NSColor systemOrangeColor]
+		                               : [NSColor secondaryLabelColor])];
 
 	BOOL broken = [store isIncomplete:[model identifier]];
 	[localActionButton setTitle:busy ? NekoLocalized(@"Stop")

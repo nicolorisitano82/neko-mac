@@ -2,6 +2,23 @@
 #import "NekoAnswerProvider.h"
 
 NSString * const NekoModelsDirectoryKey = @"NekoModelsDirectory";
+NSString * const NekoModelMemoryKey = @"NekoModelMemory";
+
+#pragma mark Whether this Mac can run it
+
+/* The weights are memory-mapped, so what a model costs to answer with is close
+   to its file size — plus the context, the KV cache and llama.cpp's own buffers,
+   which at the short context this application asks for come to something under
+   a gigabyte and a half. Rounded up rather than down: the failure this guards
+   against is somebody being told yes and finding out no. */
+static const long long NekoModelWorkingSet = 1500LL * 1000LL * 1000LL;
+
+/* And what the rest of the Mac needs while that happens. Four gigabytes is the
+   system, the window server, a browser with a few tabs and whatever somebody was
+   already doing — which is the state a model actually gets loaded in, not an
+   idle machine. */
+static const long long NekoModelLeaveForTheMac = 4000LL * 1000LL * 1000LL;
+
 
 @implementation NekoLocalModel
 
@@ -38,6 +55,43 @@ NSString * const NekoModelsDirectoryKey = @"NekoModelsDirectory";
 - (NSURL *)url { return url; }
 - (long long)expectedBytes { return expectedBytes; }
 - (BOOL)thinks { return thinks; }
+
+- (long long)memoryNeeded
+{
+	return expectedBytes + NekoModelWorkingSet;
+}
+
+- (NekoModelFit)fitOnThisMac
+{
+	long long room = [NekoModelStore memoryForAModel];
+	long long needed = [self memoryNeeded];
+	if(needed > room)
+		return NekoModelWillNotLoad;
+	/* Inside the room but against the ceiling: it loads, and then the Mac spends
+	   the day swapping. Worth saying out loud rather than discovering. */
+	if(needed > (room * 4LL) / 5LL)
+		return NekoModelFitsTightly;
+	return NekoModelFitsWell;
+}
+
+- (NSString *)memoryWarning
+{
+	double needed = (double)[self memoryNeeded] / 1e9;
+	double here = (double)[NekoModelStore memoryOnThisMac] / 1e9;
+	switch([self fitOnThisMac]) {
+		case NekoModelWillNotLoad:
+			return [NSString stringWithFormat:
+				NSLocalizedString(@"Needs about %.0f GB of memory. This Mac has %.0f GB.", nil),
+				needed, here];
+		case NekoModelFitsTightly:
+			return [NSString stringWithFormat:
+				NSLocalizedString(@"Fits barely: %.0f GB of %.0f GB. The Mac will feel it.", nil),
+				needed, here];
+		case NekoModelFitsWell:
+		default:
+			return nil;
+	}
+}
 
 @end
 
@@ -144,6 +198,34 @@ NSString * const NekoModelsDirectoryKey = @"NekoModelsDirectory";
 			            detail:NSLocalizedString(@"2.7 GB — the most recent, and it reasons at such length that it often never reaches the answer", nil)
 			               url:[NSURL URLWithString:@"https://huggingface.co/unsloth/Qwen3.5-4B-GGUF/resolve/main/Qwen3.5-4B-Q4_K_M.gguf"]
 			             bytes:2740937888LL
+			            thinks:YES] autorelease],
+		/* A different order of thing from everything above, and the catalogue
+		   has to say so rather than let somebody find out after a ten-gigabyte
+		   download. These are 27B: six to ten times the size of the rest, and
+		   the first entries here that a Mac can *fetch* and then not *run* —
+		   nothing in this application checks how much memory there is, so the
+		   only warning is the sentence in the row.
+
+		   Two of them because one is not a choice. The smaller trades accuracy
+		   for fitting on a 16 GB machine; the larger is the usual quality point
+		   and wants the memory of a bigger one.
+
+		   Both are vision-language models upstream. Neko asks them for text and
+		   never ships the projector alongside, so they run as text models, which
+		   is all NekoLocalProvider wants of them. */
+		[[[NekoLocalModel alloc]
+			initWithIdentifier:@"qwen3.8-27b-q2"
+			              name:@"Qwen3.8 27B (smaller)"
+			            detail:NSLocalizedString(@"9.8 GB — a 27B, several times the size of anything above it", nil)
+			               url:[NSURL URLWithString:@"https://huggingface.co/unsloth/Qwen3.8-27B-GGUF/resolve/main/Qwen3.8-27B-UD-Q2_K_XL.gguf"]
+			             bytes:9828981664LL
+			            thinks:YES] autorelease],
+		[[[NekoLocalModel alloc]
+			initWithIdentifier:@"qwen3.8-27b-q4"
+			              name:@"Qwen3.8 27B"
+			            detail:NSLocalizedString(@"16.5 GB — the same 27B, kept whole", nil)
+			               url:[NSURL URLWithString:@"https://huggingface.co/unsloth/Qwen3.8-27B-GGUF/resolve/main/Qwen3.8-27B-UD-Q4_K_M.gguf"]
+			             bytes:16464440224LL
 			            thinks:YES] autorelease],
 		nil];
 	return cached;
@@ -373,6 +455,52 @@ NSString * const NekoModelsDirectoryKey = @"NekoModelsDirectory";
 - (NekoLocalModel *)downloadingModel
 {
 	return downloading;
+}
+
++ (long long)memoryOnThisMac
+{
+	/* A different Mac, when a harness said so — the same seam the directories
+	   have, and needed for the same reason: the case that matters is a 16 GB
+	   machine, and the machine this was written on has thirty-nine. Without it
+	   the only verdict ever exercised is the one that happens to be true here,
+	   which is how a check ends up proving nothing. */
+	long long pretend = (long long)[[NSUserDefaults standardUserDefaults]
+		integerForKey:NekoModelMemoryKey];
+	if(pretend > 0)
+		return pretend;
+	return (long long)[[NSProcessInfo processInfo] physicalMemory];
+}
+
++ (long long)memoryForAModel
+{
+	long long all = [self memoryOnThisMac];
+	long long left = all - NekoModelLeaveForTheMac;
+	return left > 0 ? left : 0;
+}
+
+- (long long)freeDiskBytes
+{
+	NSDictionary *room = [[NSFileManager defaultManager]
+		attributesOfFileSystemForPath:[[self modelsDirectory] path] error:NULL];
+	NSNumber *free = [room objectForKey:NSFileSystemFreeSize];
+	return free != nil ? (long long)[free unsignedLongLongValue] : 0LL;
+}
+
+- (BOOL)hasRoomOnDiskFor:(NekoLocalModel *)model
+{
+	/* The download is written before it is moved into place, so the disk needs
+	   the file and a little room to breathe rather than exactly the file. */
+	long long wanted = [model expectedBytes] + 1000LL * 1000LL * 1000LL;
+	return [self freeDiskBytes] >= wanted;
+}
+
+- (NSString *)diskWarningFor:(NekoLocalModel *)model
+{
+	if([self hasRoomOnDiskFor:model])
+		return nil;
+	return [NSString stringWithFormat:
+		NSLocalizedString(@"No room on the disk: needs %.1f GB, %.1f GB free.", nil),
+		(double)[model expectedBytes] / 1e9, (double)[self freeDiskBytes] / 1e9];
 }
 
 - (void)downloadModel:(NekoLocalModel *)model
