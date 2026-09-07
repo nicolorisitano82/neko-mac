@@ -1,5 +1,65 @@
 # Changelog
 
+## 2.16 — 2026-09-06
+
+Two questions that used to reach a language model do not any more, and both were
+found the same way: by asking what the application already answers in code, over
+the questions somebody had actually asked it.
+
+### "Che tempo fa?" no longer reaches a model with no forecast in front of it
+
+The weather recogniser was never the problem. It takes a place from the question,
+and failing that the town this Mac is in — and returns nothing only when it has
+neither, which is **every Mac until somebody grants the location permission**.
+
+That case is what the floor underneath is for, and the floor had a hole exactly
+at the phrase people use. Its weather list held *"che tempo fa a"*, *"che tempo
+farà"* and *"che tempo fa fuori"* — every form except the bare one. So *"che
+tempo fa?"* went past the recogniser, past the floor, and into a model that would
+invent an answer with today's date on it. That question is in this Mac's own
+diary twice.
+
+Now caught, in four languages, with ten checks pinning it. Widening the list
+broke something within a minute — *"che tempo fa che non ci vediamo?"* is **how
+long has it been**, the same three words and a different sentence — so a phrase
+written with a leading `!` now vetoes its class, which lets the other entries stay
+short instead of enumerating every phrasing.
+
+### What day a date fell on
+
+    che giorno era il 3 marzo 2026?      Il 3 marzo 2026 era un martedì.
+    che giorno è il 25 dicembre 2027?    Il 25 dicembre 2027 sarà un sabato.
+    what day was 3 March 2026?           Il 3 marzo 2026 era un martedì.
+
+The triggers were already there; behind them sat a helper that knows today,
+tomorrow and yesterday and nothing else, so any actual date fell through to a
+model — the thing measured at **one of nine** when this file was written. Past
+and future are different sentences in a language with tenses, so there are two of
+them, in Italian, French and Spanish.
+
+**A holiday by name is still not a date**, and that is deliberate. *"Quanti
+giorni mancano a Natale?"* stays unanswered: a table of feast days across four
+countries is a bigger promise than this is, and the harness that says so refused
+the one written for this release.
+
+### And a claim on the website that was not true
+
+The site's Ask Neko section said the chain handles *"How many days until
+Christmas, what day was the 3rd of March"*. **Both examples were ones it did not
+answer.** Corrected to what it does — the days between now and a date it can
+read — with the limits stated rather than implied.
+
+### Under the floorboards
+
+- `NekoPlugins` gained the directory override `NekoMemory` and `NekoModelStore`
+  already had, so a harness can see the plugins. Without it two rungs of the chain
+  read as standing aside when they had simply never run.
+- `tests/reach.m` — how far the chain reaches over a real diary, and how much of
+  it the diary's own shorthand takes away. Answer: **the diary alone loses four of
+  eight**, because it stores notes rather than a transcript.
+- `tests/run.sh`'s cleanup removed its scratch diary unconditionally. Pointing it
+  at a real one would have deleted it. It now removes only a directory it created.
+
 ## 2.15.2 — 2026-09-05
 
 **A small release, and worth saying so plainly: the only change that reaches the
