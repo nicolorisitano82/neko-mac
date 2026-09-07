@@ -2,6 +2,19 @@
 
 #import <Cocoa/Cocoa.h>
 
+/* Whether this Mac can actually run a given model.
+
+   Added because the catalogue grew a 27B, and that is the first entry somebody
+   can *fetch* and then not *load*: sixteen gigabytes arrive over an hour and
+   then llama.cpp cannot map them beside everything else running. Nothing here
+   used to look, so the only warning was a sentence in a row somebody may not
+   read. */
+typedef enum {
+	NekoModelFitsWell,        /* room to spare */
+	NekoModelFitsTightly,     /* it will load, and the Mac will feel it */
+	NekoModelWillNotLoad      /* not on this machine */
+} NekoModelFit;
+
 /* One downloadable model. */
 @interface NekoLocalModel : NSObject
 {
@@ -21,6 +34,19 @@
    persona quoted back inside it. NekoLocalProvider takes it out now; this says
    which ones it will be taking it out of, so the preferences can say so too. */
 - (BOOL)thinks;
+
+/* What it takes to answer with, in bytes: the weights plus what llama.cpp wants
+   beside them for the context and its own buffers. Not the same as the download,
+   which is only the weights. */
+- (long long)memoryNeeded;
+
+/* And whether that fits here. Read from hw.memsize each time rather than kept:
+   the answer changes when somebody plugs in a different Mac's disk, and it costs
+   nothing to ask. */
+- (NekoModelFit)fitOnThisMac;
+
+/* One sentence for the row, or nil when there is nothing to warn about. */
+- (NSString *)memoryWarning;
 
 - (id)initWithIdentifier:(NSString *)anIdentifier
                     name:(NSString *)aName
@@ -67,6 +93,10 @@
    container. It reported that honestly and it still measured nothing. */
 extern NSString * const NekoModelsDirectoryKey;
 
+/* How much memory this Mac has, when a harness needs it to be a different Mac.
+   Bytes. Ignored when zero or unset, which is every real launch. */
+extern NSString * const NekoModelMemoryKey;
+
 + (NekoModelStore *)sharedStore;
 
 /* What can be downloaded, in ascending size. */
@@ -102,6 +132,20 @@ extern NSString * const NekoModelsDirectoryKey;
 
 /* One download at a time; asking for a second cancels the first. Progress is
    0 to 1, and both blocks arrive on the main thread. */
+/* What this Mac has, and what is left for a model after the system and whatever
+   else is open. Both in bytes. */
++ (long long)memoryOnThisMac;
++ (long long)memoryForAModel;
+
+/* Room on the disk the models live on, and whether this one would fit with the
+   headroom a download needs. */
+- (long long)freeDiskBytes;
+- (BOOL)hasRoomOnDiskFor:(NekoLocalModel *)model;
+
+/* One sentence about the disk, or nil. Only ever asked before a download —
+   a model already on the disk has already spent the space. */
+- (NSString *)diskWarningFor:(NekoLocalModel *)model;
+
 - (void)downloadModel:(NekoLocalModel *)model
              progress:(void (^)(double fraction))progress
            completion:(void (^)(NSURL *file, NSError *error))completion;

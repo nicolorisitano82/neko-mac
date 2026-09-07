@@ -545,6 +545,8 @@
 /* The downloadable models. */
 "2.3 GB — follows a brief better than anything above it" = "2,3 Go — respecte la consigne mieux que tous ceux du dessus";
 "2.7 GB — the most recent, and the largest worth keeping on a laptop" = "2,7 Go — le plus récent, et le plus gros qui vaille la peine sur un portable";
+"9.8 GB — a 27B, several times the size of anything above it" = "9,8 Go — un 27B, plusieurs fois plus gros que tout ce qui précède";
+"16.5 GB — the same 27B, kept whole" = "16,5 Go — le même 27B, en entier";
 
 /* Quoting the diary back, when somebody asks what they said. */
 "yesterday" = "hier";
@@ -619,3 +621,15 @@
 "Yesterday." = "Hier.";
 "On %@, %ld days ago." = "Le %@, il y a %ld jours.";
 "I have not said anything yet." = "Je n’ai encore rien dit.";
+
+/* Whether this Mac can run a model at all. */
+"%@ will not load on this Mac" = "%@ ne se chargera pas sur ce Mac";
+"It is on the disk, and questions sent to it will come back empty. Choose a smaller one, or remove it to get the space back." = "Il est sur le disque, et les questions qui lui sont envoyées reviendront vides. Choisissez-en un plus petit, ou supprimez-le pour récupérer la place.";
+"%@ will not run on this Mac" = "%@ ne peut pas fonctionner sur ce Mac";
+"There is not room for %@" = "Il n'y a pas de place pour %@";
+"Downloading it will work. Loading it will not, and the download is several gigabytes." = "Le téléchargement fonctionnera. Le chargement non, et le téléchargement fait plusieurs gigaoctets.";
+"Do not download" = "Ne pas télécharger";
+"Download anyway" = "Télécharger quand même";
+"Needs about %.0f GB of memory. This Mac has %.0f GB." = "Il faut environ %.0f Go de mémoire. Ce Mac en a %.0f.";
+"Fits barely: %.0f GB of %.0f GB. The Mac will feel it." = "Tient tout juste : %.0f Go sur %.0f. Le Mac le sentira.";
+"No room on the disk: needs %.1f GB, %.1f GB free." = "Disque insuffisant : %.1f Go requis, %.1f Go libres.";
