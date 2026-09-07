@@ -1,5 +1,55 @@
 # Changelog
 
+## 2.17 — 2026-09-07
+
+Two much larger models to choose from, and — because they are the first that a
+Mac can **fetch** and then not **load** — the app now says whether yours can run
+one before you spend an hour of your connection finding out.
+
+### Qwen3.8 27B, in two sizes
+
+| | on disk | to run |
+| --- | --- | --- |
+| **Qwen3.8 27B (smaller)** | 9.8 GB | about 11 GB |
+| **Qwen3.8 27B** | 16.5 GB | about 18 GB |
+
+Six to ten times the size of everything else in the list. Both reason before
+answering, which the row says. Both are vision-language models upstream; Neko
+asks them for text and never ships the projector alongside, so here they are text
+models.
+
+### Whether this Mac can run it
+
+There was no check of any kind — not for memory, not for disk space. With a 2 GB
+catalogue that never mattered. With a 16 GB entry it does: the download succeeds,
+and then nothing loads.
+
+So every row in the model list now says where it stands, and says it **in red**
+when the answer is no:
+
+    Needs about 18 GB of memory. This Mac has 16 GB.
+    Fits barely: 11 GB of 12 GB. The Mac will feel it.
+    No room on the disk: needs 16.5 GB, 9.2 GB free.
+
+Memory outranks the disk, because a model that cannot be loaded is not improved
+by there being somewhere to put it. And the disk is only mentioned while it is
+still a download — one already on your disk has spent that space, and repeating
+it would be noise.
+
+Two alerts, both of which can be overruled:
+
+- **Before a download that cannot end well.** It says what will happen —
+  downloading works, loading does not, and the download is several gigabytes —
+  and then leaves the choice, because a Mac you add memory to next month is still
+  your Mac.
+- **When you pick one that is already downloaded and cannot load.** Otherwise you
+  find out at the next question, which comes back empty.
+
+The arithmetic is deliberately conservative: the file, plus what llama.cpp wants
+beside it, against this Mac's memory less four gigabytes for the system and
+whatever else is open. It is a rule rather than a measurement of a load that
+actually happened, and `tests/room.m` says so out loud.
+
 ## 2.16 — 2026-09-06
 
 Two questions that used to reach a language model do not any more, and both were
