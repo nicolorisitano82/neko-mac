@@ -1384,7 +1384,23 @@ static const float NekoMaxStopRadius = 200.0f;
 	[content addSubview:drawCheck];
 	[drawCheck release];
 
-	drawActionButton = [[NSButton alloc] initWithFrame:NSMakeRect(20.0f, 334.0f, 180.0f, 32.0f)];
+	/* Which of them draws. There is more than one now, and until this row
+	   existed the answer was -firstObject in two different files. */
+	[content addSubview:[self labelWithString:NekoLocalized(@"Model:")
+	                                    frame:NSMakeRect(20.0f, 351.0f, 125.0f, 17.0f)]];
+	drawModelPopUp = [[NSPopUpButton alloc]
+		initWithFrame:NSMakeRect(152.0f, 346.0f, 260.0f, 26.0f) pullsDown:NO];
+	NSEnumerator *pictures = [[[NekoModelStore sharedStore] pictureCatalogue]
+		objectEnumerator];
+	NekoLocalModel *picture;
+	while((picture = [pictures nextObject]) != nil)
+		[drawModelPopUp addItemWithTitle:[picture name]];
+	[drawModelPopUp setTarget:self];
+	[drawModelPopUp setAction:@selector(takeDrawModelFrom:)];
+	[content addSubview:drawModelPopUp];
+	[drawModelPopUp release];
+
+	drawActionButton = [[NSButton alloc] initWithFrame:NSMakeRect(20.0f, 306.0f, 180.0f, 32.0f)];
 	[drawActionButton setBezelStyle:NSBezelStyleRounded];
 	[drawActionButton setTarget:self];
 	[drawActionButton setAction:@selector(drawActionPressed:)];
@@ -1392,7 +1408,7 @@ static const float NekoMaxStopRadius = 200.0f;
 	[drawActionButton release];
 
 	drawProgress = [[NSProgressIndicator alloc]
-		initWithFrame:NSMakeRect(212.0f, 342.0f, 230.0f, 16.0f)];
+		initWithFrame:NSMakeRect(212.0f, 314.0f, 230.0f, 16.0f)];
 	[drawProgress setStyle:NSProgressIndicatorStyleBar];
 	[drawProgress setIndeterminate:NO];
 	[drawProgress setMinValue:0.0];
@@ -1402,9 +1418,9 @@ static const float NekoMaxStopRadius = 200.0f;
 	[drawProgress release];
 
 	[content addSubview:[self labelWithString:NekoLocalized(@"Effort:")
-	                                    frame:NSMakeRect(20.0f, 300.0f, 125.0f, 17.0f)]];
+	                                    frame:NSMakeRect(20.0f, 277.0f, 125.0f, 17.0f)]];
 	drawStepsPopUp = [[NSPopUpButton alloc]
-		initWithFrame:NSMakeRect(152.0f, 295.0f, 200.0f, 26.0f) pullsDown:NO];
+		initWithFrame:NSMakeRect(152.0f, 272.0f, 200.0f, 26.0f) pullsDown:NO];
 	NSEnumerator *e = [[self drawStepChoices] objectEnumerator];
 	NSNumber *steps;
 	while((steps = [e nextObject]) != nil)
@@ -1416,9 +1432,9 @@ static const float NekoMaxStopRadius = 200.0f;
 	[drawStepsPopUp release];
 
 	[content addSubview:[self labelWithString:NekoLocalized(@"Size:")
-	                                    frame:NSMakeRect(20.0f, 266.0f, 125.0f, 17.0f)]];
+	                                    frame:NSMakeRect(20.0f, 243.0f, 125.0f, 17.0f)]];
 	drawSizePopUp = [[NSPopUpButton alloc]
-		initWithFrame:NSMakeRect(152.0f, 261.0f, 200.0f, 26.0f) pullsDown:NO];
+		initWithFrame:NSMakeRect(152.0f, 238.0f, 200.0f, 26.0f) pullsDown:NO];
 	NSEnumerator *sizes = [[self drawSizeChoices] objectEnumerator];
 	NSNumber *side;
 	while((side = [sizes nextObject]) != nil)
@@ -1429,7 +1445,7 @@ static const float NekoMaxStopRadius = 200.0f;
 	[content addSubview:drawSizePopUp];
 	[drawSizePopUp release];
 
-	drawNowButton = [[NSButton alloc] initWithFrame:NSMakeRect(20.0f, 218.0f, 200.0f, 32.0f)];
+	drawNowButton = [[NSButton alloc] initWithFrame:NSMakeRect(20.0f, 198.0f, 200.0f, 32.0f)];
 	[drawNowButton setBezelStyle:NSBezelStyleRounded];
 	[drawNowButton setTitle:NekoLocalized(@"Draw a cat now")];
 	[drawNowButton setTarget:self];
@@ -1440,7 +1456,7 @@ static const float NekoMaxStopRadius = 200.0f;
 	/* Tall enough for the longest translation of it, not the shortest: in
 	   Italian this paragraph runs three lines further than in English. */
 	drawStatusField = [self labelWithString:@""
-	                                  frame:NSMakeRect(20.0f, 58.0f, 556.0f, 150.0f)];
+	                                  frame:NSMakeRect(20.0f, 62.0f, 556.0f, 128.0f)];
 	[drawStatusField setAlignment:NSTextAlignmentLeft];
 	[[drawStatusField cell] setWraps:YES];
 	[content addSubview:drawStatusField];
@@ -1463,7 +1479,27 @@ static const float NekoMaxStopRadius = 200.0f;
 
 - (NekoLocalModel *)pictureModel
 {
-	return [[[NekoModelStore sharedStore] pictureCatalogue] firstObject];
+	return [[NekoPainter sharedPainter] model];
+}
+
+/* Choosing one carries its own recipe with it: the steps and the size go back to
+   what that checkpoint wants, because a turbo model left on fourteen steps at a
+   guidance of seven draws mush and nobody would have chosen that. The guidance
+   itself is never somebody's to set — see NekoPainter. */
+- (void)takeDrawModelFrom:(id)sender
+{
+	NSArray *pictures = [[NekoModelStore sharedStore] pictureCatalogue];
+	NSInteger index = [sender indexOfSelectedItem];
+	if(index < 0 || index >= (NSInteger)[pictures count])
+		return;
+	NekoLocalModel *picture = [pictures objectAtIndex:(NSUInteger)index];
+	NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
+	[defaults setObject:[picture identifier] forKey:NekoDrawModelKey];
+	[defaults setObject:[NSNumber numberWithInt:[picture drawSteps]]
+	             forKey:NekoDrawStepsKey];
+	[defaults setObject:[NSNumber numberWithInt:[picture drawSide]]
+	             forKey:NekoDrawSizeKey];
+	[self syncDrawControls];
 }
 
 - (void)takeDrawEnabledFrom:(id)sender
@@ -1502,6 +1538,10 @@ static const float NekoMaxStopRadius = 200.0f;
 	}
 	if([store installedURLForIdentifier:[model identifier]] != nil) {
 		[store removeIdentifier:[model identifier]];
+		[self syncDrawControls];
+		return;
+	}
+	if(![self mayDownload:model]) {
 		[self syncDrawControls];
 		return;
 	}
@@ -1554,6 +1594,10 @@ static const float NekoMaxStopRadius = 200.0f;
 	[drawProgress setHidden:!busy];
 	if(busy)
 		[drawProgress setDoubleValue:[store fraction]];
+	NSArray *pictures = [store pictureCatalogue];
+	NSUInteger chosen = [pictures indexOfObject:model];
+	[drawModelPopUp selectItemAtIndex:chosen == NSNotFound ? 0 : (NSInteger)chosen];
+	[drawModelPopUp setEnabled:on && !busy];
 	[drawStepsPopUp setEnabled:on && installed];
 	[drawSizePopUp setEnabled:on && installed];
 	[drawNowButton setEnabled:on && installed && ![[NekoPainter sharedPainter] isDrawing]];
@@ -1980,6 +2024,45 @@ static const float NekoMaxStopRadius = 200.0f;
 	}
 }
 
+/* Whether a download is worth starting, asked of any of them.
+
+   Sixteen gigabytes is an hour of somebody's connection. If it cannot be loaded
+   at the end of it, or will not fit on the disk in the first place, that is
+   worth an alert rather than a line of grey text — and the choice stays theirs,
+   because a Mac they plug more memory into next month is still their Mac.
+
+   Shared by the two tabs that download something. It lived inside the one for
+   models that answer in words, which left the one for models that draw with no
+   check at all — and the largest of those is four gigabytes. */
+- (BOOL)mayDownload:(NekoLocalModel *)model
+{
+	NekoModelStore *store = [NekoModelStore sharedStore];
+	NSString *cannot = [model fitOnThisMac] == NekoModelWillNotLoad
+		? [model memoryWarning] : nil;
+	NSString *noRoom = [store diskWarningFor:model];
+	if(cannot == nil && noRoom == nil)
+		return YES;
+
+	NSAlert *alert = [[[NSAlert alloc] init] autorelease];
+	[alert setAlertStyle:NSAlertStyleCritical];
+	[alert setMessageText:cannot != nil
+		? [NSString stringWithFormat:
+			NekoLocalized(@"%@ will not run on this Mac"), [model name]]
+		: [NSString stringWithFormat:
+			NekoLocalized(@"There is not room for %@"), [model name]]];
+	NSMutableArray *why = [NSMutableArray array];
+	if(cannot != nil)
+		[why addObject:cannot];
+	if(noRoom != nil)
+		[why addObject:noRoom];
+	[why addObject:NekoLocalized(@"Downloading it will work. Loading it will not, and the download is several gigabytes.")];
+	[alert setInformativeText:[why componentsJoinedByString:@"\n\n"]];
+	[alert addButtonWithTitle:NekoLocalized(@"Do not download")];
+	[alert addButtonWithTitle:NekoLocalized(@"Download anyway")];
+	[NSApp activateIgnoringOtherApps:YES];
+	return [alert runModal] != NSAlertFirstButtonReturn;
+}
+
 /* One button, three jobs, depending on what there is to do. */
 - (void)localActionPressed:(id)sender
 {
@@ -1997,36 +2080,9 @@ static const float NekoMaxStopRadius = 200.0f;
 		return;
 	}
 
-	/* Sixteen gigabytes is an hour of somebody's connection. If it cannot be
-	   loaded at the end of it, or will not fit on the disk in the first place,
-	   that is worth an alert rather than a line of grey text — and the choice
-	   stays theirs, because a Mac they plug more memory into tomorrow is still
-	   their Mac. */
-	NSString *cannot = [model fitOnThisMac] == NekoModelWillNotLoad
-		? [model memoryWarning] : nil;
-	NSString *noRoom = [store diskWarningFor:model];
-	if(cannot != nil || noRoom != nil) {
-		NSAlert *alert = [[[NSAlert alloc] init] autorelease];
-		[alert setAlertStyle:NSAlertStyleCritical];
-		[alert setMessageText:cannot != nil
-			? [NSString stringWithFormat:
-				NekoLocalized(@"%@ will not run on this Mac"), [model name]]
-			: [NSString stringWithFormat:
-				NekoLocalized(@"There is not room for %@"), [model name]]];
-		NSMutableArray *why = [NSMutableArray array];
-		if(cannot != nil)
-			[why addObject:cannot];
-		if(noRoom != nil)
-			[why addObject:noRoom];
-		[why addObject:NekoLocalized(@"Downloading it will work. Loading it will not, and the download is several gigabytes.")];
-		[alert setInformativeText:[why componentsJoinedByString:@"\n\n"]];
-		[alert addButtonWithTitle:NekoLocalized(@"Do not download")];
-		[alert addButtonWithTitle:NekoLocalized(@"Download anyway")];
-		[NSApp activateIgnoringOtherApps:YES];
-		if([alert runModal] == NSAlertFirstButtonReturn) {
-			[self syncLocalControls];
-			return;
-		}
+	if(![self mayDownload:model]) {
+		[self syncLocalControls];
+		return;
 	}
 
 	[store downloadModel:model

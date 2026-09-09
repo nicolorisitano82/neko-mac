@@ -633,3 +633,9 @@
 "Needs about %.0f GB of memory. This Mac has %.0f GB." = "Necesita unos %.0f GB de memoria. Este Mac tiene %.0f.";
 "Fits barely: %.0f GB of %.0f GB. The Mac will feel it." = "Cabe por poco: %.0f GB de %.0f. El Mac lo notará.";
 "No room on the disk: needs %.1f GB, %.1f GB free." = "Sin espacio en disco: necesita %.1f GB, libres %.1f.";
+
+/* Choosing which model draws. */
+"1.6 GB — 512 pixels in about fifteen seconds. The one this app has always drawn with" = "1,6 GB — 512 píxeles en unos quince segundos. El que esta app ha usado siempre";
+"2.0 GB — draws in four steps instead of fourteen, so a few seconds rather than fifteen. Stability AI Community licence" = "2,0 GB — dibuja en cuatro pasos en vez de catorce, así que unos segundos en lugar de quince. Licencia Stability AI Community";
+"2.0 GB — 768 pixels, and steadier with hands and faces than 1.5" = "2,0 GB — 768 píxeles, y más firme que 1.5 con manos y caras";
+"4.1 GB — the best-looking of these, in four steps. Non-commercial licence only" = "4,1 GB — el más bonito de todos, en cuatro pasos. Solo licencia no comercial";

@@ -1,9 +1,11 @@
 /* NekoPainter */
 
 #import <Cocoa/Cocoa.h>
+#import "NekoModelStore.h"
 
 /* NSUserDefaults keys */
 extern NSString * const NekoDrawEnabledKey;   /* BOOL, may the cat draw at all */
+extern NSString * const NekoDrawModelKey;     /* which of the picture models to draw with */
 extern NSString * const NekoDrawStepsKey;     /* denoising steps, quality against time */
 extern NSString * const NekoDrawSizeKey;      /* square side in pixels */
 
@@ -35,6 +37,12 @@ extern NSString * const NekoDrawSizeKey;      /* square side in pixels */
 /* Where the helper is, or nil in a build without one. */
 - (NSString *)helperPath;
 - (NSURL *)modelURL;
+
+/* Which of the picture models is drawing: whichever somebody chose in the
+   preferences, and the first when nobody has. Public because the preferences ask
+   it rather than working it out again — the two of them disagreeing about which
+   model is in use is exactly the bug that -firstObject in two files invited. */
+- (NekoLocalModel *)model;
 
 /* Draws, then hands back the picture on the main thread. Slow by the standards
    of everything else here: tens of seconds is normal, which is why the cat says
