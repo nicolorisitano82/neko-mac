@@ -275,6 +275,7 @@ static const float NekoFleeFar  = 4.0f;
 	                     NSMaxX(bounds) - frame.size.width);
 	wanderTarget.y = MIN(MAX(wanderTarget.y, NSMinY(bounds)),
 	                     NSMaxY(bounds) - frame.size.height);
+	wanderTarget = [self somewhereItCanStand:wanderTarget];
 	wanderMouse = mouse;
 	wandering = YES;
 }
@@ -294,7 +295,8 @@ static const float NekoFleeFar  = 4.0f;
 	float room = surface.size.width - frame.size.width;
 	float x = NSMinX(surface) + (room > 0.0f ? (float)arc4random_uniform((unsigned)room) : 0.0f);
 
-	wanderTarget = NSMakePoint(x + frame.size.width / 2.0f, surface.origin.y);
+	wanderTarget = [self somewhereItCanStand:
+		NSMakePoint(x + frame.size.width / 2.0f, surface.origin.y)];
 	wanderMouse = [NSEvent mouseLocation];
 	wandering = YES;
 }
@@ -324,7 +326,7 @@ static const float NekoFleeFar  = 4.0f;
 			break;
 	}
 
-	wanderTarget = spot;
+	wanderTarget = [self somewhereItCanStand:spot];
 	wanderMouse = [NSEvent mouseLocation];
 	wandering = YES;
 }
@@ -560,6 +562,70 @@ static const float NekoTurnStep = 30.0f;
 		bounds = NSIsEmptyRect(bounds) ? [screen visibleFrame]
 		                               : NSUnionRect(bounds, [screen visibleFrame]);
 	return NSIsEmptyRect(bounds) ? [[NSScreen mainScreen] visibleFrame] : bounds;
+}
+
+/* A place the cat can actually stand, given one it was aiming at.
+
+   Everything that picks somewhere to walk to picks it inside -nekoBounds, which
+   is every screen unioned so that the cat can cross from one display to another.
+   When two monitors do not tile a rectangle that union contains room no screen
+   covers, and a share of every walk is aimed there: on the desk in
+   tests/edges.m — a portrait display above a laptop — it is one walk in
+   forty-five. The rescue already existed for a cat that had *arrived* somewhere
+   impossible; this is the same rescue applied to the target, which is where it
+   belongs. The target is a midpoint and the rescue works in origins, so it goes
+   there and back. */
+- (NSPoint)somewhereItCanStand:(NSPoint)target
+{
+	NSRect frame = [self frame];
+	float side = MAX((float)frame.size.width, 1.0f);
+	/* Through floats of its own rather than the point's fields: NSPoint holds
+	   CGFloat, which is a double here, and handing &origin.x to a float* writes
+	   four bytes into eight. The compiler said so. */
+	float x = (float)(target.x - side / 2.0f);
+	float y = (float)target.y;
+	[self nudgeOntoAScreen:&x Y:&y side:side];
+	return NSMakePoint((CGFloat)x + side / 2.0f, (CGFloat)y);
+}
+
+/* One screen rather than all of them, for the things that are about the display
+   the cat is standing on: which way its own edge is, how far the wall is.
+
+   Never NSZeroRect. -[NSWindow screen] is nil for a window on no display, and
+   the union the cat roams in has room that no display covers whenever two
+   monitors do not tile a rectangle — a portrait screen above a laptop leaves a
+   strip beside it seventy points wide. Asking a nil screen for -visibleFrame
+   gives a rectangle at the origin, and an antic that works out the edge of the
+   screen from that sends the cat to x = 0 from wherever it was. tests/edges.m
+   has the desk it was reported from. */
+- (NSRect)nekoScreenBounds
+{
+	NSScreen *here = [self screen];
+	if(here != nil)
+		return [here visibleFrame];
+
+	/* On no screen: the nearest one to the middle of the sprite, by the same
+	   measure NekoOriginOnAScreen uses to rescue it. */
+	NSRect frame = [self frame];
+	NSPoint centre = NSMakePoint(NSMidX(frame), NSMidY(frame));
+	NSRect nearest = NSZeroRect;
+	float nearestDistance = 0.0f;
+	NSEnumerator *e = [[NSScreen screens] objectEnumerator];
+	NSScreen *screen;
+	while((screen = [e nextObject]) != nil) {
+		NSRect visible = [screen visibleFrame];
+		float dx = 0.0f, dy = 0.0f;
+		if(centre.x < NSMinX(visible))      dx = NSMinX(visible) - centre.x;
+		else if(centre.x > NSMaxX(visible)) dx = centre.x - NSMaxX(visible);
+		if(centre.y < NSMinY(visible))      dy = NSMinY(visible) - centre.y;
+		else if(centre.y > NSMaxY(visible)) dy = centre.y - NSMaxY(visible);
+		float distance = dx * dx + dy * dy;
+		if(NSIsEmptyRect(nearest) || distance < nearestDistance) {
+			nearest = visible;
+			nearestDistance = distance;
+		}
+	}
+	return NSIsEmptyRect(nearest) ? [[NSScreen mainScreen] visibleFrame] : nearest;
 }
 
 /* Where the Dock is, as a surface to stand on, or an empty rect when it is

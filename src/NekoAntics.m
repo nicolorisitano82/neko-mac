@@ -186,7 +186,7 @@ static const float NekoAnticsSideMax = 70.0f;
 	NSRect frame = [panel frame];
 	return [self spotBeside:pointer
 	                   from:NSMakePoint(NSMidX(frame), NSMinY(frame))
-	                 within:[[panel screen] visibleFrame]];
+	                 within:[panel nekoScreenBounds]];
 }
 
 /* It came over because somebody was typing hard, and somebody typing hard when
@@ -330,7 +330,7 @@ static const float NekoAnticsSideMax = 70.0f;
 		dy = 0.0f;
 		length = 1.0f;
 	}
-	NSRect bounds = [[panel screen] visibleFrame];
+	NSRect bounds = [panel nekoScreenBounds];
 	NSPoint away = NSMakePoint(here.x + dx / length * 140.0f,
 	                           here.y + dy / length * 140.0f);
 	away.x = MIN(MAX(away.x, NSMinX(bounds) + 16.0f), NSMaxX(bounds) - 16.0f);
@@ -368,7 +368,13 @@ static const float NekoAnticsSideMax = 70.0f;
 	if(idle > 20.0) {
 		/* Nobody typing, nobody clicking: it goes and claws the edge of the
 		   screen, which the wall behaviour turns into scratching on arrival. */
-		NSRect bounds = [[panel screen] visibleFrame];
+		/* The panel's own accessor and not the window's screen: a window on no
+		   display answers nil, nil answers an empty rectangle, and this then
+		   works out the edge of the screen from a rectangle at the origin —
+		   sending the cat to x = 0 from wherever it was standing. With a
+		   portrait monitor above a laptop that is reachable, and it is what
+		   "the cat goes mad along the borders" turned out to be. */
+		NSRect bounds = [panel nekoScreenBounds];
 		NSRect frame = [panel frame];
 		BOOL left = NSMidX(frame) < NSMidX(bounds);
 		[self beginAntic:nil
