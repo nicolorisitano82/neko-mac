@@ -75,6 +75,7 @@ extern NSString * const NekoSettingsDidChangeNotification;
 	NSButton *drawCheck;
 	NSButton *drawActionButton;
 	NSProgressIndicator *drawProgress;
+	NSPopUpButton *drawModelPopUp;
 	NSPopUpButton *drawStepsPopUp;
 	NSPopUpButton *drawSizePopUp;
 	NSButton *drawNowButton;

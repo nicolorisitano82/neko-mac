@@ -24,6 +24,9 @@ typedef enum {
 	NSURL *url;
 	long long expectedBytes;
 	BOOL thinks;
+	int drawSteps;
+	float drawGuidance;
+	int drawSide;
 }
 /* Whether this model writes its notes before it answers.
 
@@ -54,6 +57,29 @@ typedef enum {
                      url:(NSURL *)aURL
                    bytes:(long long)bytes
                   thinks:(BOOL)thinksOutLoud;
+
+/* The same thing for a model that draws, and the three extra arguments are
+   required for the reason `thinks` is: a picture model added without them is a
+   picture model drawn with somebody else's recipe.
+
+   The turbo checkpoints are distilled to draw in one to four steps with the
+   guidance turned off, and asked for fourteen steps at a guidance of seven —
+   which is what this application passed, and what suits SD 1.5 — they come back
+   as mush. The recipe belongs to the model, so it travels with it. */
+- (id)initWithIdentifier:(NSString *)anIdentifier
+                    name:(NSString *)aName
+                  detail:(NSString *)aDetail
+                     url:(NSURL *)aURL
+                   bytes:(long long)bytes
+                   steps:(int)steps
+                guidance:(float)guidance
+                    side:(int)side;
+
+/* How this one wants to be drawn with. Meaningless for a model that answers in
+   words, where they are zero. */
+- (int)drawSteps;
+- (float)drawGuidance;
+- (int)drawSide;
 - (NSString *)identifier;
 - (NSString *)name;
 - (NSString *)detail;        /* "468 MB, 4-bit" and so on */

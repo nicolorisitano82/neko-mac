@@ -79,6 +79,15 @@
    does not have: two displays of different heights, and the empty rectangle the
    bounding box invents between them. */
 NSPoint NekoOriginOnAScreen(NSPoint origin, float side, NSArray *visibleFrames);
+
+/* The screen the cat is on, or the nearest real one when it is on none.
+
+   -[NSWindow screen] answers **nil** for a window that overlaps no display, and
+   with two monitors that do not tile a rectangle that happens: the union the cat
+   walks in contains room no screen covers. nil then answers NSZeroRect to
+   -visibleFrame, and anything working out an edge from that computes it at the
+   origin. Never empty, so nobody has to remember to check. */
+- (NSRect)nekoScreenBounds;
 - (BOOL)isRoaming;
 
 - (void)holdWithState:(NekoState)state;

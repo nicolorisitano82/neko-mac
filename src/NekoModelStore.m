@@ -40,6 +40,28 @@ static const long long NekoModelLeaveForTheMac = 4000LL * 1000LL * 1000LL;
 	return self;
 }
 
+- (id)initWithIdentifier:(NSString *)anIdentifier
+                    name:(NSString *)aName
+                  detail:(NSString *)aDetail
+                     url:(NSURL *)aURL
+                   bytes:(long long)bytes
+                   steps:(int)steps
+                guidance:(float)guidance
+                    side:(int)side
+{
+	if((self = [self initWithIdentifier:anIdentifier name:aName detail:aDetail
+	                                url:aURL bytes:bytes thinks:NO]) != nil) {
+		drawSteps = steps;
+		drawGuidance = guidance;
+		drawSide = side;
+	}
+	return self;
+}
+
+- (int)drawSteps       { return drawSteps; }
+- (float)drawGuidance  { return drawGuidance; }
+- (int)drawSide        { return drawSide; }
+
 - (void)dealloc
 {
 	[identifier release];
@@ -257,14 +279,52 @@ static const long long NekoModelLeaveForTheMac = 4000LL * 1000LL * 1000LL;
 	static NSArray *cached = nil;
 	if(cached != nil)
 		return cached;
+	/* Four to choose between, in the order somebody would try them: the one that
+	   has always been here first, then the two that draw in a quarter of the
+	   time, then the one that draws bigger and slower.
+
+	   Every URL was fetched and every size read from the response rather than
+	   typed, and the licence of each was looked at — which is why two of these
+	   rows mention one. The steps and the guidance are the model's own: asked for
+	   SD 1.5's fourteen at a guidance of seven, a turbo checkpoint returns
+	   mush. */
 	cached = [[NSArray alloc] initWithObjects:
 		[[[NekoLocalModel alloc]
 			initWithIdentifier:@"sd15-q8"
 			              name:@"Stable Diffusion 1.5"
-			            detail:NSLocalizedString(@"1.6 GB, 8-bit — draws a 512 pixel picture on this Mac's GPU", nil)
+			            detail:NSLocalizedString(@"1.6 GB — 512 pixels in about fifteen seconds. The one this app has always drawn with", nil)
 			               url:[NSURL URLWithString:@"https://huggingface.co/second-state/stable-diffusion-v1-5-GGUF/resolve/main/stable-diffusion-v1-5-pruned-emaonly-Q8_0.gguf"]
 			             bytes:1717986918LL
-			            thinks:NO] autorelease], nil];
+			             steps:14
+			          guidance:7.0f
+			              side:512] autorelease],
+		[[[NekoLocalModel alloc]
+			initWithIdentifier:@"sd-turbo-q8"
+			              name:@"SD-Turbo"
+			            detail:NSLocalizedString(@"2.0 GB — draws in four steps instead of fourteen, so a few seconds rather than fifteen. Stability AI Community licence", nil)
+			               url:[NSURL URLWithString:@"https://huggingface.co/Green-Sky/SD-Turbo-GGUF/resolve/main/sd_turbo-f16-q8_0.gguf"]
+			             bytes:2023745376LL
+			             steps:4
+			          guidance:1.0f
+			              side:512] autorelease],
+		[[[NekoLocalModel alloc]
+			initWithIdentifier:@"sd21-q8"
+			              name:@"Stable Diffusion 2.1"
+			            detail:NSLocalizedString(@"2.0 GB — 768 pixels, and steadier with hands and faces than 1.5", nil)
+			               url:[NSURL URLWithString:@"https://huggingface.co/second-state/stable-diffusion-2-1-GGUF/resolve/main/v2-1_768-nonema-pruned-Q8_0.gguf"]
+			             bytes:2014680768LL
+			             steps:20
+			          guidance:7.0f
+			              side:768] autorelease],
+		[[[NekoLocalModel alloc]
+			initWithIdentifier:@"sdxl-turbo-q8"
+			              name:@"SDXL-Turbo"
+			            detail:NSLocalizedString(@"4.1 GB — the best-looking of these, in four steps. Non-commercial licence only", nil)
+			               url:[NSURL URLWithString:@"https://huggingface.co/OlegSkutte/sdxl-turbo-GGUF/resolve/main/sd_xl_turbo_1.0.q8_0.gguf"]
+			             bytes:4098988672LL
+			             steps:4
+			          guidance:1.0f
+			              side:512] autorelease], nil];
 	return cached;
 }
 

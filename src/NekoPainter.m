@@ -3,6 +3,7 @@
 #import "NekoAnswerProvider.h"
 
 NSString * const NekoDrawEnabledKey = @"NekoDrawEnabled";
+NSString * const NekoDrawModelKey   = @"NekoDrawModel";
 NSString * const NekoDrawStepsKey   = @"NekoDrawSteps";
 NSString * const NekoDrawSizeKey    = @"NekoDrawSize";
 
@@ -46,9 +47,20 @@ NSString * const NekoDrawSizeKey    = @"NekoDrawSize";
 	return [[NSFileManager defaultManager] isExecutableFileAtPath:path] ? path : nil;
 }
 
+/* Whichever of them somebody chose, and the first when nobody has. Not
+   -firstObject any more: there is more than one now, and this used to be the
+   only thing deciding which was used. */
 - (NekoLocalModel *)model
 {
-	return [[[NekoModelStore sharedStore] pictureCatalogue] firstObject];
+	NekoModelStore *store = [NekoModelStore sharedStore];
+	NSString *chosen = [[NSUserDefaults standardUserDefaults]
+		stringForKey:NekoDrawModelKey];
+	NSEnumerator *e = [[store pictureCatalogue] objectEnumerator];
+	NekoLocalModel *each;
+	while((each = [e nextObject]) != nil)
+		if([[each identifier] isEqualToString:chosen])
+			return each;
+	return [[store pictureCatalogue] firstObject];
 }
 
 - (NSURL *)modelURL
@@ -104,10 +116,15 @@ NSString * const NekoDrawSizeKey    = @"NekoDrawSize";
 	[self cancel];
 
 	NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
+	NekoLocalModel *chosen = [self model];
 	int steps = (int)[defaults integerForKey:NekoDrawStepsKey];
 	int side = (int)[defaults integerForKey:NekoDrawSizeKey];
-	if(steps < 1) steps = 14;
-	if(side < 128) side = 512;
+	if(steps < 1) steps = [chosen drawSteps] > 0 ? [chosen drawSteps] : 14;
+	if(side < 128) side = [chosen drawSide] > 0 ? [chosen drawSide] : 512;
+	/* The guidance is the model's and not somebody's to set: it is not a taste,
+	   it is what the checkpoint was distilled for. A turbo model at seven draws
+	   mush, and there is no reason anybody would want that. */
+	float guidance = [chosen drawGuidance] > 0.0f ? [chosen drawGuidance] : 7.0f;
 
 	[scratch release];
 	scratch = [[NSTemporaryDirectory() stringByAppendingPathComponent:
@@ -122,6 +139,7 @@ NSString * const NekoDrawSizeKey    = @"NekoDrawSize";
 		@"-W", [NSString stringWithFormat:@"%d", side],
 		@"-H", [NSString stringWithFormat:@"%d", side],
 		@"--sampling-method", @"euler_a",
+		@"--cfg-scale", [NSString stringWithFormat:@"%.1f", guidance],
 		/* A pet's picture, not a print: a fixed seed would draw the same
 		   Colosseum every time it was asked. */
 		@"-s", [NSString stringWithFormat:@"%u", arc4random_uniform(1000000)],
