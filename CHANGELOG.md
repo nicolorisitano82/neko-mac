@@ -1,5 +1,72 @@
 # Changelog
 
+## 2.18 — 2026-09-10
+
+### The cat no longer goes mad along the borders of two monitors
+
+Reported from a desk with a portrait display stacked above a laptop, and measured
+there rather than guessed at:
+
+    screen 0  visible (0,   0, 1512,  949)   the built-in, menu bar removed
+    screen 1  visible (0, 982, 1440, 2560)   the external one, on its side, above
+
+Those two do not tile a rectangle. The cat walks in **every screen unioned** — it
+has to, or the edge of one display becomes a wall it cannot cross — and that
+union, `(0, 0, 1512, 3542)`, contains room that no screen covers: a strip 72
+points wide beside the narrower upper display, because 1440 is not 1512.
+**4.4% of the union is nowhere**, and everything that picked somewhere to walk to
+picked it uniformly inside that union: about **one walk in forty-five** was aimed
+at a place the cat cannot be.
+
+Once it arrived there the second half bit. `-[NSWindow screen]` answers **nil**
+for a window on no display; nil answers an empty rectangle; and the antic that
+goes to claw the edge of the screen then worked that edge out from a rectangle at
+the origin — sending the cat to x = 0 from wherever it stood. From x = 1470 that
+is a bolt of 1470 points across the desk for no reason it could have.
+
+Both halves are fixed with mechanisms that already existed: a chosen target now
+goes through the rescue that until now only helped a cat which had already
+*arrived* somewhere impossible, and the screen the cat is on is asked for
+through something that never answers an empty rectangle.
+
+**Said plainly: this has not been watched on two monitors.** The external display
+was unplugged before it could be, so what is measured is the arithmetic of the
+target — the share above, and that every one of those targets now lands on a real
+screen. `tests/edges.m` stages that exact desk and says so out loud.
+
+### Four models to draw with, instead of one
+
+The picture list held one entry and both places that wanted it took whichever was
+first, so there was nothing to choose. Now there is a **Model** row in the
+drawing tab:
+
+| | | steps | pixels | |
+| --- | --- | --- | --- | --- |
+| **Stable Diffusion 1.5** | 1.6 GB | 14 | 512 | the one it has always drawn with |
+| **SD-Turbo** | 2.0 GB | **4** | 512 | Stability AI Community licence |
+| **Stable Diffusion 2.1** | 2.0 GB | 20 | 768 | steadier with hands and faces |
+| **SDXL-Turbo** | 4.1 GB | **4** | 512 | **non-commercial licence only** |
+
+The two turbo checkpoints draw in four steps rather than fourteen — a few seconds
+instead of fifteen.
+
+And the part that makes it work rather than merely longer: a turbo checkpoint is
+not 1.5 under a different file name. It is distilled to draw in four steps with
+the guidance turned off, and handed fourteen steps at a guidance of seven — which
+is what this app passed, and what suits 1.5 — it comes back as mush. So the
+recipe belongs to the model and travels with it. Choosing one puts the steps and
+the size back to what that checkpoint wants, and the guidance is never a setting:
+it is not a taste, it is what the model was made for.
+
+Every URL was fetched and every size read off the response rather than typed, and
+every licence was looked at — which is why two of those rows mention one.
+
+### And a check that should have been there since 2.17
+
+The memory and disk check before a download lived *inside* the button for models
+that answer in words. The drawing download had **no check at all**, and the
+largest of these is four gigabytes. Both ask now.
+
 ## 2.17 — 2026-09-07
 
 Two much larger models to choose from, and — because they are the first that a
