@@ -1,0 +1,4 @@
+/* Localized versions of Info.plist keys */
+"CFBundleName" = "Neko";
+"CFBundleDisplayName" = "Neko";
+NSHumanReadableCopyright = "Public domain";
